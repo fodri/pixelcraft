@@ -3733,6 +3733,42 @@ setFS=function(on){FSPREF=on;try{localStorage.setItem('pxc_fs',on?'1':'0')}catch
  else{kbLock(false);if(document.fullscreenElement){const p=(document.exitFullscreen||document.webkitExitFullscreen).call(document);if(p&&p.catch)p.catch(()=>{})}else if(isFS())say(LANG=='hu'?'Kilépés a teljes képernyőből: F11':'Leave fullscreen: F11')}}catch(e){}};
 try{document.addEventListener('fullscreenchange',()=>{kbLock(!!document.fullscreenElement)})}catch(e){}
 
+/* ===== v60: flashlight on/off with right click, beam colours, works with one-handed weapons ===== */
+GAMEV=60;
+var FLON=true,FLC=0,FLPK=false,FLHINT=false;try{FLON=localStorage.getItem('pxc_flon')!=='0';FLC=+(localStorage.getItem('pxc_flc')||0)|0}catch(e){}
+const FLCOL=[{n:['White','Fehér'],c:[255,248,215]},{n:['Warm','Meleg sárga'],c:[255,205,130]},{n:['Amber','Borostyán'],c:[255,160,50]},{n:['Red','Piros'],c:[255,70,60]},
+ {n:['Green','Zöld'],c:[90,255,120]},{n:['Cyan','Türkiz'],c:[80,235,230]},{n:['Cold blue','Hideg kék'],c:[140,180,255]},{n:['Purple UV','Lila UV'],c:[190,110,255]}];
+if(!(FLC>=0&&FLC<FLCOL.length))FLC=0;
+function flSave(){try{localStorage.setItem('pxc_flon',FLON?'1':'0');localStorage.setItem('pxc_flc',String(FLC))}catch(e){}}
+function oneHand(k){if(!k)return false;if(GUN[k])return !TWOH[k];const t=TK[k];return !!(t&&t.k&&t.k!='spear')}
+flashOn=function(){if(CLASSIC||!FLON||!(inv.flash>0)||drv||state!='play')return false;const h=HB[hb];return h=='flash'||(oneHand(h)&&inv[h]>0)};
+flashTint=function(){if(!flashOn()||dark()<.15)return;const a=Math.atan2(mwy-(P.y-8),mwx-P.x),sx=(P.x-cam.x)*ZM,sy=(P.y-8-cam.y)*ZM,R_=175*ZM,[r,gg,b]=FLCOL[FLC].c,al=FLC?.2:.16;
+ const cone=()=>{g.beginPath();g.moveTo(sx,sy);g.arc(sx,sy,R_,a-.42,a+.42);g.closePath()};
+ if(FLC){g.save();g.globalCompositeOperation='multiply';cone();const m=g.createRadialGradient(sx,sy,2,sx,sy,R_);const mc=(k)=>'rgba('+Math.round(r*k+255*(1-k))+','+Math.round(gg*k+255*(1-k))+','+Math.round(b*k+255*(1-k))+',1)';
+  m.addColorStop(0,mc(.85));m.addColorStop(.7,mc(.6));m.addColorStop(1,mc(0));g.fillStyle=m;g.fill();g.restore()}
+ g.save();g.globalCompositeOperation='lighter';cone();
+ const gr=g.createRadialGradient(sx,sy,2,sx,sy,R_);gr.addColorStop(0,'rgba('+r+','+gg+','+b+','+al+')');gr.addColorStop(.6,'rgba('+r+','+gg+','+b+','+(al*.5)+')');gr.addColorStop(1,'rgba('+r+','+gg+','+b+',0)');g.fillStyle=gr;g.fill();g.restore()};
+function flToggle(){FLON=!FLON;flSave();snd('ui');say(LANG=='hu'?(FLON?'Zseblámpa: BE':'Zseblámpa: KI'):(FLON?'Flashlight: ON':'Flashlight: OFF'))}
+{const rc1=rclick;rclick=function(){const it=HB[hb],sh=K.ShiftLeft||K.ShiftRight;
+ if(it=='flash'&&inv.flash>0){if(sh){FLPK=true;invOpen=false;book=false;snd('ui')}else flToggle();return}
+ if(inv.flash>0&&oneHand(it)&&inv[it]>0&&!sh){flToggle();if(!FLHINT&&modKind(it)){FLHINT=true;setTimeout(()=>say(LANG=='hu'?'Fegyver-módosítás: Shift + jobb klikk':'Weapon mods: Shift + right click'),1400)}return}
+ return rc1()}}
+/* colour picker */
+const FLPB={w:300,h:96};
+function flPickRects(){const x0=(VW-FLPB.w)/2,y0=(VH-FLPB.h)/2,r=[];for(let i=0;i<FLCOL.length;i++)r.push({x:x0+14+i*35,y:y0+30,w:28,h:28});return r}
+{const dr1=draw;draw=function(){dr1();if(!FLPK)return;const hu=LANG=='hu',x0=(VW-FLPB.w)/2,y0=(VH-FLPB.h)/2;Q(0,0,VW,VH,'rgba(0,0,0,.45)');
+ Q(x0-1,y0-1,FLPB.w+2,FLPB.h+2,'#8a6a3a');Q(x0,y0,FLPB.w,FLPB.h,'#1c1a12');noTr=true;txt(hu?'Zseblámpa színe':'Flashlight colour',VW/2,y0+16,'#ffd84a','center');
+ flPickRects().forEach((q,i)=>{const on=ms.x>=q.x&&ms.x<q.x+q.w&&ms.y>=q.y&&ms.y<q.y+q.h,[r,gg,b]=FLCOL[i].c;Q(q.x-2,q.y-2,q.w+4,q.h+4,i==FLC?'#ffd84a':on?'#cfd8c0':'#3a4634');
+  const gr=g.createRadialGradient(q.x+q.w/2,q.y+q.h/2,1,q.x+q.w/2,q.y+q.h/2,q.w*.7);gr.addColorStop(0,'rgb('+r+','+gg+','+b+')');gr.addColorStop(1,'rgba('+(r>>2)+','+(gg>>2)+','+(b>>2)+',1)');g.fillStyle=gr;g.fillRect(q.x,q.y,q.w,q.h);
+  if(on)txt(FLCOL[i].n[hu?1:0],VW/2,y0+76,'#f0e6b8','center')});
+ if(!flPickRects().some(q=>ms.x>=q.x&&ms.x<q.x+q.w&&ms.y>=q.y&&ms.y<q.y+q.h))txt((hu?'Most: ':'Now: ')+FLCOL[FLC].n[hu?1:0],VW/2,y0+76,'#9aa88a','center');
+ txt(hu?'Kattints egy színre   1-8: gyors választás   Esc: bezár':'Click a colour   1-8: quick pick   Esc: close',VW/2,y0+90,'#6f7c62','center');noTr=false}}
+function flPick(i){FLC=i;FLON=true;flSave();FLPK=false;snd('ui');say((LANG=='hu'?'Zseblámpa színe: ':'Flashlight colour: ')+FLCOL[i].n[LANG=='hu'?1:0])}
+addEventListener('mousedown',e=>{if(!FLPK)return;e.stopImmediatePropagation();e.preventDefault();sc(e);if(e.button==2){FLPK=false;return}const r=flPickRects();for(let i=0;i<r.length;i++){const q=r[i];if(ms.x>=q.x&&ms.x<q.x+q.w&&ms.y>=q.y&&ms.y<q.y+q.h){flPick(i);return}}
+ const x0=(VW-FLPB.w)/2,y0=(VH-FLPB.h)/2;if(ms.x<x0||ms.x>x0+FLPB.w||ms.y<y0||ms.y>y0+FLPB.h)FLPK=false},true);
+addEventListener('keydown',e=>{if(!FLPK)return;const c=e.code;e.stopImmediatePropagation();e.preventDefault();if(c=='Escape'){FLPK=false;return}if(/^Digit[1-8]$/.test(c))flPick(+c[5]-1)},true);
+HU.unshift(['Flashlight: ON','Zseblámpa: BE'],['Flashlight: OFF','Zseblámpa: KI']);
+
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
 function fireList(){const n=performance.now();if(FL.ob!==ob||n-FL.t>500){FL.ob=ob;FL.t=n;FL.a=[];for(let i=0;i<ob.length;i++){const o=ob[i];if(o&&(o.t=='fire'&&o.on||o.t=='fbarrel'))FL.a.push([(i%W)*T+8,Math.floor(i/W)*T+8])}}return FL.a}
