@@ -3672,7 +3672,7 @@ menuKey=function(c){const n=mainLabels().length;if(msel>=n)msel=0;if(c=='ArrowUp
 menuClick=function(){const n=mainLabels().length;for(let i=0;i<n;i++)if(ms.x>=MB.x&&ms.x<MB.x+MB.w&&ms.y>=mbY(i)&&ms.y<mbY(i)+MB.h){msel=i;menuAct(i);return}};
 MB.h=17;MB.g=3;
 {const mn0=menu;menu=function(){if(msel>=mainLabels().length)msel=0;mn0();const hu=LANG=='hu';noTr=true;
- txt('v'+GAMEV,6,VH-6,'#6f7c62');
+ txt('Alpha build '+GAMEV,6,VH-6,'#6f7c62');
  if(SVF&&performance.now()-SVF<2500){const a=1-(performance.now()-SVF)/2500;g.globalAlpha=Math.min(1,a*2);txt(hu?'✔ Játék mentve':'✔ Game saved',MB.x+MB.w/2,mbY(7)+6,'#9be07d','center');g.globalAlpha=1}
  else if(canSave())txt(hu?'Gyors mentés játék közben: Ctrl+S':'Quick save in game: Ctrl+S',MB.x+MB.w/2,mbY(7)+6,'#6f7c62','center');noTr=false}}
 addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.code=='KeyS'){e.preventDefault();e.stopImmediatePropagation();if(state=='play'||state=='title'){if(doSave())snd('ui')}}},true);
@@ -3701,7 +3701,7 @@ optsKey=function(c){if(c=='Escape'){state='title';return}if(c=='ArrowUp'||c=='Ke
 optsClick=function(){for(let i=0;i<15;i++){const y=obY(i);if(ms.x>=OPB.x&&ms.x<OPB.x+OPB.w&&ms.y>=y&&ms.y<y+OPB.h){osel=i;optStep(i,ms.x<OPB.x+OPB.w-60&&i!=5&&i!=6&&i!=7&&i!=9&&i!=1&&i!=13&&i!=14?-1:1);return}}};
 /* co-op: warn when the partner runs a different game version */
 {const nt1=netTick;let warned={};netTick=function(dt){if(net&&net.r&&!net.r._gv){const r=net.r,p0=r.presence;r._gv=1;r.presence=function(d){if(d&&typeof d=='object')d.gv=GAMEV;return p0.call(r,d)}}
- nt1(dt);if(net)for(const p of net.peers){const q=p.presence;if(q&&q.gv&&q.gv!==GAMEV&&!warned[p.id]){warned[p.id]=1;say((LANG=='hu'?'Figyelem: a társad más verziót használ (v':'Warning: your partner runs another version (v')+q.gv+(LANG=='hu'?') — indítsátok újra a játékot!':') — both restart the game!'))}}}}
+ nt1(dt);if(net)for(const p of net.peers){const q=p.presence;if(q&&q.gv&&q.gv!==GAMEV&&!warned[p.id]){warned[p.id]=1;say((LANG=='hu'?'Figyelem: a társad más verziót használ (Alpha build ':'Warning: your partner runs another version (Alpha build ')+q.gv+(LANG=='hu'?') — indítsátok újra a játékot!':') — both restart the game!'))}}}}
 HU.unshift(['Game saved','Játék mentve']);
 /* --- co-op: everyone has to sleep to skip the night --- */
 var SLP=null;
@@ -3720,6 +3720,18 @@ function wakeUp(){if(!SLP)return;SLP=null;P.hp=Math.min(100,P.hp+30);say('You sl
  txt((hu?'Alszol… alvók: ':'Sleeping… asleep: ')+n+' / '+t,VW/2,VH/2-8,'#f0e6b8','center');
  txt(hu?'Reggel lesz, ha mindenki lefekszik egy ágyba. Mozdulj meg a felkeléshez.':'Morning comes when everyone is in bed. Move to get up.',VW/2,VH/2+8,'#9aa8c0','center');noTr=false}}
 HU.unshift(['You slept. Day ','Aludtál. Nap: ']);
+
+/* ===== v59: fullscreen survives Esc (native window fullscreen in the client, keyboard lock in browsers), Alpha build label ===== */
+GAMEV=59;
+function natFS(){try{const n=window.pxNative;return n&&typeof n.setFullScreen=='function'?n:null}catch(e){return null}}
+function kbLock(on){try{const k=navigator.keyboard;if(!k)return;if(on){if(k.lock){const p=k.lock(['Escape']);if(p&&p.catch)p.catch(()=>{})}}else if(k.unlock)k.unlock()}catch(e){}}
+{const fs0=isFS;isFS=function(){const n=natFS();if(n){try{return !!n.isFullScreen()}catch(e){}}return fs0()}}
+setFS=function(on){FSPREF=on;try{localStorage.setItem('pxc_fs',on?'1':'0')}catch(e){}
+ const n=natFS();if(n){try{n.setFullScreen(!!on)}catch(e){}return}
+ const el=document.documentElement;
+ try{if(on){if(!document.fullscreenElement){const p=(el.requestFullscreen||el.webkitRequestFullscreen).call(el,{navigationUI:'hide'});if(p&&p.then)p.then(()=>kbLock(true),()=>say(LANG=='hu'?'Teljes képernyő: nyomd meg az F11-et':'Fullscreen: press F11'));else kbLock(true)}else kbLock(true)}
+ else{kbLock(false);if(document.fullscreenElement){const p=(document.exitFullscreen||document.webkitExitFullscreen).call(document);if(p&&p.catch)p.catch(()=>{})}else if(isFS())say(LANG=='hu'?'Kilépés a teljes képernyőből: F11':'Leave fullscreen: F11')}}catch(e){}};
+try{document.addEventListener('fullscreenchange',()=>{kbLock(!!document.fullscreenElement)})}catch(e){}
 
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
