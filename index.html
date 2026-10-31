@@ -290,7 +290,7 @@ function drawSubEntr(x,y){const t=performance.now(),p=Math.floor(t/500)%2;W_(x,y
 /* ---- menus ---- */
 const TXM={en:['Play','Continue','New game','Character','Online co-op','Settings'],hu:['Játék','Folytatás','Új játék','Karakter','Online együtt','Beállítások']};
 const OPN={en:['Biome (new game)','Language','Sound >','Font','Text color','Graphics','Mode','Hunger & thirst','Zoom','Mask color fade','Controls >','Weather >','Back'],hu:['Biom (új játék)','Nyelv','Hang >','Betű','Szövegszín','Grafika','Mód','Éhség és szomjúság','Nagyítás','Maszk színhatás','Irányítás >','Időjárás >','Vissza']};
-const mainLabels=()=>{const h=LANG=='hu'?TXM.hu:TXM.en,pc=started||!hasSave()?0:1;return[TUTM?(LANG=='hu'?'Gyakorlás folytatása':'Resume practice'):pc?h[1]:h[0],h[2],LANG=='hu'?'Kézikönyv / gyakorlás':'Handbook / practice',h[3],h[4],h[5]]};
+const mainLabels0=()=>{const h=LANG=='hu'?TXM.hu:TXM.en,pc=started||!hasSave()?0:1;return[TUTM?(LANG=='hu'?'Gyakorlás folytatása':'Resume practice'):pc?h[1]:h[0],h[2],LANG=='hu'?'Kézikönyv / gyakorlás':'Handbook / practice',h[3],h[4],h[5]]};
 const MB={x:0,y:112,w:150,h:19,g:4};MB.x=VW/2-MB.w/2-52;
 const mbY=i=>MB.y+i*(MB.h+MB.g);
 function mbtn(x,y,w,h,label,on){Q(x-1,y-1,w+2,h+2,on?'#ffd84a':'#3a4634');Q(x,y,w,h,on?'#4a3722':'#1c1a12');if(on)Q(x,y,3,h,'#ffd84a');noTr=true;txt(label,x+w/2,y+h/2+3.5,on?'#ffd84a':'#cfd8c0','center');noTr=false}
@@ -372,7 +372,7 @@ function useObj(n){const o=n.o;if(campUse(n))return;if(o.t=='car'&&o.lt!=null&&g
  if(o.t=='door'){if(o.open&&Math.hypot(n.tx*T+8-P.x,n.ty*T+8-P.y)<11)return say('Something is in the way');o.open=!o.open;snd('door');say(o.open?'Door opened':'Door closed')}
  else if(o.t=='reactor')enterR(1,'down');else if(o.t=='rdown')enterR(curRx+1,'down');else if(o.t=='hatch')enter(n.ty*W+n.tx);else if(o.t=='stairs'){if(curRx>1)enterR(curRx-1,'up');else leave()}
  else if(o.t=='chest'){o.t='open';const L=[['cooked',2],['stone',3],['wood',4],['berry',4],['wall',2],['meat',2]],a=L[Math.floor(R()*6)],b=L[Math.floor(R()*6)];inv[a[0]]+=a[1];inv[b[0]]+=b[1];say('Looted chest: +'+a[1]+' '+LBL[a[0]].toLowerCase()+', +'+b[1]+' '+LBL[b[0]].toLowerCase());hit(n.tx*T+8,n.ty*T+8,'#d9b84a')}
- else if(o.t=='bed'||o.t=='tent'){if(sleepDark()>.4){if(zs.some(z=>Math.hypot(z.x-P.x,z.y-P.y)<140))say('Can\u2019t sleep \u2014 infected nearby');else{if(net&&!net.isHost)net.r.emit('sleep',1);else{time=0;day++;zs=[]}P.hp=Math.min(100,P.hp+30);setHome();say('You slept. Day '+day+' \u2014 base set')}}else say('Not tired yet \u2014 sleep at night')}}
+ else if(o.t=='bed'||o.t=='tent'){if(sleepDark()>.4){if(zs.some(z=>Math.hypot(z.x-P.x,z.y-P.y)<140))say('Can\u2019t sleep \u2014 infected nearby');else{if(net&&!net.dead&&net.peers.length)coopSleep();else{time=0;day++;zs=[];P.hp=Math.min(100,P.hp+30);setHome();say('You slept. Day '+day+' \u2014 base set')}}}else say('Not tired yet \u2014 sleep at night')}}
 function promptE(){if(state!='play'||book||tut||stOpen||invOpen)return;const n=nearInt();if(!n)return;const sx=Math.round((n.tx*T+8-cam.x)*ZM),sy=Math.round((n.ty*T-cam.y-2)*ZM+Math.sin(performance.now()/180)*1.5);g.font=fnt(1,13);g.textAlign='center';g.fillStyle='rgba(0,0,0,.9)';for(const[a,b]of OL)g.fillText('E',sx+a,sy+b);g.fillStyle=fcol('#ffe27a');g.fillText('E',sx,sy)}
 function icon(k,x,y){if(icon2(k,x,y))return;icon0(k,x,y)}
 function icon2Old(k,x,y){if(k=='boat'){Q(x+1,y+10,18,6,'#6b4524');Q(x+2,y+8,16,3,'#8a5a30');Q(x+4,y+11,12,2,'#3a2614');Q(x,y+8,3,3,'#a07a4a');Q(x+17,y+8,3,3,'#a07a4a');Q(x+3,y+15,14,1,'#4a3018');Q(x+9,y+2,1,8,'#c8b48a');Q(x+10,y+2,6,5,'#e8e4da');return true}if(k=='arrow'){for(let i=0;i<11;i++)Q(x+4+i,y+14-i,2,2,i%2?'#c8b48a':'#b09a70');Q(x+14,y+2,4,4,'#d6dade');Q(x+16,y+2,3,3,'#eef2f4');Q(x+12,y+4,3,3,'#b8bec2');Q(x+2,y+13,4,2,'#c83a3a');Q(x+3,y+15,3,2,'#c83a3a');Q(x+5,y+12,2,2,'#e05a4a');Q(x+3,y+17,2,1,'#e05a4a');return true}const t=TK[k];if(t){const c=TC[t.t],hd='#7a5636',hl2='rgba(255,255,255,.4)';if(t.k=='pickaxe'){Q(x+9,y+4,2,13,hd);Q(x+4,y+4,12,3,c);Q(x+4,y+6,2,3,c);Q(x+14,y+6,2,3,c);Q(x+4,y+4,12,1,hl2)}else if(t.k=='axe'){Q(x+9,y+4,2,13,hd);Q(x+5,y+4,8,4,c);Q(x+5,y+4,8,1,hl2)}else if(t.k=='shovel'){Q(x+9,y+3,2,10,hd);Q(x+7,y+11,6,6,c);Q(x+8,y+11,4,1,hl2)}else if(t.k=='spear'){Q(x+9,y+5,2,13,'#c8b48a');Q(x+8,y+2,4,5,c);Q(x+9,y+2,2,1,'#fff')}else{Q(x+9,y+2,2,10,c);Q(x+9,y+2,1,10,hl2);Q(x+6,y+11,8,2,hd);Q(x+9,y+13,2,4,'#5a3d24')}return true}
@@ -1340,7 +1340,7 @@ function act(){
   else if(o.t=='flax'){if(o.b){o.b=0;o.r=60;inv.fiber+=2;say('+2 fiber')}else say('Nothing ripe yet')}
   else if(o.t=='bush'){if(o.b){o.b=0;o.r=60;inv.berry+=2;say('+2 berries')}else say('Nothing ripe yet')}
   else if(o.t=='bed'){rmObj(ty*W+tx);inv.bed++;snd('pick');hit(cx,cy,'#c8c8c0');say('Bed knocked out')}
-  else if(o.t=='bed'||o.t=='tent'){if(sleepDark()>.4){if(zs.some(z=>Math.hypot(z.x-P.x,z.y-P.y)<140))say('Can\u2019t sleep \u2014 infected nearby');else{if(net&&!net.isHost)net.r.emit('sleep',1);else{time=0;day++;zs=[]}P.hp=Math.min(100,P.hp+30);setHome();say('You slept. Day '+day+' \u2014 base set')}}else say('Not tired yet \u2014 sleep at night')}
+  else if(o.t=='bed'||o.t=='tent'){if(sleepDark()>.4){if(zs.some(z=>Math.hypot(z.x-P.x,z.y-P.y)<140))say('Can\u2019t sleep \u2014 infected nearby');else{if(net&&!net.dead&&net.peers.length)coopSleep();else{time=0;day++;zs=[];P.hp=Math.min(100,P.hp+30);setHome();say('You slept. Day '+day+' \u2014 base set')}}}else say('Not tired yet \u2014 sleep at night')}
   else if(o.t=='reactor')enterR(1,'down');else if(o.t=='rdown')enterR(curRx+1,'down');else if(o.t=='hatch')enter(ty*W+tx);else if(o.t=='stairs'){if(curRx>1)enterR(curRx-1,'up');else leave()}
   else if(o.t=='chest'){o.t='open';const L=[['cooked',2],['stone',3],['wood',4],['berry',4],['wall',2],['meat',2]],a=L[Math.floor(R()*6)],b=L[Math.floor(R()*6)];inv[a[0]]+=a[1];inv[b[0]]+=b[1];say('Looted chest: +'+a[1]+' '+LBL[a[0]].toLowerCase()+', +'+b[1]+' '+LBL[b[0]].toLowerCase());hit(cx,cy,'#d9b84a')}
   else if(o.t=='sblock'){o.hp-=3;hit(cx,cy,'#8a9092');if(o.hp<=0){ob[ty*W+tx]=null;inv.sblock++;say('Wall picked up')}}
@@ -3657,6 +3657,69 @@ optsMenu=function(){const moved=ms.x!=lmx||ms.y!=lmy;lmx=ms.x;lmy=ms.y;const hu=
 optsKey=function(c){if(c=='Escape'){state='title';return}if(c=='ArrowUp'||c=='KeyW')osel=(osel+13)%14;else if(c=='ArrowDown'||c=='KeyS')osel=(osel+1)%14;else if(c=='ArrowLeft'||c=='KeyA')optStep(osel,-1);else if(c=='ArrowRight'||c=='KeyD'||c=='Enter'||c=='Space')optStep(osel,1)};
 optsClick=function(){for(let i=0;i<14;i++){const y=obY(i);if(ms.x>=OPB.x&&ms.x<OPB.x+OPB.w&&ms.y>=y&&ms.y<y+OPB.h){osel=i;optStep(i,ms.x<OPB.x+OPB.w-60&&i!=5&&i!=6&&i!=7&&i!=9&&i!=1&&i!=13?-1:1);return}}};
 HU.unshift(['Difficulty','Nehézség']);
+
+/* ===== v58: save button (pause menu + Ctrl+S), fullscreen setting, game version ===== */
+var GAMEV=58;
+function canSave(){return started&&!TUTM&&state!=='lobby'}
+function doSave(){if(!started){say(LANG=='hu'?'Nincs mit menteni — előbb kezdj játékot':'Nothing to save yet');return false}
+ if(TUTM){say(LANG=='hu'?'Gyakorlásban nincs mentés':'Saving is off in practice');return false}
+ const st=state;save();state=st;SVF=performance.now();return true}
+var SVF=0;
+/* pause/title menu: extra "Save game" entry at the end while a game is running */
+function mainLabels(){const L=mainLabels0();if(canSave())L.push(LANG=="hu"?"Játék mentése":"Save game");return L}
+{const ma0=menuAct;menuAct=function(i){if(i==6){if(doSave())snd('ui');return}return ma0(i)}}
+menuKey=function(c){const n=mainLabels().length;if(msel>=n)msel=0;if(c=='ArrowUp'||c=='KeyW'){msel=(msel+n-1)%n;snd('ui')}else if(c=='ArrowDown'||c=='KeyS'){msel=(msel+1)%n;snd('ui')}else if(c=='Enter'||c=='Space'||c=='ArrowRight'||c=='KeyD')menuAct(msel)};
+menuClick=function(){const n=mainLabels().length;for(let i=0;i<n;i++)if(ms.x>=MB.x&&ms.x<MB.x+MB.w&&ms.y>=mbY(i)&&ms.y<mbY(i)+MB.h){msel=i;menuAct(i);return}};
+MB.h=17;MB.g=3;
+{const mn0=menu;menu=function(){if(msel>=mainLabels().length)msel=0;mn0();const hu=LANG=='hu';noTr=true;
+ txt('v'+GAMEV,6,VH-6,'#6f7c62');
+ if(SVF&&performance.now()-SVF<2500){const a=1-(performance.now()-SVF)/2500;g.globalAlpha=Math.min(1,a*2);txt(hu?'✔ Játék mentve':'✔ Game saved',MB.x+MB.w/2,mbY(7)+6,'#9be07d','center');g.globalAlpha=1}
+ else if(canSave())txt(hu?'Gyors mentés játék közben: Ctrl+S':'Quick save in game: Ctrl+S',MB.x+MB.w/2,mbY(7)+6,'#6f7c62','center');noTr=false}}
+addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.code=='KeyS'){e.preventDefault();e.stopImmediatePropagation();if(state=='play'||state=='title'){if(doSave())snd('ui')}}},true);
+/* fullscreen */
+function isFS(){try{return !!(document.fullscreenElement||document.webkitFullscreenElement)||(innerWidth>=screen.width-1&&innerHeight>=screen.height-1&&screen.width>0)}catch(e){return false}}
+var FSPREF=false;try{FSPREF=localStorage.getItem('pxc_fs')=='1'}catch(e){}
+function setFS(on){FSPREF=on;try{localStorage.setItem('pxc_fs',on?'1':'0')}catch(e){}
+ const el=document.documentElement;
+ try{if(on){if(!document.fullscreenElement){const p=(el.requestFullscreen||el.webkitRequestFullscreen).call(el);if(p&&p.catch)p.catch(()=>say(LANG=='hu'?'Teljes képernyő: nyomd meg az F11-et':'Fullscreen: press F11'))}}
+ else{if(document.fullscreenElement){const p=(document.exitFullscreen||document.webkitExitFullscreen).call(document);if(p&&p.catch)p.catch(()=>{})}else if(isFS())say(LANG=='hu'?'Kilépés a teljes képernyőből: F11':'Leave fullscreen: F11')}}catch(e){}}
+/* restore the saved preference on the first click/key (browsers need a user action) */
+{let done=false;const go=()=>{if(done)return;done=true;if(FSPREF&&!document.fullscreenElement)setFS(true)};addEventListener('pointerdown',go,true);addEventListener('keydown',go,true)}
+/* settings row 13 = Fullscreen, Back moves to 14 */
+OPN.en.splice(13,0,'Fullscreen');OPN.hu.splice(13,0,'Teljes képernyő');
+{const ov1=optVal;optVal=function(i){if(i==13)return isFS()?(LANG=='hu'?'BE':'ON'):(LANG=='hu'?'KI':'OFF');if(i==14)return '';return ov1(i)}}
+{const os1=optStep;optStep=function(i,dir){if(i==13){setFS(!isFS());snd('ui');return}return os1(i==14?13:i,dir)}}
+OPB.y=50;OPB.h=13;OPB.g=2;
+optsMenu=function(){const moved=ms.x!=lmx||ms.y!=lmy;lmx=ms.x;lmy=ms.y;const hu=LANG=='hu';Q(0,0,VW,VH,'rgba(6,10,6,.88)');
+ g.font=fnt(1,20);g.textAlign='center';g.fillStyle='#a8321f';g.fillText(hu?'Beállítások':'Settings',VW/2+2,42);g.fillStyle=fcol('#d8e4c8');g.fillText(hu?'Beállítások':'Settings',VW/2,40);
+ noTr=true;for(let i=0;i<15;i++){const y=obY(i);if(moved&&ms.x>=OPB.x&&ms.x<OPB.x+OPB.w&&ms.y>=y&&ms.y<y+OPB.h)osel=i;const on=osel==i;
+  Q(OPB.x-1,y-1,OPB.w+2,OPB.h+2,on?'#ffd84a':'#3a4634');Q(OPB.x,y,OPB.w,OPB.h,on?'#4a3722':'#1c1a12');
+  if(i==14)txt(OPN[hu?'hu':'en'][14],VW/2,y+10,on?'#ffd84a':'#cfd8c0','center');
+  else{txt(OPN[hu?'hu':'en'][i],OPB.x+8,y+10,on?'#ffd84a':'#b8c8a8');txt('<',OPB.x+OPB.w-118,y+10,on?'#ffd84a':'#5a6a52','center');txt(optVal(i),OPB.x+OPB.w-60,y+10,i==12&&DIFF==0?'#9be07d':i==12&&DIFF==3?'#ff8a6a':'#f0e6b8','center');txt('>',OPB.x+OPB.w-8,y+10,on?'#ffd84a':'#5a6a52','center')}}
+ txt(hu?'W/S: választás   A/D: változtatás   Esc: vissza   (F11 is működik)':'W/S choose   A/D change   Esc back   (F11 works too)',VW/2,obY(15)+9,'#8fa07f','center');noTr=false};
+optsKey=function(c){if(c=='Escape'){state='title';return}if(c=='ArrowUp'||c=='KeyW')osel=(osel+14)%15;else if(c=='ArrowDown'||c=='KeyS')osel=(osel+1)%15;else if(c=='ArrowLeft'||c=='KeyA')optStep(osel,-1);else if(c=='ArrowRight'||c=='KeyD'||c=='Enter'||c=='Space')optStep(osel,1)};
+optsClick=function(){for(let i=0;i<15;i++){const y=obY(i);if(ms.x>=OPB.x&&ms.x<OPB.x+OPB.w&&ms.y>=y&&ms.y<y+OPB.h){osel=i;optStep(i,ms.x<OPB.x+OPB.w-60&&i!=5&&i!=6&&i!=7&&i!=9&&i!=1&&i!=13&&i!=14?-1:1);return}}};
+/* co-op: warn when the partner runs a different game version */
+{const nt1=netTick;let warned={};netTick=function(dt){if(net&&net.r&&!net.r._gv){const r=net.r,p0=r.presence;r._gv=1;r.presence=function(d){if(d&&typeof d=='object')d.gv=GAMEV;return p0.call(r,d)}}
+ nt1(dt);if(net)for(const p of net.peers){const q=p.presence;if(q&&q.gv&&q.gv!==GAMEV&&!warned[p.id]){warned[p.id]=1;say((LANG=='hu'?'Figyelem: a társad más verziót használ (v':'Warning: your partner runs another version (v')+q.gv+(LANG=='hu'?') — indítsátok újra a játékot!':') — both restart the game!'))}}}}
+HU.unshift(['Game saved','Játék mentve']);
+/* --- co-op: everyone has to sleep to skip the night --- */
+var SLP=null;
+function coopSleep(){SLP={t:performance.now()};setHome();say(LANG=='hu'?'Lefeküdtél — várjuk, hogy a többiek is aludjanak':'You lie down — waiting for everyone to sleep')}
+function sleepers(){let n=SLP?1:0,t=1;if(net)for(const p of net.peers){t++;if(p.presence&&p.presence.zz)n++}return[n,t]}
+function wakeUp(){if(!SLP)return;SLP=null;P.hp=Math.min(100,P.hp+30);say('You slept. Day '+day+' — base set')}
+{const nt2=netTick;netTick=function(dt){
+ if(net&&net.r&&!net.r._zz){const r=net.r,p0=r.presence;r._zz=1;r.presence=function(d){if(d&&typeof d=='object')d.zz=SLP?1:0;return p0.call(r,d)};
+  if(typeof r.on=='function')r.on('wake',m=>{const d=m.data||{};if(!net||net.isHost)return;if(isFinite(d.d))day=d.d|0;time=0;if(inD&&OW)OW.zs=[];else zs=[];wakeUp()})}
+ nt2(dt);
+ if(SLP){if(!net||net.dead||!net.peers.length||(performance.now()-SLP.t>300&&!(sit&&sit.lie))){const solo=!net||net.dead||!net.peers.length;SLP=null;if(!solo)say(LANG=='hu'?'Felkeltél':'You got up')}
+  else if(sleepDark()<=.4)SLP=null;
+  else if(net.isHost){const[n,t]=sleepers();if(n>=t){time=0;day++;if(inD&&OW)OW.zs=[];else zs=[];try{net.r.emit('wake',{d:day})}catch(e){}wakeUp()}}}}}
+{const dr0=draw;draw=function(){dr0();if(!SLP||state!='play')return;const[n,t]=sleepers(),hu=LANG=='hu',k=performance.now()/1000;
+ Q(0,0,VW,VH,'rgba(4,6,14,.55)');noTr=true;txt('Z z z',VW/2+Math.sin(k*2)*3,VH/2-28,'#c8d4ff','center');
+ txt((hu?'Alszol… alvók: ':'Sleeping… asleep: ')+n+' / '+t,VW/2,VH/2-8,'#f0e6b8','center');
+ txt(hu?'Reggel lesz, ha mindenki lefekszik egy ágyba. Mozdulj meg a felkeléshez.':'Morning comes when everyone is in bed. Move to get up.',VW/2,VH/2+8,'#9aa8c0','center');noTr=false}}
+HU.unshift(['You slept. Day ','Aludtál. Nap: ']);
 
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
