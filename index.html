@@ -3750,7 +3750,7 @@ flashTint=function(){if(!flashOn()||dark()<.15)return;const a=Math.atan2(mwy-(P.
  const gr=g.createRadialGradient(sx,sy,2,sx,sy,R_);gr.addColorStop(0,'rgba('+r+','+gg+','+b+','+al+')');gr.addColorStop(.6,'rgba('+r+','+gg+','+b+','+(al*.5)+')');gr.addColorStop(1,'rgba('+r+','+gg+','+b+',0)');g.fillStyle=gr;g.fill();g.restore()};
 function flToggle(){FLON=!FLON;flSave();snd('ui');say(LANG=='hu'?(FLON?'Zseblámpa: BE':'Zseblámpa: KI'):(FLON?'Flashlight: ON':'Flashlight: OFF'))}
 {const rc1=rclick;rclick=function(){const it=HB[hb],sh=K.ShiftLeft||K.ShiftRight;
- if(it=='flash'&&inv.flash>0){if(sh){FLPK=true;invOpen=false;book=false;snd('ui')}else flToggle();return}
+ if(it=='flash'&&inv.flash>0){if(sh){FLPK=true;invOpen=false;book=false;snd('ui')}else{FLC=(FLC+1)%FLCOL.length;FLON=true;flSave();snd('ui');say((LANG=='hu'?'Zseblámpa színe: ':'Flashlight colour: ')+FLCOL[FLC].n[LANG=='hu'?1:0])}return}
  if(inv.flash>0&&oneHand(it)&&inv[it]>0&&!sh){flToggle();if(!FLHINT&&modKind(it)){FLHINT=true;setTimeout(()=>say(LANG=='hu'?'Fegyver-módosítás: Shift + jobb klikk':'Weapon mods: Shift + right click'),1400)}return}
  return rc1()}}
 /* colour picker */
@@ -3770,7 +3770,7 @@ addEventListener('keydown',e=>{if(!FLPK)return;const c=e.code;e.stopImmediatePro
 HU.unshift(['Flashlight: ON','Zseblámpa: BE'],['Flashlight: OFF','Zseblámpa: KI']);
 
 /* ===== v61: co-op worlds are saved per room and can be continued; recent rooms in the lobby; co-op autosave ===== */
-GAMEV=61;
+GAMEV=62;
 var CSLOT=null,CFORCE=false;
 function SKEY(){return CSLOT&&(net||CFORCE)?CSLOT:'pxc_save'}
 function roomsGet(){try{const a=JSON.parse(localStorage.getItem('pxc_rooms')||'[]');return Array.isArray(a)?a.filter(r=>r&&/^[A-Z0-9]{5}$/.test(r.c)):[]}catch(e){return[]}}
@@ -3817,10 +3817,9 @@ function doExit(){const now=performance.now();if(now>=EXQ){EXQ=now+3000;snd('ui'
  if(canSave()){try{save()}catch(e){}}if(net){try{net.r.leave().catch(()=>{})}catch(e){}}
  try{window.close()}catch(e){}
  setTimeout(()=>{say(LANG=='hu'?'A játék mentve — most már bezárhatod a böngészőfület':'Game saved — you can close the browser tab now');state='title'},300)}
-/* --- flashlight in hand: left click cycles the colour (right click = on/off, Shift+right = colour palette) --- */
+/* --- flashlight in hand: left click = on/off, right click = next colour, Shift+right = colour palette --- */
 addEventListener('mousedown',e=>{if(e.button!==0||state!='play'||FLPK||PE||GAL||book||invOpen||stOpen||showMap||tut||drv)return;if(HB[hb]!=='flash'||!(inv.flash>0))return;
- sc(e);if(ms.y>VH-44)return;e.stopImmediatePropagation();e.preventDefault();FLC=(FLC+1)%FLCOL.length;FLON=true;flSave();snd('ui');
- say((LANG=='hu'?'Zseblámpa színe: ':'Flashlight colour: ')+FLCOL[FLC].n[LANG=='hu'?1:0])},true);
+ sc(e);if(ms.y>VH-44)return;e.stopImmediatePropagation();e.preventDefault();flToggle()},true);
 
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
