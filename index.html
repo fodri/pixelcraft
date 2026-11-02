@@ -372,7 +372,7 @@ function useObj(n){const o=n.o;if(campUse(n))return;if(o.t=='car'&&o.lt!=null&&g
  if(o.t=='door'){if(o.open&&Math.hypot(n.tx*T+8-P.x,n.ty*T+8-P.y)<11)return say('Something is in the way');o.open=!o.open;snd('door');say(o.open?'Door opened':'Door closed')}
  else if(o.t=='reactor')enterR(1,'down');else if(o.t=='rdown')enterR(curRx+1,'down');else if(o.t=='hatch')enter(n.ty*W+n.tx);else if(o.t=='stairs'){if(curRx>1)enterR(curRx-1,'up');else leave()}
  else if(o.t=='chest'){o.t='open';const L=[['cooked',2],['stone',3],['wood',4],['berry',4],['wall',2],['meat',2]],a=L[Math.floor(R()*6)],b=L[Math.floor(R()*6)];inv[a[0]]+=a[1];inv[b[0]]+=b[1];say('Looted chest: +'+a[1]+' '+LBL[a[0]].toLowerCase()+', +'+b[1]+' '+LBL[b[0]].toLowerCase());hit(n.tx*T+8,n.ty*T+8,'#d9b84a')}
- else if(o.t=='bed'||o.t=='tent'){if(sleepDark()>.4){if(zs.some(z=>Math.hypot(z.x-P.x,z.y-P.y)<140))say('Can\u2019t sleep \u2014 infected nearby');else{if(net&&!net.dead&&net.peers.length)coopSleep();else{time=0;day++;zs=[];P.hp=Math.min(100,P.hp+30);setHome();say('You slept. Day '+day+' \u2014 base set')}}}else say('Not tired yet \u2014 sleep at night')}}
+ else if(o.t=='bed'||o.t=='tent'){if(sleepDark()>.4){if(zs.some(z=>Math.hypot(z.x-P.x,z.y-P.y)<140))say('Can\u2019t sleep \u2014 infected nearby');else{if(net&&!net.dead&&net.peers.length)coopSleep();else{if(!TL)sleepLapse(soloSleepEnd)}}}else say('Not tired yet \u2014 sleep at night')}}
 function promptE(){if(state!='play'||book||tut||stOpen||invOpen)return;const n=nearInt();if(!n)return;const sx=Math.round((n.tx*T+8-cam.x)*ZM),sy=Math.round((n.ty*T-cam.y-2)*ZM+Math.sin(performance.now()/180)*1.5);g.font=fnt(1,13);g.textAlign='center';g.fillStyle='rgba(0,0,0,.9)';for(const[a,b]of OL)g.fillText('E',sx+a,sy+b);g.fillStyle=fcol('#ffe27a');g.fillText('E',sx,sy)}
 function icon(k,x,y){if(icon2(k,x,y))return;icon0(k,x,y)}
 function icon2Old(k,x,y){if(k=='boat'){Q(x+1,y+10,18,6,'#6b4524');Q(x+2,y+8,16,3,'#8a5a30');Q(x+4,y+11,12,2,'#3a2614');Q(x,y+8,3,3,'#a07a4a');Q(x+17,y+8,3,3,'#a07a4a');Q(x+3,y+15,14,1,'#4a3018');Q(x+9,y+2,1,8,'#c8b48a');Q(x+10,y+2,6,5,'#e8e4da');return true}if(k=='arrow'){for(let i=0;i<11;i++)Q(x+4+i,y+14-i,2,2,i%2?'#c8b48a':'#b09a70');Q(x+14,y+2,4,4,'#d6dade');Q(x+16,y+2,3,3,'#eef2f4');Q(x+12,y+4,3,3,'#b8bec2');Q(x+2,y+13,4,2,'#c83a3a');Q(x+3,y+15,3,2,'#c83a3a');Q(x+5,y+12,2,2,'#e05a4a');Q(x+3,y+17,2,1,'#e05a4a');return true}const t=TK[k];if(t){const c=TC[t.t],hd='#7a5636',hl2='rgba(255,255,255,.4)';if(t.k=='pickaxe'){Q(x+9,y+4,2,13,hd);Q(x+4,y+4,12,3,c);Q(x+4,y+6,2,3,c);Q(x+14,y+6,2,3,c);Q(x+4,y+4,12,1,hl2)}else if(t.k=='axe'){Q(x+9,y+4,2,13,hd);Q(x+5,y+4,8,4,c);Q(x+5,y+4,8,1,hl2)}else if(t.k=='shovel'){Q(x+9,y+3,2,10,hd);Q(x+7,y+11,6,6,c);Q(x+8,y+11,4,1,hl2)}else if(t.k=='spear'){Q(x+9,y+5,2,13,'#c8b48a');Q(x+8,y+2,4,5,c);Q(x+9,y+2,2,1,'#fff')}else{Q(x+9,y+2,2,10,c);Q(x+9,y+2,1,10,hl2);Q(x+6,y+11,8,2,hd);Q(x+9,y+13,2,4,'#5a3d24')}return true}
@@ -1340,7 +1340,7 @@ function act(){
   else if(o.t=='flax'){if(o.b){o.b=0;o.r=60;inv.fiber+=2;say('+2 fiber')}else say('Nothing ripe yet')}
   else if(o.t=='bush'){if(o.b){o.b=0;o.r=60;inv.berry+=2;say('+2 berries')}else say('Nothing ripe yet')}
   else if(o.t=='bed'){rmObj(ty*W+tx);inv.bed++;snd('pick');hit(cx,cy,'#c8c8c0');say('Bed knocked out')}
-  else if(o.t=='bed'||o.t=='tent'){if(sleepDark()>.4){if(zs.some(z=>Math.hypot(z.x-P.x,z.y-P.y)<140))say('Can\u2019t sleep \u2014 infected nearby');else{if(net&&!net.dead&&net.peers.length)coopSleep();else{time=0;day++;zs=[];P.hp=Math.min(100,P.hp+30);setHome();say('You slept. Day '+day+' \u2014 base set')}}}else say('Not tired yet \u2014 sleep at night')}
+  else if(o.t=='bed'||o.t=='tent'){if(sleepDark()>.4){if(zs.some(z=>Math.hypot(z.x-P.x,z.y-P.y)<140))say('Can\u2019t sleep \u2014 infected nearby');else{if(net&&!net.dead&&net.peers.length)coopSleep();else{if(!TL)sleepLapse(soloSleepEnd)}}}else say('Not tired yet \u2014 sleep at night')}
   else if(o.t=='reactor')enterR(1,'down');else if(o.t=='rdown')enterR(curRx+1,'down');else if(o.t=='hatch')enter(ty*W+tx);else if(o.t=='stairs'){if(curRx>1)enterR(curRx-1,'up');else leave()}
   else if(o.t=='chest'){o.t='open';const L=[['cooked',2],['stone',3],['wood',4],['berry',4],['wall',2],['meat',2]],a=L[Math.floor(R()*6)],b=L[Math.floor(R()*6)];inv[a[0]]+=a[1];inv[b[0]]+=b[1];say('Looted chest: +'+a[1]+' '+LBL[a[0]].toLowerCase()+', +'+b[1]+' '+LBL[b[0]].toLowerCase());hit(cx,cy,'#d9b84a')}
   else if(o.t=='sblock'){o.hp-=3;hit(cx,cy,'#8a9092');if(o.hp<=0){ob[ty*W+tx]=null;inv.sblock++;say('Wall picked up')}}
@@ -3710,11 +3710,11 @@ function sleepers(){let n=SLP?1:0,t=1;if(net)for(const p of net.peers){t++;if(p.
 function wakeUp(){if(!SLP)return;SLP=null;P.hp=Math.min(100,P.hp+30);say('You slept. Day '+day+' — base set')}
 {const nt2=netTick;netTick=function(dt){
  if(net&&net.r&&!net.r._zz){const r=net.r,p0=r.presence;r._zz=1;r.presence=function(d){if(d&&typeof d=='object')d.zz=SLP?1:0;return p0.call(r,d)};
-  if(typeof r.on=='function')r.on('wake',m=>{const d=m.data||{};if(!net||net.isHost)return;if(isFinite(d.d))day=d.d|0;time=0;if(inD&&OW)OW.zs=[];else zs=[];wakeUp()})}
+  if(typeof r.on=='function')r.on('wake',m=>{const d=m.data||{};if(!net||net.isHost)return;TL=null;if(isFinite(d.d))day=d.d|0;time=0;if(inD&&OW)OW.zs=[];else zs=[];wakeUp()})}
  nt2(dt);
  if(SLP){if(!net||net.dead||!net.peers.length||(performance.now()-SLP.t>300&&!(sit&&sit.lie))){const solo=!net||net.dead||!net.peers.length;SLP=null;if(!solo)say(LANG=='hu'?'Felkeltél':'You got up')}
-  else if(sleepDark()<=.4)SLP=null;
-  else if(net.isHost){const[n,t]=sleepers();if(n>=t){time=0;day++;if(inD&&OW)OW.zs=[];else zs=[];try{net.r.emit('wake',{d:day})}catch(e){}wakeUp()}}}}}
+  else if(sleepDark()<=.4&&!TL)SLP=null;
+  else if(net.isHost){const[n,t]=sleepers();if(n>=t&&!TL){try{net.r.emit('tlapse',{t:time})}catch(e){}sleepLapse(()=>{if(inD&&OW)OW.zs=[];else zs=[];try{net.r.emit('wake',{d:day})}catch(e){}wakeUp()})}}}}}
 {const dr0=draw;draw=function(){dr0();if(!SLP||state!='play')return;const[n,t]=sleepers(),hu=LANG=='hu',k=performance.now()/1000;
  Q(0,0,VW,VH,'rgba(4,6,14,.55)');noTr=true;txt('Z z z',VW/2+Math.sin(k*2)*3,VH/2-28,'#c8d4ff','center');
  txt((hu?'Alszol… alvók: ':'Sleeping… asleep: ')+n+' / '+t,VW/2,VH/2-8,'#f0e6b8','center');
@@ -4416,6 +4416,47 @@ function hutUp(b){if(b.st2!=null)return b.st2;b.st2=0;for(let yy=b.y;yy<b.y+b.h;
  const col=['#8a7a4a','#9a8450','#7a6a3a'][b.c%3];g.globalAlpha=a;for(let r=0;r<14;r++){const ww=w-6-r*((w-18)/14);Q(sx+(w-ww)/2,sy-1-r,ww,1,r%4==0?shade(col,.7):r<7?col:shade(col,1.15))}g.globalAlpha=1}}}
 /* the attic HUD label */
 HU.unshift(['Upper floor','Emelet']);
+
+/* ===== v70: sleeping fast-forwards to morning like a time-lapse; colour grading through the day ===== */
+GAMEV=70;
+var TL=null;
+function sleepLapse(cb){if(TL)return;const from=time,d=Math.max(.02,1-from);TL={from,rate:d/4.5,cb:cb||null,st:performance.now()};snd('ui')}
+function soloSleepEnd(){zs=[];P.hp=Math.min(100,P.hp+30);setHome();say('You slept. Day '+day+' \u2014 base set')}
+{const up70=update;update=function(dt){if(TL&&state=='play'){time+=TL.rate*Math.min(dt,.05);if(time>=.9995){if(TL.cb){const cb=TL.cb;time=0;day++;TL=null;try{cb()}catch(e){}}else time=.9995}}return up70(dt)}}
+addEventListener('keydown',e=>{if(!TL||state!='play')return;if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)){e.preventDefault();e.stopImmediatePropagation()}},true);
+{const nt70=netTick;netTick=function(dt){if(net&&net.r&&!net.r._v70&&typeof net.r.on=='function'){net.r._v70=1;net.r.on('tlapse',m=>{if(!net||net.isHost)return;if(SLP&&!TL){const d=m.data||{};if(isFinite(d.t))time=d.t;sleepLapse(null)}})}nt70(dt)}}
+{const aw70=applyWorld;applyWorld=function(d){if(TL&&d&&isFinite(d.t)&&d.t<time&&d.t>.5)d=Object.assign({},d,{t:time});return aw70(d)}}
+{const dr70=draw;draw=function(){dr70();if(!TL||state!='play')return;const hu=LANG=='hu',t=performance.now()/1000,hh=Math.floor(((time*24)+6)%24),mm=Math.floor(((time*24*60)+360)%60);
+ Q(0,0,VW,VH,'rgba(6,8,20,.35)');const vg=g.createRadialGradient(VW/2,VH/2,60,VW/2,VH/2,300);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,12,.6)');g.fillStyle=vg;g.fillRect(0,0,VW,VH);
+ noTr=true;g.font=fnt(1,22);g.textAlign='center';g.fillStyle='#ffd84a';g.fillText(String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0'),VW/2,VH/2-18);
+ txt('Z z z',VW/2+Math.sin(t*2)*3,VH/2-48,'#c8d4ff','center');txt(hu?'Alszol… az idő felgyorsul reggelig':'Sleeping… time speeds up until morning',VW/2,VH/2+2,'#c8d0e0','center');
+ const pr=Math.min(1,(time-TL.from)/Math.max(.001,1-TL.from));Q(VW/2-80,VH/2+12,160,4,'#2a2a3a');Q(VW/2-80,VH/2+12,160*pr,4,'#ffd84a');noTr=false}}
+/* ---------- colour grading through the day (surface) ---------- */
+function gradeW(){const t=time,c=(v)=>Math.max(0,Math.min(1,v));
+ const rise=t>=.9?c((t-.9)/.07):c(1-t/.16);
+ const eve=t>=.34&&t<.6?c((t-.36)/.16)*c((.6-t)/.03+.0001):0,dusk=t>=.52&&t<.68?c((t-.52)/.05)*c((.68-t)/.07):0;
+ const night=t>=.58&&t<.97?Math.min(c((t-.6)/.07),c((.97-t)/.08)):0;return{rise,eve,dusk,night}}
+function gradeFX(){if(CLASSIC||inD||state!='play')return;const w=gradeW(),wk=wea?.55:1;g.save();g.setTransform(1,0,0,1,0,0);const cw=g.canvas.width,ch=g.canvas.height;
+ const F=(op,col,a)=>{if(a<.005)return;g.globalCompositeOperation=op;g.fillStyle='rgba('+col+','+a.toFixed(3)+')';g.fillRect(0,0,cw,ch)};
+ F('multiply','255,170,90',.42*w.rise*wk);F('soft-light','255,140,40',.5*w.rise*wk);F('lighter','255,150,60',.05*w.rise*wk);
+ F('multiply','255,205,120',.32*w.eve*wk);F('soft-light','255,180,60',.45*w.eve*wk);F('lighter','255,170,70',.04*w.eve*wk);
+ F('soft-light','255,120,50',.55*w.dusk*wk);F('lighter','255,120,70',.05*w.dusk*wk);F('soft-light','170,90,210',.28*w.dusk);
+ F('soft-light','105,70,200',.6*w.night);F('multiply','150,135,225',.35*w.night);F('screen','50,40,120',.1*w.night);
+ g.restore()}
+{const af70=ashFx;ashFx=function(...a){try{gradeFX()}catch(e){}return af70.apply(this,a)}}
+{const h70=hurtP;hurtP=function(n){if(TL)return;return h70(n)}}
+/* ---------- smaller wolves & dogs; right-click a tamed dog: sit / stay ---------- */
+const WSC70=.74,DSC70=.7;
+{const dw70=drawWolf;drawWolf=function(z){const x=Math.round(z.x-cam.x),y=Math.round(z.y-cam.y);g.save();g.translate(x,y);g.scale(WSC70,WSC70);g.translate(-x,-y);try{dw70(z)}finally{g.restore()}}}
+function dogSit(cv){const k='dogsit';let s=ASP.get(k);if(s)return s;s=aCanvas(28,22);const c=s.getContext('2d');c.drawImage(cv,12,0,16,22,12,-2,16,22);c.drawImage(cv,0,0,13,22,1,5,13,17);ASP.set(k,s);return s}
+drawDog=function(p,mv){const x=Math.round(p.x-cam.x),y=Math.round(p.y-cam.y),t=performance.now(),f=mv?Math.floor(t/110)%2:0,base=dogSprite(f),sitting=!mv&&!p.rest&&p.st==1;
+ g.fillStyle='rgba(10,10,10,.3)';g.beginPath();g.ellipse(x,y,6,1.8,0,0,6.28);g.fill();g.save();g.translate(x,y+(mv?-Math.abs(Math.sin(t/110)):0));g.scale(DSC70,DSC70);if((p.fx||1)<0)g.scale(-1,1);
+ if(p.rest){g.beginPath();g.rect(-16,-22,32,16);g.clip();g.translate(0,5);g.drawImage(dogSprite(0),-14,-20)}else g.drawImage(sitting?dogSit(base):base,-14,-20);g.restore();
+ const hu=LANG=='hu';if(p.rest&&dk0()>.5){const tt=t/700;noTr=true;g.globalAlpha=.75;txt('z',x+5+Math.sin(tt)*2,y-11-((tt*6)%6),'#c8d4ff');g.globalAlpha=1;noTr=false}
+ if(p.nm){noTr=true;lbl(p.nm+(p.st==1?(hu?' (ül)':' (sit)'):''),x,y-19);noTr=false}};
+function dogAt(wx,wy){let b=null,bd=13;for(const p of PETS){const d=Math.hypot(p.x-wx,p.y-6-wy);if(d<bd){bd=d;b=p}}return b}
+addEventListener('mousedown',e=>{if(e.button!=2||state!='play'||inD||!PETS.length||book||invOpen||chatOpen||CKO||CHP||FLPK)return;sc(e);const wx=ms.x/ZM+cam.x,wy=ms.y/ZM+cam.y,p=dogAt(wx,wy);if(!p||Math.hypot(p.x-P.x,p.y-P.y)>200)return;
+ e.stopImmediatePropagation();e.preventDefault();const hu=LANG=='hu';if(p.st==1){p.st=0;say(p.nm+(hu?': gyere!':': come!'))}else{p.st=1;p.mv=0;say(p.nm+(hu?' leül és itt marad (jobb klikk: gyere)':' sits and stays here (right-click: come)'))}sfxBark()},true);
 
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
