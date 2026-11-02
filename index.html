@@ -1142,7 +1142,7 @@ const wt=t=>t==1||t==7,ORC={coal:'#0a0a0c',iron:'#c9a487',copper:'#c8743a',gold:
 try{uname=localStorage.getItem('pxc_name')||uname}catch(e){}
 const lbl=(s,x,y)=>{noTr=true;txt(s,x,y,'#e8f0d8','center');noTr=false};
 function drawRP(q){const x=q.x-cam.x,y=q.y-cam.y;if(q.b)drawBoat(x,y,0);drawChar(x,y,chOf(q.c),q.mv?1+Math.floor(performance.now()/100)%4:0,isFinite(q.fx)?q.fx:0,isFinite(q.fy)?q.fy:1,1,Object.assign(eqFrom(q.e)||{},{bp:q.bp|0}));if(q.b)drawBoat(x,y,1);heldItem(x,y,isFinite(q.fx)?q.fx:0,isFinite(q.fy)?q.fy:1,typeof q.h=='string'?q.h:'',q.s?(performance.now()/350)%1:0);lbl(String(q.n||'?').slice(0,12),x,y-24);if(q.em&&performance.now()<q.em.t)drawEmB(x,y,q.em.k,q.em.t)}
-const snapKey=o=>o?o.t+'|'+(o.t=='bush'||o.t=='flax'?o.b:(o.r||0))+'|'+o.on+'|'+o.open+'|'+(o.k||'')+(o.t=='fire'?'|'+Math.ceil((o.fl||0)/30):'')+(o.lt!=null?'|L'+o.lt:'')+(o.pm!=null?'|P'+o.pm:'')+(o.fw?'|F'+o.fw+'x'+o.fh:'')+(o.it?'|'+JSON.stringify(o.it)+JSON.stringify(o.du||0):'')+(o.art?'|A'+(o.art.n||'')+(o.art.p?o.art.p.length:0):'')+(o.cl?'|C'+(o.rp?'R':''):'')+(o.rv?'|v':''):'';
+const snapKey=o=>o?o.t+'|'+(o.t=='bush'||o.t=='flax'?o.b:(o.r||0))+'|'+o.on+'|'+o.open+'|'+(o.k||'')+(o.t=='fire'?'|'+Math.ceil((o.fl||0)/30):'')+(o.lt!=null?'|L'+o.lt:'')+(o.pm!=null?'|P'+o.pm:'')+(o.fw?'|F'+o.fw+'x'+o.fh:'')+(o.it?'|'+JSON.stringify(o.it)+JSON.stringify(o.du||0):'')+(o.art?'|A'+(o.art.n||'')+(o.art.p?o.art.p.length:0):'')+(o.cl?'|C'+(o.rp?'R':''):'')+(o.rv?'|v':'')+(o.bd?'|B':''):'';
 let base=[],baseMap=null,mshadow=null,lbase=new Set(),lshadow=new Set(),wT=0,cT=0,lid=0,seeding=false,stOpen=null;
 const pk=o=>pkG(o);
 const ovr=()=>inD&&OW?OW:{ob,map,loot,deer,zs};
@@ -1623,7 +1623,7 @@ function hud(){weather();promptE();if(!inD&&state=='play'&&(!mapC||performance.n
  if(showMap&&inD&&!inC)drawUGFull();else if(showMap&&mapC)drawMapFull();else if(miniOn&&state=='play'&&!book&&!invOpen&&!stOpen&&!tut&&!view){if(inD&&!inC)drawUGMini();else if(mapC&&!inD)drawMini()}
  bar(6,6,70,P.hp,'#b02a2a');txt('HP',80,12);if(surv){bar(6,16,70,P.food,'#c88a2a');txt('FOOD',80,22);bar(6,26,70,P.th??90,'#3a8ac8');txt('THIRST',80,32)}if((P.inf||0)>1||(P.rate||0)>.3){bar(6,36,70,P.inf||0,'#c8d020');txt((P.rate||0)>.3?'RAD +'+P.rate.toFixed(1):'RAD',80,42)}if(armPts()){noTr=true;txt((LANG=='hu'?'VÉD ':'DEF ')+armPts(),122,12,'#9ab8d0');noTr=false}
  const hr=Math.floor(((time*24)+6)%24),mn=Math.floor(((time*24*60)%60)/10)*10;txt('Day '+day+'  '+String(hr).padStart(2,'0')+':'+String(mn).padStart(2,'0'),6,46);
- if(net){noTr=true;txt(tr('Co-op room ')+net.code,VW-6,VH-46,'#9ab8d0','right');txt(net.dead?tr('Disconnected'):net.peers.length?tr('Co-op players: ')+(net.peers.length+1):tr('Waiting for friends...'),VW-6,VH-36,net.dead?'#e07070':net.peers.length?'#9be07d':'#f0e6b8','right');noTr=false}if(wea&&!inD)txt((wea==2?SV:WN)[WFORCE[cb|0]=='snow'&&cb!=2?1:(WFORCE[cb|0]=='rain'||WFORCE[cb|0]=='storm')&&cb==1?0:cb],6,56,'#9ab8d0');if(inD)txt(inC?'Cabin':curOf?(curOf.f>curOf.n?'Rooftop':curOf.k=='apt'?'Apartment block':curOf.k=='hosp'?'Hospital':curOf.k=='ruin'?'Attic':'Office tower'):curRx?'Reactor':curSub?'Sewer':'Mine',6,56,'#d89a8a');if(creative)txt('Creative',6,66,'#ffd84a');let y=12;for(const k in inv)if(inv[k]&&y<VH-100){txt(LBL[k]+' '+inv[k],VW-6,y,k==sel?'#ffd84a':'#d8e4c8','right');y+=10}
+ if(net){noTr=true;txt(tr('Co-op room ')+net.code,VW-6,VH-46,'#9ab8d0','right');txt(net.dead?tr('Disconnected'):net.peers.length?tr('Co-op players: ')+(net.peers.length+1):tr('Waiting for friends...'),VW-6,VH-36,net.dead?'#e07070':net.peers.length?'#9be07d':'#f0e6b8','right');noTr=false}if(wea&&!inD)txt((wea==2?SV:WN)[WFORCE[cb|0]=='snow'&&cb!=2?1:(WFORCE[cb|0]=='rain'||WFORCE[cb|0]=='storm')&&cb==1?0:cb],6,56,'#9ab8d0');if(inD)txt(inC?'Cabin':curOf?(curOf.f>curOf.n?'Rooftop':curOf.k=='apt'?'Apartment block':curOf.k=='hosp'?'Hospital':curOf.k=='ruin'?'Attic':curOf.k=='vhut'?'Upper floor':'Office tower'):curRx?'Reactor':curSub?'Sewer':'Mine',6,56,'#d89a8a');if(creative)txt('Creative',6,66,'#ffd84a');let y=12;for(const k in inv)if(inv[k]&&y<VH-100){txt(LBL[k]+' '+inv[k],VW-6,y,k==sel?'#ffd84a':'#d8e4c8','right');y+=10}
  if(panel){let yy=VH-6-REC.length*10-22;Q(0,yy-10,262,REC.length*10+14,'rgba(0,0,0,.65)');txt('Craft (Tab hides)',6,yy,'#9ab088');yy+=10;
   REC.forEach((r,i)=>{let ok=true;for(const m in r[2])if(inv[m]<r[2][m])ok=false;if(TOOL[r[0]]&&inv[r[0]])ok=false;txt(r[1]+': '+Object.keys(r[2]).map(m=>LBL[m].toLowerCase()+' '+Math.min(inv[m],r[2][m])+'/'+r[2][m]).join(', '),6,yy+i*10,ok?'#b8e090':'#6f7a68')});
   0}
@@ -3948,7 +3948,7 @@ function beamOne(wx,wy,dir,a,lean,clip,seed){const L=dir[1]?84:66,t=performance.
  for(let i=0;i<5;i++){const f=(t*.045+i*.23+seed)%1,s=.2+((i*.37+seed*3)%1)*.6,x=q[0][0]+(q[1][0]-q[0][0])*s+(m1[0]-m0[0])*f+Math.sin(t*.7+i*2+seed)*2*ZM,y=q[0][1]+(q[1][1]-q[0][1])*s+(m1[1]-m0[1])*f+Math.cos(t*.5+i)*1.5*ZM;
   g.fillStyle='rgba(255,246,220,'+(a*2.2*(1-f)*Math.min(1,f*6)).toFixed(3)+')';g.fillRect(Math.round(x),Math.round(y),ZM,ZM)}
  g.restore()}
-function sunBeams(){if(CLASSIC)return;const dk=dk0();if(dk>.6)return;const a=.3*(1-dk/.6)*(wea?.45:1);if(a<.015)return;const lean=Math.max(-.6,Math.min(.6,(.5-time/.55)*1.2)),isW=o=>o&&(o.t=='win'||(o.t=='door'&&o.open)),out=[];
+function sunBeams(){if(CLASSIC)return;const dk=dk0();if(dk>.6)return;const a=.3*(1-dk/.6)*(wea?.45:1);if(a<.015)return;const lean=Math.max(-.6,Math.min(.6,(.5-time/.55)*1.2)),isW=o=>o&&((o.t=='win'&&!o.bd)||(o.t=='door'&&o.open)),out=[];
  if(!inD){const ptx=Math.floor(P.x/T),pty=Math.floor(P.y/T);for(const b of BLD){if(!(ptx>=b.x&&ptx<b.x+b.w&&pty>=b.y&&pty<b.y+b.h)||(b.a!=null&&b.a>.5))continue;
    const clip=[(b.x*T+2-cam.x)*ZM,(b.y*T+4-cam.y)*ZM,(b.w*T-4)*ZM,(b.h*T-6)*ZM],y1=b.y+b.h-1;g.save();g.fillStyle='rgba(24,16,8,'+(.2*(1-dk/.6)*(1-(b.a||0))).toFixed(3)+')';g.fillRect(clip[0],clip[1],clip[2],clip[3]);g.restore();
    for(let yy=b.y-1;yy<=y1;yy++)for(let xx=b.x;xx<b.x+b.w;xx++){const e=xx==b.x||xx==b.x+b.w-1||yy==b.y||yy==b.y-1||yy==y1;if(!e)continue;const o=ob[yy*W+xx];if(!isW(o))continue;
@@ -4059,7 +4059,7 @@ beamOne=function(wx,wy,dir,a,lean,clip,seed,col,lenK){const L=(dir[1]?84:66)*(le
   g.fillStyle='rgba(255,246,225,'+(a*2.2*(1-f)*Math.min(1,f*6)).toFixed(3)+')';g.fillRect(Math.round(x),Math.round(y),ZM,ZM)}g.restore()};
 sunBeams=function(){if(CLASSIC)return;const dk=dk0();if(dk>.6)return;const{s,e}=sunPos(),low=1-e;
  const a=.3*(1-dk/.6)*(wea?.45:1)*(.6+.4*e);if(a<.015)return;
- const col=[255,Math.round(244-low*74),Math.round(215-low*125)],lenK=1.85-e*.95,lean=Math.max(-.95,Math.min(.95,(Math.max(0,Math.min(1,s))-.5)*1.9)),isW=o=>o&&(o.t=='win'||(o.t=='door'&&o.open)),out=[];
+ const col=[255,Math.round(244-low*74),Math.round(215-low*125)],lenK=1.85-e*.95,lean=Math.max(-.95,Math.min(.95,(Math.max(0,Math.min(1,s))-.5)*1.9)),isW=o=>o&&((o.t=='win'&&!o.bd)||(o.t=='door'&&o.open)),out=[];
  if(!inD){const ptx=Math.floor(P.x/T),pty=Math.floor(P.y/T);for(const b of BLD){if(!(ptx>=b.x&&ptx<b.x+b.w&&pty>=b.y&&pty<b.y+b.h)||(b.a!=null&&b.a>.5))continue;
    const clip=[(b.x*T+2-cam.x)*ZM,(b.y*T+4-cam.y)*ZM,(b.w*T-4)*ZM,(b.h*T-6)*ZM],y1=b.y+b.h-1;
    g.save();g.fillStyle='rgba(24,16,8,'+((.14+.12*low)*(1-dk/.6)*(1-(b.a||0))).toFixed(3)+')';g.fillRect(clip[0],clip[1],clip[2],clip[3]);g.restore();
@@ -4371,6 +4371,51 @@ function sfxToot(){sfx(()=>{const n=10+Math.floor(Math.random()*8),base=80+Math.
  for(let r=0;r<16;r++){const ww=w-8-r*((w-24)/16);Q(sx+(w-ww)/2,sy-1-r,ww,1,r%4==0?col[2]:r<8?col[0]:col[1])}Q(sx+w/2-1,sy-18,2,2,col[2]);
  const cx=sx+Math.floor(w*.72);Q(cx,sy-24,7,12,'#6a5a50');Q(cx,sy-24,7,2,b.rp?'#3a3028':'#2a2018');if(!b.rp){Q(cx+5,sy-26,2,3,'#6a5a50')}
  g.globalAlpha=1}}}
+
+/* ===== v69: two-storey village houses, craftable stairs to add a floor to your house, board up broken windows ===== */
+GAMEV=69;
+Object.assign(LBL,{boards:'Boards',stairk:'Stairs'});Object.assign(LBLX,{boards:'Boards',stairk:'Stairs'});HU.unshift(['Boards','Deszkák'],['boards','deszkák'],['Stairs','Lépcső'],['stairs','lépcső']);
+for(const k of['boards','stairk']){if(!NEWK.includes(k))NEWK.push(k);if(inv[k]==null)inv[k]=0}
+REC.push(['boards','Boards',{wood:2}],['stairk','Stairs',{wood:8,stone:2}]);
+{const ic9=icon2;icon2=function(k,x,y){const S=(a,b,w,h,c)=>Q(x+a,y+b,w,h,c);
+ if(k=='boards'){for(let i=0;i<3;i++){S(2,4+i*4,16,3,i%2?'#9a7046':'#a87a4a');S(2,4+i*4,16,1,'#c89a60');S(4,5+i*4,1,1,'#5a4028');S(15,5+i*4,1,1,'#5a4028')}return true}
+ if(k=='stairk'){for(let i=0;i<4;i++){S(3+i*3,13-i*3,15-i*3,3,i%2?'#8a6038':'#a87a4a');S(3+i*3,13-i*3,15-i*3,1,'#c89a60')}return true}return ic9(k,x,y)}}
+/* ---------- boarding up windows ---------- */
+function boardWin(o,quiet){if(!o||o.t!='win'||o.bd)return false;o.bd=1;o.open=false;if(!quiet){snd('hit');setTimeout(()=>snd('hit'),160)}return true}
+{const dO9=drawObj;drawObj=function(o,x,y){dO9(o,x,y);if(!o||o.t!='win'||!o.bd||CLASSIC)return;for(const[yy,a]of[[3,-1],[8,1]]){W_(x+1,y+yy,14,3,'#8a6038');W_(x+1,y+yy,14,1,'#b08050');W_(x+2,y+yy+1,1,1,'#3a2414');W_(x+13,y+yy+1,1,1,'#3a2414')}W_(x+6,y+1,3,12,'#7a5230');W_(x+7,y+2,1,1,'#3a2414')}}
+{const sk9=styKey;styKey=function(o,x,y){return sk9(o,x,y)+(o.bd?'|bd':'')}}
+{const a69=act;act=function(){if(fishing||P.cd>0||CHP||CKO)return a69();if(HB[hb]=='boards'&&inv.boards>0&&mtx>=0&&mty>=0&&mtx<W&&mty<H&&Math.hypot(mtx*T+8-P.x,mty*T+8-P.y)<=50){const o=ob[mty*W+mtx];
+  if(o&&o.t=='win'){if(!edge)return;if(o.bd){say(LANG=='hu'?'Ez már be van deszkázva':'Already boarded up');P.cd=.3;return}boardWin(o);inv.boards--;P.cd=.4;say(LANG=='hu'?'Bedeszkáztad az ablakot':'You boarded up the window');return}}
+ if(HB[hb]=='stairk'&&inv.stairk>0&&mtx>=0&&mty>=0&&mtx<W&&mty<H&&edge){if(addFloor(mtx,mty)){P.cd=.4;return}}
+ return a69()}}
+/* claimed: broken windows get boarded up; repaired: proper glass again */
+{const ra9=ruinAct;ruinAct=function(){const r=ruinAtP(),wasC=r&&r.d.cl,wasR=r&&r.d.rp,res=ra9();if(r){const{b}=r,each=f=>{for(let yy=b.y;yy<b.y+b.h;yy++)for(let xx=b.x;xx<b.x+b.w;xx++){const o=ob[yy*W+xx];if(o&&o.t=='win')f(o)}};
+ if(r.d.cl&&!wasC){let n=0;each(o=>{if(o.open&&boardWin(o,true))n++});if(n)setTimeout(()=>say((LANG=='hu'?'A törött ablakokat bedeszkáztad (':'Broken windows boarded up (')+n+')'),1600)}
+ if(r.d.rp&&!wasR)each(o=>{o.bd=0;o.open=false})}return res}}
+/* ---------- add a floor to your own house with crafted stairs ---------- */
+function addFloor(tx,ty){const h=LANG=='hu';let b=null;for(const q of BLD){if(q.rf!='ruin'||!q.cl)continue;if(tx>q.x&&tx<q.x+q.w-1&&ty>q.y&&ty<q.y+q.h-1){b=q;break}}
+ if(!b){say(h?'A lépcsőt a saját (elfoglalt) házadba teheted':'Stairs go inside your own claimed house');return true}
+ for(let yy=b.y;yy<b.y+b.h;yy++)for(let xx=b.x;xx<b.x+b.w;xx++){const o=ob[yy*W+xx];if(o&&o.t=='oup'){say(h?'Ennek a háznak már van emelete':'This house already has an upper floor');return true}}
+ if(Math.hypot(tx*T+8-P.x,ty*T+8-P.y)>50){say(h?'Túl messze':'Too far');return true}const i=ty*W+tx;if(ob[i]||(tx==Math.floor(P.x/T)&&ty==Math.floor(P.y/T))){say(h?'Itt nem építhetsz':'Can\u2019t build there');return true}
+ let di=-1;for(let xx=b.x;xx<b.x+b.w;xx++){const d=ob[(b.y+b.h-1)*W+xx];if(d&&d.t=='door'&&d.ru)di=(b.y+b.h-1)*W+xx}if(di<0)return false;
+ ob[i]={t:'oup',n:1,k:'ruin',bw:b.w,bh:b.h,dr:di,ai:-1,sx:tx-b.x,sy:ty-b.y,nb:1};inv.stairk--;const d=ob[di];d.rk=2;b.rk=2;ROOFC.clear();snd('craft');say(h?'Megépült a lépcső — a házad mostantól emeletes!':'Stairs built — your house now has an upper floor!');return true}
+{const go9=genOF;genOF=function(rec,f){if(!(rec.k=='ruin'&&rec.ai===-1)&&rec.k!='vhut')return go9(rec,f);loot=[];map=new Uint8Array(W*H).fill(5);ob=new Array(W*H).fill(null);deer=[];zs=[];
+ const x0=40,y0=40,w=rec.bw||7,h=rec.bh||6,vh=rec.k=='vhut';for(let y=y0;y<y0+h;y++)for(let x=x0;x<x0+w;x++){const j=y*W+x,edge=x==x0||y==y0||x==x0+w-1||y==y0+h-1;map[j]=edge?3:12;
+  if(edge){const corner=(x==x0||x==x0+w-1)&&(y==y0||y==y0+h-1);ob[j]=!corner&&y==y0&&(x-x0)%3==1?{t:'win',hp:200,nb:1}:{t:'wall',hp:200,nb:1}}}
+ const sx=Math.max(x0+1,Math.min(x0+w-2,x0+(rec.sx|0))),sy=Math.max(y0+1,Math.min(y0+h-3,y0+(rec.sy|0)));ob[sy*W+sx]={t:'odn',b:rec._b,f:1};
+ if(vh){const F=[['bed',1,2],['wardrobe',1,1],['fcrate',1,1],['lamp',1,1],['achair',1,1],['rug',1,1]];let k=0;for(let y=y0+1;y<y0+h-1&&k<F.length;y++)for(let x=x0+1;x<x0+w-1&&k<F.length;x++){if(Math.abs(x-sx)<=1&&Math.abs(y-sy)<=1)continue;const j=y*W+x;if(ob[j])continue;if((x+y)%2)continue;const[t,fw,fh]=F[k];if(fh==2){if(y+1>=y0+h-1||ob[j+W])continue;setFP({t,hp:10,r:0,on:true},x,y,1,2)}else ob[j]={t,hp:10,on:true,c:Math.floor(R()*3)};k++}}}}
+/* ---------- two-storey village houses ---------- */
+{const gv9=genVillage;genVillage=function(cx,cy,RX,RY){const n0=BLD.length;gv9(cx,cy,RX,RY);for(let k=n0;k<BLD.length;k++){const b=BLD[k];if(b.rf!='hut'||R()<.45)continue;
+ let best=-1;for(let yy=b.y+1;yy<b.y+b.h-2&&best<0;yy++)for(const xx of[b.x+1,b.x+b.w-2]){const i=yy*W+xx;if(ob[i]||map[i]==5)continue;const ins=[i-1,i+1,i-W,i+W].filter(j=>{const q=ob[j];return !(q&&SOLID[q.t])&&map[j]!=5&&map[j]!=3});if(ins.length>=2){best=i;break}}
+ if(best<0)continue;ob[best]={t:'oup',n:1,k:'vhut',bw:b.w,bh:b.h,sx:best%W-b.x,sy:Math.floor(best/W)-b.y,nb:1};b.st2=1}}}
+function hutUp(b){if(b.st2!=null)return b.st2;b.st2=0;for(let yy=b.y;yy<b.y+b.h;yy++)for(let xx=b.x;xx<b.x+b.w;xx++){const o=ob[yy*W+xx];if(o&&o.t=='oup'&&o.k=='vhut'){b.st2=1;return 1}}return 0}
+{const rc9=roofCanvas;roofCanvas=function(b,k){const two=b.rf=='hut'&&hutUp(b);if(!two)return rc9(b,k);const had=ROOFC.has(k),cv=rc9(b,k);if(!had&&cv){const c=cv.getContext('2d'),w=b.w*T,h=(b.h-1)*T,fh=20,y0=h-fh,F=(x,y,ww,hh,col)=>{c.fillStyle=col;c.fillRect(x,y,ww,hh)};
+ F(0,y0,w,fh,'#d8c8a0');for(let y=y0+5;y<h;y+=5)F(0,y,w,1,'#c0ae86');F(0,y0,w,2,'#6a4a2a');F(0,h-1,w,1,'#5a3a20');for(let x=0;x<w;x+=Math.floor(w/3))F(x,y0,2,fh,'#6a4a2a');
+ for(let i=0;i<2;i++){const wx=Math.round((i+.5)*w/2)-6,wy=y0+4;F(wx-1,wy-1,14,12,'#5a3a20');F(wx,wy,12,10,'#8ab0c8');F(wx,wy,12,2,'#c8e0ee');F(wx+5,wy,2,10,'#5a3a20');F(wx-2,wy+10,16,2,'#7a5434');F(wx+1,wy+10,10,2,'#c83a3a')}}return cv}}
+{const dr10=drawRoofs;drawRoofs=function(){dr10();if(inD)return;for(const b of BLD){if(b.rf!='hut'||!hutUp(b))continue;const a=b.a==null?1:b.a;if(a<.02)continue;const sx=b.x*T-cam.x,sy=b.y*T-cam.y,w=b.w*T;if(sx>VW/ZM+30||sy>VH/ZM+40||sx+w<-30||sy<-60)continue;
+ const col=['#8a7a4a','#9a8450','#7a6a3a'][b.c%3];g.globalAlpha=a;for(let r=0;r<14;r++){const ww=w-6-r*((w-18)/14);Q(sx+(w-ww)/2,sy-1-r,ww,1,r%4==0?shade(col,.7):r<7?col:shade(col,1.15))}g.globalAlpha=1}}}
+/* the attic HUD label */
+HU.unshift(['Upper floor','Emelet']);
 
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
