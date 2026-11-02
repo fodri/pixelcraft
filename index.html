@@ -4353,6 +4353,25 @@ for(const k in MOVF){if(!LBL[k]){LBL[k]=MOVF[k];LBLX[k]=MOVF[k]}if(MOVH[k])HU.un
 {const sv7=save;save=function(){const r=sv7();try{localStorage.setItem(SKEY()+'_pets',JSON.stringify(PETS.map(p=>({x:Math.round(p.x),y:Math.round(p.y),nm:p.nm,st:p.st|0,id:p.id,hm:p.hm||null}))))}catch(e){}return r}}
 {const pl7=petLoad;petLoad=function(){pl7();try{const a=JSON.parse(localStorage.getItem(SKEY()+'_pets')||'[]');if(Array.isArray(a))a.forEach((q,i)=>{if(PETS[i]&&q&&q.hm&&isFinite(q.hm.x))PETS[i].hm={x:q.hm.x,y:q.hm.y}})}catch(e){}}}
 
+/* ===== v68: toilet/outhouse "toot" sound, two-storey houses look two-storey from outside ===== */
+GAMEV=68;
+function sfxToot(){sfx(()=>{const n=10+Math.floor(Math.random()*8),base=80+Math.random()*30;for(let i=0;i<n;i++){const f=base+Math.sin(i*1.7)*14+Math.random()*12-i*1.6;sxT('sawtooth',f,f*.86,.04,.3*(1-i/n*.5),i*.036)}
+ sxT('square',base*.7,base*.5,.18,.12,n*.036);sxN(.45+n*.03,'lowpass',320,140,2.5,.22)})}
+{const uo8=useObj;useObj=function(n){const o=n.o,h=LANG=='hu';
+ if(o.t=='budi'){o.op=performance.now();sfxCreak();setTimeout(sfxToot,700);setTimeout(sfxCreak,1700);say(h?'Használtad a budit… *brrrt* Jobb, mint a bokor mögött.':'You used the outhouse… *brrrt* Better than behind a bush.');return}
+ if(o.t=='wc'){const sf=sfxFlush;sfxFlush=()=>{};let r;try{r=uo8(n)}finally{sfxFlush=sf}sfxToot();setTimeout(sfxFlush,1100);setTimeout(()=>say(h?'*brrrt* … aztán lehúztad':'*brrrt* … then you flushed'),350);return r}
+ return uo8(n)}}
+/* two-storey: upper-floor facade under the roof + a taller gable on top */
+{const rc8=roofCanvas;roofCanvas=function(b,k){const had=ROOFC.has(k),cv=rc8(b,k);if(b.rf=='ruin'&&b.rk==2&&!had&&cv){const c=cv.getContext('2d'),w=b.w*T,h=(b.h-1)*T,fh=22,y0=h-fh,F=(x,y,ww,hh,col)=>{c.fillStyle=col;c.fillRect(x,y,ww,hh)};
+ F(0,y0,w,fh,b.rp?'#9a7a52':'#7a5a3a');for(let y=y0+4;y<h;y+=4)F(0,y,w,1,b.rp?'#80603e':'#5e4228');for(let x=6;x<w;x+=11)F(x,y0,1,fh,'rgba(0,0,0,.12)');F(0,y0,w,2,'#4a3020');F(0,h-1,w,1,'#3a2414');
+ const nw=Math.max(2,Math.floor(w/40));for(let i=0;i<nw;i++){const wx=Math.round((i+.5)*w/nw)-6,wy=y0+5;F(wx-1,wy-1,14,13,'#4a3020');F(wx,wy,12,11,b.rp?'#8ab0c8':'#1a1410');if(b.rp){F(wx,wy,12,2,'#c8e0ee')}else if((i+b.x)%2){F(wx+2,wy+2,3,7,'#2a221a');F(wx+6,wy+5,4,1,'#8a7a6a')}F(wx+5,wy,2,11,'#4a3020');F(wx,wy+5,12,1,'#4a3020');F(wx-2,wy+11,16,2,'#5a3a24')}
+ if(!b.rp)for(let i=0;i<5;i++){const vx=(b.x*13+i*29)%w;for(let j=0;j<10+i;j++)F(vx+((j>>2)%2),y0+j,1,1,j%3?'#4a7a3a':'#6a9a4a')}}return cv}}
+{const dr9=drawRoofs;drawRoofs=function(){dr9();if(inD)return;for(const b of BLD){if(b.rf!='ruin'||b.rk!=2)continue;const a=b.a==null?1:b.a;if(a<.02)continue;const sx=b.x*T-cam.x,sy=b.y*T-cam.y,w=b.w*T;if(sx>VW/ZM+30||sy>VH/ZM+40||sx+w<-30||sy<-60)continue;
+ const col=b.rp?['#a8432c','#c85a3e','#7a2e20']:['#8a4a3a','#a0583e','#5e3428'][0]?(b.rp?['#a8432c','#c85a3e','#7a2e20']:['#8a4a3a','#a0583e','#5e3428']):0;g.globalAlpha=a;
+ for(let r=0;r<16;r++){const ww=w-8-r*((w-24)/16);Q(sx+(w-ww)/2,sy-1-r,ww,1,r%4==0?col[2]:r<8?col[0]:col[1])}Q(sx+w/2-1,sy-18,2,2,col[2]);
+ const cx=sx+Math.floor(w*.72);Q(cx,sy-24,7,12,'#6a5a50');Q(cx,sy-24,7,2,b.rp?'#3a3028':'#2a2018');if(!b.rp){Q(cx+5,sy-26,2,3,'#6a5a50')}
+ g.globalAlpha=1}}}
+
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
 function fireList(){const n=performance.now();if(FL.ob!==ob||n-FL.t>500){FL.ob=ob;FL.t=n;FL.a=[];for(let i=0;i<ob.length;i++){const o=ob[i];if(o&&(o.t=='fire'&&o.on||o.t=='fbarrel'))FL.a.push([(i%W)*T+8,Math.floor(i/W)*T+8])}}return FL.a}
