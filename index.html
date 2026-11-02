@@ -18,7 +18,7 @@ const fnt=(b,sz)=>{const p=FP[fpi];return(b?p.b:p.w)+' '+(Math.round(sz*p.k*2)/2
 function fcol(c){const f=FCOL[fci][1];if(!f||KEEPC.has(c)||typeof c!='string'||c[0]!='#'||c.length!=7)return c;const r=parseInt(c.substr(1,2),16),gg=parseInt(c.substr(3,2),16),b=parseInt(c.substr(5,2),16),l=(r*.3+gg*.59+b*.11)/255,k=l<.5?.55:l<.7?.78:1;return'#'+[1,3,5].map(i=>Math.round(parseInt(f.substr(i,2),16)*k).toString(16).padStart(2,'0')).join('')}
 try{if(document.fonts)for(const p of FP)document.fonts.load('16px '+p.f)}catch(e){}
 const dk=document.createElement('canvas');dk.width=VW;dk.height=VH;const d2=dk.getContext('2d');
-let R=Math.random;const mb=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};let W=256,H=256,WDEF=256,WLOCK=0;const T=16,cl=(v,a,b)=>Math.max(a,Math.min(b,v));
+let R=Math.random;const mb=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};let W=320,H=320,WDEF=320,WLOCK=0;const T=16,cl=(v,a,b)=>Math.max(a,Math.min(b,v));
 function hs(x,y){let n=Math.sin(x*127.1+y*311.7)*43758.5453;return n-Math.floor(n)}
 function ns(x,y,s){x/=s;y/=s;const xi=Math.floor(x),yi=Math.floor(y),xf=x-xi,yf=y-yi,u=xf*xf*(3-2*xf),v=yf*yf*(3-2*yf);const a=hs(xi,yi),b=hs(xi+1,yi),c=hs(xi,yi+1),d=hs(xi+1,yi+1);return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v}
 let map,ob,P,deer,zs,inv,time,day,msg='',msgT=0,state='title',fishing=null,parts=[],sel='fire',panel=false,cam={x:0,y:0},spawnT=0,sp=[];
@@ -441,16 +441,16 @@ function genElev(S){const id=(x,y)=>y*W+x,nb=[[1,0],[-1,0],[0,1],[0,-1]],lv=new 
  for(let p=0;p<3;p++){const f2=new Float32Array(W*H);for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){let q=0;for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++)q+=fld[id(x+a,y+b)];f2[id(x,y)]=q/9}fld.set(f2)}
  const el0=[];for(let y=2;y<H-2;y++)for(let x=2;x<W-2;x++){const i=id(x,y);if(map[i]!=0||bm[i]==3)continue;let dm=999;for(const c of ISC)dm=Math.min(dm,Math.hypot(x-c[0],y-c[1]));if(dm<13)continue;el0.push(i)}
  const qs=Float32Array.from(el0,i=>fld[i]).sort(),t1=qs[Math.floor(qs.length*ELT[0])]??9,t2=qs[Math.floor(qs.length*ELT[1])]??9;
- for(const i of el0){const v=fld[i];lv[i]=v>t2?2:v>t1?1:0}
- for(let p=0;p<2;p++){const l2=lv.slice();for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const i=id(x,y);if(map[i]!=0)continue;const c=[0,0,0];for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++)c[lv[id(x+a,y+b)]]++;let bl=lv[i];if(c[0]>c[bl])bl=0;if(c[1]>c[bl])bl=1;if(c[2]>c[bl])bl=2;l2[i]=bl}lv.set(l2)}
+ for(const i of el0){const v=fld[i];lv[i]=v>t2?2:v>t1?1:0}mtnAdd(lv,el0,S);
+ for(let p=0;p<2;p++){const l2=lv.slice();for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const i=id(x,y);if(map[i]!=0)continue;const c=[0,0,0,0,0];for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++)c[lv[id(x+a,y+b)]]++;let bl=lv[i];for(let q=0;q<5;q++)if(c[q]>c[bl])bl=q;l2[i]=bl}lv.set(l2)}
  const clean=()=>{for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const i=id(x,y);if(lv[i]&&nb.some(([a,b])=>map[id(x+a,y+b)]!=0))lv[i]=0}};clean();clean();
  const comps=test=>{const seen=new Uint8Array(W*H),out=[];for(let i=0;i<W*H;i++){if(!test(i)||seen[i])continue;const q=[i];seen[i]=1;for(let k=0;k<q.length;k++){const c=q[k],cx=c%W,cy=(c/W)|0;for(const[a,b]of nb){const j=id(cx+a,cy+b);if(j>=0&&j<W*H&&test(j)&&!seen[j]){seen[j]=1;q.push(j)}}}out.push(q)}return out};
  for(const c of comps(i=>lv[i]>0))if(c.length<34)for(const i of c)lv[i]=0;
- for(let p=0;p<3;p++)for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const i=id(x,y);if(lv[i]==2&&nb.some(([a,b])=>lv[id(x+a,y+b)]==0))lv[i]=1}
- for(const c of comps(i=>lv[i]==2))if(c.length<14)for(const i of c)lv[i]=1;
+ for(let p=0;p<6;p++)for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const i=id(x,y),L=lv[i];if(L>=2&&nb.some(([a,b])=>lv[id(x+a,y+b)]<L-1))lv[i]=L-1}
+ for(let L=4;L>=2;L--)for(const c of comps(i=>lv[i]>=L))if(c.length<(L>2?12:14))for(const i of c)lv[i]=Math.min(lv[i],L-1);
  el=lv;
- for(let i=0;i<W*H;i++)if(lv[i]==2){const r=R();ob[i]=r<.14?{t:'rock',hp:5}:r<.17?{t:'tree',hp:6}:null}
- for(let L=1;L<=2;L++)for(const cs of comps(i=>lv[i]>=L)){const bd=cs.filter(i=>lv[i]==L&&nb.some(([a,b])=>lv[id(i%W+a,((i/W)|0)+b)]<L));if(!bd.length)continue;const rs=new Set();for(const i of bd)if(hs((i%W)*3.1+L,((i/W)|0)*2.7)<.2)rs.add(i);let g2=0;while(rs.size<Math.min(3,bd.length)&&g2++<80)rs.add(bd[Math.floor(R()*bd.length)]);for(const i of bd){if(rs.has(i))ramp.add(i);else{map[i]=8;ob[i]=null}}}
+ for(let i=0;i<W*H;i++)if(lv[i]>=2){const r=R();ob[i]=lv[i]>=3?(r<.2?{t:'rock',hp:5}:r<(lv[i]==3?.25:.215)?{t:'tree',hp:6}:null):r<.14?{t:'rock',hp:5}:r<.17?{t:'tree',hp:6}:null}
+ for(let L=1;L<=4;L++)for(const cs of comps(i=>lv[i]>=L)){const bd=cs.filter(i=>lv[i]==L&&nb.some(([a,b])=>lv[id(i%W+a,((i/W)|0)+b)]<L));if(!bd.length)continue;const rs=new Set();for(const i of bd)if(hs((i%W)*3.1+L,((i/W)|0)*2.7)<.2)rs.add(i);let g2=0;while(rs.size<Math.min(3,bd.length)&&g2++<80)rs.add(bd[Math.floor(R()*bd.length)]);for(const i of bd){if(rs.has(i))ramp.add(i);else{map[i]=8;ob[i]=null}}}
  for(const i of ramp)for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const j=id(i%W+a,((i/W)|0)+b);if(j>=0&&j<W*H&&map[j]==0&&ob[j]&&SOLID[ob[j].t])ob[j]=null}
  const walk=i=>map[i]==0||map[i]==2||map[i]==4||map[i]==6,reach=()=>{const seen=new Uint8Array(W*H),q=[];for(const c of ISC){const st=c[1]*W+c[0];if(walk(st)&&!seen[st]){seen[st]=1;q.push(st)}}for(let k=0;k<q.length;k++){const c=q[k];for(const n of[c-1,c+1,c-W,c+W])if(n>=0&&n<W*H&&!seen[n]&&walk(n)){seen[n]=1;q.push(n)}}return seen};
  for(let pass=0;pass<20;pass++){const seen=reach();let fixed=0;for(let i=0;i<W*H;i++)if(map[i]==8){const n4=[i-1,i+1,i-W,i+W].filter(n=>n>=0&&n<W*H);if(n4.some(n=>seen[n])&&n4.some(n=>walk(n)&&!seen[n])){map[i]=0;fixed++}}if(!fixed)break}
@@ -1142,7 +1142,7 @@ const wt=t=>t==1||t==7,ORC={coal:'#0a0a0c',iron:'#c9a487',copper:'#c8743a',gold:
 try{uname=localStorage.getItem('pxc_name')||uname}catch(e){}
 const lbl=(s,x,y)=>{noTr=true;txt(s,x,y,'#e8f0d8','center');noTr=false};
 function drawRP(q){const x=q.x-cam.x,y=q.y-cam.y;if(q.b)drawBoat(x,y,0);drawChar(x,y,chOf(q.c),q.mv?1+Math.floor(performance.now()/100)%4:0,isFinite(q.fx)?q.fx:0,isFinite(q.fy)?q.fy:1,1,Object.assign(eqFrom(q.e)||{},{bp:q.bp|0}));if(q.b)drawBoat(x,y,1);heldItem(x,y,isFinite(q.fx)?q.fx:0,isFinite(q.fy)?q.fy:1,typeof q.h=='string'?q.h:'',q.s?(performance.now()/350)%1:0);lbl(String(q.n||'?').slice(0,12),x,y-24);if(q.em&&performance.now()<q.em.t)drawEmB(x,y,q.em.k,q.em.t)}
-const snapKey=o=>o?o.t+'|'+(o.t=='bush'||o.t=='flax'?o.b:(o.r||0))+'|'+o.on+'|'+o.open+'|'+(o.k||'')+(o.t=='fire'?'|'+Math.ceil((o.fl||0)/30):'')+(o.lt!=null?'|L'+o.lt:'')+(o.pm!=null?'|P'+o.pm:'')+(o.fw?'|F'+o.fw+'x'+o.fh:'')+(o.it?'|'+JSON.stringify(o.it)+JSON.stringify(o.du||0):'')+(o.art?'|A'+(o.art.n||'')+(o.art.p?o.art.p.length:0):''):'';
+const snapKey=o=>o?o.t+'|'+(o.t=='bush'||o.t=='flax'?o.b:(o.r||0))+'|'+o.on+'|'+o.open+'|'+(o.k||'')+(o.t=='fire'?'|'+Math.ceil((o.fl||0)/30):'')+(o.lt!=null?'|L'+o.lt:'')+(o.pm!=null?'|P'+o.pm:'')+(o.fw?'|F'+o.fw+'x'+o.fh:'')+(o.it?'|'+JSON.stringify(o.it)+JSON.stringify(o.du||0):'')+(o.art?'|A'+(o.art.n||'')+(o.art.p?o.art.p.length:0):'')+(o.cl?'|C'+(o.rp?'R':''):'')+(o.rv?'|v':''):'';
 let base=[],baseMap=null,mshadow=null,lbase=new Set(),lshadow=new Set(),wT=0,cT=0,lid=0,seeding=false,stOpen=null;
 const pk=o=>pkG(o);
 const ovr=()=>inD&&OW?OW:{ob,map,loot,deer,zs};
@@ -2058,7 +2058,7 @@ function drawRoofs(){if(inD||!BLD.length)return;const ptx=Math.floor(P.x/T),pty=
  for(let k=0;k<BLD.length;k++){const b=BLD[k];const sx=b.x*T-cam.x,sy=b.y*T-cam.y;if(sx>VW/ZM+20||sy>VH/ZM+20||sx+b.w*T<-20||sy+b.h*T<-20){b.a=1;continue}
   const inside=ptx>=b.x&&ptx<b.x+b.w&&pty>=b.y&&pty<b.y+b.h,ta=inside?0:1;if(b.a==null)b.a=ta;b.a+=(ta-b.a)*Math.min(1,dt*8);if(b.a<.02)continue;
   const cv=roofCanvas(b,k);g.globalAlpha=b.a;{const so=b.sd?18:4;Q(sx+so,sy+so*.6,b.w*T,(b.h-1)*T,'rgba(0,0,0,'+(b.sd?.3:.22)+')')}g.drawImage(cv,Math.round(sx),Math.round(sy));g.globalAlpha=1;if(b.di==null){b.di=-1;for(let xx=b.x;xx<b.x+b.w;xx++){const o=ob[(b.y+b.h-1)*W+xx];if(o&&o.t=='door'&&o.sh){b.di=(b.y+b.h-1)*W+xx;break}}}if(b.di>=0){const o=ob[b.di];if(o&&o.sh)shopSign((b.di%W)*T,Math.floor(b.di/W)*T,o.sh)}}}
-const underRoof=(x,y)=>{if(inD)return false;for(const b of BLD)if(x>=b.x&&x<b.x+b.w&&y>=b.y&&y<b.y+b.h-1&&(b.a==null||b.a>.5))return true;return false};
+var RGD=null,RGB=null,RGN=-1;const underRoof=(x,y)=>{if(inD)return false;if(RGB!==BLD||RGN!==BLD.length||!RGD||RGD.length!==W*H){RGB=BLD;RGN=BLD.length;RGD=new Int32Array(W*H).fill(-1);for(let k=0;k<BLD.length;k++){const b=BLD[k];for(let yy=Math.max(0,b.y);yy<Math.min(H,b.y+b.h-1);yy++)for(let xx=Math.max(0,b.x);xx<Math.min(W,b.x+b.w);xx++){const j=yy*W+xx;if(RGD[j]<0)RGD[j]=k}}}if(x<0||y<0||x>=W||y>=H)return false;const k=RGD[y*W+x];if(k<0)return false;const b=BLD[k];return b.a==null||b.a>.5};
 /* ---------- builders (lot = 12x12) ---------- */
 const bOfficeO=bOffice,bShopO=bShop,bLibO=bLib,bAptO=bApt;
 bOffice=(lx,ly)=>{bOfficeO(lx,ly);const o=ob.find((q,i)=>q&&q.t=='oup'&&q.n&&i>=ly*W+lx&&i<(ly+2)*W+lx+12);BLD.push({x:lx,y:ly,w:12,h:11,rf:'office',mi:o&&o.mi?1:0})};
@@ -3957,6 +3957,63 @@ function sunBeams(){if(CLASSIC)return;const dk=dk0();if(dk>.6)return;const a=.3*
    const fl=j=>map[j]!=5&&map[j]!=1&&!(ob[j]&&(ob[j].t=='wall'||ob[j].t=='gwall'||ob[j].t=='sblock'||ob[j].t=='win'));const i=yy*W+xx;const d=fl(i+W)?[0,1]:fl(i-1)&&!fl(i+1)?[-1,0]:fl(i+1)&&!fl(i-1)?[1,0]:fl(i-W)?[0,-1]:null;if(d)out.push([xx,yy,d,null])}}
  for(const[xx,yy,d,clip]of out)beamOne(xx*T,yy*T,d,a*(ob[yy*W+xx].t=='door'?1.25:1),lean,clip,((xx*7+yy*13)%17)/17)}
 {const af3=ashFx;ashFx=function(...a){try{sunBeams()}catch(e){}return af3.apply(this,a)}}
+
+/* ===== v64: bigger world (320), mountain ranges (levels 3-4: rocky slopes + snowy peaks), claim & repair abandoned houses ===== */
+GAMEV=64;
+/* --- mountains: extra elevation levels on top of the hills --- */
+function mtnAdd(lv,el0,S){if(!el0.length)return;const mf=new Float32Array(el0.length);
+ for(let k=0;k<el0.length;k++){const i=el0[k],x=i%W,y=(i/W)|0,a=ns(x+S*11,y+S*13,40),r=1-Math.abs(ns(x+S*17,y+S*5,22)*2-1);mf[k]=a*.78+r*.22}
+ const qs=Float32Array.from(mf).sort(),q=f=>qs[Math.floor(qs.length*f)],t1=q(.80),t2=q(.855),t3=q(.905),t4=q(.958);
+ for(let k=0;k<el0.length;k++){const i=el0[k],x=i%W,y=(i/W)|0;if(Math.hypot(x-SX,y-SY)<20)continue;const v=mf[k],L=v>t4?4:v>t3?3:v>t2?2:v>t1?1:0;if(L>lv[i])lv[i]=L}}
+/* rocky mountain ground + rock cliffs + snowy peaks */
+{const gt8=gTile;gTile=function(tx,ty,now){gt8(tx,ty,now);if(CLASSIC||inD||!el||tx<0||ty<0||tx>=W||ty>=H)return;const i=ty*W+tx,e=el[i];if(e<3)return;const m=map[i],px=tx*T,py=ty*T,h=aHash(tx,ty,83),b=bm[i]|0,des=b==2,snow=b==1;
+ if(m==8){const c=des?['#9a7a54','#7a5c3a','#b8946a','#d8b888']:['#6e6a64','#4e4a46','#8e8a82','#aaa69e'];W_(px,py,T,T,c[0]);for(let k=0;k<3;k++)W_(px,py+3+k*4+((tx+k)%2),T,1,c[1]);
+  for(let k=0;k<2;k++){const xx=(tx*7+k*8)%14;W_(px+xx,py+1,2,T-2,c[2]);W_(px+xx+2,py+2,1,T-4,c[1])}if(h<.3){W_(px+4,py+8,5,3,c[3]);W_(px+4,py+8,5,1,'#e0dcd4')}
+  if(map[i-W]!=8){W_(px,py,T,3,e>=4&&!des?'#eef3f6':c[3]);W_(px,py,T,1,e>=4&&!des?'#ffffff':'#c8c4bc');if(e>=4&&!des)for(let k=0;k<3;k++)W_(px+((tx*5+k*5)%14),py+3,2,1+((k+tx)%3),'#e4ecf0')}
+  if(i+W<W*H&&map[i+W]!=8)W_(px,py+T-2,T,2,c[1]);return}
+ if(m==1||m==9)return;
+ if(e==3){W_(px,py,T,T,des?'rgba(150,112,70,.32)':snow?'rgba(200,210,220,.35)':'rgba(112,106,96,.36)');if(h<.4){W_(px+((h*91)|0)%13,py+((h*57)|0)%13,2,1,'#8a8478');W_(px+((h*41)|0)%13,py+((h*23)|0)%13,1,1,'#5a5650')}
+  if(h>.82){W_(px+3,py+5,5,3,'#7e7a72');W_(px+3,py+5,5,1,'#a8a49c')}}
+ else{W_(px,py,T,T,des?'rgba(176,136,86,.4)':'rgba(238,243,247,.72)');if(!des){if(h<.35)W_(px+((h*97)|0)%12,py+((h*61)|0)%12,3,1,'#ffffff');if(h>.7)W_(px+((h*37)|0)%12,py+((h*73)|0)%12,2,2,'#b8c4cc')}}}}
+/* --- claim & repair abandoned houses --- */
+function ruinAtP(){if(inD)return null;const tx=Math.floor(P.x/T),ty=Math.floor(P.y/T);for(const b of BLD){if(b.rf!='ruin')continue;if(tx>=b.x&&tx<b.x+b.w&&ty>=b.y&&ty<b.y+b.h){const di=(b.y+b.h-1)*W+b.x+3,d=ob[di];if(d&&d.t=='door'&&d.ru)return{b,d,di}}}return null}
+function ruinZ(b){let n=0;for(const z of zs){if(z.hp<=0)continue;const zx=Math.floor(z.x/T),zy=Math.floor(z.y/T);if(zx>=b.x-1&&zx<=b.x+b.w&&zy>=b.y-1&&zy<=b.y+b.h)n++}return n}
+const RPC={wood:12,stone:6};
+function ruinAct(){const r=ruinAtP();if(!r)return false;const{b,d}=r,hu=LANG=='hu';
+ if(!d.cl){const n=ruinZ(b);if(n){say(hu?'Előbb takarítsd ki a házat! Zombik: '+n:'Clear the house first! Infected: '+n);return true}
+  d.cl=1;d.own=String(uname||(hu?'Te':'You')).slice(0,12);for(let y=b.y;y<b.y+b.h;y++)for(let x=b.x;x<b.x+b.w;x++){const o=ob[y*W+x];if(o&&o.t=='cweb')ob[y*W+x]=null}
+  setHome();ruinRoofs();snd('craft');say(hu?'A ház a tiéd! Itt születsz újra. Felújítás: B':'The house is yours! You respawn here. Repair: B');return true}
+ if(!d.rp){const need=Object.entries(RPC).filter(([k,n])=>!creative&&(inv[k]||0)<n);if(need.length){say((hu?'Felújításhoz kell: ':'To repair you need: ')+Object.entries(RPC).map(([k,n])=>n+' '+tr(LBL[k]||k)).join(', '));return true}
+  if(!creative)for(const[k,n]of Object.entries(RPC))inv[k]-=n;d.rp=1;
+  for(let y=b.y;y<b.y+b.h;y++)for(let x=b.x;x<b.x+b.w;x++){const i=y*W+x,o=ob[i];if(o&&o.rv)delete o.rv;if(o&&(o.t=='rubble'||o.t=='papers'||o.t=='bones'||o.t=='cweb'))ob[i]=null;if(x>b.x&&x<b.x+b.w-1&&y>b.y&&y<b.y+b.h-1&&map[i]==0)map[i]=12}
+  ruinRoofs();snd('craft');say(hu?'Felújítva! Új tető, tiszta padló.':'Repaired! New roof, clean floor.');return true}
+ say(hu?'Ez a te házad ('+d.own+')':'This is your house ('+d.own+')');return true}
+addEventListener('keydown',e=>{if(e.code!='KeyB'||state!='play'||book||invOpen||stOpen||SFOC||FLPK||PE||GAL||chatOpen)return;if(ruinAct()){e.preventDefault();e.stopImmediatePropagation()}},true);
+/* roof: patched hole when claimed, a fresh roof when repaired */
+ruinRoofs=function(){const want=[];for(let i=0;i<W*H;i++){const o=ob[i];if(o&&o.t=='door'&&o.ru&&isFinite(o.rx))want.push({x:o.rx,y:o.ry,w:o.rw||7,h:o.rh||6,rf:'ruin',c:(o.rx*7+o.ry*3)%4,cl:o.cl?1:0,rp:o.rp?1:0,own:o.own||''})}
+ const cur=BLD.filter(b=>b.rf=='ruin'),sig=a=>a.map(b=>b.x+','+b.y+','+(b.cl|0)+(b.rp|0)).sort().join(';');if(sig(cur)===sig(want))return;BLD=BLD.filter(b=>b.rf!='ruin').concat(want);ROOFC.clear()};
+{const rc10=roofCanvas;roofCanvas=function(b,k){if(b.rf!='ruin'||!(b.cl||b.rp))return rc10(b,k);if(b.rp){let cv=ROOFC.get(k);if(cv)return cv;ROOFC.delete(k);const fake=Object.assign({},b,{rf:'house'});return rc10(fake,k)}
+ let cv=ROOFC.get(k);if(cv)return cv;const tmp=Object.assign({},b,{cl:0});cv=rc10(tmp,k);const cg=cv.getContext('2d'),w=b.w*T,h=(b.h-1)*T,H_=(a,c)=>hs(b.x*3.1+a*.71,b.y*1.7+c*1.3),hx=6+Math.floor(H_(1,1)*(w-34)),hy=4+Math.floor(H_(2,2)*(h-26));
+ for(let i=0;i<4;i++){cg.fillStyle=i%2?'#8a6a42':'#9a7a4e';cg.fillRect(hx-3,hy-3+i*5,28,4);cg.fillStyle='#5a4028';cg.fillRect(hx-3,hy+i*5,28,1)}cg.fillStyle='#3a2a1a';for(let i=0;i<4;i++){cg.fillRect(hx+i*8,hy-2+i*5,1,1);cg.fillRect(hx+20-i*3,hy-1+i*5,1,1)}return cv}}
+/* owner sign above the door */
+{const dr10=drawRoofs;drawRoofs=function(){dr10();if(inD)return;for(const b of BLD){if(b.rf!='ruin'||!b.cl)continue;const sx=(b.x+3)*T-cam.x,sy=(b.y+b.h-1)*T-cam.y-9;if(sx<-60||sy<-30||sx>VW/ZM+60||sy>VH/ZM+30)continue;
+ const nm=String(b.own||'');g.font=fnt(0,8);const tw=Math.max(18,Math.ceil(g.measureText(nm).width)+6);Q(sx+8-tw/2,sy,tw,8,'#6a4a2a');Q(sx+8-tw/2,sy,tw,1,'#8a6a42');Q(sx+8-tw/2,sy+7,tw,1,'#3a2614');noTr=true;txt(nm,sx+8,sy+7,'#f0e0b8','center');noTr=false}}}
+/* hint while standing in an abandoned house */
+{const dr11=draw;draw=function(){dr11();if(state!='play'||book||invOpen||stOpen||tut)return;const r=ruinAtP();if(!r)return;const{b,d}=r,hu=LANG=='hu';let s;
+ if(!d.cl){const n=ruinZ(b);s=n?(hu?'Elhagyott ház — takarítsd ki (zombik: '+n+')':'Abandoned house — clear it out (infected: '+n+')'):(hu?'Elhagyott ház — elfoglalás: B':'Abandoned house — claim it: B')}
+ else if(!d.rp)s=(hu?'A te házad — felújítás: B  (':'Your house — repair: B  (')+RPC.wood+' '+tr(LBL.wood)+', '+RPC.stone+' '+tr(LBL.stone)+')';else return;
+ noTr=true;g.font=fnt(0,9);const w=Math.ceil(g.measureText(s).width)+14;Q(VW/2-w/2,VH-74,w,14,'rgba(20,16,10,.78)');Q(VW/2-w/2,VH-74,w,1,'#8a6a3a');txt(s,VW/2,VH-63,'#f0e6b8','center');noTr=false}}
+/* snapshot keys must notice claim/repair/vines so co-op partners see it */
+/* more abandoned houses on the bigger map */
+{const gr10=genRuins;genRuins=function(want){return gr10(want||(W>=300?8:W>=240?6:4))}}
+/* keep localStorage small enough on the bigger map: only the 3 most recent co-op slots are kept */
+{const cs10=coopStart;coopStart=function(code,host){try{const keep=new Set(roomsGet().slice(0,2).map(r=>'pxc_coop_'+r.c));keep.add('pxc_coop_'+String(code||'').toUpperCase());for(let i=localStorage.length-1;i>=0;i--){const k=localStorage.key(i);if(k&&k.startsWith('pxc_coop_')&&!keep.has(k))localStorage.removeItem(k)}}catch(e){}return cs10(code,host)}}
+/* make sure every plateau can be reached after all world features were placed (cuts a ramp through a cliff where needed) */
+function fixReach(){if(!el)return;const walk=i=>{const m=map[i];return m==0||m==2||m==3||m==4||m==6||m==12||m==14||m==15||m==16||m==17||m==18||m==20||m==24};
+ const bfs=()=>{const s=new Uint8Array(W*H),q=[];for(const c of ISC){const st=c[1]*W+c[0];if(st>=0&&st<W*H&&walk(st)&&!s[st]){s[st]=1;q.push(st)}}for(let k=0;k<q.length;k++){const c=q[k];for(const n of[c-1,c+1,c-W,c+W])if(n>=0&&n<W*H&&!s[n]&&walk(n)){s[n]=1;q.push(n)}}return s};
+ for(let it=0;it<60;it++){const s=bfs();let cut=-1;for(let i=W;i<W*(H-1)&&cut<0;i++){if(map[i]!=8)continue;const n4=[i-1,i+1,i-W,i+W];if(n4.some(n=>s[n])&&n4.some(n=>walk(n)&&!s[n]))cut=i}if(cut<0)break;map[cut]=0;if(ob[cut]&&SOLID[ob[cut].t])ob[cut]=null}
+ const s=bfs();for(let i=0;i<W*H;i++)if(el[i]>0&&walk(i)&&!s[i])el[i]=0}
+{const gdt2=genDesertTowers;genDesertTowers=function(){const r=gdt2();try{fixReach()}catch(e){}return r}}
 
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
