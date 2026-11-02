@@ -3897,7 +3897,7 @@ function placeTowers(){let ri=-1;for(let i=0;i<W*H;i++)if(ob[i]&&ob[i].t=='react
   const dir=Math.sign(rx-(x+1))||1,py_=y+2;for(let k=1;k<=5;k++){const xx=dir>0?x+2+k:x-k,i=py_*W+xx;if(!okT(xx,py_)||Math.abs(xx-rx)<2)break;ob[i]={t:'rpipe',hp:99}}}
  for(const[dx,dy]of[[-2,2],[2,2]]){const i=(ry+dy)*W+rx+dx;if(okT(rx+dx,ry+dy))ob[i]={t:'rsign',hp:99}}return n}
 /* ---------- abandoned houses ---------- */
-const RUINP=[["F.G.b","Z...b","m.~hT","m...a"],["bbGFZ","hT...","..~.m","NN..m"],["KfF.G","...hT","Z.~..","Qj..a"],["JQFbG","j....","..~Z.","NN..a"]];
+const RUINP=[["F.G.b","Z...b","m.~hT","m...a"],["bbGFZ","hT...","..~.m","NN..m"],["KfF.G","...hT","Z.~..","b...a"],["b.FbG","m....","m.~Z.","NN..a"]];
 {const pp9=putPlan;putPlan=function(x0,y0,plan,mir,opt){pp9(x0,y0,plan,mir,opt);const rows=plan.length,cols=plan[0].length;for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const ch=mir?plan[r][cols-1-c]:plan[r][c],i=(y0+r)*W+x0+c;if(ob[i])continue;
  if(ch=='F')ob[i]={t:'fplace',hp:99};else if(ch=='G')ob[i]={t:'gclock',hp:40};else if(ch=='Z')ob[i]={t:'achair',hp:30,c:Math.floor(R()*3)};else if(ch=='~')ob[i]={t:'cweb',r:Math.floor(R()*4)}}}}
 function ruinArea(x,y){const e0=el?el[y*W+x]:0;for(let yy=y-2;yy<=y+8;yy++)for(let xx=x-2;xx<=x+8;xx++){if(!vLand(xx,yy))return false;if(el&&el[yy*W+xx]!==e0)return false}return true}
@@ -4200,7 +4200,7 @@ function harvest(o,bed,i){const c=bed?o.c:o,h=hu6();if(c.dead){if(bed)o.c=null;e
 function inOwnHouse(tx,ty){if(inD){if(curOf&&OW){const rec=OW.ob[curOf.b];if(rec&&rec.k=='ruin'&&rec.dr!=null){const d=OW.ob[rec.dr];return !!(d&&d.cl)}}return false}
  for(const b of BLD){if(b.rf!='ruin'||!b.cl)continue;if(tx>b.x&&tx<b.x+b.w-1&&ty>b.y&&ty<b.y+b.h-1)return true}return false}
 /* ---------- house variants + traces of past life ---------- */
-const RUINL=[["bF.","b..","Z.~","..."],["KfQ","...","h.j","T.~"]],RUINR=[["G.m","..m","Z.~","a.."],["mmb","...","~.N","a.N"]];
+const RUINL=[["bF.","b..","Z.~","..."],["Kfb","...","h.T","..~"]],RUINR=[[".#jQ",".#.J","..D#","a.NN"],[".#Qj",".#.J","..D#","Z..a"]];
 const RUIN2=[["F.G.bU","Z.....","..~...","NN...a","T....."],["bbF..U","......","Z.~.hT","......","m....a"]];
 const RUINA=[["m.~.aV","m.....","..o...","b.....","...~.."],["~.mmbV","......","..o..Z",".....a","~....."]];
 function ruinSite(x,y,w,h){const e0=el?el[y*W+x]:0;for(let yy=y-2;yy<=y+h+2;yy++)for(let xx=x-3;xx<=x+w+3;xx++){if(!vLand(xx,yy))return false;if(el&&el[yy*W+xx]!==e0)return false}return true}
@@ -4219,6 +4219,7 @@ buildRuin=function(x,y,kind){kind=kind|0;const w=kind==1?11:kind==2?8:7,h=kind==
  if(gok){const ks=Object.keys(CROPS);for(let yy=gy;yy<gy+2;yy++)for(let xx=gx;xx<gx+3;xx++){const i=yy*W+xx;map[i]=4;ob[i]=null;if(R()<.6)ob[i]={t:'crop',k:ks[Math.floor(R()*ks.length)],pt:-99,dead:1}}
   for(let xx=gx-1;xx<=gx+3;xx++)for(const yy of[gy-1,gy+2])if(R()<.45&&free(xx,yy))ob[yy*W+xx]={t:'fence',hp:60}}
  if(free(sx,sy)&&ob[sy*W+sx]&&DEC[ob[sy*W+sx].t])ob[sy*W+sx]=null;
+ if(kind!=1){for(const[bx2,by2]of[[side<0?x+w+2:x-3,y],[x+1,y-3],[x+w-2,y-3],[side<0?x+w+3:x-4,y+2],[x-3,y+h+1]]){if(free(bx2,by2)&&free(bx2,by2+1)&&free(bx2,by2-1)){ob[by2*W+bx2]={t:'budi',hp:99,nb:1};map[(by2+1)*W+bx2]=2;for(let k=2;k<5;k++){const j=(by2+k)*W+bx2;if(free(bx2,by2+k))map[j]=2}break}}}
  if(R()<.45){const v=[0,1,3,4][Math.floor(R()*4)];zs.push({id:nid(),x:(x+2)*T+8,y:(y+2)*T+8,hp:VHP[v],a:0,t:0,vx:0,vy:0,z:1,v})}};
 genRuins=function(want){want=want||(W>=300?8:W>=240?6:4);const got=[];for(const n of NPCS)got.push([n.hx/T,n.hy/T,24]);for(let i=0;i<W*H;i++){const o=ob[i];if(o&&o.t=='door'&&o.ru)got.push([o.rx,o.ry,30])}
  let made=0;for(let a=0;a<9000&&made<want;a++){let kind=made%3==1?1:made%3==2?2:(R()<.3?1:0);const x=8+Math.floor(R()*(W-27)),y=8+Math.floor(R()*(H-23));
@@ -4302,6 +4303,55 @@ function petLoad(){try{const a=JSON.parse(localStorage.getItem(SKEY()+'_pets')||
 {const vl6=vLand;vLand=function(x,y){if(x<0||y<0||x>=W||y>=H)return vl6(x,y);const i=y*W+x,o=ob[i];if(o&&(o.t=='tgrass'||o.t=='shrub'||o.t=='flower')){ob[i]=null;try{return vl6(x,y)}finally{ob[i]=o}}return vl6(x,y)}}
 HU.unshift(['Attic','Padlás']);
 {const eo66=enterO;enterO=function(b,f,dir){const r=eo66(b,f,dir);try{if(curOf&&OW){const rec=OW.ob[curOf.b];if(rec&&rec.k&&!curOf.k)curOf.k=rec.k}}catch(e){}return r}}
+
+/* ===== v67: outhouses & real bathrooms, toilet/tap/outhouse sounds, movable furniture in your own house, dog bed & kennel ===== */
+GAMEV=67;
+/* ---------- sounds ---------- */
+function sfx(fn){try{if(!SXS.ok||vol<=0)return;SXS.mul=(SVOL.a||.2)*2.2;fn()}catch(e){}finally{try{SXS.mul=1}catch(e){}}}
+function sfxFlush(){sfx(()=>{sxN(1.6,'lowpass',2600,380,1.2,.55);sxN(1,'bandpass',900,280,2,.3,.35);for(const at of[.55,.8,1.05,1.3])sxT('sine',380+Math.random()*120,170,.12,.12,at)})}
+function sfxTap(){sfx(()=>{sxN(1.3,'bandpass',2300,1900,1.3,.32);sxN(1.3,'highpass',5200,5200,1,.06);for(const at of[1.35,1.6,1.9])sxT('sine',1250,880,.05,.12,at)})}
+function sfxCreak(){sfx(()=>{sxT('sawtooth',190,120,.38,.07);sxT('triangle',310,230,.3,.05,.06);sxN(.09,'lowpass',700,300,1,.35,.55)})}
+function sfxTub(){sfx(()=>{sxN(1.6,'lowpass',1400,700,1,.38);for(const at of[.3,.6,.9,1.2])sxT('sine',520+Math.random()*200,300,.08,.08,at)})}
+function sfxBark(){sfx(()=>{sxT('square',520,300,.07,.14);sxT('square',480,280,.08,.12,.16)})}
+{const uo7=useObj;useObj=function(n){const o=n.o,h=LANG=='hu';
+ if(o.t=='budi'){o.op=performance.now();sfxCreak();setTimeout(()=>{sfxFlush()},900);say(h?'Használtad a budit. Jobb, mint a bokor mögött.':'You used the outhouse. Better than behind a bush.');return}
+ if(o.t=='wc'){const r=uo7(n);sfxFlush();setTimeout(()=>say(h?'Lehúztad a vécét':'You flushed the toilet'),300);return r}
+ if(o.t=='sink'){const r=uo7(n);sfxTap();return r}
+ if(o.t=='tub'){sfxTub();P.inf=Math.max(0,(P.inf||0)-4);say(h?'Lemosakodtál a kádban — jobban érzed magad':'You washed up in the tub');return}
+ if(o.t=='dbed'||o.t=='kennel'){if(!PETS.length){say(h?'Ide fekhet majd a kutyád':'Your dog can sleep here');return}let b=null,bd=1e9;for(const p of PETS){const d=Math.hypot(p.x-P.x,p.y-P.y);if(d<bd){bd=d;b=p}}
+  b.hm={x:n.tx*T+8,y:n.ty*T+(o.t=='kennel'?14:9)};b.st=2;sfxBark();say(b.nm+(h?' helye mostantól itt van (J: gyere / helyedre)':' now sleeps here (J: come / go to your place)'));return}
+ return uo7(n)}}
+/* ---------- outhouse + dog bed + kennel ---------- */
+Object.assign(LBL,{budi:'Outhouse',dbed:'Dog bed',kennel:'Kennel'});Object.assign(LBLX,{budi:'Outhouse',dbed:'Dog bed',kennel:'Kennel'});HU.unshift(['Outhouse','Budi'],['outhouse','budi'],['Dog bed','Kutyafekhely'],['dog bed','kutyafekhely'],['Kennel','Kutyaház'],['kennel','kutyaház']);
+for(const k of['dbed','kennel']){if(!NEWK.includes(k))NEWK.push(k);if(inv[k]==null)inv[k]=0;PL[k]=1;CAMP[k]=1;ICOBJ[k]=1}
+REC.push(['dbed','Dog bed',{cloth:2,wood:1}],['kennel','Kennel',{wood:6,stone:1}]);
+Object.assign(SOLID,{budi:1,kennel:1});Object.assign(INT,{budi:1,dbed:1,kennel:1,tub:1});Object.assign(NMX,{budi:'outhouse',dbed:'dog bed',kennel:'kennel'});Object.assign(STYSKIP,{budi:1});
+Object.assign(DRAWX,{
+ budi(o,x,y){const op=o.op&&performance.now()-o.op<1400;W_(x,y+13,16,3,'rgba(0,0,0,.3)');W_(x+1,y-12,14,26,'#7a5432');for(let i=0;i<4;i++)W_(x+1+i*4,y-12,1,26,'#5a3a20');W_(x,y-15,16,4,'#5a3a22');W_(x-1,y-15,18,1,'#7a5434');
+  if(op){W_(x+3,y-8,10,21,'#1a120a');W_(x+12,y-8,3,21,'#8a6038')}else{W_(x+3,y-8,10,21,'#8a6038');W_(x+3,y-8,10,1,'#a87a4a');W_(x+7,y-5,1,1,'#2a1a0a');W_(x+6,y-4,3,1,'#2a1a0a');W_(x+7,y-3,1,1,'#2a1a0a');W_(x+11,y+2,1,2,'#c8c4b8')}},
+ dbed(o,x,y){W_(x+1,y+6,14,9,'#8a4a3a');W_(x+2,y+7,12,7,'#c8b090');W_(x+3,y+8,10,5,'#e0ccaa');W_(x+1,y+6,14,1,'#a86a5a')},
+ kennel(o,x,y){W_(x,y+13,16,3,'rgba(0,0,0,.3)');W_(x+1,y-2,14,16,'#9a6a3a');for(let i=0;i<4;i++)W_(x+1,y+1+i*3,14,1,'#7a5030');W_(x-1,y-6,9,5,'#a8432c');W_(x+8,y-6,9,5,'#8a3624');W_(x+7,y-8,2,3,'#6a2a1a');W_(x+5,y+4,6,10,'#1a120a');W_(x+5,y+3,6,1,'#5a3a20');W_(x+4,y+5,8,1,'#c8a060')}
+});
+/* ---------- movable furniture inside your own (claimed) house ---------- */
+const MOVF={bshelf:'Bookshelf',wardrobe:'Wardrobe',fridge:'Fridge',sofa:'Sofa',achair:'Armchair',gclock:'Grandfather clock',stove:'Stove',wc:'Toilet',sink:'Sink',tub:'Bathtub',tv:'TV',mtab:'Table',desk:'Desk',cabinet:'Cabinet',bench:'Bench',fcrate:'Crate',counter:'Counter',bed:'Bed',chair:'Chair',table:'Table',lamp:'Lamp',rug:'Rug',shelf:'Shelf',pot:'Pot',dbed:'Dog bed'};
+const MOVH={bshelf:'Könyvespolc',wardrobe:'Ruhásszekrény',fridge:'Hűtő',sofa:'Kanapé',achair:'Fotel',gclock:'Állóóra',stove:'Tűzhely',wc:'WC',sink:'Mosdó',tub:'Kád',tv:'TV',mtab:'Asztal',desk:'Íróasztal',cabinet:'Szekrény',bench:'Pad',fcrate:'Láda',counter:'Pult'};
+for(const k in MOVF){if(!LBL[k]){LBL[k]=MOVF[k];LBLX[k]=MOVF[k]}if(MOVH[k])HU.unshift([MOVF[k],MOVH[k]],[MOVF[k].toLowerCase(),MOVH[k].toLowerCase()]);if(!NEWK.includes(k))NEWK.push(k);if(inv[k]==null)inv[k]=0;PL[k]=1;if(k!='bed'&&k!='bench'&&k!='dbed')FURN[k]=1;if(ICOBJ[k]==null)ICOBJ[k]=1}
+{const a67=act;act=function(){if(fishing||P.cd>0||CHP||CKO||drv)return a67();const it=HB[hb];if(GUN[it])return a67();
+ if(mtx>=0&&mty>=0&&mtx<W&&mty<H&&Math.hypot(mtx*T+8-P.x,mty*T+8-P.y)<=46){let tx=mtx,ty=mty;const q0=ob[ty*W+tx];if(q0&&q0.pm!=null){tx=q0.pm%W;ty=Math.floor(q0.pm/W)}const i=ty*W+tx,o=ob[i];
+  if(o&&MOVF[o.t]&&inOwnHouse(tx,ty)&&!(LOOTT[o.t]&&o.lt==null)&&!zs.some(e=>e.hp>0&&Math.hypot(e.x-mwx,e.y-6-mwy)<13)){if(!edge)return;if(o.it&&Object.keys(o.it).some(k=>o.it[k]>0)){say(LANG=='hu'?'Előbb pakold ki':'Empty it first');P.cd=.3;return}
+   if(sit)sit=null;rmObj(i);inv[o.t]=(inv[o.t]||0)+1;snd('pick');hit(tx*T+8,ty*T+8,'#c8c8c0');say((LANG=='hu'?'Felvetted: ':'Picked up: ')+tr(LBL[o.t]).toLowerCase()+(LANG=='hu'?' — tedd le, ahova szeretnéd':' — place it wherever you like'));P.cd=.3;return}}
+ return a67()}}
+/* ---------- the dog's own place ---------- */
+{const pt7=petTick;petTick=function(dt){if(inD||!PETS.length||state!='play')return pt7(dt);for(const p of PETS){p.rest=0;if(p.st==2&&p.hm){const dx=p.hm.x-p.x,dy=p.hm.y-p.y,d=Math.hypot(dx,dy);if(d>420){p.x=p.hm.x;p.y=p.hm.y}
+  else if(d>5){const s=Math.min(d,80*dt);mv(p,dx/d*s,dy/d*s,4);p.mv=1;if(Math.abs(dx)>2)p.fx=Math.sign(dx)}else{p.mv=0;p.rest=1}}}
+ const keep=PETS.filter(p=>p.st==2&&p.hm);const sv=keep.map(p=>[p,p.st]);for(const[p]of sv)p.st=1;try{pt7(dt)}finally{for(const[p,s]of sv)p.st=s}
+ for(const p of keep){const dx=p.hm.x-p.x,dy=p.hm.y-p.y;if(Math.hypot(dx,dy)<=5){p.x=p.hm.x;p.y=p.hm.y;p.mv=0;p.rest=1}}}}
+{const dd7=drawDog;drawDog=function(p,mv){if(!p.rest)return dd7(p,mv);const x=Math.round(p.x-cam.x),y=Math.round(p.y-cam.y),cv=dogSprite(0);g.save();g.beginPath();g.rect(x-16,y-22,32,16);g.clip();g.translate(x,y+5);if((p.fx||1)<0)g.scale(-1,1);g.drawImage(cv,-14,-20);g.restore();
+ if(dk0()>.5){const t=performance.now()/700;noTr=true;g.globalAlpha=.75;txt('z',x+6+Math.sin(t)*2,y-14-((t*6)%6),'#c8d4ff');g.globalAlpha=1;noTr=false}if(p.nm){noTr=true;lbl(p.nm,x,y-18);noTr=false}}}
+{const kd=e=>{if(e.code!='KeyJ'||state!='play'||!PETS.length||book||invOpen||SFOC||chatOpen)return;e.stopImmediatePropagation();let b=null,bd=120;for(const p of PETS){const d=Math.hypot(p.x-P.x,p.y-P.y);if(d<bd){bd=d;b=p}}const L=b?[b]:PETS,h=LANG=='hu';
+ const goHome=L[0].st==0;for(const p of L)p.st=goHome?(p.hm?2:1):0;sfxBark();say(L.map(p=>p.nm).join(', ')+(goHome?(L[0].hm?(h?': a helyedre!':': go to your place!'):(h?': marad!':': stay!')):(h?': gyere!':': come!')))};addEventListener('keydown',kd,true)}
+{const sv7=save;save=function(){const r=sv7();try{localStorage.setItem(SKEY()+'_pets',JSON.stringify(PETS.map(p=>({x:Math.round(p.x),y:Math.round(p.y),nm:p.nm,st:p.st|0,id:p.id,hm:p.hm||null}))))}catch(e){}return r}}
+{const pl7=petLoad;petLoad=function(){pl7();try{const a=JSON.parse(localStorage.getItem(SKEY()+'_pets')||'[]');if(Array.isArray(a))a.forEach((q,i)=>{if(PETS[i]&&q&&q.hm&&isFinite(q.hm.x))PETS[i].hm={x:q.hm.x,y:q.hm.y}})}catch(e){}}}
 
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
