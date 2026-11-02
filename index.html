@@ -4687,6 +4687,27 @@ const MHI_P={run:'run',drp:'drop',dog:'dog',rui:'claim',emo:'emo',cht:'chat'};
 {const du71=drawUGMini;drawUGMini=function(){if(!mobOn())return du71();g.save();g.translate(VW-76,(MH.mapY||10)-(VH-74));try{du71()}finally{g.restore()}}}
 {const da71=drawAmmo;drawAmmo=function(){if(!mobOn())return da71();g.save();g.translate(-4,(MH.mapY||10)+72-(VH-30));try{da71()}finally{g.restore()}}}
 
+/* ===== v72: the dog swims after you and hops into your boat ===== */
+GAMEV=72;
+function petWet(p){const tx=Math.floor(p.x/T),ty=Math.floor(p.y/T);if(tx<0||ty<0||tx>=W||ty>=H)return false;return wt(map[ty*W+tx])}
+{const pt72=petTick;petTick=function(dt){if(inD||!PETS.length||state!='play'){for(const p of PETS)p.inB=0;return pt72(dt)}const h=LANG=='hu';
+ for(const p of PETS){
+  if(P.boat&&!drv&&p.st==0&&(p.inB||Math.hypot(p.x-P.x,p.y-P.y)<64)){if(!p.inB){p.inB=1;try{sfxBark()}catch(e){}say(p.nm+(h?' beugrott a csónakba':' jumped into the boat'))}continue}
+  if(p.inB&&!P.boat){p.inB=0;const c=[[-12,6],[12,6],[0,10],[-12,-4],[12,-4],[0,-10],[0,0]];for(const[dx,dy]of c){const x=P.x+dx,y=P.y+dy;if(!blocked(x,y,4)){p.x=x;p.y=y;break}}say(p.nm+(h?' kiugrott a partra':' hopped ashore'))}}
+ const sw=swim;swim=true;try{pt72(dt)}finally{swim=sw}
+ for(const p of PETS)if(p.inB){const f=(P.fx||0)<0?-1:1;p.x=P.x-f*7;p.y=P.y-1;p.fx=f;p.mv=0;p.rest=0}
+ /* swimming is slower: pull a wet dog back a little toward where it was */
+ for(const p of PETS){if(p.inB)continue;const wet=petWet(p);if(wet&&p._lx!=null&&Math.hypot(p.x-p._lx,p.y-p._ly)<12){p.x=p._lx+(p.x-p._lx)*.6;p.y=p._ly+(p.y-p._ly)*.6}p._lx=p.x;p._ly=p.y;p.sw=wet?1:0}}}
+{const dd72=drawDog;drawDog=function(p,mv){if(p.inB&&P.boat)return;if(!petWet(p))return dd72(p,mv);
+ const x=Math.round(p.x-cam.x),y=Math.round(p.y-cam.y),t=performance.now(),bob=Math.sin(t/260+p.x*.1)*.8,f=mv?Math.floor(t/160)%2:0;
+ g.save();g.translate(x,y+3+bob);g.beginPath();g.rect(-14,-16,28,11.5);g.clip();g.scale(.7,.7);if((p.fx||1)<0)g.scale(-1,1);g.drawImage(dogSprite(f),-14,-20);g.restore();
+ const r=6+Math.sin(t/300)*1.2;g.strokeStyle='rgba(225,242,250,.6)';g.lineWidth=1;g.beginPath();g.ellipse(x,y-1+bob,r,2,0,0,6.28);g.stroke();
+ if(mv){g.fillStyle='rgba(235,248,255,.55)';const s=(p.fx||1)<0?1:-1;for(let i=0;i<3;i++)g.fillRect(x+s*(8+i*3)+((t/90+i)%2|0),y-1+((i+Math.floor(t/120))%2),2,1)}
+ if(p.nm){noTr=true;lbl(p.nm+(p.st==1?(LANG=='hu'?' (ül)':' (sit)'):''),x,y-15);noTr=false}}}
+function drawBoatDog(p){const x=Math.round(p.x-cam.x),y=Math.round(p.y-cam.y);g.save();g.translate(x,y+2);g.scale(.7,.7);if((p.fx||1)<0)g.scale(-1,1);g.drawImage(dogSit(dogSprite(0)),-14,-20);g.restore();
+ if(p.nm){noTr=true;lbl(p.nm,x,y-26);noTr=false}}
+{const dp72=drawP;drawP=function(){if(P.boat&&!inD&&!drv)for(const p of PETS)if(p.inB)drawBoatDog(p);return dp72()}}
+
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
 function fireList(){const n=performance.now();if(FL.ob!==ob||n-FL.t>500){FL.ob=ob;FL.t=n;FL.a=[];for(let i=0;i<ob.length;i++){const o=ob[i];if(o&&(o.t=='fire'&&o.on||o.t=='fbarrel'))FL.a.push([(i%W)*T+8,Math.floor(i/W)*T+8])}}return FL.a}
