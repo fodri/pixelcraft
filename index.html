@@ -5494,6 +5494,28 @@ const STFLOOR=m=>m==12||m==14||m==18;
 /* the claimed-ruin upper floor follows the same floor rule */
 {const af85=addFloor;addFloor=function(tx,ty){if(!STFLOOR(map[ty*W+tx])){say(LANG=='hu'?'A lépcsőt fa padlóra vagy betonra tedd — előbb újítsd fel a házat (B)':'Stairs go on a wooden or concrete floor — repair the house first (B)');return true}return af85(tx,ty)}}
 
+/* ===== v86: a cabin with a loft shows its upper storey from outside ===== */
+GAMEV=86;
+const LFC86=new WeakMap();
+function cabHasLoft(o){const r=o.room;if(!r||!r.ob)return false;let v=LFC86.get(r);if(v===undefined){v=r.ob.some(q=>q&&q.t=='cup');LFC86.set(r,v)}return v}
+{const bc86=BIG.cabin;BIG.cabin=function(o,x,y){bc86(o,x,y);if(CLASSIC||!cabHasLoft(o))return;
+ const ab=!!o.ab,w1=ab?'#6a4a30':'#7a5636',w2=ab?'#4e3522':'#5a3d24',ax=Math.round(x/T),ay=Math.round(y/T),isC=j=>{const a=(j<0||j>=W*H)?-1:anchorOf(j);return a>=0&&ob[a]&&ob[a].t=='cabin'&&a!==ay*W+ax},hasL=ax>0&&(isC(ay*W+ax-1)||isC((ay+1)*W+ax-1)),hasR=ax<W-4&&(isC(ay*W+ax+3)||isC((ay+1)*W+ax+3));
+ const L=hasL?0:2,R=hasR?48:46,RL=hasL?0:-1,RR=hasR?48:49,col=ab?'#6e623c':'#8a7a4a',hi=shade(col,1.18),lo=shade(col,.72);
+ /* upper storey: a log band with two little windows and a small balcony rail */
+ const uy=y-6;W_(x+RL,uy,RR-RL,18,w1);for(let i=0;i<4;i++)W_(x+RL,uy+3+i*4,RR-RL,1,w2);for(let i=0;i<4;i++)for(let k=(i%2)*9;k<RR-RL;k+=18)W_(x+RL+k,uy+1+i*4,1,3,shade(w1,.8));
+ if(!hasL){W_(x-1,uy,3,18,w2);W_(x-1,uy,1,18,shade(w2,1.3))}if(!hasR){W_(x+46,uy,3,18,w2);W_(x+48,uy,1,18,shade(w2,.7))}
+ for(const wx of[x+9,x+31]){W_(wx-1,uy+3,10,10,'#3a2414');W_(wx,uy+4,8,8,ab?'#1a1410':'#9ac0d4');if(!ab){W_(wx,uy+4,8,2,'#d4e8f0');const g0=dark()>.5;if(g0)W_(wx,uy+4,8,8,'rgba(255,200,110,.75)')}W_(wx+3,uy+4,1,8,'#3a2414');W_(wx,uy+8,8,1,'#3a2414');W_(wx-2,uy+12,12,2,'#5a3a24')}
+ W_(x+RL,uy+16,RR-RL,2,shade(w2,.8));
+ /* the roof moves up a storey */
+ const rt=uy-23,rh=25,mid=rt+12;W_(x+RL,rt,RR-RL,12,hi);W_(x+RL,mid,RR-RL,rh-12,lo);
+ for(let yy=rt+2;yy<rt+rh;yy+=3)W_(x+RL,yy,RR-RL,1,yy<mid?shade(col,1.05):shade(col,.62));
+ for(let yy=rt;yy<rt+rh;yy+=3)for(let xx=((yy-rt)/3|0)%2*4;xx<RR-RL;xx+=8)W_(x+RL+xx,yy,1,3,'rgba(0,0,0,.12)');
+ W_(x+RL,mid-1,RR-RL,2,shade(col,1.35));W_(x+RL,rt,RR-RL,1,shade(col,1.3));W_(x+RL,rt+rh-1,RR-RL,2,shade(col,.45));if(!hasL)W_(x+RL,rt,1,rh,shade(col,.55));if(!hasR)W_(x+RR-1,rt,1,rh,shade(col,.55));
+ if(ab){W_(x+12,rt+3,7,4,'#2a2014');W_(x+30,mid+2,5,3,'#2a2014')}
+ if(!hasL){W_(x+33,rt-4,7,10,'#6a5a50');W_(x+33,rt-4,7,2,'#3a3028');W_(x+34,rt-1,5,1,'#5a4a40')}}}
+/* mark the cabin as soon as the stairs exist (before you ever leave) */
+{const a86=act;act=function(){const had=inC&&curCab&&ob.some(q=>q&&q.t=='cup');const r=a86();if(inC&&curCab){const has=ob.some(q=>q&&q.t=='cup');if(has!==had&&curCab.room)LFC86.set(curCab.room,has)}return r}}
+
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
 function fireList(){const n=performance.now();if(FL.ob!==ob||n-FL.t>500){FL.ob=ob;FL.t=n;FL.a=[];for(let i=0;i<ob.length;i++){const o=ob[i];if(o&&(o.t=='fire'&&o.on||o.t=='fbarrel'))FL.a.push([(i%W)*T+8,Math.floor(i/W)*T+8])}}return FL.a}
