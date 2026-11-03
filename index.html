@@ -5884,7 +5884,7 @@ cycleGfx=function(){if(V3D){V3D=false;setRetro(false);DYN=true}else if(CLASSIC){
 {const gn92=gfxName;gfxName=function(){if(V3D&&!CLASSIC)return LANG=='hu'?'3D Alpha (kísérleti)':'3D Alpha (experimental)';return gn92()}}
 
 /* ===== v93: Graphics tab — 5 modes (simple / 2D lights+shadows / 2D + 3D shadows / 3D Alpha / retro), shadow strength slider, shadow quality ===== */
-GAMEV=94;
+GAMEV=95;
 var S3D=false;
 var S3MODE=false;const S3={};
 const INV94=new THREE.MeshBasicMaterial({colorWrite:false,depthWrite:false});
@@ -5943,26 +5943,46 @@ let SHQA=-1;function s3Quality(){if(!V3||!V3.ok||SHQA===SHQ)return;SHQA=SHQ;cons
 /* 2D shadows: off by day when the 3D shadows are on, and scaled by the strength slider */
 {const cs95=castShadow;castShadow=function(wx,wy,h){if(GMODE==2&&!inD&&!inC&&dark()<.5)return;const ga=g.globalAlpha;g.globalAlpha=ga*Math.min(1.5,SHS/.7);try{cs95(wx,wy,h)}finally{g.globalAlpha=ga}}}
 /* main settings: the Graphics row opens its own tab */
-{const ov95=optVal;optVal=function(i){if(i==5)return gfxName().split(' (')[0]+'  >';return ov95(i)}}
+/* ---------- main settings: graphics rows move into their own "Graphics settings" menu ---------- */
+OPN.hu[5]='Grafikai beállítások';OPN.en[5]='Graphics settings';
+{const ov95=optVal;optVal=function(i){if(i==5)return '>';return ov95(i)}}
 {const os95=optStep;optStep=function(i,dir){if(i==5){state='gfxo';gsel=0;snd('ui');return}return os95(i,dir)}}
-let gsel=0;const GFXL={hu:['Grafika','Árnyékok erőssége','Árnyékok minősége','Vissza'],en:['Graphics','Shadow strength','Shadow quality','Back']};
-function gfxStep(i,dir){if(i==0)setGMode(GMODE+(dir<0?-1:1),true);else if(i==1){SHS=Math.max(0,Math.min(1,Math.round((SHS+dir*.1)*10)/10));try{localStorage.setItem('pxc_shs',String(SHS))}catch(e){}}
- else if(i==2){SHQ=(SHQ+(dir<0?2:1))%3;try{localStorage.setItem('pxc_shq',String(SHQ))}catch(e){}}else if(i==3){state='opts';snd('ui');return}snd('ui')}
-function gfxMenu(){const moved=ms.x!=lmx||ms.y!=lmy;lmx=ms.x;lmy=ms.y;const hu=LANG=='hu',L=GFXL[hu?'hu':'en'];Q(0,0,VW,VH,'rgba(6,10,6,.88)');
- g.font=fnt(1,20);g.textAlign='center';g.fillStyle='#a8321f';g.fillText(L[0],VW/2+2,50);g.fillStyle=fcol('#d8e4c8');g.fillText(L[0],VW/2,48);
- noTr=true;const desc=hu?['Csak a pixelgrafika, éjjel egyszerű fénykörök','A fények falakon akadnak meg, a szereplőknek 2D árnyékuk van','A 3D-motor számolja a napárnyékot: fák, házak, emberek','Valódi 3D nézet (kísérleti) — a belső terek 2D-ben maradnak','Az első verzió egyszerű kinézete']:['Pixel art only, simple light circles at night','Lights are blocked by walls, characters cast 2D shadows','The 3D engine casts the sun shadows: trees, houses, people','A real 3D view (experimental) — interiors stay 2D','The simple look of the first version'];
- for(let i=0;i<4;i++){const y=obY(i)+(i==3?14:0)+(i>0?10:0);if(moved&&ms.x>=OPB.x&&ms.x<OPB.x+OPB.w&&ms.y>=y&&ms.y<y+OPB.h)gsel=i;const on=gsel==i,dis=(i==1||i==2)&&(GMODE==0||GMODE==4);
+/* the main list without Zoom (8), Mask colour effect (9) and Fullscreen (13) — those live in Graphics settings now */
+const OPV=[0,1,2,3,4,5,6,7,10,11,12,14];
+optsMenu=function(){const moved=ms.x!=lmx||ms.y!=lmy;lmx=ms.x;lmy=ms.y;const hu=LANG=='hu';Q(0,0,VW,VH,'rgba(6,10,6,.88)');if(osel>=OPV.length)osel=0;
+ g.font=fnt(1,20);g.textAlign='center';g.fillStyle='#a8321f';g.fillText(hu?'Beállítások':'Settings',VW/2+2,42);g.fillStyle=fcol('#d8e4c8');g.fillText(hu?'Beállítások':'Settings',VW/2,40);
+ noTr=true;for(let r=0;r<OPV.length;r++){const i=OPV[r],y=obY(r)+(i==14?6:0);if(moved&&ms.x>=OPB.x&&ms.x<OPB.x+OPB.w&&ms.y>=y&&ms.y<y+OPB.h)osel=r;const on=osel==r;
   Q(OPB.x-1,y-1,OPB.w+2,OPB.h+2,on?'#ffd84a':'#3a4634');Q(OPB.x,y,OPB.w,OPB.h,on?'#4a3722':'#1c1a12');
-  if(i==3){txt(L[3],VW/2,y+10,on?'#ffd84a':'#cfd8c0','center');continue}
-  txt(L[i],OPB.x+8,y+10,dis?'#5a6a52':on?'#ffd84a':'#b8c8a8');
-  if(i==0){txt('<',OPB.x+OPB.w-150,y+10,on?'#ffd84a':'#5a6a52','center');txt(gfxName(),OPB.x+OPB.w-78,y+10,GMODE==3?'#ffb060':'#f0e6b8','center');txt('>',OPB.x+OPB.w-6,y+10,on?'#ffd84a':'#5a6a52','center')}
-  else if(i==1){const bx=OPB.x+OPB.w-150,bw=100;txt('<',bx-10,y+10,on?'#ffd84a':'#5a6a52','center');Q(bx,y+5,bw,5,'#2a2a1e');Q(bx,y+5,Math.round(bw*SHS),5,dis?'#4a5a42':'#8ac85a');Q(bx+Math.round(bw*SHS)-1,y+3,3,9,'#f0e6b8');txt(Math.round(SHS*100)+'%',OPB.x+OPB.w-26,y+10,dis?'#5a6a52':'#f0e6b8','center');txt('>',OPB.x+OPB.w-6,y+10,on?'#ffd84a':'#5a6a52','center')}
-  else{txt('<',OPB.x+OPB.w-118,y+10,on?'#ffd84a':'#5a6a52','center');txt(shqName(),OPB.x+OPB.w-60,y+10,dis?'#5a6a52':'#f0e6b8','center');txt('>',OPB.x+OPB.w-8,y+10,on?'#ffd84a':'#5a6a52','center')}
-  if(i==0){g.font=fnt(0,8);txt(desc[GMODE],VW/2,y+OPB.h+9,'#8fa07f','center')}}
- txt(hu?'W/S: választás   A/D vagy kattintás: állítás   Esc: vissza':'W/S choose   A/D or click: adjust   Esc back',VW/2,obY(5)+30,'#8fa07f','center');noTr=false}
-function gfxKey(c){if(c=='Escape'){state='opts';return}if(c=='ArrowUp'||c=='KeyW')gsel=(gsel+3)%4;else if(c=='ArrowDown'||c=='KeyS')gsel=(gsel+1)%4;else if(c=='ArrowLeft'||c=='KeyA')gfxStep(gsel,-1);else if(c=='ArrowRight'||c=='KeyD'||c=='Enter'||c=='Space')gfxStep(gsel,1)}
-function gfxClick(){for(let i=0;i<4;i++){const y=obY(i)+(i==3?14:0)+(i>0?10:0);if(ms.x>=OPB.x&&ms.x<OPB.x+OPB.w&&ms.y>=y&&ms.y<y+OPB.h){gsel=i;if(i==3)return gfxStep(3,1);
-  if(i==1){const bx=OPB.x+OPB.w-150,bw=100;if(ms.x>=bx-4&&ms.x<=bx+bw+4){SHS=Math.max(0,Math.min(1,Math.round((ms.x-bx)/bw*20)/20));try{localStorage.setItem('pxc_shs',String(SHS))}catch(e){}snd('ui');return}return gfxStep(1,ms.x<bx?-1:1)}
+  if(i==14)txt(OPN[hu?'hu':'en'][14],VW/2,y+10,on?'#ffd84a':'#cfd8c0','center');
+  else if(i==5||i==2||i==10||i==11){txt(OPN[hu?'hu':'en'][i].replace(/\s*>$/,'')+(i==5?'':''),OPB.x+8,y+10,on?'#ffd84a':i==5?'#e8d8a0':'#b8c8a8');txt('>',OPB.x+OPB.w-8,y+10,on?'#ffd84a':'#cfd8c0','center');if(i==2)txt(optVal(2).replace(/\s*>$/,''),OPB.x+OPB.w-60,y+10,'#f0e6b8','center')}
+  else{txt(OPN[hu?'hu':'en'][i],OPB.x+8,y+10,on?'#ffd84a':'#b8c8a8');txt('<',OPB.x+OPB.w-118,y+10,on?'#ffd84a':'#5a6a52','center');txt(optVal(i),OPB.x+OPB.w-60,y+10,i==12&&DIFF==0?'#9be07d':i==12&&DIFF==3?'#ff8a6a':'#f0e6b8','center');txt('>',OPB.x+OPB.w-8,y+10,on?'#ffd84a':'#5a6a52','center')}}
+ txt(hu?'W/S: választás   A/D: változtatás   Esc: vissza':'W/S choose   A/D change   Esc back',VW/2,obY(OPV.length)+15,'#8fa07f','center');noTr=false};
+optsKey=function(c){const n=OPV.length;if(c=='Escape'){state='title';return}if(osel>=n)osel=0;if(c=='ArrowUp'||c=='KeyW')osel=(osel+n-1)%n;else if(c=='ArrowDown'||c=='KeyS')osel=(osel+1)%n;else if(c=='ArrowLeft'||c=='KeyA')optStep(OPV[osel],-1);else if(c=='ArrowRight'||c=='KeyD'||c=='Enter'||c=='Space')optStep(OPV[osel],1)};
+optsClick=function(){for(let r=0;r<OPV.length;r++){const i=OPV[r],y=obY(r)+(i==14?6:0);if(ms.x>=OPB.x&&ms.x<OPB.x+OPB.w&&ms.y>=y&&ms.y<y+OPB.h){osel=r;optStep(i,ms.x<OPB.x+OPB.w-60&&i!=5&&i!=6&&i!=7&&i!=1&&i!=2&&i!=10&&i!=11&&i!=14?-1:1);return}}};
+OPB.y=52;OPB.h=15;OPB.g=2;
+/* ---------- Graphics settings menu ---------- */
+let gsel=0;
+const GFR=[{k:'mode'},{k:'shs'},{k:'shq'},{k:'zoom'},{k:'mask'},{k:'fs'},{k:'back'}];
+const GFXL={hu:{title:'Grafikai beállítások',mode:'Megjelenítés',shs:'Árnyékok erőssége',shq:'Árnyékok minősége',zoom:'Nagyítás',mask:'Maszk színhatás',fs:'Teljes képernyő',back:'Vissza'},en:{title:'Graphics settings',mode:'Rendering',shs:'Shadow strength',shq:'Shadow quality',zoom:'Zoom',mask:'Mask colour effect',fs:'Fullscreen',back:'Back'}};
+const gfY=i=>obY(i)+(i>0?12:0)+(i==6?6:0);
+function gfxDis(k){return (k=='shs'||k=='shq')&&(GMODE==0||GMODE==4)}
+function gfxVal(k){if(k=='mode')return gfxName();if(k=='shq')return shqName();if(k=='zoom')return optVal(8);if(k=='mask')return maskFx?(LANG=='hu'?'BE':'ON'):(LANG=='hu'?'KI':'OFF');if(k=='fs')return optVal(13);return ''}
+function gfxStep(i,dir){const k=GFR[i].k;if(k=='mode')setGMode(GMODE+(dir<0?-1:1),true);else if(k=='shs'){SHS=Math.max(0,Math.min(1,Math.round((SHS+dir*.1)*10)/10));try{localStorage.setItem('pxc_shs',String(SHS))}catch(e){}}
+ else if(k=='shq'){SHQ=(SHQ+(dir<0?2:1))%3;try{localStorage.setItem('pxc_shq',String(SHQ))}catch(e){}}else if(k=='zoom')optStep(8,dir<0?-1:1);else if(k=='mask')optStep(9,1);else if(k=='fs'){optStep(13,1);return}else if(k=='back'){state='opts';snd('ui');return}snd('ui')}
+function gfxMenu(){const moved=ms.x!=lmx||ms.y!=lmy;lmx=ms.x;lmy=ms.y;const hu=LANG=='hu',L=GFXL[hu?'hu':'en'];Q(0,0,VW,VH,'rgba(6,10,6,.88)');
+ g.font=fnt(1,20);g.textAlign='center';g.fillStyle='#a8321f';g.fillText(L.title,VW/2+2,42);g.fillStyle=fcol('#d8e4c8');g.fillText(L.title,VW/2,40);
+ noTr=true;const desc=hu?['Csak a pixelgrafika, éjjel egyszerű fénykörök','A fények falakon akadnak meg, a szereplőknek 2D árnyékuk van','A 3D-motor számolja a napárnyékot: fák, házak, emberek','Valódi 3D nézet (kísérleti) — a belső terek 2D-ben maradnak','Az első verzió egyszerű kinézete']:['Pixel art only, simple light circles at night','Lights are blocked by walls, characters cast 2D shadows','The 3D engine casts the sun shadows: trees, houses, people','A real 3D view (experimental) — interiors stay 2D','The simple look of the first version'];
+ for(let i=0;i<GFR.length;i++){const k=GFR[i].k,y=gfY(i);if(moved&&ms.x>=OPB.x&&ms.x<OPB.x+OPB.w&&ms.y>=y&&ms.y<y+OPB.h)gsel=i;const on=gsel==i,dis=gfxDis(k);
+  Q(OPB.x-1,y-1,OPB.w+2,OPB.h+2,on?'#ffd84a':'#3a4634');Q(OPB.x,y,OPB.w,OPB.h,on?'#4a3722':'#1c1a12');
+  if(k=='back'){txt(L.back,VW/2,y+10,on?'#ffd84a':'#cfd8c0','center');continue}
+  txt(L[k],OPB.x+8,y+10,dis?'#5a6a52':on?'#ffd84a':'#b8c8a8');
+  if(k=='shs'){const bx=OPB.x+OPB.w-150,bw=100;txt('<',bx-10,y+10,on?'#ffd84a':'#5a6a52','center');Q(bx,y+5,bw,5,'#2a2a1e');Q(bx,y+5,Math.round(bw*SHS),5,dis?'#4a5a42':'#8ac85a');Q(bx+Math.round(bw*SHS)-1,y+3,3,9,'#f0e6b8');txt(Math.round(SHS*100)+'%',OPB.x+OPB.w-26,y+10,dis?'#5a6a52':'#f0e6b8','center');txt('>',OPB.x+OPB.w-6,y+10,on?'#ffd84a':'#5a6a52','center')}
+  else{const wide=k=='mode',cx=wide?OPB.x+OPB.w-78:OPB.x+OPB.w-60;txt('<',wide?OPB.x+OPB.w-150:OPB.x+OPB.w-118,y+10,on?'#ffd84a':'#5a6a52','center');txt(gfxVal(k),cx,y+10,dis?'#5a6a52':k=='mode'&&GMODE==3?'#ffb060':'#f0e6b8','center');txt('>',OPB.x+OPB.w-8,y+10,on?'#ffd84a':'#5a6a52','center')}
+  if(k=='mode'){g.font=fnt(0,8);txt(desc[GMODE],VW/2,y+OPB.h+9,'#8fa07f','center')}}
+ txt(hu?'W/S: választás   A/D vagy kattintás: állítás   Esc: vissza':'W/S choose   A/D or click: adjust   Esc back',VW/2,gfY(GFR.length-1)+OPB.h+14,'#8fa07f','center');noTr=false}
+function gfxKey(c){const n=GFR.length;if(c=='Escape'){state='opts';return}if(c=='ArrowUp'||c=='KeyW')gsel=(gsel+n-1)%n;else if(c=='ArrowDown'||c=='KeyS')gsel=(gsel+1)%n;else if(c=='ArrowLeft'||c=='KeyA')gfxStep(gsel,-1);else if(c=='ArrowRight'||c=='KeyD'||c=='Enter'||c=='Space')gfxStep(gsel,1)}
+function gfxClick(){for(let i=0;i<GFR.length;i++){const k=GFR[i].k,y=gfY(i);if(ms.x>=OPB.x&&ms.x<OPB.x+OPB.w&&ms.y>=y&&ms.y<y+OPB.h){gsel=i;if(k=='back'||k=='fs'||k=='mask')return gfxStep(i,1);
+  if(k=='shs'){const bx=OPB.x+OPB.w-150,bw=100;if(ms.x>=bx-4&&ms.x<=bx+bw+4){SHS=Math.max(0,Math.min(1,Math.round((ms.x-bx)/bw*20)/20));try{localStorage.setItem('pxc_shs',String(SHS))}catch(e){}snd('ui');return}return gfxStep(i,ms.x<bx?-1:1)}
   return gfxStep(i,ms.x<OPB.x+OPB.w/2?-1:1)}}}
 /* F8 (in game): jump between the 3D Alpha view and the last 2D mode */
 addEventListener('keydown',e=>{if(e.code!='F8'||state!='play')return;e.preventDefault();e.stopImmediatePropagation();setGMode(GMODE==3?GPREV:3)},true);
