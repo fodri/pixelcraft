@@ -1608,7 +1608,7 @@ function draw(){g.setTransform(2,0,0,2,0,0);BASE=2;g.imageSmoothingEnabled=false
  d2.setTransform(1,0,0,1,0,0);d2.globalCompositeOperation='source-over';d2.clearRect(0,0,VW,VH);d2.fillStyle='rgba(4,8,18,'+(dr*.94)+')';d2.fillRect(0,0,VW,VH);
  d2.setTransform(ZM,0,0,ZM,0,0);if(dr>.01){d2.globalCompositeOperation='destination-out';const L=(x,y,r,a)=>LIT(d2,x,y,r,a);
   L(P.x-cam.x,P.y-cam.y-6,(inD?(curOf&&curOf.k=='hosp'&&curOf.f<=curOf.n?44:58):(BD>.5?34:44))*(1+sk('eyes')),.95);if(HB[hb]=="torch"&&inv.torch>0){const fl=1+Math.sin(performance.now()/90)*.06+Math.sin(performance.now()/37)*.04;L(P.x-cam.x,P.y-cam.y-6,Math.round(125*fl),1)}if(mfT>0)L(P.x-cam.x+P.fx*12,P.y-cam.y-8+P.fy*12,70,.9);flashLight(d2);lavaGlow(d2,x0,y0);if(curSub||curRx)for(let y=y0-1;y<y0+21;y+=2)for(let x=x0-1;x<x0+33;x+=2)if(x>=0&&y>=0&&x<W&&y<H&&map[y*W+x]==10)L(x*T+8-cam.x,y*T+8-cam.y,34,.6);
-  for(let y=y0-4;y<y0+24;y++)for(let x=x0-4;x<x0+36;x++){const o=ob[y*W+x];if(x>=0&&y>=0&&x<W&&y<H&&o&&o.t=='fix'&&!underRoof(x,y)){const b=fixLv(o,x,y,now);if(b>0)L(x*T+8-cam.x,y*T+5-cam.y,78*(.55+.45*b),b)}else if(x>=0&&y>=0&&x<W&&y<H&&o&&(((o.t=='fire'||o.t=='furnace'||o.t=='fplace')&&o.on)||(o.t=='lamp'&&o.on!==false)||(o.t=='flood'&&o.on!==false)||(o.t=='tv'&&o.on)||o.t=='rcons'||o.t=='mlamp'||o.t=='crys'||o.t=='fbarrel'||(o.t=='slamp'&&!o.b&&!(o.fk&&slFk(x,now)))))L(x*T+8-cam.x,y*T+(o.t=='slamp'?-10:8)-cam.y,(o.t=='furnace'?58:o.t=='fplace'?82:o.t=='flood'?165:o.t=='slamp'?105:o.t=='tv'?52:o.t=='rcons'?34:o.t=='crys'?38:o.t=='mlamp'?84:95)+Math.sin(now/90+x)*5,1)}}
+  for(let y=y0-4;y<y0+24;y++)for(let x=x0-4;x<x0+36;x++){const o=ob[y*W+x];if(x>=0&&y>=0&&x<W&&y<H&&o&&o.t=='fix'&&!underRoof(x,y)){const b=fixLv(o,x,y,now);if(b>0)L(x*T+8-cam.x,y*T+5-cam.y,78*(.55+.45*b),b)}else if(x>=0&&y>=0&&x<W&&y<H&&o&&(((o.t=='fire'||o.t=='furnace'||o.t=='fplace')&&o.on)||(o.t=='lamp'&&o.on!==false)||(o.t=='flood'&&o.on!==false)||(o.t=='wtorch'&&o.on!==false)||(o.t=='tv'&&o.on)||o.t=='rcons'||o.t=='mlamp'||o.t=='crys'||o.t=='fbarrel'||(o.t=='slamp'&&!o.b&&!(o.fk&&slFk(x,now)))))L(x*T+8-cam.x,y*T+(o.t=='slamp'?-10:8)-cam.y,(o.t=='furnace'?58:o.t=='fplace'?82:o.t=='flood'?165:o.t=='wtorch'?72:o.t=='slamp'?105:o.t=='tv'?52:o.t=='rcons'?34:o.t=='crys'?38:o.t=='mlamp'?84:95)+Math.sin(now/90+x)*5,1)}}
  g.setTransform(2,0,0,2,0,0);BASE=2;g.drawImage(dk,0,0);
  g.save();if((maskFx?MG:0)>.01){g.globalCompositeOperation='saturation';g.globalAlpha=.42*(maskFx?MG:0);g.fillStyle='#808080';g.fillRect(0,0,VW,VH);g.globalCompositeOperation='multiply';g.globalAlpha=.4*(maskFx?MG:0);g.fillStyle=inD?'#c8d0cc':'#d8cdb4';g.fillRect(0,0,VW,VH)}if((maskFx?MG:0)<.99){g.globalCompositeOperation='soft-light';g.globalAlpha=.16*(1-(maskFx?MG:0));g.fillStyle='#ffc070';g.fillRect(0,0,VW,VH)}g.restore();
  if(!inD&&(maskFx?MG:0)>.01)Q(0,0,VW,VH,'rgba(120,110,90,'+.08*(maskFx?MG:0)+')');
@@ -5405,6 +5405,65 @@ function carve(tx,ty,it){const h=LANG=='hu',i=ty*W+tx;if(tx<3||ty<3||tx>=W-3||ty
   if(o.t=='dhole'){if(!o.lad){if(inv.ladder>0){o.lad=1;inv.ladder--;snd('craft');say(h?'Létra a gödörben — E: lemászás':'Ladder in the pit — E: climb down')}else say(h?'Ehhez létra kell (Létra: 4 fa, 2 rost)':'You need a ladder (Ladder: 4 wood, 2 fiber)');return}
    if(!inD){enterDM(i,1,'down');return}if(curDM){enterDM(curDM.i,curDM.l+1,'down');return}}
   if(o.t=='dlad'&&curDM){enterDM(curDM.i,curDM.l-1,'up');return}}return uo82(n)}}
+
+/* ===== v83: shovel right-click fills pits back in, hoe right-click lays paths, wall torches, abandoned mine adits to find, infected only come out at night (hard: day too) ===== */
+GAMEV=83;
+/* ---------- right-click tools ---------- */
+{const rc83=rclick;rclick=function(){const tl=tool(),it=HB[hb],h=LANG=='hu';if(mtx<0||mty<0||mtx>=W||mty>=H)return rc83();const i=mty*W+mtx,o=ob[i],d=Math.hypot(mtx*T+8-P.x,mty*T+8-P.y);
+ if(tl&&tl.k=='shovel'&&d<=46){
+  if(o&&o.t=='dhole'){if(o.lad)inv.ladder=(inv.ladder|0)+1;ob[i]=null;if(!inD)map[i]=0;try{wear(it)}catch(e){}hit(mtx*T+8,mty*T+8,'#5a4630');snd('hit');say(h?'Visszatemetted a gödröt'+(o.lad?' (a létrát kivetted)':''):'You filled the pit back in'+(o.lad?' (ladder taken out)':''));return}
+  if(!o&&!inD&&map[i]==4){map[i]=0;snd('hit');say(h?'Elegyengetted a földet':'You levelled the soil');return}
+  if(!o&&canCarve()&&map[i]==3&&!(mtx==Math.floor(P.x/T)&&mty==Math.floor(P.y/T))){if(!(inv.stone>0)){say(h?'A visszatemetéshez kő kell':'You need stone to fill it in');return}map[i]=5;inv.stone--;snd('hit');say(h?'Visszatemetted a járatot':'You filled the tunnel back in');return}
+  return}
+ if(it=='hoe'&&inv.hoe>0&&!inD&&d<=46&&!o){if(map[i]==0||map[i]==4){map[i]=2;try{wear('hoe')}catch(e){}hit(mtx*T+8,mty*T+8,'#c8b88a');snd('hit');say(h?'Ösvényt csináltál':'You laid a path');return}if(map[i]==2){say(h?'Ez már ösvény':'Already a path');return}}
+ return rc83()}}
+/* ---------- wall torches ---------- */
+Object.assign(LBL,{wtorch:'Wall torch',adit:'Old mine adit',aexit:'Way out'});Object.assign(LBLX,{wtorch:'Wall torch',adit:'Old mine adit',aexit:'Way out'});
+HU.unshift(['Wall torch','Fali fáklya'],['wall torch','fali fáklya'],['Old mine adit','Elhagyott tárna'],['old mine adit','elhagyott tárna'],['Way out','Kijárat']);
+if(!NEWK.includes('wtorch'))NEWK.push('wtorch');if(inv.wtorch==null)inv.wtorch=0;REC.push(['wtorch','Wall torch',{wood:1,coal:1}],['wtorch','Wall torch (fiber)',{wood:2,fiber:2}]);
+Object.assign(INT,{adit:1,aexit:1});Object.assign(SOLID,{adit:1,aexit:1});Object.assign(NMX,{wtorch:'wall torch',adit:'old mine adit',aexit:'way out'});Object.assign(STYSKIP,{wtorch:1,adit:1,aexit:1});
+{const ic83=icon2;icon2=function(k,x,y){const S=(a,b,w,h,c)=>Q(x+a,y+b,w,h,c);if(k=='wtorch'){S(9,8,2,10,'#7a5230');S(7,13,6,2,'#5a5e62');S(8,3,4,6,'#d9581a');S(9,4,2,4,'#f2b134');S(9,6,2,1,'#fff0a0');return true}return ic83(k,x,y)}}
+Object.assign(DRAWX,{
+ wtorch(o,x,y){const t=performance.now(),f=Math.floor(t/90+x)%3;W_(x+6,y+9,4,2,'#4a4e52');W_(x+7,y+5,2,7,'#6a4a28');if(o.on===false){W_(x+6,y+3,4,3,'#2a2420');return}
+  W_(x+6,y+1-f,4,5+f,'#d9581a');W_(x+7,y+2-f,2,4+f,'#f2b134');W_(x+7,y+4,2,1,'#fff0a0');if(f==2)W_(x+5,y,1,1,'#ffd060')},
+ adit(o,x,y){W_(x-4,y-6,24,22,'rgba(0,0,0,.25)');W_(x-2,y-4,20,20,'#5a3a20');W_(x+1,y-1,14,17,'#0a0806');W_(x-2,y-6,20,3,'#7a5434');W_(x-2,y-6,20,1,'#a87a4a');W_(x-2,y-4,3,20,'#6a4a28');W_(x+15,y-4,3,20,'#6a4a28');
+  W_(x+2,y+4,12,1,'#3a2a1a');W_(x+3,y+14,10,2,'#5a5a5a');W_(x+5,y+12,1,4,'#6a4a28');W_(x+10,y+12,1,4,'#6a4a28');noTr=true;g.fillStyle='#c8b070';g.font=fnt(0,5);g.textAlign='center';g.fillText('X',x+8-cam.x,y-1-cam.y);noTr=false},
+ aexit(o,x,y){const t=performance.now()/1000;W_(x,y,16,16,'#d8e4ea');W_(x+2,y+2,12,12,'#f4f8fa');W_(x,y,2,16,'#6a4a28');W_(x+14,y,2,16,'#6a4a28');W_(x,y,16,2,'#7a5434');g.fillStyle='rgba(255,250,220,'+(.18+.06*Math.sin(t*2))+')';g.fillRect(Math.round(x-6-cam.x),Math.round(y-4-cam.y),28,26)}});
+{const a83=act;act=function(){const it=HB[hb],h=LANG=='hu';
+ if(it=='wtorch'&&inv.wtorch>0&&edge&&inD&&mtx>=0&&mty>=0&&mtx<W&&mty<H&&P.cd<=0){const i=mty*W+mtx;if(Math.hypot(mtx*T+8-P.x,mty*T+8-P.y)>46){say(h?'Túl messze':'Too far');P.cd=.3;return}
+  const floorNb=[[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>map[(mty+dy)*W+mtx+dx]!=5);if(map[i]!=5||!floorNb||ob[i]){say(h?'A fáklyát egy falra tedd, ami mellett járat van':'Put the torch on a wall next to a tunnel');P.cd=.3;return}
+  ob[i]={t:'wtorch',on:true};inv.wtorch--;snd('craft');say(h?'Fáklya a falon':'Torch on the wall');P.cd=.3;return}
+ if((it=='hand'||!it)&&edge&&inD&&mtx>=0&&mty>=0){const i=mty*W+mtx,o=ob[i];if(o&&o.t=='wtorch'&&Math.hypot(mtx*T+8-P.x,mty*T+8-P.y)<46){ob[i]=null;if(o.on!==false)inv.wtorch=(inv.wtorch|0)+1;snd('pick');say(o.on===false?(h?'Kiégett fáklya — eldobtad':'Burnt-out torch — tossed'):(h?'Levetted a fáklyát':'Took the torch down'));P.cd=.3;return}}
+ return a83()}}
+/* ---------- abandoned mine adits in the hillsides ---------- */
+var DMID=null,ADITS=[];
+function genAdits(){const r=rng75((wseed|0)+1313,5),out=[];for(let k=0;k<6000&&out.length<5;k++){const x=4+Math.floor(r()*(W-8)),y=4+Math.floor(r()*(H-8)),i=y*W+x;if(map[i]!=8||ob[i])continue;const b=(y+1)*W+x;if(!(map[b]==0||map[b]==2||map[b]==4)||ob[b])continue;if(el&&!(el[(y-1)*W+x]>el[b]))continue;if((bm[i]|0)==3||inCamp(x,y))continue;if(out.some(q=>Math.hypot(q[0]-x,q[1]-y)<45))continue;if(Math.hypot(x-SX,y-SY)<12)continue;ob[i]={t:'adit',nb:1};out.push([x,y])}ADITS=out;return out.length}
+{const ini83=init;init=function(...a){const r=ini83.apply(this,a);try{if(!inD)genAdits()}catch(e){}return r}}
+function genAdit(){loot=[];map=new Uint8Array(W*H).fill(5);ob=new Array(W*H).fill(null);deer=[];zs=[];const rn=n=>Math.floor(Math.random()*n),C=(x,y)=>{if(x>3&&y>3&&x<W-4&&y<H-4)map[y*W+x]=3};
+ const sx=48,sy=86;for(let y=sy-1;y<=sy+1;y++)for(let x=sx-1;x<=sx+1;x++)C(x,y);ob[(sy+2)*W+sx]=null;map[(sy+2)*W+sx]=3;ob[(sy+2)*W+sx]={t:'aexit'};
+ const main=[];let x=sx,y=sy-2,dir=[0,-1];for(let s=0;s<70;s++){C(x,y);main.push([x,y]);if(s%9==4)C(x+1,y);if(Math.random()<.18){const t=Math.random()<.5?[dir[1],-dir[0]]:[-dir[1],dir[0]];if(t[1]<=0)dir=t}else if(Math.random()<.25)dir=[0,-1];x+=dir[0];y+=dir[1];x=Math.max(8,Math.min(W-9,x));y=Math.max(8,Math.min(H-9,y))}
+ for(let i=0;i<main.length;i+=3){const[mx,my]=main[i];if(map[my*W+mx]==3&&!ob[my*W+mx]&&i>2)ob[my*W+mx]={t:'mrail'}}
+ const ends=[];for(let b=0;b<4;b++){let[bx,by]=main[8+rn(main.length-10)],d=Math.random()<.5?[1,0]:[-1,0];const len=10+rn(14);for(let s=0;s<len;s++){bx+=d[0];by+=d[1];C(bx,by);if(Math.random()<.2)d=Math.random()<.5?[0,-1]:[d[0]||1,0]}ends.push([bx,by])}
+ ends.push(main[main.length-1]);
+ for(const[ex,ey]of ends){for(let yy=ey-1;yy<=ey+1;yy++)for(let xx=ex-2;xx<=ex+2;xx++)C(xx,yy);const pick=[[ex-2,ey-1],[ex+2,ey-1],[ex-2,ey+1],[ex+2,ey+1]];const it=[{t:'chest'},{t:'mcart'},{t:'fcrate'},{t:'bones'}];for(let k=0;k<pick.length;k++){const[px,py]=pick[k];if(map[py*W+px]==3&&!ob[py*W+px]&&Math.random()<.75)ob[py*W+px]=it[k]}}
+ /* ore in the walls of the tunnels, torches every few metres (some long dead) */
+ const tun=[];for(let i=0;i<W*H;i++)if(map[i]==3)tun.push(i);
+ for(const i of tun){if(ob[i])continue;const nb=[i-1,i+1,i-W,i+W].filter(j=>map[j]==5);if(nb.length>=2&&Math.random()<.11){const q=Math.random();ob[i]={t:'ore',k:q>.97?'diamond':q>.88?'gold':q>.68?'iron':q>.42?'copper':'coal',hp:6}}}
+ for(let i=6;i<main.length;i+=7){const[mx,my]=main[i];for(const j of[my*W+mx-1,my*W+mx+1]){if(map[j]==5&&!ob[j]){ob[j]={t:'wtorch',on:Math.random()<.6};break}}}
+ /* someone — something — still lives down here */
+ for(let k=0;k<3;k++){const[zx,zy]=main[20+rn(main.length-21)];const v=[0,1,2,3][rn(4)];zs.push({id:nid(),x:zx*T+8,y:zy*T+8,hp:VHP[v],a:0,t:0,vx:0,vy:0,z:1,v})}}
+{const ed83=enterDM;enterDM=function(i,l,dir){DMID=i;const r=ed83(i,l,dir);if(String(i)[0]=='a'&&l==1&&inD&&dir!='up'){let s=-1;for(let k=0;k<W*H;k++)if(ob[k]&&ob[k].t=='aexit'){s=k;break}if(s>=0){P.x=(s%W)*T+8;P.y=(Math.floor(s/W)-1)*T+8}say(LANG=='hu'?'Elhagyott tárna — fogd a fáklyát, és figyelj!':'An abandoned adit — hold a torch and stay sharp!')}return r}}
+{const gd83=genDM;genDM=function(l){if(String(DMID)[0]=='a'&&l==1)return genAdit();return gd83(l)}}
+{const uo83=useObj;useObj=function(n){const o=n&&n.o;if(o&&o.t=='adit'&&!inD){enterDM('a'+(n.ty*W+n.tx),1,'down');return}if(o&&o.t=='aexit'&&inD){leave();return}return uo83(n)}}
+/* ---------- the infected keep to the dark: off the surface by day (except on Hard) ---------- */
+let NZ83=0;
+function inAnyBld(x,y){const tx=Math.floor(x/T),ty=Math.floor(y/T);for(const b of BLD)if(tx>=b.x&&tx<b.x+b.w&&ty>=b.y&&ty<b.y+b.h)return true;return false}
+{const up83=update;update=function(dt){up83(dt);if(state!='play'||inD||DIFF>=3||(net&&!net.dead&&!net.isHost))return;NZ83-=dt;if(NZ83>0)return;NZ83=.5;if(dk0()>.35)return;
+ const rc=locReactor();for(let i=zs.length-1;i>=0;i--){const z=zs[i];if(z.w||z.boss||z.mu||z.id==='tutz'||z.st79||z.hp<=0)continue;if(rc&&Math.hypot(z.x/T-rc.x,z.y/T-rc.y)<RR)continue;if(inAnyBld(z.x,z.y))continue;if(Math.hypot(z.x-P.x,z.y-P.y)<200)continue;zs.splice(i,1)}}}
+/* the story's scripted first infected stay, whatever the hour */
+{const sa83=stAdvance;stAdvance=function(){const n0=zs.length;const r=sa83();setTimeout(()=>{for(const z of zs)if(!z.w&&!z.st79&&Math.hypot(z.x-P.x,z.y-P.y)<200)z.st79=1},4700);return r}}
+
+{const tx83=txt;txt=function(s,x,y,c,al){if(curDM&&inD&&String(curDM.i)[0]=='a'&&x===6&&y===56&&typeof s=='string'&&(s.startsWith('Saját bánya')||s.startsWith('Your mine')))s=(LANG=='hu'?'Elhagyott tárna':'Old adit')+(curDM.l>1?' '+curDM.l:'');return tx83(s,x,y,c,al)}}
 
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
