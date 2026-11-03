@@ -5198,6 +5198,38 @@ const RCL={0:['#6e6a64','#5a5650','#8a867e','#46423e'],1:['#b4bcc4','#98a0a8','#
  /* hills and mountains: lighter plateaus, darker step edges so height still reads */
  if(!inD&&el&&el[i]&&m!=1&&m!=7&&m!=20){const e=el[i];W_(px,py,T,T,'rgba(255,255,240,'+(.04*e)+')');if(ty<H-1&&el[(ty+1)*W+tx]<e&&map[(ty+1)*W+tx]!=8)W_(px,py+T-2,T,2,'rgba(0,0,0,.25)');if(ty>0&&el[(ty-1)*W+tx]<e)W_(px,py,T,1,'rgba(255,255,255,.12)')}}}
 
+/* ===== v79: story mode is more guided — safe start, infected only from the city on, arrows to every goal ===== */
+GAMEV=79;
+function obNear(pred,r){const tx=Math.floor(P.x/T),ty=Math.floor(P.y/T);let best=null,bd=1e9;for(let y=Math.max(1,ty-r);y<=Math.min(H-2,ty+r);y++)for(let x=Math.max(1,tx-r);x<=Math.min(W-2,tx+r);x++){const o=ob[y*W+x];if(!o||!pred(o,x,y))continue;const d=(x-tx)*(x-tx)+(y-ty)*(y-ty);if(d<bd){bd=d;best=[x*T+8,y*T+8]}}return best}
+function tileNear(pred,r){const tx=Math.floor(P.x/T),ty=Math.floor(P.y/T);let best=null,bd=1e9;for(let y=Math.max(1,ty-r);y<=Math.min(H-2,ty+r);y++)for(let x=Math.max(1,tx-r);x<=Math.min(W-2,tx+r);x++){if(!pred(map[y*W+x],x,y))continue;const d=(x-tx)*(x-tx)+(y-ty)*(y-ty);if(d<bd){bd=d;best=[x*T+8,y*T+8]}}return best}
+const wolfNear=()=>{let b=null,bd=1e9;for(const z of zs){if(!z.w||z.hp<=0)continue;const d=Math.hypot(z.x-P.x,z.y-P.y);if(d<bd){bd=d;b=[z.x,z.y]}}return b};
+/* goals for the arrow in act I + the car and the stairs */
+const STO={wood:()=>obNear(o=>o.t=='tree',40),berry:()=>obNear(o=>o.t=='bush'&&o.b,45),fish:()=>tileNear(m=>m==1||m==20,50),dog:()=>(inv.bone|0)<3?obNear(o=>o.t=='bones',60):wolfNear(),
+ rest:()=>obNear(o=>(o.t=='fire'||o.t=='fplace')&&o.on,30),car:()=>obNear(o=>o.t=='car',70),down:()=>inD?obNear(o=>o.t=='rdown',90):null,gen:()=>inD?obNear(o=>o.t=='egen',90):null};
+for(const A of SACT)for(const s of A.steps)if(STO[s.id]&&!s.to)s.to=STO[s.id];
+SACT[0].steps.find(s=>s.id=='dog').h=['Csontot a romoknál találsz (a nyíl mutatja). 3 csonttal a kézben katt a farkasra','Bones lie by the ruins (follow the arrow). With 3 bones in hand, click a wolf'];
+/* arrow: cache the target, and show it underground for the stairs/generator too */
+let STA={t:0,v:null,id:null};
+function stTarget(s){const now=performance.now();if(STA.id!==s.id||now-STA.t>500){STA.t=now;STA.id=s.id;try{STA.v=s.to?s.to():null}catch(e){STA.v=null}}return STA.v}
+{const ds79=drawStory;drawStory=function(){const s=stCur();if(s&&s.to){const orig=s.to;s.to=null;try{ds79()}finally{s.to=orig}
+  const r=trkRect(),to=stTarget(s);if(r&&to&&!STORY.intro&&!invOpen&&!book&&!stOpen&&!skOpen&&!showMap&&!tut&&!SJ&&!SEND&&(!inD||s.id=='down'||s.id=='gen')){noTr=true;stArrow(r.x+r.w+8,r.y+20,to);noTr=false}return}return ds79()}}
+/* ---------- the infected come later: none in act I, only inside the city in act II ---------- */
+{const up79=update;update=function(dt){up79(dt);if(!STORY||STORY.done||state!='play'||inD||net)return;if(STORY.act>=2)return;
+ for(let i=zs.length-1;i>=0;i--){const z=zs[i];if(z.w||z.boss||z.id==='tutz'||z.st79)continue;const b=bm[Math.floor(z.y/T)*W+Math.floor(z.x/T)]|0;if(b==3&&Math.hypot(z.x-P.x,z.y-P.y)>40)continue;if(STORY.act==1&&b==3)continue;zs.splice(i,1)}
+ stEnsure()}}
+/* make sure act I can always be finished nearby: bones + a wolf */
+let STE={t:0};
+function stEnsure(){const s=stCur();if(!s||s.id!='dog')return;STE.t-=1/60;if(STE.t>0)return;STE.t=3;
+ const free=(x,y)=>x>2&&y>2&&x<W-3&&y<H-3&&!ob[y*W+x]&&(map[y*W+x]==0||map[y*W+x]==4||map[y*W+x]==2);
+ if((inv.bone|0)<3&&!obNear(o=>o.t=='bones',45)){const tx=Math.floor(P.x/T),ty=Math.floor(P.y/T);let n=0;for(let k=0;k<200&&n<3;k++){const a=Math.random()*6.28,r=12+Math.random()*10,x=Math.round(tx+Math.cos(a)*r),y=Math.round(ty+Math.sin(a)*r);if(free(x,y)){ob[y*W+x]={t:'bones'};n++}}}
+ if(!wolfNear()||Math.hypot(...(wolfNear()||[1e9,1e9]).map((v,i)=>v-(i?P.y:P.x)))>520){for(let k=0;k<40;k++){const a=Math.random()*6.28,x=P.x+Math.cos(a)*260,y=P.y+Math.sin(a)*260;if(!blocked(x,y,5)){zs.push({id:nid(),x,y,hp:5,a:0,t:0,vx:0,vy:0,z:1,w:1,st79:1});break}}}}
+/* the first infected: a scripted encounter when you reach the city */
+{const sa79=stAdvance;stAdvance=function(){const s=stCur(),id=s&&s.id;sa79();if(id=='city'&&!net){RADIO.push({k:'radio',t:['…vigyázz! Mozgást látok a kameráimon… fertőzöttek, pont előtted! Ne hagyd, hogy körbevegyenek — üss és hátrálj!','…careful! I see movement on my cameras… infected, right in front of you! Don’t let them surround you — strike and back off!']});
+  setTimeout(()=>{if(!STORY||inD)return;let n=0;for(let k=0;k<60&&n<2;k++){const a=Math.random()*6.28,x=P.x+Math.cos(a)*130,y=P.y+Math.sin(a)*130;if(!blocked(x,y,5)){zs.push({id:nid(),x,y,hp:VHP[0],a:0,t:0,vx:0,vy:0,z:1,v:0});n++}}},4500)}}}
+/* a nudge line for the safe first act */
+SACT[0].steps[0].b=SACT[0].steps[0].b||null;
+INTRO.push(['Ez a vidék most még csendes. A városban már nem az.','This land is quiet for now. The city is not.']);
+
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
 function fireList(){const n=performance.now();if(FL.ob!==ob||n-FL.t>500){FL.ob=ob;FL.t=n;FL.a=[];for(let i=0;i<ob.length;i++){const o=ob[i];if(o&&(o.t=='fire'&&o.on||o.t=='fbarrel'))FL.a.push([(i%W)*T+8,Math.floor(i/W)*T+8])}}return FL.a}
