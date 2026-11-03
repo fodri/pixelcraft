@@ -5516,6 +5516,9 @@ function cabHasLoft(o){const r=o.room;if(!r||!r.ob)return false;let v=LFC86.get(
 /* mark the cabin as soon as the stairs exist (before you ever leave) */
 {const a86=act;act=function(){const had=inC&&curCab&&ob.some(q=>q&&q.t=='cup');const r=a86();if(inC&&curCab){const has=ob.some(q=>q&&q.t=='cup');if(has!==had&&curCab.room)LFC86.set(curCab.room,has)}return r}}
 
+/* ===== v87: fix — the dog no longer steals E from stairs, hatches and ladders ===== */
+GAMEV=87;
+
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
 function fireList(){const n=performance.now();if(FL.ob!==ob||n-FL.t>500){FL.ob=ob;FL.t=n;FL.a=[];for(let i=0;i<ob.length;i++){const o=ob[i];if(o&&(o.t=='fire'&&o.on||o.t=='fbarrel'))FL.a.push([(i%W)*T+8,Math.floor(i/W)*T+8])}}return FL.a}
