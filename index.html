@@ -5582,6 +5582,13 @@ addEventListener('keydown',e=>{if(e.code!='KeyR'||state!='play'||HB[hb]!='hkit'|
 {const dp89=drawP;drawP=function(){const r=dp89();if(HB[hb]=='hkit'&&inv.hkit>0&&state=='play'&&!inD&&mtx>=0){const s=hkSpot(),ok=hkOk(s),c=ok?'rgba(120,255,120,':'rgba(255,90,80,';const X=s.x*T-cam.x,Y=s.y*T-cam.y,w=s.w*T,hh=s.h*T;
   Q(X,Y,w,hh,c+'.16)');Q(X,Y,w,1,c+'.8)');Q(X,Y+hh-1,w,1,c+'.8)');Q(X,Y,1,hh,c+'.8)');Q(X+w-1,Y,1,hh,c+'.8)');const dx=s.k==1?2:Math.floor(s.w/2);Q(X+dx*T+4,Y+hh-4,8,4,c+'.8)')}return r}}
 
+/* ===== v90: fix — starting a new world from inside a cabin left the game thinking you were still indoors (rug/plank texture on the grass) ===== */
+GAMEV=90;
+{const ini90=init;init=function(...a){inC=false;curCab=null;INLOFT=false;curPH=null;curDM=null;try{curOf=null}catch(e){}const r=ini90.apply(this,a);inC=false;curCab=null;return r}}
+{const ld90=load;load=function(...a){const r=ld90.apply(this,a);if(!inD){inC=false;curCab=null;INLOFT=false;curPH=null;curDM=null;try{curOf=null}catch(e){}}return r}}
+/* safety net: on the surface you are never "in a cabin" */
+{const up90=update;update=function(dt){if(!inD&&inC){inC=false;curCab=null;INLOFT=false}return up90(dt)}}
+
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
 function fireList(){const n=performance.now();if(FL.ob!==ob||n-FL.t>500){FL.ob=ob;FL.t=n;FL.a=[];for(let i=0;i<ob.length;i++){const o=ob[i];if(o&&(o.t=='fire'&&o.on||o.t=='fbarrel'))FL.a.push([(i%W)*T+8,Math.floor(i/W)*T+8])}}return FL.a}
