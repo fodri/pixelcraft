@@ -1348,7 +1348,7 @@ function act(){
   return}}
 function mv(e,dx,dy,r){let a=false,b=false;if(!blocked(e.x+dx,e.y,r))e.x+=dx;else a=true;if(!blocked(e.x,e.y+dy,r))e.y+=dy;else b=true;return[a,b]}
 function update(dt){
- time+=dt/240;if(time>=1){time=0;day++;say('Day '+day+' begins')}
+ time+=dt/(240*(typeof DAYSLOW=='number'?DAYSLOW:1));if(time>=1){time=0;day++;say('Day '+day+' begins')}
  BD+=((inBuild()?bDim():0)-BD)*Math.min(1,dt*4);const dr=dark();let mx=0,my=0;sporeTick(dt);
  if(K.KeyA||K.ArrowLeft)mx--;if(K.KeyD||K.ArrowRight)mx++;if(K.KeyW||K.ArrowUp)my--;if(K.KeyS||K.ArrowDown)my++;
  if(view){ang+=((K.ArrowRight?1:0)-(K.ArrowLeft?1:0))*2.4*dt;const f=(K.KeyW||K.ArrowUp?1:0)-(K.KeyS||K.ArrowDown?1:0),s=(K.KeyD?1:0)-(K.KeyA?1:0),v=(K.ShiftLeft?100:70)*dt;if(f||s){mv(P,(Math.cos(ang)*f-Math.sin(ang)*s)*v,(Math.sin(ang)*f+Math.cos(ang)*s)*v,4);P.an+=dt*10;if(fishing){fishing=null;say('Fishing cancelled')}}P.fx=Math.cos(ang);P.fy=Math.sin(ang);mx=my=0}
@@ -4186,7 +4186,7 @@ function harvest(o,bed,i){const c=bed?o.c:o,h=hu6();if(c.dead){if(bed)o.c=null;e
  if(it=='bone'&&inv.bone>0){const w=zs.find(z=>z.w&&z.hp>0&&Math.hypot(z.x-P.x,z.y-P.y)<40&&Math.hypot(z.x-mwx,z.y-6-mwy)<22);if(w){if(edge)feedWolf(w);P.cd=.4;return}}
  if(inb&&near&&it&&it.startsWith('sd_')&&inv[it]>0){const k=it.slice(3);if(!o&&map[i]==4){ob[i]={t:'crop',k,pt:gtime()};inv[it]--;snd('pick');say((h?'Elültetted: ':'Planted: ')+tr(LBL[k]).toLowerCase());P.cd=.25;return}
   if(o&&o.t=='gbed'&&!o.c){o.c={k,pt:gtime()};inv[it]--;snd('pick');say((h?'Elültetted: ':'Planted: ')+tr(LBL[k]).toLowerCase());P.cd=.25;return}
-  if(!o&&(map[i]==0||map[i]==2)){say(h?'Előbb ásd fel a földet ásóval (vagy építs magaságyást)':'Dig the soil with a shovel first (or build a garden bed)');P.cd=.3;return}}
+  if(!o&&(map[i]==0||map[i]==2)){say(h?'Előbb kapáld fel a földet kapával (vagy építs magaságyást)':'Till the soil with a hoe first (or build a garden bed)');P.cd=.3;return}}
  if(inb&&near&&o&&o.t=='crop'){if(edge){if(cropStage(o)==3||o.dead)harvest(o,false,i);else say((h?'Még nő… ':'Growing… ')+Math.round(Math.min(.99,(gtime()-o.pt)/(CROPS[o.k]||CROPS.wheat).g)*100)+'%')}P.cd=.3;return}
  if(inb&&near&&o&&o.t=='gbed'&&o.c){if(edge){if(cropStage(o.c)==3||o.c.dead)harvest(o,true);else say((h?'Még nő… ':'Growing… ')+Math.round(Math.min(.99,(gtime()-o.c.pt)/(CROPS[o.c.k]||CROPS.wheat).g)*100)+'%')}P.cd=.3;return}
  if(inb&&near&&it=='kpot'&&inv.kpot>0&&o&&(o.t=='fire'||o.t=='fplace')&&!o.pot){o.pot=1;inv.kpot--;snd('pick');say(h?'Bogrács a tűzön — E: főzés':'Pot on the fire — E: cook');P.cd=.3;return}
@@ -5445,7 +5445,7 @@ function genAdit(){loot=[];map=new Uint8Array(W*H).fill(5);ob=new Array(W*H).fil
  for(let i=0;i<main.length;i+=3){const[mx,my]=main[i];if(map[my*W+mx]==3&&!ob[my*W+mx]&&i>2)ob[my*W+mx]={t:'mrail'}}
  const ends=[];for(let b=0;b<4;b++){let[bx,by]=main[8+rn(main.length-10)],d=Math.random()<.5?[1,0]:[-1,0];const len=10+rn(14);for(let s=0;s<len;s++){bx+=d[0];by+=d[1];C(bx,by);if(Math.random()<.2)d=Math.random()<.5?[0,-1]:[d[0]||1,0]}ends.push([bx,by])}
  ends.push(main[main.length-1]);
- for(const[ex,ey]of ends){for(let yy=ey-1;yy<=ey+1;yy++)for(let xx=ex-2;xx<=ex+2;xx++)C(xx,yy);const pick=[[ex-2,ey-1],[ex+2,ey-1],[ex-2,ey+1],[ex+2,ey+1]];const it=[{t:'chest'},{t:'mcart'},{t:'fcrate'},{t:'bones'}];for(let k=0;k<pick.length;k++){const[px,py]=pick[k];if(map[py*W+px]==3&&!ob[py*W+px]&&Math.random()<.75)ob[py*W+px]=it[k]}}
+ for(const[ex,ey]of ends){for(let yy=ey-1;yy<=ey+1;yy++)for(let xx=ex-2;xx<=ex+2;xx++)C(xx,yy);const pick=[[ex-2,ey-1],[ex+2,ey-1],[ex-2,ey+1],[ex+2,ey+1]];const it=[{t:'chest'},{t:'mcart'},{t:'fcrate'},{t:'kbones',hl:1}];for(let k=0;k<pick.length;k++){const[px,py]=pick[k];if(map[py*W+px]==3&&!ob[py*W+px]&&Math.random()<.75)ob[py*W+px]=it[k]}}
  /* ore in the walls of the tunnels, torches every few metres (some long dead) */
  const tun=[];for(let i=0;i<W*H;i++)if(map[i]==3)tun.push(i);
  for(const i of tun){if(ob[i])continue;const nb=[i-1,i+1,i-W,i+W].filter(j=>map[j]==5);if(nb.length>=2&&Math.random()<.11){const q=Math.random();ob[i]={t:'ore',k:q>.97?'diamond':q>.88?'gold':q>.68?'iron':q>.42?'copper':'coal',hp:6}}}
@@ -5463,7 +5463,7 @@ function inAnyBld(x,y){const tx=Math.floor(x/T),ty=Math.floor(y/T);for(const b o
 /* the story's scripted first infected stay, whatever the hour */
 {const sa83=stAdvance;stAdvance=function(){const n0=zs.length;const r=sa83();setTimeout(()=>{for(const z of zs)if(!z.w&&!z.st79&&Math.hypot(z.x-P.x,z.y-P.y)<200)z.st79=1},4700);return r}}
 
-{const tx83=txt;txt=function(s,x,y,c,al){if(curDM&&inD&&String(curDM.i)[0]=='a'&&x===6&&y===56&&typeof s=='string'&&(s.startsWith('Saját bánya')||s.startsWith('Your mine')))s=(LANG=='hu'?'Elhagyott tárna':'Old adit')+(curDM.l>1?' '+curDM.l:'');return tx83(s,x,y,c,al)}}
+{const tx83=txt;txt=function(s,x,y,c,al){if(curDM&&inD&&String(curDM.i)[0]=='a'&&x===6&&y===56&&typeof s=='string'&&(s==='Mine'||s==='Bánya'||s.startsWith('Saját bánya')||s.startsWith('Your mine')))s=(LANG=='hu'?'Elhagyott tárna':'Old adit')+(curDM.l>1?' '+curDM.l:'');return tx83(s,x,y,c,al)}}
 
 /* ===== v84: clearer axe, pickaxe and shovel icons ===== */
 GAMEV=84;
@@ -5518,6 +5518,69 @@ function cabHasLoft(o){const r=o.room;if(!r||!r.ob)return false;let v=LFC86.get(
 
 /* ===== v87: fix — the dog no longer steals E from stairs, hatches and ladders ===== */
 GAMEV=87;
+
+/* ===== v88: no light while holding a tool — instead find a headlamp on a skeleton in the mines ===== */
+GAMEV=88;
+const TOOLNOL=k=>{const t=TK[k];return !!(t&&(t.k=='axe'||t.k=='pickaxe'||t.k=='shovel'))||k=='hoe'};
+var HLON=true;try{HLON=localStorage.getItem('pxc_hl')!=='0'}catch(e){}
+Object.assign(LBL,{hlamp:'Headlamp'});Object.assign(LBLX,{hlamp:'Headlamp'});HU.unshift(['Headlamp','Fejlámpa'],['headlamp','fejlámpa']);
+if(!NEWK.includes('hlamp'))NEWK.push('hlamp');if(inv.hlamp==null)inv.hlamp=0;
+{const ic88=icon2;icon2=function(k,x,y){const S=(a,b,w,h,c)=>Q(x+a,y+b,w,h,c);if(k=='hlamp'){S(2,8,16,3,'#3a3a3e');S(2,8,16,1,'#5a5a60');S(6,5,8,8,'#2a2a2e');S(7,6,6,6,'#5a5e62');S(8,7,4,4,'#fff6c0');S(9,8,2,2,'#ffffff');S(2,11,2,4,'#3a3a3e');S(16,11,2,4,'#3a3a3e');return true}return ic88(k,x,y)}}
+{const fo88=flashOn;flashOn=function(){if(!CLASSIC&&HLON&&inv.hlamp>0&&!drv&&state=='play')return true;const h=HB[hb];if(TOOLNOL(h))return false;return fo88()}}
+/* right-click with a tool never toggles a weapon light; with the headlamp selected, click toggles it */
+{const rc88=rclick;rclick=function(){const it=HB[hb];if(TOOLNOL(it)&&it!='hoe'&&!(tool()&&tool().k=='shovel')&&!(K.ShiftLeft||K.ShiftRight))return;return rc88()}}
+{const a88=act;act=function(){const it=HB[hb],h=LANG=='hu';
+ if(it=='hlamp'&&inv.hlamp>0&&edge&&P.cd<=0){HLON=!HLON;try{localStorage.setItem('pxc_hl',HLON?'1':'0')}catch(e){}snd('ui');say(h?(HLON?'Fejlámpa: BE':'Fejlámpa: KI'):(HLON?'Headlamp: ON':'Headlamp: OFF'));P.cd=.3;return}
+ /* loose bones down in the dark sometimes hide a headlamp */
+ if(inD&&edge&&mtx>=0&&mty>=0&&mtx<W&&mty<H){const o=ob[mty*W+mtx];if(o&&o.t=='bones'&&!(inv.hlamp>0)&&Math.hypot(mtx*T+8-P.x,mty*T+8-P.y)<46&&(o.hl||Math.random()<.3)){const r=a88();hlFound();return r}}
+ return a88()}}
+function hlFound(){inv.hlamp=1;HLON=true;try{givehb('hlamp')}catch(e){}snd('craft');setTimeout(()=>say(LANG=='hu'?'Egy fejlámpa volt a csontváz koponyáján! Mostantól világít előtted, bármi van a kezedben (katt rá a gyorssávon: be/ki)':'There was a headlamp on the skull! It now lights the way whatever you hold (click it in the hotbar: on/off)'),350)}
+/* searching a skeleton (E) */
+{const uo88=useObj;useObj=function(n){const o=n&&n.o;if(o&&o.t=='kbones'&&!o.taken&&!(inv.hlamp>0)&&(o.hl||(inD&&Math.random()<.45))){const r=uo88(n);hlFound();return r}return uo88(n)}}
+/* the lamp shows on your forehead */
+{const dp88=drawP;drawP=function(){const r=dp88();if(!CLASSIC&&HLON&&inv.hlamp>0&&!drv&&!rid&&state=='play'){const x=Math.round(P.x-cam.x),y=Math.round(P.y-cam.y);Q(x-2,y-19,4,1,'#2a2a2e');Q(x-1,y-20,2,2,'#fff6c0')}return r}}
+
+/* ===== v89: longer days, bandages & first-aid kits, and a real house kit (same size and look as the houses in the world) ===== */
+GAMEV=89;
+{const fl89=flashLight;flashLight=function(d){if(!isFinite(mwx)||!isFinite(mwy)||!isFinite(P.x)||!isFinite(P.y)||!isFinite(cam.x)||!isFinite(cam.y))return;return fl89(d)}}
+{const ft89=flashTint;flashTint=function(...a){if(!isFinite(mwx)||!isFinite(mwy)||!isFinite(cam.x))return;return ft89(...a)}}
+/* ---------- slower days (sleeping still fast-forwards) ---------- */
+var DAYSLOW=2.5;
+/* ---------- healing ---------- */
+Object.assign(LBL,{bandage:'Bandage',medkit:'First-aid kit',hkit:'House kit'});Object.assign(LBLX,{bandage:'Bandage',medkit:'First-aid kit',hkit:'House kit'});
+HU.unshift(['Bandage','Kötszer'],['bandage','kötszer'],['First-aid kit','Elsősegélycsomag'],['first-aid kit','elsősegélycsomag'],['House kit','Ház építőkészlet'],['house kit','ház építőkészlet']);
+for(const k of['bandage','medkit','hkit']){if(!NEWK.includes(k))NEWK.push(k);if(inv[k]==null)inv[k]=0}
+REC.push(['bandage','Bandage',{cloth:2}],['medkit','First-aid kit',{bandage:2,tonic:1,bottle:1}],['hkit','House kit',{wood:40,stone:16,boards:6}]);
+TBS.medcab.push(['bandage',45],['medkit',12]);TBS.cabinet.push(['bandage',18]);
+{const ic89=icon2;icon2=function(k,x,y){const S=(a,b,w,h,c)=>Q(x+a,y+b,w,h,c);
+ if(k=='bandage'){S(3,6,14,9,'#e8e4d8');S(3,6,14,1,'#ffffff');for(let i=0;i<4;i++)S(5+i*3,6,1,9,'#c8c4b8');S(14,9,4,6,'#d8d4c8');S(8,9,4,3,'#c8302a');return true}
+ if(k=='medkit'){S(3,6,14,11,'#c8302a');S(3,6,14,2,'#e05a4a');S(7,3,6,4,'#8a1a14');S(8,4,4,2,'#c8302a');S(9,8,2,7,'#ffffff');S(6,10,8,3,'#ffffff');return true}
+ if(k=='hkit'){S(3,9,14,9,'#8a5a30');S(3,9,14,1,'#a87444');S(1,8,18,2,'#6a3a22');for(let i=0;i<5;i++)S(3+i*3,4+Math.abs(2-i),3,5-Math.abs(2-i),'#a8432c');S(8,12,4,6,'#4a2e18');S(4,11,3,3,'#9ac0d4');S(13,11,3,3,'#9ac0d4');return true}return ic89(k,x,y)}}
+var HEAL=null;
+{const a89=act;act=function(){const it=HB[hb],h=LANG=='hu';if((it=='bandage'||it=='medkit')&&inv[it]>0&&edge&&P.cd<=0){
+  if(HEAL){say(h?'Már kötözöd magad…':'Already bandaging…');P.cd=.3;return}if(P.hp>=99&&!(it=='medkit'&&(P.inf||0)>5)){say(h?'Nincs szükséged kötözésre':'You don’t need patching up');P.cd=.3;return}
+  inv[it]--;HEAL={left:it=='medkit'?60:28,t:it=='medkit'?5:4,inf:it=='medkit'?30:0};snd('pick');say(it=='medkit'?(h?'Elsősegély… (+60 élet)':'First aid… (+60 health)'):(h?'Bekötözöd a sebeidet… (+28 élet)':'You bandage your wounds… (+28 health)'));P.cd=.6;return}return a89()}}
+{const up89=update;update=function(dt){up89(dt);if(!HEAL||state!='play')return;const r=HEAL.left/HEAL.t,d=Math.min(HEAL.left,r*dt);P.hp=Math.min(100,P.hp+d);HEAL.left-=d;if(HEAL.inf)P.inf=Math.max(0,(P.inf||0)-HEAL.inf*dt/HEAL.t);
+ if(Math.random()<dt*6)parts.push({x:P.x+(Math.random()-.5)*10,y:P.y-14,vx:0,vy:-20,l:.6,c:'#7aff8a'});if(HEAL.left<=.01||P.hp>=100){HEAL=null}}}
+{const hb89=hud;hud=function(){hb89();if(HEAL&&state=='play'){noTr=true;const t=performance.now()/200;Q(114,4,7,7,'rgba(0,0,0,.4)');Q(116,5,3,5,'#7aff8a');Q(115,6,5,3,'#7aff8a');noTr=false}}}
+/* ---------- house kit: builds a proper house like the ones in the world ---------- */
+const HKD=[[7,6],[11,6],[8,7]];
+function hkSpot(){const k=(rot|0)%3,[w,h]=HKD[k],x=mtx-Math.floor(w/2),y=mty-(h-1);return{k,w,h,x,y}}
+function hkOk(s){if(inD)return false;const e0=el?el[(s.y+s.h-1)*W+s.x]:0;for(let yy=s.y-1;yy<=s.y+s.h;yy++)for(let xx=s.x-1;xx<=s.x+s.w;xx++){if(xx<3||yy<3||xx>=W-3||yy>=H-3)return false;const i=yy*W+xx,m=map[i];if(!(m==0||m==2||m==4||m==12||m==14))return false;if(el&&el[i]!==e0)return false;const o=ob[i];if(o&&!{tree:1,bush:1,rock:1,flax:1,tgrass:1,shrub:1,flower:1}[o.t])return false;if(bm[i]==3)return false}
+ for(const b of BLD)if(s.x<b.x+b.w+1&&s.x+s.w+1>b.x&&s.y<b.y+b.h+1&&s.y+s.h+1>b.y)return false;const px=Math.floor(P.x/T),py=Math.floor(P.y/T);if(px>=s.x-1&&px<=s.x+s.w&&py>=s.y-1&&py<=s.y+s.h)return false;return true}
+function hkBuild(s){const R0=R;R=Math.random;const z0=zs.length;try{buildRuin(s.x,s.y,s.k)}finally{R=R0}zs.splice(z0);
+ const di=ob.findIndex((o,i)=>o&&o.t=='door'&&o.ru&&o.rx===s.x&&o.ry===s.y);const d=ob[di];if(d){d.cl=1;d.rp=1;d.own=String(uname||'').slice(0,12)}
+ for(let yy=s.y-2;yy<=s.y+s.h+2;yy++)for(let xx=s.x-5;xx<=s.x+s.w+5;xx++){const i=yy*W+xx,o=ob[i];if(!o)continue;if(o.rv)delete o.rv;if(o.t=='win'){o.open=false;o.bd=0}if(o.t=='rubble'||o.t=='papers'||o.t=='bones'||o.t=='cweb'||(o.t=='crop'&&o.dead))ob[i]=null;if(o.t=='budi'&&(xx<s.x-3||xx>s.x+s.w+3))ob[i]=null}
+ for(let yy=s.y+1;yy<s.y+s.h-1;yy++)for(let xx=s.x+1;xx<s.x+s.w-1;xx++){const i=yy*W+xx;if(map[i]==0)map[i]=12}
+ try{ruinRoofs()}catch(e){}ROOFC.clear()}
+{const a89b=act;act=function(){if(HB[hb]=='hkit'&&inv.hkit>0&&edge&&P.cd<=0&&mtx>=0&&mty>=0){const h=LANG=='hu',s=hkSpot();if(Math.hypot(mtx*T+8-P.x,mty*T+8-P.y)>120){say(h?'Túl messze':'Too far');P.cd=.3;return}
+  if(!hkOk(s)){say(h?'Ide nem fér el a ház — sík, szabad terület kell (R: másik ház)':'The house doesn’t fit here — needs flat, open ground (R: other house)');P.cd=.4;return}
+  inv.hkit--;hkBuild(s);snd('craft');say(h?['Felépült a házad! (földszintes) — a tiéd, itt fogsz újraéledni','Felépült a hosszú házad, fürdőszobával!','Felépült az emeletes házad!'][s.k]:['Your house is built! It’s yours — you’ll respawn here','Your long house with a bathroom is built!','Your two-storey house is built!'][s.k]);try{setHome()}catch(e){}P.cd=.8;return}return a89b()}}
+/* R cycles the three house types while holding the kit */
+addEventListener('keydown',e=>{if(e.code!='KeyR'||state!='play'||HB[hb]!='hkit'||!(inv.hkit>0)||SFOC||chatOpen||book||invOpen)return;e.stopImmediatePropagation();rot=((rot|0)+1)%3;snd('ui');const h=LANG=='hu';say(h?['Ház: földszintes (7×6)','Ház: hosszú, fürdőszobás (11×6)','Ház: emeletes (8×7)'][rot]:['House: single storey (7×6)','House: long with bathroom (11×6)','House: two storeys (8×7)'][rot])},true);
+/* ghost preview */
+{const dp89=drawP;drawP=function(){const r=dp89();if(HB[hb]=='hkit'&&inv.hkit>0&&state=='play'&&!inD&&mtx>=0){const s=hkSpot(),ok=hkOk(s),c=ok?'rgba(120,255,120,':'rgba(255,90,80,';const X=s.x*T-cam.x,Y=s.y*T-cam.y,w=s.w*T,hh=s.h*T;
+  Q(X,Y,w,hh,c+'.16)');Q(X,Y,w,1,c+'.8)');Q(X,Y+hh-1,w,1,c+'.8)');Q(X,Y,1,hh,c+'.8)');Q(X+w-1,Y,1,hh,c+'.8)');const dx=s.k==1?2:Math.floor(s.w/2);Q(X+dx*T+4,Y+hh-4,8,4,c+'.8)')}return r}}
 
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
