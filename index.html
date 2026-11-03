@@ -5230,6 +5230,70 @@ function stEnsure(){const s=stCur();if(!s||s.id!='dog')return;STE.t-=1/60;if(STE
 SACT[0].steps[0].b=SACT[0].steps[0].b||null;
 INTRO.push(['Ez a vidék most még csendes. A városban már nem az.','This land is quiet for now. The city is not.']);
 
+/* ===== v80: your dog comes inside (tents, cabins, houses, mines…), abandoned log cabins to find in the woods, stairs up to a cabin loft ===== */
+GAMEV=80;
+/* ---------- dogs follow you indoors ---------- */
+let IND80=false,LSP80={x:0,y:0};
+function petPlaceNear(p){const C=[[12,6],[-12,6],[0,12],[12,-6],[-12,-6],[0,-12],[18,0],[-18,0],[0,0]];for(const[dx,dy]of C){const x=P.x+dx,y=P.y+dy;if(!blocked(x,y,4)){p.x=x;p.y=y;return}}p.x=P.x;p.y=P.y}
+{const up80=update;update=function(dt){up80(dt);if(state!='play'||!PETS.length)return;
+ if(inD&&!IND80){for(const p of PETS){if(p.st==0&&Math.hypot(p.x-LSP80.x,p.y-LSP80.y)<220){p.in=1;p.sx=p.x;p.sy=p.y;petPlaceNear(p);p.mv=0}}}
+ else if(!inD&&IND80){for(const p of PETS)if(p.in){p.in=0;petPlaceNear(p)}}
+ IND80=inD;if(!inD){LSP80.x=P.x;LSP80.y=P.y;return}
+ for(const p of PETS){if(!p.in)continue;p.a=(p.a||0)-dt;p.rest=0;const dp=Math.hypot(P.x-p.x,P.y-p.y);if(dp>260||blocked(p.x,p.y,4)){petPlaceNear(p);continue}
+  let tx=null,ty=null,sp=72,foe=null,fd=100;for(const z of zs){if(z.w||z.hp<=0||z.boss)continue;const d=Math.hypot(z.x-p.x,z.y-p.y);if(d<fd){fd=d;foe=z}}
+  if(foe){tx=foe.x;ty=foe.y;sp=96;if(fd<15&&p.a<=0){p.a=.7;foe.hp-=3;foe.kx=Math.sign(foe.x-p.x)*70;hit(foe.x,foe.y-6,'#8a1c1c')}}
+  else if(dp>30){tx=P.x-(P.fx||0)*14;ty=P.y-(P.fy||0)*10+4;sp=dp>90?110:72}
+  p.mv=0;if(tx!=null){const dx=tx-p.x,dy=ty-p.y,d=Math.hypot(dx,dy);if(d>6){const s=Math.min(d,sp*dt);mv(p,dx/d*s,dy/d*s,4);p.mv=1;if(Math.abs(dx)>2)p.fx=Math.sign(dx)}}
+  else if(dk0()>.5&&dp<40){p.rest=1}}}}
+{const dp80=drawP;drawP=function(){if(inD)for(const p of PETS)if(p.in)drawDog(p,p.mv);return dp80()}}
+{const pl80=petLoad;petLoad=function(){pl80();for(const p of PETS)p.in=0;IND80=false}}
+/* the E key / name tag works indoors too */
+addEventListener('keydown',e=>{if(e.code!='KeyE'||e.repeat||state!='play'||!inD||DTAG||book||invOpen||SFOC||chatOpen)return;let b=null,bd=22;for(const p of PETS){if(!p.in)continue;const d=Math.hypot(p.x-P.x,p.y-P.y);if(d<bd){bd=d;b=p}}if(!b)return;let n=null;try{n=nearInt()}catch(x){}if(n&&isFinite(n.tx)&&Math.hypot(n.tx*T+8-P.x,n.ty*T+8-P.y)<bd)return;e.stopImmediatePropagation();e.preventDefault();dtagOpen(b,false)},true);
+/* ---------- abandoned log cabins hidden in the forests and the snow ---------- */
+function genCabins(){if(inD)return 0;const r=rng75((wseed|0)+911,77),want=6+Math.floor(r()*3);let n=0;
+ for(let k=0;k<4000&&n<want;k++){const ax=4+Math.floor(r()*(W-12)),ay=4+Math.floor(r()*(H-12)),b0=bm[ay*W+ax]|0;if(b0!=0&&b0!=1)continue;
+  let ok=true;for(let y=ay-2;y<ay+4&&ok;y++)for(let x=ax-2;x<ax+5;x++){const i=y*W+x;if(map[i]!=0||(el&&el[i]!==el[ay*W+ax])){ok=false;break}const o=ob[i];if(o&&!{tree:1,bush:1,rock:1,flax:1,tgrass:1,shrub:1,flower:1}[o.t]){ok=false;break}}
+  if(!ok)continue;if(Math.hypot(ax-SX,ay-SY)<14)continue;if(BLD.some(b=>Math.hypot(b.x+b.w/2-ax,b.y+b.h/2-ay)<16))continue;if(inCamp(ax,ay))continue;
+  if(CABS80.some(c=>Math.hypot(c[0]-ax,c[1]-ay)<35))continue;
+  for(let y=ay-1;y<ay+3;y++)for(let x=ax-1;x<ax+4;x++)ob[y*W+x]=null;
+  setFP({t:'cabin',ab:1,r:0,on:true,hp:60},ax,ay,3,2);CABS80.push([ax,ay]);n++;
+  /* signs of life long gone: wood pile, stump, a path of trampled dirt */
+  const spots=[[ax-1,ay+1],[ax+3,ay+1],[ax-1,ay],[ax+3,ay]];const sp=spots[Math.floor(r()*spots.length)];if(!ob[sp[1]*W+sp[0]])ob[sp[1]*W+sp[0]]={t:'wpile',hp:20};
+  for(let y=ay+2;y<ay+5;y++){const i=y*W+ax+1;if(map[i]==0&&!ob[i]&&r()<.8)map[i]=4}}
+ return n}
+var CABS80=[];
+{const ini80=init;init=function(...a){CABS80=[];const r=ini80.apply(this,a);try{if(!inD)genCabins()}catch(e){}return r}}
+HU.unshift(['Abandoned cabin','Elhagyott faház'],['Entered the cabin','Beléptél a faházba']);
+{const ec80=enterCab;enterCab=function(o,idx){const first=o&&o.ab&&!o.room;const r=ec80(o,idx);if(first&&inC)say(LANG=='hu'?'Elhagyott faház… poros, de a tűzhely még jó. Ha kitakarítod, a tiéd.':'An abandoned cabin… dusty, but the stove still works. Clean it up and it’s yours.');return r}}
+/* moss and boards on the abandoned ones */
+{const dO80=drawObj;drawObj=function(o,x,y){dO80(o,x,y);if(!o||CLASSIC||o.t!='cabin'||!o.ab||!o.fw||inD)return;const w=(o.fw||3)*T;W_(x+5,y+9,9,7,'#5a3e22');W_(x+4,y+10,11,2,'#8a6038');W_(x+4,y+13,11,2,'#7a5230');
+ for(let i=0;i<9;i++)W_(x+((i*11)%w),y+(o.fh||2)*T-2-((i*5)%5),2,2,i%2?'#4e7034':'#3a5a2a');for(let i=0;i<6;i++)W_(x+2+((i*13)%(w-4)),y-6+((i*7)%6),3,1,'rgba(70,100,50,.55)')}}
+/* ---------- stairs up to a loft inside a cabin ---------- */
+var INLOFT=false;
+Object.assign(LBL,{cup:'Stairs up',cdn:'Stairs down'});Object.assign(LBLX,{cup:'Stairs up',cdn:'Stairs down'});HU.unshift(['Stairs up','Lépcső fel'],['Stairs down','Lépcső le'],['Loft','Padlás']);
+Object.assign(INT,{cup:1,cdn:1});Object.assign(NMX,{cup:'stairs up',cdn:'stairs down'});Object.assign(STYSKIP,{cup:1,cdn:1});
+Object.assign(DRAWX,{cup(o,x,y){for(let i=0;i<4;i++){W_(x+1,y+13-i*4,14,3,i%2?'#8a6038':'#a87a4a');W_(x+1,y+13-i*4,14,1,'#c89a60');W_(x+1,y+15-i*4,14,1,'#5a3a20')}W_(x,y-2,2,18,'#5a3a20');W_(x+14,y-2,2,18,'#5a3a20');W_(x,y-3,16,2,'#7a5434')},
+ cdn(o,x,y){W_(x+1,y+1,14,14,'#1a120a');for(let i=0;i<3;i++){W_(x+2,y+3+i*4,12,2,'#5a3a20');W_(x+2,y+3+i*4,12,1,'#8a6038')}W_(x,y,16,1,'#c89a60');W_(x,y,1,16,'#7a5434');W_(x+15,y,1,16,'#7a5434')}});
+function cabLoftEnter(){const c=curCab;if(!c||INLOFT)return;c.room={map,ob,loot,zs};const room=c.room;let ci=-1;for(let i=0;i<W*H;i++)if(room.ob[i]&&room.ob[i].t=='cup'){ci=i;break}
+ if(!c.loft){const m=new Uint8Array(W*H).fill(5),o2=new Array(W*H).fill(null);for(let i=0;i<W*H;i++)if(room.map[i]!=5)m[i]=3;if(ci>=0)o2[ci]={t:'cdn'};
+  if(c.ab){const fl=[];for(let i=0;i<W*H;i++)if(m[i]!=5&&i!==ci&&Math.abs((i%W)-(ci%W))+Math.abs(Math.floor(i/W)-Math.floor(ci/W))>1)fl.push(i);for(const t of['chest','bed','fcrate']){if(!fl.length)break;const j=fl.splice(Math.floor(Math.random()*fl.length),1)[0];o2[j]=t=='bed'?{t,hp:10}:{t,hp:10}}}
+  c.loft={map:m,ob:o2,loot:[],zs:[]}}
+ ({map,ob,loot,zs}=c.loft);INLOFT=true;if(ci>=0){P.x=(ci%W)*T+8;P.y=(Math.floor(ci/W)+1)*T+8;if(blocked(P.x,P.y,4))P.y-=T*2}P.cd=.6;snd('door');say(LANG=='hu'?'Padlás':'Loft')}
+function cabLoftLeave(){const c=curCab;if(!c||!INLOFT)return;c.loft={map,ob,loot,zs};({map,ob,loot,zs}=c.room);INLOFT=false;let ci=-1;for(let i=0;i<W*H;i++)if(ob[i]&&ob[i].t=='cup'){ci=i;break}if(ci>=0){P.x=(ci%W)*T+8;P.y=(Math.floor(ci/W)+1)*T+8;if(blocked(P.x,P.y,4))P.y-=T*2}P.cd=.6;snd('door')}
+{const lv80=leave;leave=function(...a){if(INLOFT)cabLoftLeave();return lv80.apply(this,a)}}
+{const uo80=useObj;useObj=function(n){const o=n&&n.o;if(o&&o.t=='cup'&&inC){cabLoftEnter();return}if(o&&o.t=='cdn'&&inC){cabLoftLeave();return}return uo80(n)}}
+{const a80=act;act=function(){if(HB[hb]=='stairk'&&inv.stairk>0&&inC&&curCab&&curCab.t=='cabin'&&mtx>=0&&mty>=0&&edge){const h=LANG=='hu',i=mty*W+mtx;
+  if(INLOFT){say(h?'A padláson már nincs feljebb':'There is nothing above the loft');P.cd=.4;return}
+  if(ob.some(q=>q&&q.t=='cup')){say(h?'Ebben a házban már van lépcső':'This cabin already has stairs');P.cd=.4;return}
+  if(map[i]==5||ob[i]||Math.hypot(mtx*T+8-P.x,mty*T+8-P.y)>50||(mtx==Math.floor(P.x/T)&&mty==Math.floor(P.y/T))){say(h?'Itt nem építhetsz':'Can’t build there');P.cd=.4;return}
+  ob[i]={t:'cup'};inv.stairk--;snd('craft');say(h?'Megépült a lépcső — fent egy padlás vár (E)':'Stairs built — a loft waits upstairs (E)');P.cd=.4;return}return a80()}}
+/* the loft looks like an attic: sloping rafters and a darker, dusty light */
+{const dp80b=drawP;drawP=function(){const r=dp80b();if(!INLOFT||!inC||CLASSIC)return r;let x0=1e9,y0=1e9,x1=-1,y1=-1;for(let y=30;y<70;y++)for(let x=30;x<70;x++)if(map[y*W+x]!=5){x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y)}if(x1<0)return r;
+ const X0=x0*T-cam.x,Y0=y0*T-cam.y,X1=(x1+1)*T-cam.x,Y1=(y1+1)*T-cam.y;Q(X0,Y0,X1-X0,Y1-Y0,'rgba(20,12,6,.22)');Q(X0,Y0,X1-X0,6,'rgba(0,0,0,.25)');
+ for(let k=0;k<=Math.ceil((X1-X0)/24);k++){const xx=X0+k*24;for(let j=0;j<10;j++){Q(xx-1+j,Y0-20+j*2,3,2,'rgba(70,44,22,.6)');Q(xx+1-j+12,Y0-20+j*2,2,2,'rgba(70,44,22,.5)')}}
+ Q(X0-8,Y0-22,X1-X0+16,6,'#4a2e16');Q(X0-8,Y0-22,X1-X0+16,1,'#8a6038');
+ const t=performance.now()/1000;for(let i=0;i<14;i++){const px=X0+((i*37.3+t*4)%(X1-X0)),py=Y0+((i*19.7+Math.sin(t+i)*6+t*2)%(Y1-Y0));Q(px,py,1,1,'rgba(255,230,180,.35)')}return r}}
+
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
 function fireList(){const n=performance.now();if(FL.ob!==ob||n-FL.t>500){FL.ob=ob;FL.t=n;FL.a=[];for(let i=0;i<ob.length;i++){const o=ob[i];if(o&&(o.t=='fire'&&o.on||o.t=='fbarrel'))FL.a.push([(i%W)*T+8,Math.floor(i/W)*T+8])}}return FL.a}
