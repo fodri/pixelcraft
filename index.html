@@ -5472,6 +5472,28 @@ const TICC=new Map();
 function tmapCanvas(type,tier){const k=type+'|'+tier;let cv=TICC.get(k);if(cv)return cv;const M=TMAP[type],C=TIERC[tier]||TIERC.stone,P_={o:'#1e1610',h:'#7a5228',H:'#a87444',w:'#46301e',m:C[0],l:C[1],d:C[2]};cv=aCanvas(16,16);const c=cv.getContext('2d');for(let r=0;r<16;r++)for(let x=0;x<16;x++){const col=P_[M[r][x]];if(col){c.fillStyle=col;c.fillRect(x,r,1,1)}}TICC.set(k,cv);return cv}
 {const ti84=toolIcon;toolIcon=function(x,y,type,tier){if(!TMAP[type]||CLASSIC)return ti84(x,y,type,tier);g.imageSmoothingEnabled=false;g.drawImage(tmapCanvas(type,tier),Math.round(x)+2,Math.round(y)+2)}}
 
+/* ===== v85: stairs only on wooden / concrete floors (or inside a cabin), and stairs can be knocked out again ===== */
+GAMEV=85;
+const STFLOOR=m=>m==12||m==14||m==18;
+{const a85=act;act=function(){const it=HB[hb],h=LANG=='hu';if(mtx<0||mty<0||mtx>=W||mty>=H||!edge||P.cd>0)return a85();const i=mty*W+mtx,o=ob[i],d=Math.hypot(mtx*T+8-P.x,mty*T+8-P.y);
+ /* placement rule */
+ if((it=='stairk'||it=='cellar')&&inv[it]>0&&!inC&&!inD&&!o&&d<=50&&!STFLOOR(map[i])){say(h?'A lépcsőt fa padlóra vagy betonra tedd (vagy egy faházba)':'Stairs go on a wooden or concrete floor (or inside a cabin)');P.cd=.4;return}
+ /* knocking stairs out again */
+ if(o&&d<=46&&!(it&&(PL[it]||it=='stairk'||it=='cellar'||it=='ladder'||it=='wtorch'))){let back=null,ok=true;
+  if(o.t=='psu'&&!inD)back='stairk';else if(o.t=='psd'&&!inD)back='cellar';
+  else if(o.t=='cup'&&inC&&!INLOFT)back='stairk';
+  else if(curPH&&inD&&o.t=='pup'){if(curPH.f>0)back='stairk';else ok=false}
+  else if(curPH&&inD&&o.t=='pdn'){if(curPH.f<0)back='cellar';else ok=false}
+  
+  if(o.t=='cdn'&&INLOFT)ok=false;
+  if(!ok&&(o.t=='pup'||o.t=='pdn'||o.t=='cdn')){say(h?'Ezt nem bonthatod le — ezen jöttél, ezen mész vissza':'You can’t knock this out — it’s your way back');P.cd=.4;return}
+  if(back){o.kh=(o.kh|0)+1;hit(mtx*T+8,mty*T+8,'#a87a4a');snd('hit');P.cd=.3;
+   if(o.kh>=3){ob[i]=null;inv[back]=(inv[back]|0)+1;snd('pick');say(h?(back=='stairk'?'Kiütötted a lépcsőt — visszakerült a táskádba (az emelet megmarad, ha ugyanide teszed)':'Kiütötted a pincelejárót — visszakerült a táskádba'):(back=='stairk'?'Stairs knocked out — back in your bag (the floor stays if you put them back here)':'Cellar hatch knocked out — back in your bag'))}
+   else say((h?'Bontás… ':'Breaking… ')+o.kh+'/3');return}}
+ return a85()}}
+/* the claimed-ruin upper floor follows the same floor rule */
+{const af85=addFloor;addFloor=function(tx,ty){if(!STFLOOR(map[ty*W+tx])){say(LANG=='hu'?'A lépcsőt fa padlóra vagy betonra tedd — előbb újítsd fel a házat (B)':'Stairs go on a wooden or concrete floor — repair the house first (B)');return true}return af85(tx,ty)}}
+
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
 function fireList(){const n=performance.now();if(FL.ob!==ob||n-FL.t>500){FL.ob=ob;FL.t=n;FL.a=[];for(let i=0;i<ob.length;i++){const o=ob[i];if(o&&(o.t=='fire'&&o.on||o.t=='fbarrel'))FL.a.push([(i%W)*T+8,Math.floor(i/W)*T+8])}}return FL.a}
