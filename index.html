@@ -5354,6 +5354,58 @@ function phPlace(kind){const h=LANG=='hu',tx=mtx,ty=mty,i=ty*W+tx;if(tx<1||ty<1|
 /* the HUD knows where you are */
 {const tx81=txt;txt=function(s,x,y,c,al){if(curPH&&inD&&(s==='Mine'||s==='Bánya')&&x===6&&y===56){const h=LANG=='hu';s=curPH.f>0?(h?'Emelet '+curPH.f:'Floor '+curPH.f):(h?'Pince':'Cellar')}return tx81(s,x,y,c,al)}}
 
+/* ===== v82: dig your own mine (shovel hole + ladder), carve tunnels and expand cellars, hoe for the garden, shovel right-click lays paths ===== */
+GAMEV=82;
+var curDM=null;
+Object.assign(LBL,{hoe:'Hoe',dhole:'Pit',dlad:'Ladder up'});Object.assign(LBLX,{hoe:'Hoe',dhole:'Pit',dlad:'Ladder up'});
+HU.unshift(['Hoe','Kapa'],['hoe','kapa'],['Pit','Gödör'],['pit','gödör'],['Ladder up','Létra fel']);
+if(!NEWK.includes('hoe'))NEWK.push('hoe');if(inv.hoe==null)inv.hoe=0;DMAX.hoe=150;TOOL.hoe=1;
+REC.push(['hoe','Hoe',{wood:3,stone:1}]);
+Object.assign(SOLID,{dhole:1,dlad:1});Object.assign(INT,{dhole:1,dlad:1});Object.assign(NMX,{dhole:'pit',dlad:'ladder up'});Object.assign(STYSKIP,{dhole:1,dlad:1});
+{const ic82=icon2;icon2=function(k,x,y){const S=(a,b,w,h,c)=>Q(x+a,y+b,w,h,c);if(k=='hoe'){S(9,3,2,15,'#7a5636');S(9,3,1,15,'#9a7656');S(4,3,7,3,'#8a9092');S(4,3,7,1,'#c8ccd0');S(4,6,2,2,'#6a7074');return true}return ic82(k,x,y)}}
+Object.assign(DRAWX,{
+ dhole(o,x,y){W_(x,y+1,16,15,'#4a3826');W_(x+1,y+2,14,13,'#2a1e14');W_(x+3,y+4,10,9,'#0c0806');W_(x+1,y+1,14,1,'#6a5236');for(let i=0;i<5;i++)W_(x+((i*7)%14),y+14,2,2,'#5a4630');
+  if(o.lad){W_(x+5,y+1,1,13,'#a87a4a');W_(x+10,y+1,1,13,'#a87a4a');for(let i=0;i<4;i++)W_(x+5,y+3+i*3,6,1,'#c89a60');W_(x+4,y-3,1,5,'#a87a4a');W_(x+11,y-3,1,5,'#a87a4a')}},
+ dlad(o,x,y){W_(x+3,y-6,2,22,'#7a5230');W_(x+11,y-6,2,22,'#7a5230');W_(x+3,y-6,1,22,'#a87a4a');W_(x+11,y-6,1,22,'#a87a4a');for(let i=0;i<7;i++)W_(x+4,y-4+i*3,8,1,'#c89a60');W_(x+2,y-8,12,3,'rgba(255,240,200,.25)')}});
+/* ---------- own mine levels ---------- */
+function genDM(l){loot=[];map=new Uint8Array(W*H).fill(5);ob=new Array(W*H).fill(null);deer=[];zs=[];const cx=48,cy=48;
+ for(let y=cy-1;y<=cy+1;y++)for(let x=cx-1;x<=cx+1;x++)map[y*W+x]=3;ob[(cy-1)*W+cx]={t:'dlad'};ob[(cy+1)*W+cx+1]={t:'lamp',on:true,hp:10}}
+function enterDM(i,l,dir){const h=LANG=='hu';if(l<=0){leave();return}if(l>3){say(h?'Ennél mélyebbre már nem tudsz ásni':'You can’t dig any deeper');return}
+ if(!inD){OW={map,ob,deer,zs,loot,x:P.x,y:P.y};inD=true}else if(curMine){curMine.map=map;curMine.ob=ob;curMine.zs=zs;curMine.loot=loot}
+ fishing=null;curSub=false;curRx=0;LSx=null;sit=null;curOf=null;curPH=null;
+ const key='dm'+i+'_'+l;let M=MINES[key];if(M&&M.map&&M.ob){map=M.map;ob=M.ob;zs=M.zs||[];loot=M.loot||[];deer=[]}else{genDM(l);M=MINES[key]={mined:{},map,ob,zs,loot,left:0}}
+ curMine=M;curM=key;curDM={i,l};
+ let si=-1;if(dir=='up'){for(let k=0;k<W*H;k++)if(ob[k]&&ob[k].t=='dhole'&&ob[k].lad){si=k;break}}if(si<0)for(let k=0;k<W*H;k++)if(ob[k]&&ob[k].t=='dlad'){si=k;break}
+ if(si>=0){P.x=(si%W)*T+8;P.y=(Math.floor(si/W)+1)*T+8;if(blocked(P.x,P.y,4)){P.y-=2*T;if(blocked(P.x,P.y,4))P.x+=T}}P.cd=.6;snd('door');say(h?'Saját bánya — '+l+'. szint (csákánnyal vagy ásóval vájj járatokat)':'Your mine — level '+l+' (carve tunnels with a pickaxe or shovel)')}
+{const lv82=leave;leave=function(...a){curDM=null;return lv82.apply(this,a)}}
+{const tx82=txt;txt=function(s,x,y,c,al){if(curDM&&inD&&(s==='Mine'||s==='Bánya')&&x===6&&y===56)s=(LANG=='hu'?'Saját bánya ':'Your mine ')+curDM.l;return tx82(s,x,y,c,al)}}
+/* what you find while carving rock (deeper = richer) */
+function digFind(l){const r=Math.random(),out=[['stone',1]];if(r<.10)out.push(['coal',1]);else if(r<.16)out.push(['copper',1]);else if(r<.21&&l>=1)out.push(['iron',1]);else if(r<.24&&l>=2)out.push(['gold',1]);else if(r<.26&&l>=3)out.push(['diamond',1]);return out}
+const canCarve=()=>(curDM&&inD)||(curPH&&curPH.f<0&&inD);
+function carve(tx,ty,it){const h=LANG=='hu',i=ty*W+tx;if(tx<3||ty<3||tx>=W-3||ty>=H-3){say(h?'Itt kemény az alapkőzet':'Bedrock — can’t dig here');return true}
+ if(map[i]!=5)return false;if(ob[i])return false;map[i]=3;const l=curDM?curDM.l:1;const got=digFind(l);for(const[k,n]of got)inv[k]=(inv[k]|0)+n;
+ if(got.length>1)say((h?'Találtál: ':'You found: ')+got.slice(1).map(([k])=>tr(LBL[k]||k).toLowerCase()).join(', '));
+ hit(tx*T+8,ty*T+8,'#8a8478');snd('hit');try{wear(it)}catch(e){}P.cd=.35;return true}
+/* ---------- tools ---------- */
+{const a82=act;act=function(){const it=HB[hb],tl=tool(),h=LANG=='hu';if(mtx<0||mty<0||mtx>=W||mty>=H||P.cd>0||fishing||drv)return a82();const i=mty*W+mtx,o=ob[i],d=Math.hypot(mtx*T+8-P.x,mty*T+8-P.y);
+ /* ladder into a pit */
+ if(it=='ladder'&&inv.ladder>0&&edge&&o&&o.t=='dhole'&&!o.lad&&d<46){o.lad=1;inv.ladder--;snd('craft');say(h?'Létra a gödörben — E: lemászás':'Ladder in the pit — E: climb down');P.cd=.3;return}
+ /* hoe: tills soil for the garden (what the shovel used to do) */
+ if(it=='hoe'&&inv.hoe>0&&d<=46&&!o){if(map[i]==4){say(h?'Ez már fel van kapálva':'Already tilled');P.cd=.3;return}if(map[i]==0||map[i]==2){map[i]=4;try{wear('hoe')}catch(e){}hit(mtx*T+8,mty*T+8,'#5a4630');snd('hit');say(h?'Felkapáltad a földet — vethetsz bele':'Tilled the soil — ready to plant');P.cd=.35;return}}
+ if(tl&&(tl.k=='shovel'||tl.k=='pickaxe')&&canCarve()&&d<=34&&map[i]==5){if(carve(mtx,mty,it))return}
+ if(tl&&tl.k=='shovel'&&d<=46&&!o){
+  /* dig a pit on open ground → your own mine */
+  if(!inD&&(map[i]==0||map[i]==2||map[i]==4)&&!(bm[i]==3)){if(!edge)return;ob[i]={t:'dhole',lad:0};try{wear(it)}catch(e){}hit(mtx*T+8,mty*T+8,'#5a4630');snd('hit');say(h?'Kiástál egy gödröt — tegyél bele létrát (létra a kézben, katt), aztán E: le':'You dug a pit — put a ladder in it (ladder in hand, click), then E: down');P.cd=.5;return}
+  if(curDM&&inD&&map[i]==3){if(!edge)return;if(curDM.l>=3){say(h?'Ennél mélyebbre már nem tudsz ásni':'You can’t dig any deeper');P.cd=.3;return}if(ob.some(q=>q&&q.t=='dhole')){say(h?'Ezen a szinten már van lejárat':'This level already has a way down');P.cd=.3;return}ob[i]={t:'dhole',lad:0};try{wear(it)}catch(e){}snd('hit');say(h?'Lyukat ástál lefelé — kell bele egy létra':'You dug a hole down — it needs a ladder');P.cd=.5;return}}
+ return a82()}}
+/* shovel right-click: lay a path */
+{const rc82=rclick;rclick=function(){const tl=tool();if(tl&&tl.k=='shovel'&&!inD&&mtx>=0&&mty>=0&&mtx<W&&mty<H){const i=mty*W+mtx,h=LANG=='hu';if(Math.hypot(mtx*T+8-P.x,mty*T+8-P.y)<=46&&!ob[i]){if(map[i]==0||map[i]==4){map[i]=2;try{wear(HB[hb])}catch(e){}hit(mtx*T+8,mty*T+8,'#c8b88a');snd('hit');say(h?'Ösvényt csináltál':'You laid a path');return}if(map[i]==2){say(h?'Ez már ösvény':'Already a path');return}}}return rc82()}}
+/* using pits and ladders */
+{const uo82=useObj;useObj=function(n){const o=n&&n.o;if(o&&(o.t=='dhole'||o.t=='dlad')){const h=LANG=='hu',i=n.ty*W+n.tx;
+  if(o.t=='dhole'){if(!o.lad){if(inv.ladder>0){o.lad=1;inv.ladder--;snd('craft');say(h?'Létra a gödörben — E: lemászás':'Ladder in the pit — E: climb down')}else say(h?'Ehhez létra kell (Létra: 4 fa, 2 rost)':'You need a ladder (Ladder: 4 wood, 2 fiber)');return}
+   if(!inD){enterDM(i,1,'down');return}if(curDM){enterDM(curDM.i,curDM.l+1,'down');return}}
+  if(o.t=='dlad'&&curDM){enterDM(curDM.i,curDM.l-1,'up');return}}return uo82(n)}}
+
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
 function fireList(){const n=performance.now();if(FL.ob!==ob||n-FL.t>500){FL.ob=ob;FL.t=n;FL.a=[];for(let i=0;i<ob.length;i++){const o=ob[i];if(o&&(o.t=='fire'&&o.on||o.t=='fbarrel'))FL.a.push([(i%W)*T+8,Math.floor(i/W)*T+8])}}return FL.a}
