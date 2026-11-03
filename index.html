@@ -1102,7 +1102,7 @@ addEventListener('keydown',e=>{musTick();if(state=='lobby'){lobbyType(e);return}
 addEventListener('keyup',e=>{K[e.code]=0;gaRel(e.code);if(e.code=='Space'){if(JA&&JA.ok&&!J&&!drv&&state=='play'){fishing=null;sit=null;J={x0:P.x,y0:P.y,x1:JA.X,y1:JA.Y,t:0,d:.32+JA.dd/300,h:6+JA.dd*.22};snd('bow')}JA=null}});
 const sc=e=>{const r=C.getBoundingClientRect();ms.x=(e.clientX-r.left)/r.width*VW;ms.y=(e.clientY-r.top)/r.height*VH};
 C.addEventListener('mousemove',e=>{sc(e);if(skOpen&&(e.buttons&2)){const f=VW/C.clientWidth;skPx+=e.movementX*f;skPy+=e.movementY*f}});
-C.addEventListener('mousedown',e=>{sc(e);musTick();if(state=='char'){charClick();return}if(state=='lobby'){if(Math.abs(ms.x-VW/2)<80&&ms.y>=106&&ms.y<=124)lobbyGo();else if(ms.y>=66&&ms.y<=82)lf=0;else if(ms.y>=84&&ms.y<=100)lf=1;return}if(state=='title'){menuClick();return}if(state=='opts'){optsClick();return}if(state=='sndo'){sndClick();return}if(state=='keys'){keysClick();return}if(state=='wthr'){wthrClick();return}if(state!='play')return;
+C.addEventListener('mousedown',e=>{sc(e);musTick();if(state=='char'){charClick();return}if(state=='lobby'){if(Math.abs(ms.x-VW/2)<80&&ms.y>=106&&ms.y<=124)lobbyGo();else if(ms.y>=66&&ms.y<=82)lf=0;else if(ms.y>=84&&ms.y<=100)lf=1;return}if(state=='title'){menuClick();return}if(state=='opts'){optsClick();return}if(state=='sndo'){sndClick();return}if(state=='gfxo'){gfxClick();return}if(state=='keys'){keysClick();return}if(state=='wthr'){wthrClick();return}if(state!='play')return;
  if(emOpen){emClick();return}
  if(gaOpen){gaClick();return}if(mdOpen){mdClick();return}if(gtOpen){gtClick();return}if(skOpen){skClick();return}
  if(ms.y>=VH-26&&ms.x>=HX&&ms.x<HX+22*HB.length){const s=Math.floor((ms.x-HX)/22);if(invOpen)slotClick(s);else hb=s;return}
@@ -1115,7 +1115,7 @@ function once(c){if(c=='KeyL'){setLang(LANG=='hu'?'en':'hu');return}
  if(state=='char'){const NC=chNV();if(c=='ArrowUp'||c=='KeyW')csel=(csel+NC+1)%(NC+2);else if(c=='ArrowDown'||c=='KeyS')csel=(csel+1)%(NC+2);else if((c=='ArrowLeft'||c=='KeyA')&&csel<NC)chStep(csel,-1);else if((c=='ArrowRight'||c=='KeyD')&&csel<NC)chStep(csel,1);else if(c=='Enter'||c=='Space'){if(csel==NC)chRand();else if(csel==NC+1){state='title';snd('ui')}else chStep(csel,1)}else if(c=='Escape')state='title';return}
  if(state=='play'&&(book||invOpen)&&c=='Slash'){SFOC=true;return}
  if(state=='title'){menuKey(c);return}
- if(state=='opts'){optsKey(c);return}if(state=='sndo'){sndKey(c);return}if(state=='keys'){keysKey(c);return}if(state=='wthr'){wthrKey(c);return}
+ if(state=='opts'){optsKey(c);return}if(state=='sndo'){sndKey(c);return}if(state=='gfxo'){gfxKey(c);return}if(state=='keys'){keysKey(c);return}if(state=='wthr'){wthrKey(c);return}
  if(state=='play'&&tut){hbKey(c);return}
  if(state=='play'&&gaOpen){gaKey(c);return}
  if(state=='play'&&mdOpen){if(c=='Escape'||c=='KeyE')mdOpen=false;return}
@@ -2064,7 +2064,7 @@ function roofCanvas(b,k){let cv=ROOFC.get(k);if(cv)return cv;cv=document.createE
 function drawRoofs(){if(inD||!BLD.length)return;const ptx=Math.floor(P.x/T),pty=Math.floor(P.y/T),now=performance.now(),dt=Math.min(.05,(now-(drawRoofs.t||now))/1000);drawRoofs.t=now;
  for(let k=0;k<BLD.length;k++){const b=BLD[k];const sx=b.x*T-cam.x,sy=b.y*T-cam.y;if(sx>VW/ZM+20||sy>VH/ZM+20||sx+b.w*T<-20||sy+b.h*T<-20){b.a=1;continue}
   const inside=ptx>=b.x&&ptx<b.x+b.w&&pty>=b.y&&pty<b.y+b.h,ta=inside?0:1;if(b.a==null)b.a=ta;b.a+=(ta-b.a)*Math.min(1,dt*8);if(b.a<.02)continue;
-  const cv=roofCanvas(b,k);g.globalAlpha=b.a;{const so=b.sd?18:4;Q(sx+so,sy+so*.6,b.w*T,(b.h-1)*T,'rgba(0,0,0,'+(b.sd?.3:.22)+')')}g.drawImage(cv,Math.round(sx),Math.round(sy));g.globalAlpha=1;if(b.di==null){b.di=-1;for(let xx=b.x;xx<b.x+b.w;xx++){const o=ob[(b.y+b.h-1)*W+xx];if(o&&o.t=='door'&&o.sh){b.di=(b.y+b.h-1)*W+xx;break}}}if(b.di>=0){const o=ob[b.di];if(o&&o.sh)shopSign((b.di%W)*T,Math.floor(b.di/W)*T,o.sh)}}}
+  const cv=roofCanvas(b,k);g.globalAlpha=b.a;if(!(typeof s3Want=='function'&&s3Want())){const so=b.sd?18:4;Q(sx+so,sy+so*.6,b.w*T,(b.h-1)*T,'rgba(0,0,0,'+(b.sd?.3:.22)+')')}g.drawImage(cv,Math.round(sx),Math.round(sy));g.globalAlpha=1;if(b.di==null){b.di=-1;for(let xx=b.x;xx<b.x+b.w;xx++){const o=ob[(b.y+b.h-1)*W+xx];if(o&&o.t=='door'&&o.sh){b.di=(b.y+b.h-1)*W+xx;break}}}if(b.di>=0){const o=ob[b.di];if(o&&o.sh)shopSign((b.di%W)*T,Math.floor(b.di/W)*T,o.sh)}}}
 var RGD=null,RGB=null,RGN=-1;const underRoof=(x,y)=>{if(inD)return false;if(RGB!==BLD||RGN!==BLD.length||!RGD||RGD.length!==W*H){RGB=BLD;RGN=BLD.length;RGD=new Int32Array(W*H).fill(-1);for(let k=0;k<BLD.length;k++){const b=BLD[k];for(let yy=Math.max(0,b.y);yy<Math.min(H,b.y+b.h-1);yy++)for(let xx=Math.max(0,b.x);xx<Math.min(W,b.x+b.w);xx++){const j=yy*W+xx;if(RGD[j]<0)RGD[j]=k}}}if(x<0||y<0||x>=W||y>=H)return false;const k=RGD[y*W+x];if(k<0)return false;const b=BLD[k];return b.a==null||b.a>.5};
 /* ---------- builders (lot = 12x12) ---------- */
 const bOfficeO=bOffice,bShopO=bShop,bLibO=bLib,bAptO=bApt;
@@ -3052,7 +3052,7 @@ function treeSprites(kind,k){const key='t'+kind+k;let s=ASP.get(key);if(s)return
 function treeKind(bb,h,tx,ty){const r=aHash(tx,ty,77);if(bb==1)return r<.6?'spine':'sround';if(bb==2)return 'palm';if(bb==3)return r<.5?'lime':'oak';
  return r<.38?'oak':r<.56?'pine':r<.7?'lime':r<.8?'autumn':r<.9?'fruit':'pink'}
 function drawTreeNew(x,y,s){const tx=Math.round(x/T),ty=Math.round(y/T),bb=inD?0:(bm?bm[ty*W+tx]|0:0),kind=treeKind(bb,0,tx,ty),k=Math.floor(aHash(tx,ty,5)*4),S=treeSprites(kind,k);
- const sx=Math.round(x-cam.x),sy=Math.round(y-cam.y);g.fillStyle='rgba(16,28,10,.32)';g.beginPath();g.ellipse(sx+8,sy+14,12,4,0,0,6.28);g.fill();
+ const sx=Math.round(x-cam.x),sy=Math.round(y-cam.y);if(!(typeof s3Want=='function'&&s3Want())){g.fillStyle='rgba(16,28,10,.32)';g.beginPath();g.ellipse(sx+8,sy+14,12,4,0,0,6.28);g.fill()}
  g.drawImage(S.tr,sx-9,sy-26);g.drawImage(S.can,sx-9+s,sy-26+(kind=='palm'?-2:0))}
 /* dead / irradiated trees: bare branching */
 function deadSprite(k){const key='dead'+k;let s=ASP.get(key);if(s)return s;const cv=aCanvas(34,44),c=cv.getContext('2d');c.lineCap='round';
@@ -4639,7 +4639,7 @@ tcTick=function(){
  const portrait=innerHeight>innerWidth*1.05;TCH.po.style.display=portrait?'flex':'none';if(portrait){const el=document.getElementById('mhot');const t=hu71()?'Fordítsd el a telefont fekvő helyzetbe! (Koppints a teljes képernyőhöz)':'Turn your phone sideways! (Tap for fullscreen)';if(el.textContent!==t)el.textContent=t}
  TCH.u=Math.max(4,Math.min(innerWidth/108,innerHeight/54))*MH.sz;tc.style.setProperty('--u',TCH.u+'px');const u=TCH.u,cr=C.getBoundingClientRect();
  const playing=state=='play',ov=overlayOpen()||!!CKO||!!CHP||!!FLPK||!!chatOpen||!!DTAG||(typeof SJ!='undefined'&&(!!SJ||!!SEND||!!(STORY&&STORY.intro))),dead=state=='dead';
- tc.style.display=(playing||dead||['title','opts','sndo','keys','wthr','char','lobby'].includes(state))?'block':'none';
+ tc.style.display=(playing||dead||['title','opts','sndo','gfxo','keys','wthr','char','lobby'].includes(state))?'block':'none';
  tc.style.opacity=1;const full=playing&&!ov&&!TCH.hide&&!MH.panel,R_=MH.lh?'l':'r',L_=MH.lh?'r':'l';
  for(const k in TCH.b){const d=TCH.b[k];d.style.opacity=(k=='esc'||k=='cfg'||k=='res'||k=='tfs')?Math.max(.8,MH.op):MH.op}
  const it=HB[hb],gun=!!(it&&GUN[it])&&inv[it]>0,pl=!!(it&&PL[it]&&inv[it]>0),fl=it=='flash'&&inv.flash>0;
@@ -5883,6 +5883,90 @@ cycleGfx=function(){if(V3D){V3D=false;setRetro(false);DYN=true}else if(CLASSIC){
  try{localStorage.setItem('pxc_dyn',DYN?'1':'0');localStorage.setItem('pxc_3d',V3D?'1':'0')}catch(e){}say(gfxName())};
 {const gn92=gfxName;gfxName=function(){if(V3D&&!CLASSIC)return LANG=='hu'?'3D Alpha (kísérleti)':'3D Alpha (experimental)';return gn92()}}
 
+/* ===== v93: Graphics tab — 5 modes (simple / 2D lights+shadows / 2D + 3D shadows / 3D Alpha / retro), shadow strength slider, shadow quality ===== */
+GAMEV=94;
+var S3D=false;
+var S3MODE=false;const S3={};
+const INV94=new THREE.MeshBasicMaterial({colorWrite:false,depthWrite:false});
+function s3Want(){return !!(S3D&&!V3D&&typeof THREE!='undefined'&&state=='play'&&!inD&&!inC&&!view&&!CLASSIC)}
+function s3Clear(){if(!V3||!V3.ok)return;for(const ch of V3.chunks.values()){V3.S.remove(ch.gm);ch.gm.geometry.dispose();if(ch.am){V3.S.remove(ch.am);ch.am.geometry.dispose()}if(ch.og)V3.S.remove(ch.og);if(ch.tex)ch.tex.dispose()}V3.chunks.clear();
+ for(const r of V3.roofs.values())V3.S.remove(r.G);V3.roofs.clear();for(const e of V3.ents.values())V3.S.remove(e.m);V3.ents.clear();if(V3.cars){for(const G of V3.cars.values())V3.S.remove(G);V3.cars.clear()}}
+function s3Mode(on){if(S3MODE===on)return;S3MODE=on;s3Clear()}
+/* in shadow mode everything is invisible to the camera but still casts; only the ground shows (as shadow) */
+function s3Inv(root){root.traverse(m=>{if(!m.isMesh)return;m.material=INV94})}
+function s3Cross(m){/* sprites stand straight up and get a crossed twin, so they cast a shadow from any sun angle */
+ m.rotation.x=0;m.position.z-=.35;const c=new THREE.Mesh(m.geometry,INV94);c.customDepthMaterial=m.customDepthMaterial;c.castShadow=true;c.rotation.y=Math.PI/2;c.position.set(.5,0,.5-.0);m.add(c);m.material=INV94;
+ /* the twin rotates around the sprite origin (tile's left edge); move it to the tile centre */
+ c.position.set(.5,0,.5)}
+{const bg94=v3BuildGround;v3BuildGround=function(ch){bg94(ch);if(!S3MODE)return;ch.gm.material=S3.shMat;ch.gm.castShadow=true;if(ch.am)ch.am.material=S3.shMat}}
+{const bo94=v3BuildObjs;v3BuildObjs=function(ch){bo94(ch);if(!S3MODE||!ch.og)return;const sprites=[];ch.og.traverse(m=>{if(m.isMesh&&m.customDepthMaterial&&m.geometry.type=='PlaneGeometry'&&m.parent===ch.og)sprites.push(m)});
+ for(const m of sprites){if(Math.abs(m.rotation.x+Math.PI/2)<.01){m.castShadow=false;m.material=INV94;continue}s3Cross(m)}
+ ch.og.traverse(m=>{if(m.isMesh&&m.material!==INV94)m.material=INV94})}}
+{const rf94=v3Roofs;v3Roofs=function(){rf94();if(!S3MODE)return;for(const r of V3.roofs.values())if(!r.s3){r.s3=1;s3Inv(r.G)}}}
+{const ve94=v3Ent;v3Ent=function(...a){const e=ve94(...a);if(S3MODE&&!e.s3){e.s3=1;const m=e.m;m.rotation.x=0;m.material.colorWrite=false;m.material.depthWrite=false;const c=new THREE.Mesh(m.geometry,INV94);c.customDepthMaterial=m.customDepthMaterial;c.castShadow=true;c.rotation.y=Math.PI/2;m.add(c)}return e}}
+{const vs94=v3Ents;v3Ents=function(){vs94();if(!S3MODE||!V3.cars)return;for(const G of V3.cars.values())if(!G.userData.s3){G.userData.s3=1;s3Inv(G)}}}
+/* the real 3D view switches the shadow mode off */
+{const vd94=v3Draw;v3Draw=function(){if(V3&&v3Active()&&S3MODE)s3Mode(false);return vd94()}}
+function s3Frame(){if(!v3Init())return false;if(!S3.shMat)S3.shMat=new THREE.ShadowMaterial({opacity:.4});s3Mode(true);V3.fr++;
+ const vw=VW/ZM,vh=VH/ZM,cx=(cam.x+vw/2)/T,cz=(cam.y+vh/2)/T,tg={x:cx,y:0,z:cz},rad=Math.ceil(Math.hypot(vw,vh)/T/2+6),ccx=Math.floor(cx/GQS),ccy=Math.floor(cz/GQS),cr=Math.ceil(rad/GQS)+1;let built=0;
+ for(const ch of V3.chunks.values())ch.vis=false;
+ for(let cy=Math.max(0,ccy-cr);cy<=Math.min(H/GQS-1,ccy+cr);cy++)for(let cx2=Math.max(0,ccx-cr);cx2<=Math.min(W/GQS-1,ccx+cr);cx2++){const dx=Math.max(0,Math.abs((cx2+.5)*GQS-cx)-GQS/2),dz=Math.max(0,Math.abs((cy+.5)*GQS-cz)-GQS/2);if(Math.hypot(dx,dz)>rad)continue;
+  const key=cx2+','+cy;let ch=V3.chunks.get(key);if(!ch){if(built>=2)continue;ch={cx:cx2,cy};V3.chunks.set(key,ch);v3BuildGround(ch);v3BuildObjs(ch);built++}
+  else if((V3.fr+cx2*7+cy*13)%15==0){if(v3GroundSig(cx2,cy)!==ch.gsig||gqChunk(cx2,cy).cv!==ch.src)v3BuildGround(ch);if(v3ObjSig(cx2,cy)!==ch.osig)v3BuildObjs(ch)}
+  ch.vis=true;ch.gm.visible=true;if(ch.am)ch.am.visible=true;ch.og.visible=true}
+ for(const[k,ch]of V3.chunks)if(!ch.vis){ch.gm.visible=false;if(ch.am)ch.am.visible=false;ch.og.visible=false;if(Math.abs(ch.cx*GQS-cx)>60||Math.abs(ch.cy*GQS-cz)>60){V3.S.remove(ch.gm);ch.gm.geometry.dispose();if(ch.am){V3.S.remove(ch.am);ch.am.geometry.dispose()}V3.S.remove(ch.og);ch.tex.dispose();V3.chunks.delete(k)}}
+ v3Roofs();v3Ents();if(V3.pts)V3.pts.visible=false;V3.hl.visible=false;
+ /* sun: shadows fall down-screen (towards the viewer) so they peek out from under the 2D sprites */
+ v3Light(tg);const dk=dark(),k=Math.max(0,1-dk/.85),p=Math.max(0,Math.min(1,((time+.03)%1)/.61)),e=Math.sin(p*Math.PI),dxs=(p-.5)*2,bd=BD||0;
+ if(k>.3)V3.sun.position.set(cx-dxs*26,6+e*24,cz-15);else V3.sun.position.set(cx+12,26,cz-18);V3.sun.target.position.set(cx,0,cz);
+ S3.shMat.opacity=(k>.3?.6*Math.min(1,e*3+.1)*(1-bd*.8):.17*(1-bd*.8))*SHS;s3Quality();
+ if(!S3.cam){S3.cam=new THREE.OrthographicCamera(-1,1,1,-1,1,200);S3.cam.up.set(0,0,-1)}const c=S3.cam;c.left=-vw/T/2;c.right=vw/T/2;c.top=vh/T/2;c.bottom=-vh/T/2;c.position.set(cx,80,cz);c.lookAt(cx,0,cz);c.updateProjectionMatrix();
+ if(!S3.R){S3.cv=document.createElement('canvas');S3.R=new THREE.WebGLRenderer({canvas:S3.cv,alpha:true,antialias:false,premultipliedAlpha:false});S3.R.shadowMap.enabled=true;S3.R.shadowMap.type=THREE.PCFSoftShadowMap;S3.R.setClearColor(0x000000,0)}
+ const rs=SHQ==0?1:2,W2=Math.round(vw*rs),H2=Math.round(vh*rs);if(S3.w!==W2||S3.h!==H2){S3.w=W2;S3.h=H2;S3.R.setSize(W2,H2,false)}
+ const bg=V3.S.background,fg=V3.S.fog;V3.S.background=null;V3.S.fog=null;S3.R.render(V3.S,c);V3.S.background=bg;V3.S.fog=fg;return true}
+{const gd94=groundDraw;groundDraw=function(x0,y0,now){gd94(x0,y0,now);if(!s3Want())return;try{if(s3Frame()){const sm=g.imageSmoothingEnabled;g.imageSmoothingEnabled=true;g.drawImage(S3.cv,0,0,VW/ZM,VH/ZM);g.imageSmoothingEnabled=sm}}catch(e){S3D=false;console.error('s3',e)}}}
+
+/* ---------- settings: mode, shadow strength, shadow quality ---------- */
+var GMODE=1,SHS=.7,SHQ=1;try{SHQ=matchMedia('(pointer:coarse)').matches?0:1}catch(e){}
+try{const m=localStorage.getItem('pxc_gmode');if(m!=null&&m!=='')GMODE=+m;else GMODE=CLASSIC?4:V3D?3:DYN?1:0;const s=localStorage.getItem('pxc_shs');if(s!=null&&s!=='')SHS=Math.max(0,Math.min(1,+s));const q=localStorage.getItem('pxc_shq');if(q!=null&&q!=='')SHQ=+q}catch(e){}
+const GMN={hu:['Egyszerű (fény és árnyék nélkül)','2D fények + 2D árnyékok','2D fények + 3D árnyékok','3D Alpha (kísérleti)','Retró (1. verzió)'],en:['Simple (no lights, no shadows)','2D lights + 2D shadows','2D lights + 3D shadows','3D Alpha (experimental)','Retro (v1)']};
+let GPREV=1;
+function setGMode(m,quiet){m=((m%5)+5)%5;if(m!=3)GPREV=m;GMODE=m;if(m==4){if(!CLASSIC)setRetro(true)}else if(CLASSIC)setRetro(false);DYN=m!=0;V3D=m==3;S3D=m==2;
+ try{localStorage.setItem('pxc_gmode',String(m));localStorage.setItem('pxc_dyn',DYN?'1':'0');localStorage.setItem('pxc_3d',V3D?'1':'0')}catch(e){}if(!quiet)say(gfxName())}
+setGMode(GMODE,true);
+cycleGfx=function(){setGMode(GMODE+1)};
+gfxName=function(){return GMN[LANG=='hu'?'hu':'en'][GMODE]||''};
+function shqName(){const h=LANG=='hu';return[h?'Alacsony':'Low',h?'Közepes':'Medium',h?'Magas':'High'][SHQ]}
+let SHQA=-1;function s3Quality(){if(!V3||!V3.ok||SHQA===SHQ)return;SHQA=SHQ;const sz=[1024,2048,4096][SHQ]||2048,sh=V3.sun.shadow;sh.mapSize.set(sz,sz);if(sh.map){sh.map.dispose();sh.map=null}}
+/* shadow strength in the 3D Alpha view: part of the sunlight becomes ambient light, so shadows get lighter while lit ground stays as bright */
+{const vl95=v3Light;v3Light=function(tg){vl95(tg);s3Quality();if(!V3.amb){V3.amb=new THREE.AmbientLight(0xffffff,0);V3.S.add(V3.amb)}if(S3MODE){V3.amb.intensity=0;return}const si=V3.sun.intensity,keep=.25+.75*SHS;V3.amb.intensity=si*(1-keep);V3.sun.intensity=si*keep}}
+/* 2D shadows: off by day when the 3D shadows are on, and scaled by the strength slider */
+{const cs95=castShadow;castShadow=function(wx,wy,h){if(GMODE==2&&!inD&&!inC&&dark()<.5)return;const ga=g.globalAlpha;g.globalAlpha=ga*Math.min(1.5,SHS/.7);try{cs95(wx,wy,h)}finally{g.globalAlpha=ga}}}
+/* main settings: the Graphics row opens its own tab */
+{const ov95=optVal;optVal=function(i){if(i==5)return gfxName().split(' (')[0]+'  >';return ov95(i)}}
+{const os95=optStep;optStep=function(i,dir){if(i==5){state='gfxo';gsel=0;snd('ui');return}return os95(i,dir)}}
+let gsel=0;const GFXL={hu:['Grafika','Árnyékok erőssége','Árnyékok minősége','Vissza'],en:['Graphics','Shadow strength','Shadow quality','Back']};
+function gfxStep(i,dir){if(i==0)setGMode(GMODE+(dir<0?-1:1),true);else if(i==1){SHS=Math.max(0,Math.min(1,Math.round((SHS+dir*.1)*10)/10));try{localStorage.setItem('pxc_shs',String(SHS))}catch(e){}}
+ else if(i==2){SHQ=(SHQ+(dir<0?2:1))%3;try{localStorage.setItem('pxc_shq',String(SHQ))}catch(e){}}else if(i==3){state='opts';snd('ui');return}snd('ui')}
+function gfxMenu(){const moved=ms.x!=lmx||ms.y!=lmy;lmx=ms.x;lmy=ms.y;const hu=LANG=='hu',L=GFXL[hu?'hu':'en'];Q(0,0,VW,VH,'rgba(6,10,6,.88)');
+ g.font=fnt(1,20);g.textAlign='center';g.fillStyle='#a8321f';g.fillText(L[0],VW/2+2,50);g.fillStyle=fcol('#d8e4c8');g.fillText(L[0],VW/2,48);
+ noTr=true;const desc=hu?['Csak a pixelgrafika, éjjel egyszerű fénykörök','A fények falakon akadnak meg, a szereplőknek 2D árnyékuk van','A 3D-motor számolja a napárnyékot: fák, házak, emberek','Valódi 3D nézet (kísérleti) — a belső terek 2D-ben maradnak','Az első verzió egyszerű kinézete']:['Pixel art only, simple light circles at night','Lights are blocked by walls, characters cast 2D shadows','The 3D engine casts the sun shadows: trees, houses, people','A real 3D view (experimental) — interiors stay 2D','The simple look of the first version'];
+ for(let i=0;i<4;i++){const y=obY(i)+(i==3?14:0)+(i>0?10:0);if(moved&&ms.x>=OPB.x&&ms.x<OPB.x+OPB.w&&ms.y>=y&&ms.y<y+OPB.h)gsel=i;const on=gsel==i,dis=(i==1||i==2)&&(GMODE==0||GMODE==4);
+  Q(OPB.x-1,y-1,OPB.w+2,OPB.h+2,on?'#ffd84a':'#3a4634');Q(OPB.x,y,OPB.w,OPB.h,on?'#4a3722':'#1c1a12');
+  if(i==3){txt(L[3],VW/2,y+10,on?'#ffd84a':'#cfd8c0','center');continue}
+  txt(L[i],OPB.x+8,y+10,dis?'#5a6a52':on?'#ffd84a':'#b8c8a8');
+  if(i==0){txt('<',OPB.x+OPB.w-150,y+10,on?'#ffd84a':'#5a6a52','center');txt(gfxName(),OPB.x+OPB.w-78,y+10,GMODE==3?'#ffb060':'#f0e6b8','center');txt('>',OPB.x+OPB.w-6,y+10,on?'#ffd84a':'#5a6a52','center')}
+  else if(i==1){const bx=OPB.x+OPB.w-150,bw=100;txt('<',bx-10,y+10,on?'#ffd84a':'#5a6a52','center');Q(bx,y+5,bw,5,'#2a2a1e');Q(bx,y+5,Math.round(bw*SHS),5,dis?'#4a5a42':'#8ac85a');Q(bx+Math.round(bw*SHS)-1,y+3,3,9,'#f0e6b8');txt(Math.round(SHS*100)+'%',OPB.x+OPB.w-26,y+10,dis?'#5a6a52':'#f0e6b8','center');txt('>',OPB.x+OPB.w-6,y+10,on?'#ffd84a':'#5a6a52','center')}
+  else{txt('<',OPB.x+OPB.w-118,y+10,on?'#ffd84a':'#5a6a52','center');txt(shqName(),OPB.x+OPB.w-60,y+10,dis?'#5a6a52':'#f0e6b8','center');txt('>',OPB.x+OPB.w-8,y+10,on?'#ffd84a':'#5a6a52','center')}
+  if(i==0){g.font=fnt(0,8);txt(desc[GMODE],VW/2,y+OPB.h+9,'#8fa07f','center')}}
+ txt(hu?'W/S: választás   A/D vagy kattintás: állítás   Esc: vissza':'W/S choose   A/D or click: adjust   Esc back',VW/2,obY(5)+30,'#8fa07f','center');noTr=false}
+function gfxKey(c){if(c=='Escape'){state='opts';return}if(c=='ArrowUp'||c=='KeyW')gsel=(gsel+3)%4;else if(c=='ArrowDown'||c=='KeyS')gsel=(gsel+1)%4;else if(c=='ArrowLeft'||c=='KeyA')gfxStep(gsel,-1);else if(c=='ArrowRight'||c=='KeyD'||c=='Enter'||c=='Space')gfxStep(gsel,1)}
+function gfxClick(){for(let i=0;i<4;i++){const y=obY(i)+(i==3?14:0)+(i>0?10:0);if(ms.x>=OPB.x&&ms.x<OPB.x+OPB.w&&ms.y>=y&&ms.y<y+OPB.h){gsel=i;if(i==3)return gfxStep(3,1);
+  if(i==1){const bx=OPB.x+OPB.w-150,bw=100;if(ms.x>=bx-4&&ms.x<=bx+bw+4){SHS=Math.max(0,Math.min(1,Math.round((ms.x-bx)/bw*20)/20));try{localStorage.setItem('pxc_shs',String(SHS))}catch(e){}snd('ui');return}return gfxStep(1,ms.x<bx?-1:1)}
+  return gfxStep(i,ms.x<OPB.x+OPB.w/2?-1:1)}}}
+/* F8 (in game): jump between the 3D Alpha view and the last 2D mode */
+addEventListener('keydown',e=>{if(e.code!='F8'||state!='play')return;e.preventDefault();e.stopImmediatePropagation();setGMode(GMODE==3?GPREV:3)},true);
+
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
 function fireList(){const n=performance.now();if(FL.ob!==ob||n-FL.t>500){FL.ob=ob;FL.t=n;FL.a=[];for(let i=0;i<ob.length;i++){const o=ob[i];if(o&&(o.t=='fire'&&o.on||o.t=='fbarrel'))FL.a.push([(i%W)*T+8,Math.floor(i/W)*T+8])}}return FL.a}
@@ -6073,7 +6157,7 @@ requestAnimationFrame(tcTick);
 
 (function loop(n){const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
- if(state=='title')menu();if(state=='opts')optsMenu();if(state=='sndo')sndMenu();if(state=='keys')keysMenu();if(state=='wthr')wthrMenu();if(state=='char')charMenu();if(state=='lobby')drawLobby();if(state=='hb'){Q(0,0,VW,VH,'rgba(6,10,6,.6)');drawHB()}if(0)title('ASHFALL',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Hold the fire. Survive the nights.','','WASD move \u2022 Space chop / fish / attack \u2022 Tab recipes','Press any key']);
+ if(state=='title')menu();if(state=='opts')optsMenu();if(state=='sndo')sndMenu();if(state=='gfxo')gfxMenu();if(state=='keys')keysMenu();if(state=='wthr')wthrMenu();if(state=='char')charMenu();if(state=='lobby')drawLobby();if(state=='hb'){Q(0,0,VW,VH,'rgba(6,10,6,.6)');drawHB()}if(0)title('ASHFALL',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Hold the fire. Survive the nights.','','WASD move \u2022 Space chop / fish / attack \u2022 Tab recipes','Press any key']);
  if(state=='dead')title('YOU DIED',['Days survived: '+day,deathAt!=null?'Your belongings wait in a tombstone where you fell (see map: M)':'',home?'Press R to respawn at your base':'Press R to respawn']);
  fx();requestAnimationFrame(loop)})(last);
 </script></body></html>
