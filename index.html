@@ -4817,7 +4817,7 @@ addEventListener('mousedown',e=>{if(!DTAG||state!='play')return;e.stopImmediateP
 {const fw74=feedWolf;feedWolf=function(w){const n0=PETS.length;const r=fw74(w);if(PETS.length>n0)dtagOpen(PETS[PETS.length-1],true);return r}}
 function petNear(){let b=null,bd=24;for(const p of PETS){const d=Math.hypot(p.x-P.x,p.y-P.y);if(d<bd){bd=d;b=p}}return b?{p:b,d:bd}:null}
 addEventListener('keydown',e=>{if(e.code!='KeyE'||e.repeat||state!='play'||DTAG||inD||book||invOpen||stOpen||skOpen||showMap||tut||SFOC||chatOpen||drv||P.boat)return;const q=petNear();if(!q)return;
- let n=null;try{n=nearInt()}catch(x){}if(n&&isFinite(n.tx)&&Math.hypot(n.tx*T+8-P.x,n.ty*T+8-P.y)<q.d)return;e.stopImmediatePropagation();e.preventDefault();dtagOpen(q.p,false)},true);
+ let n=null;try{n=nearInt()}catch(x){}if(n)return;e.stopImmediatePropagation();e.preventDefault();dtagOpen(q.p,false)},true);
 {const ap74=addPet;addPet=function(x,y){const p=ap74(x,y);p.fur=p.fur|0;p.col=p.col|0;return p}}
 
 /* ===== v75: post-apocalyptic city (damaged roofs, broken facades, cracked streets, smoke) + villages become survivor camps ===== */
@@ -5248,7 +5248,7 @@ function petPlaceNear(p){const C=[[12,6],[-12,6],[0,12],[12,-6],[-12,-6],[0,-12]
 {const dp80=drawP;drawP=function(){if(inD)for(const p of PETS)if(p.in)drawDog(p,p.mv);return dp80()}}
 {const pl80=petLoad;petLoad=function(){pl80();for(const p of PETS)p.in=0;IND80=false}}
 /* the E key / name tag works indoors too */
-addEventListener('keydown',e=>{if(e.code!='KeyE'||e.repeat||state!='play'||!inD||DTAG||book||invOpen||SFOC||chatOpen)return;let b=null,bd=22;for(const p of PETS){if(!p.in)continue;const d=Math.hypot(p.x-P.x,p.y-P.y);if(d<bd){bd=d;b=p}}if(!b)return;let n=null;try{n=nearInt()}catch(x){}if(n&&isFinite(n.tx)&&Math.hypot(n.tx*T+8-P.x,n.ty*T+8-P.y)<bd)return;e.stopImmediatePropagation();e.preventDefault();dtagOpen(b,false)},true);
+addEventListener('keydown',e=>{if(e.code!='KeyE'||e.repeat||state!='play'||!inD||DTAG||book||invOpen||SFOC||chatOpen)return;let b=null,bd=22;for(const p of PETS){if(!p.in)continue;const d=Math.hypot(p.x-P.x,p.y-P.y);if(d<bd){bd=d;b=p}}if(!b)return;let n=null;try{n=nearInt()}catch(x){}if(n)return;e.stopImmediatePropagation();e.preventDefault();dtagOpen(b,false)},true);
 /* ---------- abandoned log cabins hidden in the forests and the snow ---------- */
 function genCabins(){if(inD)return 0;const r=rng75((wseed|0)+911,77),want=6+Math.floor(r()*3);let n=0;
  for(let k=0;k<4000&&n<want;k++){const ax=4+Math.floor(r()*(W-12)),ay=4+Math.floor(r()*(H-12)),b0=bm[ay*W+ax]|0;if(b0!=0&&b0!=1)continue;
