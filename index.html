@@ -2064,7 +2064,7 @@ function roofCanvas(b,k){let cv=ROOFC.get(k);if(cv)return cv;cv=document.createE
 function drawRoofs(){if(inD||!BLD.length)return;const ptx=Math.floor(P.x/T),pty=Math.floor(P.y/T),now=performance.now(),dt=Math.min(.05,(now-(drawRoofs.t||now))/1000);drawRoofs.t=now;
  for(let k=0;k<BLD.length;k++){const b=BLD[k];const sx=b.x*T-cam.x,sy=b.y*T-cam.y;if(sx>VW/ZM+20||sy>VH/ZM+20||sx+b.w*T<-20||sy+b.h*T<-20){b.a=1;continue}
   const inside=ptx>=b.x&&ptx<b.x+b.w&&pty>=b.y&&pty<b.y+b.h,ta=inside?0:1;if(b.a==null)b.a=ta;b.a+=(ta-b.a)*Math.min(1,dt*8);if(b.a<.02)continue;
-  const cv=roofCanvas(b,k);g.globalAlpha=b.a;if(!(typeof F3D!='undefined'&&F3D&&!CLASSIC)){const so=b.sd?18:4;Q(sx+so,sy+so*.6,b.w*T,(b.h-1)*T,'rgba(0,0,0,'+(b.sd?.3:.22)+')')}g.drawImage(cv,Math.round(sx),Math.round(sy));g.globalAlpha=1;if(b.di==null){b.di=-1;for(let xx=b.x;xx<b.x+b.w;xx++){const o=ob[(b.y+b.h-1)*W+xx];if(o&&o.t=='door'&&o.sh){b.di=(b.y+b.h-1)*W+xx;break}}}if(b.di>=0){const o=ob[b.di];if(o&&o.sh)shopSign((b.di%W)*T,Math.floor(b.di/W)*T,o.sh)}}}
+  const cv=roofCanvas(b,k);g.globalAlpha=b.a;{const so=b.sd?18:4;Q(sx+so,sy+so*.6,b.w*T,(b.h-1)*T,'rgba(0,0,0,'+(b.sd?.3:.22)+')')}g.drawImage(cv,Math.round(sx),Math.round(sy));g.globalAlpha=1;if(b.di==null){b.di=-1;for(let xx=b.x;xx<b.x+b.w;xx++){const o=ob[(b.y+b.h-1)*W+xx];if(o&&o.t=='door'&&o.sh){b.di=(b.y+b.h-1)*W+xx;break}}}if(b.di>=0){const o=ob[b.di];if(o&&o.sh)shopSign((b.di%W)*T,Math.floor(b.di/W)*T,o.sh)}}}
 var RGD=null,RGB=null,RGN=-1;const underRoof=(x,y)=>{if(inD)return false;if(RGB!==BLD||RGN!==BLD.length||!RGD||RGD.length!==W*H){RGB=BLD;RGN=BLD.length;RGD=new Int32Array(W*H).fill(-1);for(let k=0;k<BLD.length;k++){const b=BLD[k];for(let yy=Math.max(0,b.y);yy<Math.min(H,b.y+b.h-1);yy++)for(let xx=Math.max(0,b.x);xx<Math.min(W,b.x+b.w);xx++){const j=yy*W+xx;if(RGD[j]<0)RGD[j]=k}}}if(x<0||y<0||x>=W||y>=H)return false;const k=RGD[y*W+x];if(k<0)return false;const b=BLD[k];return b.a==null||b.a>.5};
 /* ---------- builders (lot = 12x12) ---------- */
 const bOfficeO=bOffice,bShopO=bShop,bLibO=bLib,bAptO=bApt;
@@ -5596,61 +5596,8 @@ GAMEV=90;
 /* safety net: on the surface you are never "in a cabin" */
 {const up90=update;update=function(dt){if(!inD&&inC){inC=false;curCab=null;INLOFT=false}return up90(dt)}}
 
-/* ===== v91: real-time sun shadows — trees, buildings, people and hills cast shadows that move with the time of day (F9 toggles) ===== */
-GAMEV=91;
-var F3D=true;try{F3D=localStorage.getItem('pxc_f3d')!=='0'}catch(e){}
-const SHX=document.createElement('canvas'),shx=SHX.getContext('2d');
-/* sun vector: morning shadows fall left, evening right, long at the horizon, short at noon */
-function sunX(){const p=Math.max(0,Math.min(1,((time+.03)%1)/.61)),e=Math.sin(p*Math.PI),dx=(p-.5)*2,lf=.5+(1-e)*1.8;
- return{vx:dx*.95*lf,vy:(.42+.18*(1-Math.abs(dx)))*lf,e,lf,a:.36*Math.min(1,e*3.2+.15)*Math.max(0,1-dk0()/.6)*(1-(BD||0)*.85)}}
-function hull91(pts){pts.sort((a,b)=>a[0]-b[0]||a[1]-b[1]);const cr=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]),lo=[],up=[];
- for(const p of pts){while(lo.length>=2&&cr(lo[lo.length-2],lo[lo.length-1],p)<=0)lo.pop();lo.push(p)}
- for(let i=pts.length-1;i>=0;i--){const p=pts[i];while(up.length>=2&&cr(up[up.length-2],up[up.length-1],p)<=0)up.pop();up.push(p)}up.pop();lo.pop();return lo.concat(up)}
-function poly91(ps){shx.beginPath();shx.moveTo(ps[0][0],ps[0][1]);for(let i=1;i<ps.length;i++)shx.lineTo(ps[i][0],ps[i][1]);shx.closePath();shx.fill()}
-/* a box standing on footprint (x,y,w,h) with height hb */
-function box91(x,y,w,h,hb,V){const ox=V.vx*hb/20*16,oy=V.vy*hb/20*16;poly91(hull91([[x,y],[x+w,y],[x,y+h],[x+w,y+h],[x+ox,y+oy],[x+w+ox,y+oy],[x+ox,y+h+oy],[x+w+ox,y+h+oy]]))}
-/* a pole from a base point, with width w and height hb, plus an optional blob at the top */
-function pole91(bx,by,w,hb,V){const tx=bx+V.vx*hb/20*16,ty=by+V.vy*hb/20*16,l=Math.hypot(tx-bx,ty-by)||1,px=-(ty-by)/l*w/2,py=(tx-bx)/l*w/2;poly91([[bx+px,by+py],[tx+px,ty+py],[tx-px,ty-py],[bx-px,by-py]]);return[tx,ty]}
-function blob91(x,y,rx,ry,V){const r=Math.atan2(V.vy,V.vx);shx.beginPath();shx.ellipse(x,y,rx,ry,r,0,6.283);shx.fill()}
-const SH91={rock:[6,'b',7,4],bush:[10,'t',7,5],shrub:[9,'t',6,4],flax:[9,'p',2],tgrass:[6,'p',2],cactus:[18,'p',5],lamp:[24,'p',2],fence:[9,'w'],wall:[18,'w'],sblock:[18,'w'],pillar:[24,'w'],chest:[8,'w'],stash:[8,'w'],furnace:[14,'w'],fcrate:[10,'w'],trash:[10,'w'],tomb:[10,'w'],fridge:[18,'w'],wardrobe:[18,'w'],bshelf:[18,'w'],shelf:[16,'w'],door:[20,'w'],win:[20,'w'],ctent:[14,'B'],tent:[14,'B'],cabin:[30,'B'],car:[12,'B'],wpile:[8,'w'],csign:[14,'p',2],wtorch:[14,'p',2],ore:[8,'b',6,4],tire:[5,'b',6,3],junk:[7,'b',7,4]};
-const CLF91={8:1};
-function shadows91(x0,y0){if(!F3D||inD||inC||CLASSIC)return;const V=sunX();if(V.a<.02)return;const w=Math.ceil(VW/ZM)+4,h=Math.ceil(VH/ZM)+4;if(SHX.width!==w||SHX.height!==h){SHX.width=w;SHX.height=h}
- shx.setTransform(1,0,0,1,0,0);shx.clearRect(0,0,w,h);shx.fillStyle='#000';const cx=cam.x,cy=cam.y,ur=typeof underRoof=='function'?underRoof:()=>false;
- /* cliffs and hills: lower tiles next to a higher one on the sun side get a band of shadow */
- if(el){const sxN=V.vx<0?1:-1,bx=Math.min(16,Math.abs(V.vx)*16),by=Math.min(16,V.vy*16);
-  for(let ty=Math.max(1,y0-2);ty<=Math.min(H-2,y0+21);ty++)for(let tx=Math.max(1,x0-3);tx<=Math.min(W-2,x0+32);tx++){const i=ty*W+tx,e0=el[i];const X=tx*T-cx,Y=ty*T-cy;
-   if(CLF91[map[i]])continue;const ds=Math.max(el[i+sxN],(tx+2*sxN>=0&&tx+2*sxN<W)?el[i+2*sxN]:0)-e0;if(ds>0&&bx>.5){const ww=Math.min(16,bx*ds*1.6);if(V.vx<0)shx.fillRect(X+16-ww,Y,ww,16);else shx.fillRect(X,Y,ww,16)}
-}}
- /* objects */
- for(let ty=Math.max(0,y0-4);ty<=Math.min(H-1,y0+22);ty++)for(let tx=Math.max(0,x0-6);tx<=Math.min(W-1,x0+33);tx++){const o=ob[ty*W+tx];if(!o||o.pm!=null)continue;const X=tx*T-cx,Y=ty*T-cy;
-  if(o.t=='tree'){const bb=bm?bm[ty*W+tx]|0:0,k=treeKind(bb,0,tx,ty);const big=!(k=='palm'||k=='pine'||k=='spine');const[ttx,tty]=pole91(X+8,Y+14,2.6,13,V);blob91(X+8+V.vx*21,Y+14+V.vy*21,big?11+Math.abs(V.vx)*3:9,big?8:7,V);continue}
-  const d=SH91[o.t];if(!d)continue;if(ur(tx,ty))continue;
-  if(d[1]=='w')box91(X+1,Y+6,14,10,d[0],V);
-  else if(d[1]=='B'){const fw=(o.fw||1)*T,fh=(o.fh||1)*T;box91(X+1,Y+fh*.35,fw-2,fh*.65,d[0],V)}
-  else if(d[1]=='p')pole91(X+8,Y+14,d[2],d[0],V);
-  else if(d[1]=='t'){blob91(X+8+V.vx*d[0]*.5,Y+12+V.vy*d[0]*.5,d[2]+Math.abs(V.vx)*2,d[3],V)}
-  else blob91(X+8+V.vx*d[0]*.4,Y+12+V.vy*d[0]*.4,d[2]+Math.abs(V.vx)*d[0]*.3,d[3],V)}
- /* buildings */
- for(const b of BLD){const X=b.x*T-cx,Y=b.y*T-cy;if(X>w+80||Y>h+80||X+b.w*T<-80||Y+b.h*T<-80)continue;const hb=b.sd?60:{office:44,shop:40,lib:40,apt:52,house:30}[b.rf]||30;box91(X,Y+T*.5,b.w*T,(b.h-.5)*T,hb,V)}
- /* creatures and people */
- const ch=(x,y,hh,ww)=>{const[tx,ty]=pole91(x-cx,y-cy,ww,hh,V);blob91(tx,ty,ww*.7,ww*.55,V)};
- if(!drv&&!rid&&!P.boat)ch(P.x,P.y,19,7);
- for(const n of NPCS)ch(n.x,n.y,19,7);for(const z of zs)ch(z.x,z.y,z.big?28:19,z.big?10:7);for(const e of deer)ch(e.x,e.y,14,10);
- if(typeof PETS!='undefined')for(const p of PETS)if(p&&isFinite(p.x)&&!p.inB)ch(p.x,p.y,8,8);
- for(const c of CARS)if(c!==drv){const X=c.x-cx,Y=c.y-cy;box91(X-14,Y-8,28,14,12,V)}
- if(net)for(const p of net.peers){const q=p.presence;if(q&&peerSame(q)&&!q.rd)ch(isFinite(p.sx)?p.sx:q.x,isFinite(p.sy)?p.sy:q.y,19,7)}
- g.save();g.setTransform(BASE,0,0,BASE,0,0);g.globalAlpha=V.a;g.drawImage(SHX,0,0);g.restore()}
-{const gd91=groundDraw;groundDraw=function(x0,y0,now){gd91(x0,y0,now);try{shadows91(x0,y0)}catch(e){F3D=false}}}
-/* trees: lighter contact shadow + the crown leans away from the screen centre (perspective) */
-drawTreeNew=function(x,y,s){const tx=Math.round(x/T),ty=Math.round(y/T),bb=inD?0:(bm?bm[ty*W+tx]|0:0),kind=treeKind(bb,0,tx,ty),k=Math.floor(aHash(tx,ty,5)*4),S=treeSprites(kind,k);
- const sx=Math.round(x-cam.x),sy=Math.round(y-cam.y);const f3=F3D&&!CLASSIC&&!inD;g.fillStyle='rgba(16,28,10,'+(f3?.22:.32)+')';g.beginPath();g.ellipse(sx+8,sy+14,f3?8:12,f3?3:4,0,0,6.28);g.fill();
- let lx=0,ly=0;if(F3D&&!CLASSIC&&!inD){lx=Math.round(Math.max(-3,Math.min(3,(sx+8-VW/ZM/2)*.012)));ly=Math.round(Math.max(-2,Math.min(2,(sy-VH/ZM/2)*.01)))}
- g.drawImage(S.tr,sx-9,sy-26);g.drawImage(S.can,sx-9+s+lx,sy-26+(kind=='palm'?-2:0)+ly)}
-/* F9 toggles the shadows (remembered) */
-addEventListener('keydown',e=>{if(e.code!='F9')return;e.preventDefault();F3D=!F3D;try{localStorage.setItem('pxc_f3d',F3D?'1':'0')}catch(_){}if(typeof say=='function')say(LANG=='hu'?(F3D?'Napárnyékok: BE (F9)':'Napárnyékok: KI (F9)'):(F3D?'Sun shadows: ON (F9)':'Sun shadows: OFF (F9)'))});
-
 /* ===== v92: 3D Alpha — optional 3D view of the surface (Settings > Graphics, or F8). Uses the real world data and the real 2D sprites. ===== */
-GAMEV=92;
+GAMEV=93;
 var V3D=false;try{V3D=localStorage.getItem('pxc_3d')=='1'}catch(e){}
 var V3={ok:false,on:false};
 const L3=.5,TILT3=.78;var ELEV3=75*Math.PI/180;
@@ -5935,8 +5882,6 @@ function v3SetElev(deg){ELEV3=deg*Math.PI/180;try{localStorage.setItem('pxc_3de'
 cycleGfx=function(){if(V3D){V3D=false;setRetro(false);DYN=true}else if(CLASSIC){setRetro(false);DYN=true;V3D=true}else if(DYN){DYN=false}else{setRetro(true);DYN=true}
  try{localStorage.setItem('pxc_dyn',DYN?'1':'0');localStorage.setItem('pxc_3d',V3D?'1':'0')}catch(e){}say(gfxName())};
 {const gn92=gfxName;gfxName=function(){if(V3D&&!CLASSIC)return LANG=='hu'?'3D Alpha (kísérleti)':'3D Alpha (experimental)';return gn92()}}
-/* the 2D sun shadows are now opt-in (F9) — the 3D Alpha view has real shadows */
-try{F3D=localStorage.getItem('pxc_f3d')=='1'}catch(e){F3D=false}
 
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
