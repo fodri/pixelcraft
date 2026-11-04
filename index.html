@@ -1644,10 +1644,10 @@ function menuOld(){title('PixelCRAFT',['The spores took the cities. The forest t
  txt('WASD move  Click act  Right-click place/plant  C craft  M map',VW/2,VH-34,'#8fa07f','center');txt('E interact  H tutorial  Find hatches to enter the ruins',VW/2,VH-24,'#8fa07f','center');txt('W/S select  Enter confirm  Esc menu',VW/2,VH-12,'#6f7c62','center')}
 
 const VS='attribute vec2 p;varying vec2 uv;void main(){uv=vec2(p.x*.5+.5,.5-p.y*.5);gl_Position=vec4(p,0.,1.);}';
-const FS=`precision mediump float;varying vec2 uv;uniform sampler2D tx;uniform vec2 px;uniform float t,dk;
+const FS=`precision mediump float;varying vec2 uv;uniform sampler2D tx;uniform vec2 px;uniform float t,dk,bs;
 void main(){vec3 c=texture2D(tx,uv).rgb,b=vec3(0.);float ws=0.;
  for(int i=-3;i<=3;i++)for(int j=-3;j<=3;j++){vec2 o=vec2(float(i),float(j))*px*3.;float w=exp(-float(i*i+j*j)/7.);vec3 s=texture2D(tx,uv+o).rgb;float mx=max(s.r,max(s.g,s.b)),sa=mx-min(s.r,min(s.g,s.b));b+=s*smoothstep(.9,1.,mx)*smoothstep(.35,.6,sa)*w;ws+=w;}
- b/=ws;c+=b*(.9+.7*dk);gl_FragColor=vec4(c,1.);}`;
+ b/=ws;c+=b*(.9+.7*dk)*bs;gl_FragColor=vec4(c,1.);}`;
 let shaderOn=true,GLX=null,fxShown=null;
 shaderOn=false;try{shaderOn=localStorage.getItem('pxc_fx2')==='1'}catch(e){}
 function initGL(){try{const cv=document.getElementById('gl');if(!cv)return null;const gl=cv.getContext('webgl',{alpha:false,antialias:false});if(!gl)return null;
@@ -1655,14 +1655,14 @@ function initGL(){try{const cv=document.getElementById('gl');if(!cv)return null;
  const pr=gl.createProgram();gl.attachShader(pr,sh(gl.VERTEX_SHADER,VS));gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,FS));gl.linkProgram(pr);if(!gl.getProgramParameter(pr,gl.LINK_STATUS))throw new Error('link');gl.useProgram(pr);
  const bf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,bf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);const lc=gl.getAttribLocation(pr,'p');gl.enableVertexAttribArray(lc);gl.vertexAttribPointer(lc,2,gl.FLOAT,false,0,0);
  const tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex);for(const[a,v]of[[gl.TEXTURE_MIN_FILTER,gl.LINEAR],[gl.TEXTURE_MAG_FILTER,gl.LINEAR],[gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE],[gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE]])gl.texParameteri(gl.TEXTURE_2D,a,v);
- const U={};for(const n of['tx','px','tint','t','sat','vig','dk'])U[n]=gl.getUniformLocation(pr,n);return{cv,gl,U}}catch(e){return null}}
+ const U={};for(const n of['tx','px','tint','t','sat','vig','dk','bs'])U[n]=gl.getUniformLocation(pr,n);return{cv,gl,U}}catch(e){return null}}
 function fx(){const on=!!(shaderOn&&GLX);if(on!==fxShown){fxShown=on;if(GLX)GLX.cv.style.display=on?'block':'none';C.style.opacity=on?'0':'1'}
  if(!on)return;try{const{cv,gl,U}=GLX,dpr=Math.min(window.devicePixelRatio||1,2),w=Math.round(cv.clientWidth*dpr)||960,h=Math.round(cv.clientHeight*dpr)||600;
  if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h}gl.viewport(0,0,w,h);
  const pl=state=='play'||state=='dead',d=pl?Math.min(dark(),.6):0,sn=cb==1,ds=cb==2;
  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,C);
  gl.uniform1i(U.tx,0);gl.uniform2f(U.px,1/C.width,1/C.height);gl.uniform3f(U.tint,1.03-d*.2+(ds?.04:0)-(sn?.03:0),1-d*.05,.97+d*.22-(ds?.05:0)+(sn?.05:0));
- gl.uniform1f(U.t,(performance.now()/1000)%100);gl.uniform1f(U.sat,1.08-(pl&&wea&&!inD?.2:0)-d*.12);gl.uniform1f(U.vig,.45+d*.35);gl.uniform1f(U.dk,d);gl.drawArrays(gl.TRIANGLE_STRIP,0,4)}catch(e){GLX=null}}
+ gl.uniform1f(U.t,(performance.now()/1000)%100);gl.uniform1f(U.sat,1.08-(pl&&wea&&!inD?.2:0)-d*.12);gl.uniform1f(U.vig,.45+d*.35);gl.uniform1f(U.dk,d);gl.uniform1f(U.bs,typeof BLS=='number'?BLS*2:1);gl.drawArrays(gl.TRIANGLE_STRIP,0,4)}catch(e){GLX=null}}
 GLX=initGL();
 init();try{if(/^#[FSDCM][0-9A-Z]{4}$/i.test(location.hash)){lcode=location.hash.slice(1).toUpperCase();state='lobby';lf=1}}catch(e){}let last=performance.now();
 /* ===================== CITY 2.0: designed buildings, multi-storey offices, post-apoc streets ===================== */
@@ -2064,7 +2064,7 @@ function roofCanvas(b,k){let cv=ROOFC.get(k);if(cv)return cv;cv=document.createE
 function drawRoofs(){if(inD||!BLD.length)return;const ptx=Math.floor(P.x/T),pty=Math.floor(P.y/T),now=performance.now(),dt=Math.min(.05,(now-(drawRoofs.t||now))/1000);drawRoofs.t=now;
  for(let k=0;k<BLD.length;k++){const b=BLD[k];const sx=b.x*T-cam.x,sy=b.y*T-cam.y;if(sx>VW/ZM+20||sy>VH/ZM+20||sx+b.w*T<-20||sy+b.h*T<-20){b.a=1;continue}
   const inside=ptx>=b.x&&ptx<b.x+b.w&&pty>=b.y&&pty<b.y+b.h,ta=inside?0:1;if(b.a==null)b.a=ta;b.a+=(ta-b.a)*Math.min(1,dt*8);if(b.a<.02)continue;
-  const cv=roofCanvas(b,k);g.globalAlpha=b.a;if(!(typeof s3Want=='function'&&s3Want())){const so=b.sd?18:4;Q(sx+so,sy+so*.6,b.w*T,(b.h-1)*T,'rgba(0,0,0,'+(b.sd?.3:.22)+')')}g.drawImage(cv,Math.round(sx),Math.round(sy));g.globalAlpha=1;if(b.di==null){b.di=-1;for(let xx=b.x;xx<b.x+b.w;xx++){const o=ob[(b.y+b.h-1)*W+xx];if(o&&o.t=='door'&&o.sh){b.di=(b.y+b.h-1)*W+xx;break}}}if(b.di>=0){const o=ob[b.di];if(o&&o.sh)shopSign((b.di%W)*T,Math.floor(b.di/W)*T,o.sh)}}}
+  const cv=roofCanvas(b,k);g.globalAlpha=b.a;if(!(typeof noSh2D=='function'&&noSh2D()&&!CLASSIC)){const so=b.sd?18:4;Q(sx+so,sy+so*.6,b.w*T,(b.h-1)*T,'rgba(0,0,0,'+(b.sd?.3:.22)+')')}g.drawImage(cv,Math.round(sx),Math.round(sy));g.globalAlpha=1;if(b.di==null){b.di=-1;for(let xx=b.x;xx<b.x+b.w;xx++){const o=ob[(b.y+b.h-1)*W+xx];if(o&&o.t=='door'&&o.sh){b.di=(b.y+b.h-1)*W+xx;break}}}if(b.di>=0){const o=ob[b.di];if(o&&o.sh)shopSign((b.di%W)*T,Math.floor(b.di/W)*T,o.sh)}}}
 var RGD=null,RGB=null,RGN=-1;const underRoof=(x,y)=>{if(inD)return false;if(RGB!==BLD||RGN!==BLD.length||!RGD||RGD.length!==W*H){RGB=BLD;RGN=BLD.length;RGD=new Int32Array(W*H).fill(-1);for(let k=0;k<BLD.length;k++){const b=BLD[k];for(let yy=Math.max(0,b.y);yy<Math.min(H,b.y+b.h-1);yy++)for(let xx=Math.max(0,b.x);xx<Math.min(W,b.x+b.w);xx++){const j=yy*W+xx;if(RGD[j]<0)RGD[j]=k}}}if(x<0||y<0||x>=W||y>=H)return false;const k=RGD[y*W+x];if(k<0)return false;const b=BLD[k];return b.a==null||b.a>.5};
 /* ---------- builders (lot = 12x12) ---------- */
 const bOfficeO=bOffice,bShopO=bShop,bLibO=bLib,bAptO=bApt;
@@ -3052,7 +3052,7 @@ function treeSprites(kind,k){const key='t'+kind+k;let s=ASP.get(key);if(s)return
 function treeKind(bb,h,tx,ty){const r=aHash(tx,ty,77);if(bb==1)return r<.6?'spine':'sround';if(bb==2)return 'palm';if(bb==3)return r<.5?'lime':'oak';
  return r<.38?'oak':r<.56?'pine':r<.7?'lime':r<.8?'autumn':r<.9?'fruit':'pink'}
 function drawTreeNew(x,y,s){const tx=Math.round(x/T),ty=Math.round(y/T),bb=inD?0:(bm?bm[ty*W+tx]|0:0),kind=treeKind(bb,0,tx,ty),k=Math.floor(aHash(tx,ty,5)*4),S=treeSprites(kind,k);
- const sx=Math.round(x-cam.x),sy=Math.round(y-cam.y);if(!(typeof s3Want=='function'&&s3Want())){g.fillStyle='rgba(16,28,10,.32)';g.beginPath();g.ellipse(sx+8,sy+14,12,4,0,0,6.28);g.fill()}
+ const sx=Math.round(x-cam.x),sy=Math.round(y-cam.y);if(!(typeof noSh2D=='function'&&noSh2D()&&!CLASSIC)){g.fillStyle='rgba(16,28,10,.32)';g.beginPath();g.ellipse(sx+8,sy+14,12,4,0,0,6.28);g.fill()}
  g.drawImage(S.tr,sx-9,sy-26);g.drawImage(S.can,sx-9+s,sy-26+(kind=='palm'?-2:0))}
 /* dead / irradiated trees: bare branching */
 function deadSprite(k){const key='dead'+k;let s=ASP.get(key);if(s)return s;const cv=aCanvas(34,44),c=cv.getContext('2d');c.lineCap='round';
@@ -5926,22 +5926,35 @@ function s3Frame(){if(!v3Init())return false;if(!S3.shMat)S3.shMat=new THREE.Sha
  const bg=V3.S.background,fg=V3.S.fog;V3.S.background=null;V3.S.fog=null;S3.R.render(V3.S,c);V3.S.background=bg;V3.S.fog=fg;return true}
 {const gd94=groundDraw;groundDraw=function(x0,y0,now){gd94(x0,y0,now);if(!s3Want())return;try{if(s3Frame()){const sm=g.imageSmoothingEnabled;g.imageSmoothingEnabled=true;g.drawImage(S3.cv,0,0,VW/ZM,VH/ZM);g.imageSmoothingEnabled=sm}}catch(e){S3D=false;console.error('s3',e)}}}
 
-/* ---------- settings: mode, shadow strength, shadow quality ---------- */
-var GMODE=1,SHS=.7,SHQ=1;try{SHQ=matchMedia('(pointer:coarse)').matches?0:1}catch(e){}
-try{const m=localStorage.getItem('pxc_gmode');if(m!=null&&m!=='')GMODE=+m;else GMODE=CLASSIC?4:V3D?3:DYN?1:0;const s=localStorage.getItem('pxc_shs');if(s!=null&&s!=='')SHS=Math.max(0,Math.min(1,+s));const q=localStorage.getItem('pxc_shq');if(q!=null&&q!=='')SHQ=+q}catch(e){}
-const GMN={hu:['Egyszerű (fény és árnyék nélkül)','2D fények + 2D árnyékok','2D fények + 3D árnyékok','3D Alpha (kísérleti)','Retró (1. verzió)'],en:['Simple (no lights, no shadows)','2D lights + 2D shadows','2D lights + 3D shadows','3D Alpha (experimental)','Retro (v1)']};
+/* ---------- graphics: 4 modes + personal settings ---------- */
+var GMODE=1,SHS=.7,SHQ=1,SHON=true,LTON=true,SHSOFT=true,BLS=.5;try{SHQ=matchMedia('(pointer:coarse)').matches?0:1}catch(e){}
+try{const ls=k=>localStorage.getItem(k),has=v=>v!=null&&v!=='';
+ if(has(ls('pxc_gm2')))GMODE=+ls('pxc_gm2');else if(has(ls('pxc_gmode'))){const o=+ls('pxc_gmode');GMODE=o==4?0:o==0?1:o;if(o==0){SHON=false;LTON=false}}else GMODE=CLASSIC?0:V3D?3:1;
+ if(has(ls('pxc_shs')))SHS=Math.max(0,Math.min(1,+ls('pxc_shs')));if(has(ls('pxc_shq')))SHQ=+ls('pxc_shq');if(has(ls('pxc_shon')))SHON=ls('pxc_shon')==='1';if(has(ls('pxc_lton')))LTON=ls('pxc_lton')==='1';
+ if(has(ls('pxc_shsoft')))SHSOFT=ls('pxc_shsoft')==='1';if(has(ls('pxc_bls')))BLS=Math.max(0,Math.min(1,+ls('pxc_bls')))}catch(e){}
+GMODE=Math.max(0,Math.min(3,GMODE|0));
+const GMN={hu:['Retro','Modern','Modern Plusz','3D Alpha'],en:['Retro','Modern','Modern Plus','3D Alpha']};
 let GPREV=1;
-function setGMode(m,quiet){m=((m%5)+5)%5;if(m!=3)GPREV=m;GMODE=m;if(m==4){if(!CLASSIC)setRetro(true)}else if(CLASSIC)setRetro(false);DYN=m!=0;V3D=m==3;S3D=m==2;
- try{localStorage.setItem('pxc_gmode',String(m));localStorage.setItem('pxc_dyn',DYN?'1':'0');localStorage.setItem('pxc_3d',V3D?'1':'0')}catch(e){}if(!quiet)say(gfxName())}
+function gSave(){try{const s=(k,v)=>localStorage.setItem(k,String(v));s('pxc_gm2',GMODE);s('pxc_shs',SHS);s('pxc_shq',SHQ);s('pxc_shon',SHON?1:0);s('pxc_lton',LTON?1:0);s('pxc_shsoft',SHSOFT?1:0);s('pxc_bls',BLS);s('pxc_dyn',DYN?1:0);s('pxc_3d',V3D?1:0);s('pxc_fx2',shaderOn?1:0)}catch(e){}}
+function gApply(){if(GMODE==0){if(!CLASSIC)setRetro(true)}else if(CLASSIC)setRetro(false);V3D=GMODE==3;S3D=GMODE==2&&SHON;DYN=LTON;s3Type()}
+function setGMode(m,quiet){m=((m%4)+4)%4;if(m!=3)GPREV=m;GMODE=m;gApply();gSave();if(!quiet)say(gfxName())}
+function noSh2D(){return !SHON||(typeof s3Want=='function'&&s3Want())}
 setGMode(GMODE,true);
 cycleGfx=function(){setGMode(GMODE+1)};
 gfxName=function(){return GMN[LANG=='hu'?'hu':'en'][GMODE]||''};
 function shqName(){const h=LANG=='hu';return[h?'Alacsony':'Low',h?'Közepes':'Medium',h?'Magas':'High'][SHQ]}
 let SHQA=-1;function s3Quality(){if(!V3||!V3.ok||SHQA===SHQ)return;SHQA=SHQ;const sz=[1024,2048,4096][SHQ]||2048,sh=V3.sun.shadow;sh.mapSize.set(sz,sz);if(sh.map){sh.map.dispose();sh.map=null}}
-/* shadow strength in the 3D Alpha view: part of the sunlight becomes ambient light, so shadows get lighter while lit ground stays as bright */
-{const vl95=v3Light;v3Light=function(tg){vl95(tg);s3Quality();if(!V3.amb){V3.amb=new THREE.AmbientLight(0xffffff,0);V3.S.add(V3.amb)}if(S3MODE){V3.amb.intensity=0;return}const si=V3.sun.intensity,keep=.25+.75*SHS;V3.amb.intensity=si*(1-keep);V3.sun.intensity=si*keep}}
-/* 2D shadows: off by day when the 3D shadows are on, and scaled by the strength slider */
-{const cs95=castShadow;castShadow=function(wx,wy,h){if(GMODE==2&&!inD&&!inC&&dark()<.5)return;const ga=g.globalAlpha;g.globalAlpha=ga*Math.min(1.5,SHS/.7);try{cs95(wx,wy,h)}finally{g.globalAlpha=ga}}}
+/* soft (PCF soft) or sharp (basic) shadow edges — the materials are recompiled on change */
+let SHTA=null;function s3Type(){if(!V3||!V3.ok)return;const ty=SHSOFT?THREE.PCFSoftShadowMap:THREE.BasicShadowMap;if(SHTA===ty)return;SHTA=ty;for(const r of[V3.R,S3&&S3.R])if(r)r.shadowMap.type=ty;
+ V3.S.traverse(o=>{if(!o.material)return;for(const m of(Array.isArray(o.material)?o.material:[o.material]))m.needsUpdate=true});if(S3&&S3.shMat)S3.shMat.needsUpdate=true}
+/* 3D views: shadow strength (part of the sunlight becomes ambient), shadows on/off, extra lights on/off */
+{const vl95=v3Light;v3Light=function(tg){vl95(tg);s3Quality();s3Type();if(!V3.amb){V3.amb=new THREE.AmbientLight(0xffffff,0);V3.S.add(V3.amb)}V3.sun.castShadow=SHON;
+ if(!LTON){for(const l of V3.lights)l.intensity=0;V3.spot.intensity=Math.min(V3.spot.intensity,1)}
+ if(S3MODE){V3.amb.intensity=0;return}const si=V3.sun.intensity,keep=SHON?.25+.75*SHS:1;V3.amb.intensity=si*(1-keep);V3.sun.intensity=si*keep}}
+/* 2D character shadows: follow the shadow switch; by day the 3D shadows replace them in Modern Plus */
+{const cs95=castShadow;castShadow=function(wx,wy,h){if(!SHON||CLASSIC)return;if(GMODE==2&&!inD&&!inC&&dark()<.5)return;const ga=g.globalAlpha,d=DYN;g.globalAlpha=ga*Math.min(1.5,SHS/.7);DYN=true;try{cs95(wx,wy,h)}finally{g.globalAlpha=ga;DYN=d}}}
+/* bloom: not available in the 3D view (it would only see the HUD) */
+{const fx95=fx;fx=function(){const s=shaderOn;if(V3D&&typeof V3!='undefined'&&V3.on)shaderOn=false;try{fx95()}finally{shaderOn=s}}}
 /* main settings: the Graphics row opens its own tab */
 /* ---------- main settings: graphics rows move into their own "Graphics settings" menu ---------- */
 OPN.hu[5]='Grafikai beállítások';OPN.en[5]='Graphics settings';
@@ -5960,35 +5973,58 @@ optsMenu=function(){const moved=ms.x!=lmx||ms.y!=lmy;lmx=ms.x;lmy=ms.y;const hu=
 optsKey=function(c){const n=OPV.length;if(c=='Escape'){state='title';return}if(osel>=n)osel=0;if(c=='ArrowUp'||c=='KeyW')osel=(osel+n-1)%n;else if(c=='ArrowDown'||c=='KeyS')osel=(osel+1)%n;else if(c=='ArrowLeft'||c=='KeyA')optStep(OPV[osel],-1);else if(c=='ArrowRight'||c=='KeyD'||c=='Enter'||c=='Space')optStep(OPV[osel],1)};
 optsClick=function(){for(let r=0;r<OPV.length;r++){const i=OPV[r],y=obY(r)+(i==14?6:0);if(ms.x>=OPB.x&&ms.x<OPB.x+OPB.w&&ms.y>=y&&ms.y<y+OPB.h){osel=r;optStep(i,ms.x<OPB.x+OPB.w-60&&i!=5&&i!=6&&i!=7&&i!=1&&i!=2&&i!=10&&i!=11&&i!=14?-1:1);return}}};
 OPB.y=52;OPB.h=15;OPB.g=2;
-/* ---------- Graphics settings menu ---------- */
-let gsel=0;
-const GFR=[{k:'mode'},{k:'shs'},{k:'shq'},{k:'rs'},{k:'fpsc'},{k:'fps'},{k:'zoom'},{k:'mask'},{k:'fs'},{k:'back'}];
-const GFXL={hu:{title:'Grafikai beállítások',mode:'Megjelenítés',shs:'Árnyékok erőssége',shq:'Árnyékok minősége',rs:'Felbontás',fpsc:'Képkocka-korlát',fps:'FPS kijelzése',zoom:'Nagyítás',mask:'Maszk színhatás',fs:'Teljes képernyő',back:'Vissza'},en:{title:'Graphics settings',mode:'Rendering',shs:'Shadow strength',shq:'Shadow quality',rs:'Resolution',fpsc:'Frame rate limit',fps:'Show FPS',zoom:'Zoom',mask:'Mask colour effect',fs:'Fullscreen',back:'Back'}};
-const gfY=i=>obY(i)+(i>0?12:0)+(i==GFR.length-1?6:0);
-function gfxDis(k){return (k=='shs'||k=='shq')&&(GMODE==0||GMODE==4)}
-function gfxVal(k){if(k=='mode')return gfxName();if(k=='shq')return shqName();if(k=='rs')return RS==1?(LANG=='hu'?'Teljesítmény (fél)':'Performance (half)'):(LANG=='hu'?'Teljes':'Full');if(k=='fpsc')return FPSC?FPSC+' FPS':(LANG=='hu'?'Nincs':'None');if(k=='fps')return FPSON?(LANG=='hu'?'BE':'ON'):(LANG=='hu'?'KI':'OFF');if(k=='zoom')return optVal(8);if(k=='mask')return maskFx?(LANG=='hu'?'BE':'ON'):(LANG=='hu'?'KI':'OFF');if(k=='fs')return optVal(13);return ''}
-function gfxStep(i,dir){const k=GFR[i].k;if(k=='mode')setGMode(GMODE+(dir<0?-1:1),true);else if(k=='shs'){SHS=Math.max(0,Math.min(1,Math.round((SHS+dir*.1)*10)/10));try{localStorage.setItem('pxc_shs',String(SHS))}catch(e){}}
- else if(k=='shq'){SHQ=(SHQ+(dir<0?2:1))%3;try{localStorage.setItem('pxc_shq',String(SHQ))}catch(e){}}else if(k=='rs')setRS(RS==1?2:1);else if(k=='fpsc'){const L_=[0,60,30],i2=L_.indexOf(FPSC);FPSC=L_[((i2<0?1:i2)+(dir<0?2:1))%3];FPN=0;try{localStorage.setItem('pxc_fpsc',String(FPSC))}catch(e){}}else if(k=='fps'){FPSON=!FPSON;try{localStorage.setItem('pxc_fpson',FPSON?'1':'0')}catch(e){}}else if(k=='zoom')optStep(8,dir<0?-1:1);else if(k=='mask')optStep(9,1);else if(k=='fs'){optStep(13,1);return}else if(k=='back'){state='opts';snd('ui');return}snd('ui')}
-function gfxMenu(){const moved=ms.x!=lmx||ms.y!=lmy;lmx=ms.x;lmy=ms.y;const hu=LANG=='hu',L=GFXL[hu?'hu':'en'];Q(0,0,VW,VH,'rgba(6,10,6,.88)');
- g.font=fnt(1,20);g.textAlign='center';g.fillStyle='#a8321f';g.fillText(L.title,VW/2+2,42);g.fillStyle=fcol('#d8e4c8');g.fillText(L.title,VW/2,40);
- noTr=true;const desc=hu?['Csak a pixelgrafika, éjjel egyszerű fénykörök','A fények falakon akadnak meg, a szereplőknek 2D árnyékuk van','A 3D-motor számolja a napárnyékot: fák, házak, emberek','Valódi 3D nézet (kísérleti) — a belső terek 2D-ben maradnak','Az első verzió egyszerű kinézete']:['Pixel art only, simple light circles at night','Lights are blocked by walls, characters cast 2D shadows','The 3D engine casts the sun shadows: trees, houses, people','A real 3D view (experimental) — interiors stay 2D','The simple look of the first version'];
- for(let i=0;i<GFR.length;i++){const k=GFR[i].k,y=gfY(i);if(moved&&ms.x>=OPB.x&&ms.x<OPB.x+OPB.w&&ms.y>=y&&ms.y<y+OPB.h)gsel=i;const on=gsel==i,dis=gfxDis(k);
+/* ---------- Graphics settings: main page + Video page + Shadows & lights page ---------- */
+let gsel=0,GPG='main';
+const hu_=()=>LANG=='hu',OnOff=v=>v?(hu_()?'BE':'ON'):(hu_()?'KI':'OFF');
+const FPSL=[30,60,120,144,0];
+const GPAGES={
+ main:{t:['Grafikai beállítások','Graphics settings'],rows:[
+  {k:'mode',l:['Grafikai mód','Graphics mode'],ty:'cyc',wide:1,get:()=>gfxName(),step:d=>setGMode(GMODE+(d<0?-1:1),true),desc:()=>(hu_()?['Az első verzió egyszerű kinézete','Pixelgrafika 2D fényekkel és 2D árnyékokkal','Pixelgrafika — a napárnyékot a 3D-motor számolja','Valódi 3D nézet (kísérleti) — a belső terek 2D-ben maradnak']:['The simple look of the first version','Pixel art with 2D lights and 2D shadows','Pixel art — the 3D engine casts the sun shadows','A real 3D view (experimental) — interiors stay 2D'])[GMODE]},
+  {k:'vid',l:['Videó beállítások','Video settings'],ty:'link',to:'video'},
+  {k:'shl',l:['Árnyékok és fények','Shadows and lights'],ty:'link',to:'shl'},
+  {k:'zoom',l:['Nagyítás','Zoom'],ty:'cyc',get:()=>optVal(8),step:d=>optStep(8,d<0?-1:1)},
+  {k:'mask',l:['Maszk színhatás','Mask colour effect'],ty:'tog',get:()=>OnOff(maskFx),step:()=>optStep(9,1)},
+  {k:'back',ty:'back'}]},
+ video:{t:['Videó beállítások','Video settings'],rows:[
+  {k:'rs',l:['Felbontás','Resolution'],ty:'cyc',get:()=>RS==1?(hu_()?'Fél (gyorsabb)':'Half (faster)'):(hu_()?'Teljes':'Full'),step:()=>setRS(RS==1?2:1)},
+  {k:'fs',l:['Teljes képernyő','Fullscreen'],ty:'tog',get:()=>optVal(13),step:()=>optStep(13,1),nosnd:1},
+  {k:'fpsc',l:['FPS-korlát','Frame rate limit'],ty:'cyc',get:()=>FPSC?FPSC+' FPS':(hu_()?'Kikapcsolva':'Off'),step:d=>{const i=FPSL.indexOf(FPSC);FPSC=FPSL[((i<0?1:i)+(d<0?FPSL.length-1:1))%FPSL.length];FPN=0;try{localStorage.setItem('pxc_fpsc',String(FPSC))}catch(e){}}},
+  {k:'fps',l:['FPS kijelzése','Show FPS'],ty:'tog',get:()=>OnOff(FPSON),step:()=>{FPSON=!FPSON;try{localStorage.setItem('pxc_fpson',FPSON?'1':'0')}catch(e){}}},
+  {k:'bloom',l:['Bloom (ragyogás)','Bloom'],ty:'tog',dis:()=>!GLX||GMODE==3,get:()=>!GLX?(hu_()?'Nem elérhető':'N/A'):GMODE==3?(hu_()?'3D-ben nincs':'Not in 3D'):OnOff(shaderOn),step:()=>{shaderOn=!shaderOn;gSave()}},
+  {k:'bls',l:['Bloom erőssége','Bloom strength'],ty:'sld',dis:()=>!GLX||!shaderOn||GMODE==3,get:()=>BLS,set:v=>{BLS=v;gSave()}},
+  {k:'back',ty:'back'}]},
+ shl:{t:['Árnyékok és fények','Shadows and lights'],rows:[
+  {k:'shon',l:['Árnyékok','Shadows'],ty:'tog',dis:()=>GMODE==0,get:()=>GMODE==0?(hu_()?'Retróban nincs':'Not in Retro'):OnOff(SHON),step:()=>{SHON=!SHON;gApply();gSave()}},
+  {k:'shs',l:['Árnyékok erőssége','Shadow strength'],ty:'sld',dis:()=>GMODE==0||!SHON,get:()=>SHS,set:v=>{SHS=v;gSave()}},
+  {k:'shsoft',l:['Árnyékok minősége','Shadow quality'],ty:'cyc',dis:()=>GMODE<2||!SHON,get:()=>GMODE<2?(hu_()?'csak 3D-ben':'3D only'):SHSOFT?(hu_()?'Puha szélek':'Soft edges'):(hu_()?'Éles (gyorsabb)':'Sharp (faster)'),step:()=>{SHSOFT=!SHSOFT;s3Type();gSave()}},
+  {k:'shq',l:['Árnyékok felbontása','Shadow resolution'],ty:'cyc',dis:()=>GMODE<2||!SHON,get:()=>GMODE<2?(hu_()?'csak 3D-ben':'3D only'):shqName(),step:d=>{SHQ=(SHQ+(d<0?2:1))%3;gSave()}},
+  {k:'lton',l:['Extra fények','Extra lights'],ty:'tog',dis:()=>GMODE==0,get:()=>GMODE==0?(hu_()?'Retróban nincs':'Not in Retro'):OnOff(LTON),step:()=>{LTON=!LTON;gApply();gSave()},desc:()=>hu_()?'Falakon megakadó fények, lámpafény a 3D-ben':'Lights blocked by walls, lamp lights in 3D'},
+  {k:'back',ty:'back'}]}};
+const gRows=()=>GPAGES[GPG].rows;
+function gfY(i){const R=gRows();let y=obY(i)+6;for(let j=0;j<i;j++)if(R[j].desc)y+=12;if(R[i].ty=='back')y+=6;return y}
+function gfxStep(i,dir){const r=gRows()[i];if(!r)return;if(r.ty=='back'){if(GPG=='main'){state='opts'}else{GPG='main';gsel=0}snd('ui');return}
+ if(r.ty=='link'){GPG=r.to;gsel=0;snd('ui');return}if(r.dis&&r.dis())return;
+ if(r.ty=='sld'){r.set(Math.max(0,Math.min(1,Math.round((r.get()+dir*.1)*10)/10)));snd('ui');return}r.step(dir);if(!r.nosnd)snd('ui')}
+function gfxMenu(){const moved=ms.x!=lmx||ms.y!=lmy;lmx=ms.x;lmy=ms.y;const hu=hu_(),pg=GPAGES[GPG],R=pg.rows,ti=pg.t[hu?0:1];Q(0,0,VW,VH,'rgba(6,10,6,.88)');
+ g.font=fnt(1,20);g.textAlign='center';g.fillStyle='#a8321f';g.fillText(ti,VW/2+2,42);g.fillStyle=fcol('#d8e4c8');g.fillText(ti,VW/2,40);noTr=true;if(gsel>=R.length)gsel=0;
+ for(let i=0;i<R.length;i++){const r=R[i],y=gfY(i);if(moved&&ms.x>=OPB.x&&ms.x<OPB.x+OPB.w&&ms.y>=y&&ms.y<y+OPB.h)gsel=i;const on=gsel==i,dis=r.dis&&r.dis();
   Q(OPB.x-1,y-1,OPB.w+2,OPB.h+2,on?'#ffd84a':'#3a4634');Q(OPB.x,y,OPB.w,OPB.h,on?'#4a3722':'#1c1a12');
-  if(k=='back'){txt(L.back,VW/2,y+10,on?'#ffd84a':'#cfd8c0','center');continue}
-  txt(L[k],OPB.x+8,y+10,dis?'#5a6a52':on?'#ffd84a':'#b8c8a8');
-  if(k=='shs'){const bx=OPB.x+OPB.w-150,bw=100;txt('<',bx-10,y+10,on?'#ffd84a':'#5a6a52','center');Q(bx,y+5,bw,5,'#2a2a1e');Q(bx,y+5,Math.round(bw*SHS),5,dis?'#4a5a42':'#8ac85a');Q(bx+Math.round(bw*SHS)-1,y+3,3,9,'#f0e6b8');txt(Math.round(SHS*100)+'%',OPB.x+OPB.w-26,y+10,dis?'#5a6a52':'#f0e6b8','center');txt('>',OPB.x+OPB.w-6,y+10,on?'#ffd84a':'#5a6a52','center')}
-  else{const wide=k=='mode',cx=wide?OPB.x+OPB.w-78:OPB.x+OPB.w-60;txt('<',wide?OPB.x+OPB.w-150:OPB.x+OPB.w-118,y+10,on?'#ffd84a':'#5a6a52','center');txt(gfxVal(k),cx,y+10,dis?'#5a6a52':k=='mode'&&GMODE==3?'#ffb060':'#f0e6b8','center');txt('>',OPB.x+OPB.w-8,y+10,on?'#ffd84a':'#5a6a52','center')}
-  if(k=='mode'){g.font=fnt(0,8);txt(desc[GMODE],VW/2,y+OPB.h+9,'#8fa07f','center')}}
- txt(hu?'W/S: választás   A/D vagy kattintás: állítás   Esc: vissza':'W/S choose   A/D or click: adjust   Esc back',VW/2,gfY(GFR.length-1)+OPB.h+14,'#8fa07f','center');noTr=false}
-function gfxKey(c){const n=GFR.length;if(c=='Escape'){state='opts';return}if(c=='ArrowUp'||c=='KeyW')gsel=(gsel+n-1)%n;else if(c=='ArrowDown'||c=='KeyS')gsel=(gsel+1)%n;else if(c=='ArrowLeft'||c=='KeyA')gfxStep(gsel,-1);else if(c=='ArrowRight'||c=='KeyD'||c=='Enter'||c=='Space')gfxStep(gsel,1)}
-function gfxClick(){for(let i=0;i<GFR.length;i++){const k=GFR[i].k,y=gfY(i);if(ms.x>=OPB.x&&ms.x<OPB.x+OPB.w&&ms.y>=y&&ms.y<y+OPB.h){gsel=i;if(k=='back'||k=='fs'||k=='mask'||k=='rs'||k=='fps')return gfxStep(i,1);
-  if(k=='shs'){const bx=OPB.x+OPB.w-150,bw=100;if(ms.x>=bx-4&&ms.x<=bx+bw+4){SHS=Math.max(0,Math.min(1,Math.round((ms.x-bx)/bw*20)/20));try{localStorage.setItem('pxc_shs',String(SHS))}catch(e){}snd('ui');return}return gfxStep(i,ms.x<bx?-1:1)}
-  return gfxStep(i,ms.x<OPB.x+OPB.w/2?-1:1)}}}
-/* F8 (in game): jump between the 3D Alpha view and the last 2D mode */
+  if(r.ty=='back'){txt(hu?'Vissza':'Back',VW/2,y+10,on?'#ffd84a':'#cfd8c0','center');continue}
+  txt(r.l[hu?0:1],OPB.x+8,y+10,dis?'#5a6a52':on?'#ffd84a':r.ty=='link'?'#e8d8a0':'#b8c8a8');
+  if(r.ty=='link')txt('>',OPB.x+OPB.w-8,y+10,on?'#ffd84a':'#cfd8c0','center');
+  else if(r.ty=='sld'){const v=r.get(),bx=OPB.x+OPB.w-150,bw=100;txt('<',bx-10,y+10,on?'#ffd84a':'#5a6a52','center');Q(bx,y+5,bw,5,'#2a2a1e');Q(bx,y+5,Math.round(bw*v),5,dis?'#4a5a42':'#8ac85a');Q(bx+Math.round(bw*v)-1,y+3,3,9,dis?'#6a6a5a':'#f0e6b8');txt(Math.round(v*100)+'%',OPB.x+OPB.w-26,y+10,dis?'#5a6a52':'#f0e6b8','center');txt('>',OPB.x+OPB.w-6,y+10,on?'#ffd84a':'#5a6a52','center')}
+  else{const cx=r.wide?OPB.x+OPB.w-78:OPB.x+OPB.w-60;txt('<',r.wide?OPB.x+OPB.w-150:OPB.x+OPB.w-118,y+10,on&&!dis?'#ffd84a':'#5a6a52','center');txt(r.get(),cx,y+10,dis?'#5a6a52':r.k=='mode'&&GMODE==3?'#ffb060':'#f0e6b8','center');txt('>',OPB.x+OPB.w-8,y+10,on&&!dis?'#ffd84a':'#5a6a52','center')}
+  if(r.desc){g.font=fnt(0,8);txt(r.desc(),VW/2,y+OPB.h+9,'#8fa07f','center')}}
+ txt(hu?'W/S: választás   A/D vagy kattintás: állítás   Esc: vissza':'W/S choose   A/D or click: adjust   Esc back',VW/2,gfY(R.length-1)+OPB.h+14,'#8fa07f','center');noTr=false}
+function gfxKey(c){const n=gRows().length;if(c=='Escape'){if(GPG!='main'){GPG='main';gsel=0}else state='opts';return}if(c=='ArrowUp'||c=='KeyW')gsel=(gsel+n-1)%n;else if(c=='ArrowDown'||c=='KeyS')gsel=(gsel+1)%n;else if(c=='ArrowLeft'||c=='KeyA')gfxStep(gsel,-1);else if(c=='ArrowRight'||c=='KeyD'||c=='Enter'||c=='Space')gfxStep(gsel,1)}
+function gfxClick(){const R=gRows();for(let i=0;i<R.length;i++){const r=R[i],y=gfY(i);if(ms.x>=OPB.x&&ms.x<OPB.x+OPB.w&&ms.y>=y&&ms.y<y+OPB.h){gsel=i;
+  if(r.ty=='sld'&&!(r.dis&&r.dis())){const bx=OPB.x+OPB.w-150,bw=100;if(ms.x>=bx-4&&ms.x<=bx+bw+4){r.set(Math.max(0,Math.min(1,Math.round((ms.x-bx)/bw*20)/20)));snd('ui');return}return gfxStep(i,ms.x<bx?-1:1)}
+  if(r.ty=='cyc')return gfxStep(i,ms.x<OPB.x+OPB.w/2?-1:1);return gfxStep(i,1)}}}
+{const os96=optStep;optStep=function(i,dir){if(i==5){state='gfxo';GPG='main';gsel=0;snd('ui');return}return os96(i,dir)}}
 addEventListener('keydown',e=>{if(e.code!='F8'||state!='play')return;e.preventDefault();e.stopImmediatePropagation();setGMode(GMODE==3?GPREV:3)},true);
 
 /* ===== v94: performance — resolution option, frame cap, FPS display, pre-rendered grass blades ===== */
-GAMEV=96;
+GAMEV=97;
 /* RS (canvas pixels per game pixel) is defined where the canvas is created: 2 = full, 1 = performance */
 var FPSC=60,FPSON=false;try{const f=localStorage.getItem('pxc_fpsc');if(f!=null&&f!=='')FPSC=+f;FPSON=localStorage.getItem('pxc_fpson')==='1'}catch(e){}
 let FPN=0,FPSF=0,FPST=0,FPSV=0;var RGA94=0,TKA94=0;
