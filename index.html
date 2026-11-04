@@ -1338,7 +1338,7 @@ function act(){
   const cx=tx*T+8,cy=ty*T+8;P.cd=tl&&tl.k!='sword'?Math.max(.18,(tl.k=='axe'?.32:.45)/Math.sqrt(tl.s/1.6)):.4;
   if(o.t=='tree'){const ax=tl&&tl.k=='axe';o.hp-=ax?tl.s:1;hit(cx,cy,'#6b4a2b');o.shT=performance.now()+280;leafFx(cx,cy-10);if(ax)wear(it);if(o.hp<=0){ob[ty*W+tx]=null;const n=3+Math.floor(R()*2)+(ax?2:0);inv.wood+=n;const fb=R()<.7?1+Math.floor(R()*2):0;if(fb)inv.fiber+=fb;say('Tree felled: +'+n+' wood'+(fb?', +'+fb+' fiber':''))}}
   else if(o.t=='cactus'){if(it=='hand'){if(edge){P.cd=.35;if(o.lt!=null&&gtime()-o.lt<1)say('The cactus is dry - try again tomorrow');else{o.lt=gtime();P.th=Math.min(100,(P.th||0)+14);snd('ui');hit(cx,cy,'#9ad890');say('You drink cactus water')}}}else{o.hp-=tl?tl.s:1;if(tl)wear(it);hit(cx,cy,'#58a050');if(o.hp<=0){ob[ty*W+tx]=null;const fb=2+Math.floor(R()*2);inv.fiber+=fb;say('Cactus chopped: +'+fb+' fiber')}}}
-  else if(o.t=='stash'||o.t=='furnace'){let n=0;for(const k in (o.it||{}))if(o.it[k]>0){inv[k]=(inv[k]||0)+o.it[k];n+=o.it[k]}ob[ty*W+tx]=null;inv[o.t]++;givehb(o.t);snd('pick');hit(cx,cy,'#c8c8c0');say('Picked up '+LBL[o.t].toLowerCase()+(n?' (+'+n+' items)':''))}
+  else if(o.t=='stash'&&typeof carryPick=='function'){carryPick(o,tx,ty,cx,cy)}else if(o.t=='stash'||o.t=='furnace'){let n=0;for(const k in (o.it||{}))if(o.it[k]>0){inv[k]=(inv[k]||0)+o.it[k];n+=o.it[k]}ob[ty*W+tx]=null;inv[o.t]++;givehb(o.t);snd('pick');hit(cx,cy,'#c8c8c0');say('Picked up '+LBL[o.t].toLowerCase()+(n?' (+'+n+' items)':''))}
   else if(LOOTT[o.t]){if(edge)crate(o)}else if(o.t=='tomb'){if(edge){stOpen=o;held=null;snd('ui')}}
   else if(o.t=='fire'){if(edge)fuelUp(o)}
   else if(FURN[o.t]||CAMP[o.t]||o.t=='fence'||o.t=='wfence'||o.t=='twall'||o.t=='door'||o.t=='painting'){if(o.art&&typeof keepArt=='function')keepArt(o.art);rmObj(ty*W+tx);inv[o.t]++;snd('pick');hit(cx,cy,'#c8c8c0');say('Picked up '+LBL[o.t].toLowerCase())}
@@ -1360,7 +1360,7 @@ function update(dt){
  if(K.KeyA||K.ArrowLeft)mx--;if(K.KeyD||K.ArrowRight)mx++;if(K.KeyW||K.ArrowUp)my--;if(K.KeyS||K.ArrowDown)my++;
  if(view){ang+=((K.ArrowRight?1:0)-(K.ArrowLeft?1:0))*2.4*dt;const f=(K.KeyW||K.ArrowUp?1:0)-(K.KeyS||K.ArrowDown?1:0),s=(K.KeyD?1:0)-(K.KeyA?1:0),v=(K.ShiftLeft?100:70)*dt;if(f||s){mv(P,(Math.cos(ang)*f-Math.sin(ang)*s)*v,(Math.sin(ang)*f+Math.cos(ang)*s)*v,4);P.an+=dt*10;if(fishing){fishing=null;say('Fishing cancelled')}}P.fx=Math.cos(ang);P.fy=Math.sin(ang);mx=my=0}
  if(rid){if(!rid.occ||!CARS.includes(rid))rid=null;else{P.x=rid.x;P.y=rid.y;sit=null;P.boat=false}mx=my=0}if(drv){driveTick(dt,mx,my);mx=my=0}if(J){mx=my=0}if(mx||my){sit=null;const l=Math.hypot(mx,my);mx/=l;my/=l;P.fx=Math.abs(mx)>=Math.abs(my)?Math.sign(mx):0;P.fy=P.fx?0:Math.sign(my);if(mx&&my){P.fx=mx>0?1:-1;P.fy=0}
-  const iw=wt(map[Math.floor(P.y/T)*W+Math.floor(P.x/T)])||map[Math.floor(P.y/T)*W+Math.floor(P.x/T)]==10,sp=(K.ShiftLeft?100*(1+sk('run')):70)*(1+sk('spd'))*dt*(iw&&!P.boat?.5:1)*(P.boat?1.12:1)*(creative?1.6:1);swim=true;mv(P,mx*sp,my*sp,4);swim=false;P.an+=dt*(K.ShiftLeft?14:10);if(K.ShiftLeft&&!P.boat&&!iw){dsT-=dt;if(dsT<=0){dsT=.08;const dc=cb==1&&!inD?'rgba(240,246,250,.7)':cb==2&&!inD?'rgba(226,200,140,.6)':'rgba(190,176,140,.5)';parts.push({x:P.x-1+(Math.random()-.5)*6,y:P.y-1,vx:-mx*16+(Math.random()-.5)*10,vy:-5-Math.random()*6,l:.38,c:dc,ds:1,sz:3})}}if(fishing){fishing=null;say('Fishing cancelled')}}
+  const iw=wt(map[Math.floor(P.y/T)*W+Math.floor(P.x/T)])||map[Math.floor(P.y/T)*W+Math.floor(P.x/T)]==10,sp=(K.ShiftLeft?100*(1+sk('run')):70)*(1+sk('spd'))*dt*(iw&&!P.boat?.5:1)*(P.boat?1.12:1)*(creative?1.6:1)*(typeof carryMul=='function'?carryMul():1);swim=true;mv(P,mx*sp,my*sp,4);swim=false;P.an+=dt*(K.ShiftLeft?14:10);if(K.ShiftLeft&&!P.boat&&!iw){dsT-=dt;if(dsT<=0){dsT=.08;const dc=cb==1&&!inD?'rgba(240,246,250,.7)':cb==2&&!inD?'rgba(226,200,140,.6)':'rgba(190,176,140,.5)';parts.push({x:P.x-1+(Math.random()-.5)*6,y:P.y-1,vx:-mx*16+(Math.random()-.5)*10,vy:-5-Math.random()*6,l:.38,c:dc,ds:1,sz:3})}}if(fishing){fishing=null;say('Fishing cancelled')}}
  {const a0=ms.x/ZM+cam.x-P.x,b0=ms.y/ZM+cam.y-P.y,l0=Math.hypot(a0,b0)||1;P.fx=a0/l0;P.fy=b0/l0}P.cd-=dt;P.hurt-=dt;
  mtx=Math.floor((ms.x/ZM+cam.x)/T);mty=Math.floor((ms.y/ZM+cam.y)/T);mwx=ms.x/ZM+cam.x;mwy=ms.y/ZM+cam.y;if(V3&&V3.on)v3Mouse();if(mdown)act();edge=false;
  JA=(K.Space&&!J&&!P.boat&&!sit&&!drv&&!wt(map[Math.floor(P.y/T)*W+Math.floor(P.x/T)]))?jumpCheck(mwx,mwy):null;
@@ -6244,6 +6244,40 @@ function ambTick(dt){if(state!='play'||inD||TALK)return;BARKT-=dt;
 /* phones: tap the answers */
 C.addEventListener('touchstart',e=>{if(!TALK||state!='play'||!e.touches.length)return;const t=e.touches[0],r=C.getBoundingClientRect();ms.x=(t.clientX-r.left)/r.width*VW;ms.y=(t.clientY-r.top)/r.height*VH;const q=talkRect();
  if(ms.x>=q.x&&ms.x<q.x+q.w&&ms.y>=q.y&&ms.y<q.y+q.h){const i=Math.floor((ms.y-q.y-4)/13);e.preventDefault();e.stopImmediatePropagation();if(i>=0&&i<talkOpts().length){if(DLG&&!DLG.done)dlAdvance();talkPick(i)}}},{capture:true,passive:false});
+
+/* ===== v97: storage chests keep their contents when knocked out; a heavy chest slows you down. NPC friendship is saved too. ===== */
+GAMEV=102;
+var CARRY=[];
+const WGT97={stone:1.2,iron:1.5,copper:1.5,gold:1.6,coal:1,ore:1.5,wood:.8,boards:.8,sblock:2,wall:1.5,water:1,bottle:.6,meat:.6,fish:.6,canned:.5};
+const hu97=()=>LANG=='hu';
+function chestWeight(it){let w=0;for(const k in it){const v=it[k]|0;if(v>0)w+=v*(WGT97[k]!=null?WGT97[k]:(TOOL&&TOOL[k]||ARM&&ARM[k]?2:.4))}return w}
+function carryW(){let w=0;for(const c of CARRY)w+=chestWeight(c.it);return w}
+/* 1 = normal speed. Light chests don't matter; a packed one halves your speed */
+function carryMul(){if(creative||!CARRY.length)return 1;const w=carryW();if(w<15)return 1;return Math.max(.45,1-(w-15)/260)}
+function itemsIn(it){let n=0;for(const k in it)n+=Math.max(0,it[k]|0);return n}
+/* knock out: the chest goes into your bag with everything inside */
+function carryPick(o,tx,ty,cx,cy){const it={};for(const k in (o.it||{}))if(o.it[k]>0)it[k]=o.it[k];const n=itemsIn(it);
+ ob[ty*W+tx]=null;inv.stash=(inv.stash||0)+1;givehb('stash');if(n){CARRY.push({it,n});CARRY.sort((a,b)=>chestWeight(a.it)-chestWeight(b.it))}
+ snd('pick');hit(cx,cy,'#c8c8c0');const m=carryMul();
+ say(n?(hu97()?'Felvetted a ládát — '+n+' tárgy van benne'+(m<1?' (nehéz: '+Math.round((1-m)*100)+'%-kal lassabb vagy)':''):'Picked up the chest — '+n+' items inside'+(m<1?' (heavy: '+Math.round((1-m)*100)+'% slower)':'')):(hu97()?'Felvetted az üres ládát':'Picked up the empty chest'))}
+/* placing: the heaviest packed chest goes down first, with its contents */
+{const pl97=place;place=function(...a){const before=inv.stash|0,s0=sel,tx=mtx,ty=mty;const r=pl97.apply(this,a);
+ if(s0=='stash'&&(inv.stash|0)<before&&CARRY.length){const o=ob[ty*W+tx];if(o&&o.t=='stash'){const c=CARRY.pop();o.it=c.it;say(hu97()?'Láda letéve — benne maradt mind a '+c.n+' tárgy':'Chest placed — all '+c.n+' items are still inside')}}
+ if((inv.stash|0)<CARRY.length)CARRY.length=Math.max(0,inv.stash|0);return r}}
+/* never more packed chests than chests */
+{const up97=update;update=function(dt){if((inv.stash|0)<CARRY.length)CARRY.length=Math.max(0,inv.stash|0);return up97(dt)}}
+/* HUD: weight note above the hotbar */
+{const hb97=hud;hud=function(){hb97();if(state!='play'||!CARRY.length||book||invOpen||stOpen)return;const m=carryMul(),n=CARRY.reduce((a,c)=>a+c.n,0),h=hu97();noTr=true;
+ const s=(h?'Teli láda × ':'Packed chest × ')+CARRY.length+'  ('+n+(h?' tárgy':' items')+')'+(m<1?(h?'  — lassabb vagy: −':'  — slower: −')+Math.round((1-m)*100)+'%':'');g.font=fnt(0,8);const w=Math.ceil(g.measureText(s).width)+20;
+ Q(HX-1,VH-41,w+2,13,m<.7?'#c8603a':'#8a6a3a');Q(HX,VH-40,w,11,'rgba(20,16,10,.9)');Q(HX+3,VH-37,9,6,'#9a6a3c');Q(HX+3,VH-37,9,2,'#b8844a');Q(HX+7,VH-36,1,3,'#d9b84a');txt(s,HX+15,VH-32,m<.7?'#ffb08a':'#f0e6b8');noTr=false}}
+/* the chest icon in the hotbar gets a little weight mark */
+{const hbr97=hotbar;hotbar=function(){hbr97();if(!CARRY.length)return;for(let i=0;i<HB.length;i++)if(HB[i]=='stash'){const x=HX+i*22,y=VH-26;Q(x+13,y+2,5,5,'#c8603a');Q(x+14,y+3,3,3,'#ffd0a0')}}}
+/* dying: the contents go into the tombstone with everything else */
+{const od97=onDeath;onDeath=function(){if(state!='dead'&&!creative&&CARRY.length){for(const c of CARRY)for(const k in c.it)inv[k]=(inv[k]||0)+c.it[k];CARRY=[]}return od97()}}
+/* saving: packed chests + NPC friendship and personality */
+{const sv97=save;save=function(){const r=sv97();try{localStorage.setItem(SKEY()+'_carry',JSON.stringify(CARRY));localStorage.setItem(SKEY()+'_npc2',JSON.stringify(NPCS.map(n=>({fr:n.fr|0,ps:n.ps,ab:n.ab|0,td:n.td96||'',gd:n.gd96||'',kn:n.kn|0}))))}catch(e){}return r}}
+{const ld97=load;load=function(){const r=ld97();try{const c=JSON.parse(localStorage.getItem(SKEY()+'_carry')||'[]');CARRY=Array.isArray(c)?c.filter(x=>x&&x.it):[];const q=JSON.parse(localStorage.getItem(SKEY()+'_npc2')||'[]');if(Array.isArray(q)&&q.length==NPCS.length)q.forEach((d,i)=>{const n=NPCS[i];if(!d||!n)return;n.fr=d.fr|0;if(d.ps!=null)n.ps=d.ps;n.ab=d.ab|0;n.td96=d.td;n.gd96=d.gd;if(d.kn)n.kn=1})}catch(e){CARRY=[]}return r}}
+{const in97=init;init=function(...a){CARRY=[];return in97.apply(this,a)}}
 
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
