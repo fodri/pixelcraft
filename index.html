@@ -6064,12 +6064,12 @@ styDraw=function(o,x,y,raw){if(isAnim(o,x,y,raw))return animDraw(o,x,y,raw);cons
  if(e.cv)g.drawImage(e.cv,Math.round(x-cam.x)-12+e.ox,Math.round(y-cam.y)-28+e.oy)};
 
 /* ===== v95: dialogue box — when people talk, a white box at the bottom shows their portrait, name and the text, typed out with a babbling voice ===== */
-GAMEV=99;
+GAMEV=100;
 var DLG=null;const DLQ=[];
 const DPORT=new Map();
 function dlHash(s){let h=7;for(const c of String(s||''))h=(h*31+c.charCodeAt(0))>>>0;return h}
 /* portraits: the real sprite, drawn 3× and cropped to head and shoulders */
-function dlPortrait(kind,src){const key=kind=='npc'?'n:'+(src.nm||'')+'|'+(src.c||'')+'|'+(src.ot||src.th||''):kind=='player'||kind=='memo'?'p:'+JSON.stringify(CH)+'|'+(typeof eqStr=='function'?eqStr():''):kind;
+function dlPortrait(kind,src){const key=kind=='npc'?'n:'+(src.nm||'')+'|'+(src.c||'')+'|'+(src.ot||src.th||''):kind=='player'||kind=='memo'?kind+':'+JSON.stringify(CH)+'|'+(typeof eqStr=='function'?eqStr():''):kind;
  let cv=DPORT.get(key);if(cv)return cv;cv=document.createElement('canvas');cv.width=cv.height=44;const cx=cv.getContext('2d');cx.imageSmoothingEnabled=false;const sg=g,sc=cam,sb=BASE;g=cx;BASE=1;
  try{if(kind=='npc'){const dc=drawChar,sv=[src.fx,src.fy,src.mv,src.an];drawChar=function(x,y,c,w,fx,fy,s,e){return dc(x,y,c,0,0,1,3,e)};cam={x:src.x-22,y:src.y-68};try{drawNPC(src)}finally{drawChar=dc;[src.fx,src.fy,src.mv,src.an]=sv;if(typeof OVQ!='undefined')OVQ.length=0}}
   else if(kind=='player'||kind=='memo'){cam={x:0,y:0};drawChar(22,68,CH,0,0,1,3,typeof eqOf=='function'?eqOf():{});if(kind=='memo'){cx.globalCompositeOperation='source-atop';cx.fillStyle='rgba(150,110,210,.45)';cx.fillRect(0,0,44,44);cx.globalCompositeOperation='source-over'}}
@@ -6078,11 +6078,15 @@ function dlPortrait(kind,src){const key=kind=='npc'?'n:'+(src.nm||'')+'|'+(src.c
  catch(e){}finally{g=sg;cam=sc;BASE=sb}DPORT.set(key,cv);if(DPORT.size>80)DPORT.delete(DPORT.keys().next().value);return cv}
 const DVOICE={player:['triangle',250],memo:['sine',470],radio:['square',330],note:null};
 function dlVoice(kind,src){if(kind=='npc'){const h=dlHash(src.nm);return['square',(src.sx=='f'?290:200)+h%110]}return DVOICE[kind]}
+/* the hero's name: in the story the character has lost their memory — "???" until the memory comes back */
+const customName=()=>{const n=String(uname||'').trim();return n&&!/^player\d*$/i.test(n)?n:''};
+function heroKnown(){try{if(!STORY)return true;if(STORY.done||(STORY.t&&STORY.t.named))return true;const s=stCur();return STORY.act>3||(STORY.act==3&&!!s&&s.id!='gate')}catch(e){return true}}
+function heroName(){const h=LANG=='hu';if(STORY&&!heroKnown())return '???';return customName()||(STORY?(h?'Műszakvezető':'Shift supervisor'):(h?'Te':'You'))}
 /* add a line */
-function dlSay(kind,name,text,src,hint){if(!text)return;const e={kind,name,text:String(text),src,hint:hint||'',voice:dlVoice(kind,src),n:0,done:false,t0:performance.now(),bl:0};
+function dlSay(kind,name,text,src,hint){if(!text)return;const e={kind,name,text:String(text),src,hint:hint||'',voice:dlVoice(kind,src),n:0,done:false,t0:performance.now(),bl:0,reveal:kind=='memo'&&/^(Most már emlékszem|Now I remember)/.test(String(text))};
  if(kind=='npc'){if(DLG&&DLG.kind=='npc'&&DLG.src===src){Object.assign(DLG,e);return}for(let i=DLQ.length-1;i>=0;i--)if(DLQ[i].src===src)DLQ.splice(i,1)}
  if(!DLG){DLG=e;if(kind=='note')snd('pick')}else{if(DLQ.length>6)DLQ.shift();DLQ.push(e)}}
-function dlNext(){DLG=DLQ.shift()||null;if(DLG){DLG.t0=performance.now();if(DLG.kind=='note')snd('pick')}}
+function dlNext(){if(DLG&&DLG.reveal&&STORY){STORY.t=STORY.t||{};if(!STORY.t.named){STORY.t.named=1;try{stSave()}catch(e){}const n=customName(),h=LANG=='hu';DLQ.unshift({kind:'player',name:'',text:n?(h?'A nevem… '+n+'. Igen. Ez vagyok én.':'My name… '+n+'. Yes. That is me.'):(h?'A nevemre még mindig nem emlékszem. De arra igen, mit tettem.':'I still can’t recall my name. But I remember what I did.'),src:null,hint:'',voice:DVOICE.player,n:0,done:false,t0:0,bl:0})}}DLG=DLQ.shift()||null;if(DLG){DLG.t0=performance.now();if(DLG.kind=='note')snd('pick')}}
 function dlBlip(e,ch){if(!e.voice||!/[0-9A-Za-zÀ-ž]/.test(ch))return;e.bl++;if(e.bl%2)return;try{if(!SXS.ok||vol<=0)return;SXS.mul=(SVOL.e!=null?SVOL.e:1)*.9;const f=e.voice[1]*(1+((ch.charCodeAt(0)%7)-3)*.045);sxT(e.voice[0],f,f*.97,.05,e.kind=='radio'?.035:.05,0,0)}catch(err){}finally{try{SXS.mul=1}catch(err){}}}
 /* NPC lines: picked up from the existing talk code */
 {const npo=npcOverlay;npcOverlay=function(){const st=[];for(const n of OVQ)if(DLG&&DLG.src===n&&n.sayT>0){st.push([n,n.sayT]);n.sayT=0}try{npo()}finally{for(const[n,v]of st)n.sayT=Math.max(0,v-1/60)}}}
@@ -6090,7 +6094,7 @@ function dlWatch(){if(state!='play'||inD&&!inC)return;for(const n of NPCS){if(!(
   let hint='';const pre=n.nm+': '+n.line;if(typeof msg=='string'&&msgT>0){if(msg.startsWith(pre)){hint=msg.slice(pre.length).trim();msgT=0}else if(msg===n.line)msgT=0}dlSay('npc',n.nm,n.line,n,hint)}}
 /* story thoughts, memories, radio and notes go to the same box */
 if(typeof drawStory=='function'){const ds95=drawStory;drawStory=function(){while(!RAD&&RADIO.length&&!SCARD&&!SEND){const e=RADIO.shift(),it=Array.isArray(e)?{k:'radio',t:e}:e,h=LANG=='hu',k=it.k||'radio',t=Array.isArray(it.t)?it.t[h?0:1]:it.t;
-  const nm={radio:h?'Vera (rádió)':'Vera (radio)',think:uname||(h?'Te':'You'),memo:h?'Emlékfoszlány':'Memory',note:h?'Talált feljegyzés':'Found note'}[k]||'';dlSay(k=='think'?'player':k,nm,t,null);if(k=='radio')sfx(()=>{sxN(.4,'bandpass',1800,900,3,.12)})}return ds95()}}
+  const nm={radio:h?'Vera (rádió)':'Vera (radio)',think:'',memo:h?'Emlékfoszlány':'Memory',note:h?'Talált feljegyzés':'Found note'}[k]||'';dlSay(k=='think'?'player':k,nm,t,null);if(k=='radio')sfx(()=>{sxN(.4,'bandpass',1800,900,3,.12)})}return ds95()}}
 /* drawing */
 function dlWrap(text,w){const out=[];let line='';for(const wd of text.split(' ')){const t2=line?line+' '+wd:wd;if(g.measureText(t2).width>w&&line){out.push(line);line=wd}else line=t2}out.push(line);return out}
 function dlRect(){const bh=60,bx=10,bw=VW-20;return{x:bx,y:VH-34-bh,w:bw,h:bh}}
@@ -6102,6 +6106,7 @@ function dlDraw(){dlWatch();const e=DLG;if(!e)return;const now=performance.now()
  noTr=true;const a=Math.min(1,(now-e.t0)/120);g.globalAlpha=a;
  Q(r.x-2,r.y-2,r.w+4,r.h+4,'#2a2218');Q(r.x,r.y,r.w,r.h,'#f7f3e8');Q(r.x,r.y,r.w,2,'#ffffff');Q(r.x,r.y+r.h-2,r.w,2,'#d8d0bc');
  const pc=dlPortrait(e.kind,e.src);Q(r.x+6,r.y+7,46,46,'#2a2218');Q(r.x+7,r.y+8,44,44,e.kind=='radio'?'#c8d8b0':e.kind=='memo'?'#e0d4f0':e.kind=='note'?'#e8e0c8':'#d9cfb8');g.drawImage(pc,r.x+7,r.y+8);
+ if(e.kind=='player')e.name=heroName();if(e.kind=='radio'&&!e.nm2){e.nm2=1;const n=customName();if(n&&heroKnown())e.text=e.text.replace('tudom, ki vagy.','tudom, ki vagy, '+n+'.').replace('I know who you are.','I know who you are, '+n+'.')}
  const col={npc:'#8a4a1a',player:'#2a5a8a',memo:'#6a4a8a',radio:'#3a6a2a',note:'#7a6030'}[e.kind]||'#333';g.font=fnt(1,9);g.textAlign='left';g.fillStyle=col;g.fillText(e.name,r.x+60,r.y+15);
  g.font=fnt(0,8);const tw=r.w-70;if(!e.ln||e.lw!==tw){e.lw=tw;e.ln=dlWrap(e.text,tw)}g.fillStyle=e.kind=='memo'?'#4a3a5a':'#1e1a14';let left=Math.floor(e.n),yy=r.y+28;
  for(const ln of e.ln.slice(0,3)){if(left<=0)break;g.fillText(ln.slice(0,left),r.x+60,yy);left-=ln.length+1;yy+=10}
