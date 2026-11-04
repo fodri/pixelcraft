@@ -318,9 +318,9 @@ function menuAct(i){if(i==0){if(!started){if(!load()){init();tut=1}}started=true
 function menuKey(c){if(c=='ArrowUp'||c=='KeyW'){msel=(msel+5)%6;snd('ui')}else if(c=='ArrowDown'||c=='KeyS'){msel=(msel+1)%6;snd('ui')}else if(c=='Enter'||c=='Space'||c=='ArrowRight'||c=='KeyD')menuAct(msel)}
 function menuClick(){for(let i=0;i<6;i++)if(ms.x>=MB.x&&ms.x<MB.x+MB.w&&ms.y>=mbY(i)&&ms.y<mbY(i)+MB.h){msel=i;menuAct(i);return}}
 /* settings */
-function optVal(i){const hu=LANG=='hu';switch(i){case 0:return tr(BN[biome]);case 1:return LANG=='hu'?'Magyar':'English';case 2:return Math.round(vol*100)+'%  >';case 3:return FP[fpi].n;case 4:return FCOL[fci][0];case 5:return gfxName();case 6:return creative?(hu?'Kreatív':'Creative'):(hu?'Túlélő':'Survival');case 7:return surv?'ON':'OFF';case 8:return ZL[zi]+'x';case 9:return maskFx?'ON':'OFF';case 10:return '>';case 11:return '>'}return''}
+function optVal(i){const hu=LANG=='hu';switch(i){case 0:return tr(biome==4&&CONTP?'Continent (all)':BN[biome]);case 1:return LANG=='hu'?'Magyar':'English';case 2:return Math.round(vol*100)+'%  >';case 3:return FP[fpi].n;case 4:return FCOL[fci][0];case 5:return gfxName();case 6:return creative?(hu?'Kreatív':'Creative'):(hu?'Túlélő':'Survival');case 7:return surv?'ON':'OFF';case 8:return ZL[zi]+'x';case 9:return maskFx?'ON':'OFF';case 10:return '>';case 11:return '>'}return''}
 function optStep(i,dir){const sv=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
- if(i==0)biome=(biome+dir+5)%5;else if(i==1)setLang(LANG=='hu'?'en':'hu');
+ if(i==0){const L6=[0,1,2,3,'i','c'],cur=biome==4?(CONTP?'c':'i'):biome,v=L6[(L6.indexOf(cur)+dir+6)%6];if(v=='i'){biome=4;CONTP=false}else if(v=='c'){biome=4;CONTP=true}else biome=v;try{localStorage.setItem('pxc_cont',CONTP?'1':'0')}catch(e){}}else if(i==1)setLang(LANG=='hu'?'en':'hu');
  else if(i==2){state='sndo';ssel=0;snd('ui');return}
  else if(i==3){fpi=(fpi+dir+FP.length)%FP.length;sv('pxc_font2',fpi)}else if(i==4){fci=(fci+dir+FCOL.length)%FCOL.length;sv('pxc_fc',fci)}
  else if(i==5){cycleGfx()}
@@ -1638,7 +1638,7 @@ function hud(){weather();promptE();if(!inD&&state=='play'&&(!mapC||performance.n
 function title(s,sub){s=tr(s);Q(0,0,VW,VH,'rgba(0,0,0,.78)');g.font=fnt(1,30);g.textAlign='center';g.fillStyle='#a8321f';g.fillText(s,VW/2+2,92);g.fillStyle=fcol('#d8e4c8');g.fillText(s,VW/2,90);
  sub.forEach((l,i)=>txt(l,VW/2,125+i*13,i==sub.length-1?'#ffd84a':'#b8c8a8','center'))}
 function menuOld(){title('PixelCRAFT',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Raid the ruins. Survive the nights.']);
- [started||!hasSave()?'Play':'Continue','New game','Biome: '+BN[biome],'Language / Nyelv: '+(LANG=='hu'?'Magyar':'English'),'Volume: ['+'|'.repeat(Math.round(vol*10))+'.'.repeat(10-Math.round(vol*10))+']','Character >','Font: '+FP[fpi].n,'Text color: '+FCOL[fci][0],'Bloom: '+(GLX?(shaderOn?'ON':'OFF'):'N/A'),'Mode: '+(creative?'Creative':'Survival'),'Hunger & thirst: '+(surv?'ON':'OFF'),'Music: '+(musicOn?'ON':'OFF'),'Online co-op'].forEach((s,i)=>txt((mi==i?'> ':'  ')+s,VW/2,146+i*9,mi==i?'#ffd84a':'#b8c8a8','center'));
+ [started||!hasSave()?'Play':'Continue','New game','Biome: '+(biome==4&&CONTP?'Continent (all)':BN[biome]),'Language / Nyelv: '+(LANG=='hu'?'Magyar':'English'),'Volume: ['+'|'.repeat(Math.round(vol*10))+'.'.repeat(10-Math.round(vol*10))+']','Character >','Font: '+FP[fpi].n,'Text color: '+FCOL[fci][0],'Bloom: '+(GLX?(shaderOn?'ON':'OFF'):'N/A'),'Mode: '+(creative?'Creative':'Survival'),'Hunger & thirst: '+(surv?'ON':'OFF'),'Music: '+(musicOn?'ON':'OFF'),'Online co-op'].forEach((s,i)=>txt((mi==i?'> ':'  ')+s,VW/2,146+i*9,mi==i?'#ffd84a':'#b8c8a8','center'));
  chPrev(VW/2+140,206,2);
  txt('Created by: Fodros Gergely',VW-6,VH-6,'#6f7c62','right');
  txt('WASD move  Click act  Right-click place/plant  C craft  M map',VW/2,VH-34,'#8fa07f','center');txt('E interact  H tutorial  Find hatches to enter the ruins',VW/2,VH-24,'#8fa07f','center');txt('W/S select  Enter confirm  Esc menu',VW/2,VH-12,'#6f7c62','center')}
@@ -6765,7 +6765,12 @@ if(typeof npcGreet=='function'){const ng104=npcGreet;npcGreet=function(n){if(!n|
 
 /* ===== v105: one big continent with natural biome borders; camp NPCs with jobs ===== */
 GAMEV=113;
-var CONT=true;
+var CONT=true,CONTP=true;try{CONTP=localStorage.getItem('pxc_cont')!=='0'}catch(e){}CONT=CONTP;
+{const inc=init;init=function(...a){CONT=CONTP;return inc.apply(this,a)}}
+HU.unshift(['Continent (all)','Kontinens (mind)']);
+/* the world type travels with the save */
+{const svc=save;save=function(){const r=svc();try{localStorage.setItem(SKEY()+'_cont',CONT?'1':'0')}catch(e){}return r}}
+{const ldc=load;load=function(){const r=ldc();try{const v=localStorage.getItem(SKEY()+'_cont');CONT=v==='1'}catch(e){}return r}}
 /* ---------- soft biome borders: the neighbour's ground bleeds in as a dithered fringe ---------- */
 var GCOL105=null;
 function gcol105(b){if(!GCOL105)GCOL105={};if(GCOL105[b])return GCOL105[b];let ti=-1;for(let i=0;i<W*H;i+=7)if(bm[i]==b&&map[i]==0&&!ob[i]){ti=i;break}
@@ -6892,7 +6897,7 @@ const JOBQ105={kovacs:['Megjavítanád a szerszámaimat?','Can you fix my tools?
 
 /* ===== v106: a world laid out by reasons — cold mountains in the north, forest in the middle, desert in the south,
    the city at a river mouth on the east coast, the reactor on a lake beside it, roads between settlements, weather that fades between regions ===== */
-GAMEV=115;
+GAMEV=116;
 var RCX105=0,RCY105=0,RIV105=null;
 const CONT6=()=>typeof CONT!='undefined'&&CONT&&biome==4;
 /* ---------- where things are ---------- */
@@ -6947,7 +6952,7 @@ function roads105(){if(!CONT6())return;RCG105=null;const nodes=[];const CC=ISC.f
  /* minimum spanning tree over straight-line distance, then each edge becomes a road */
  const inT=[0],edges=[];while(inT.length<nodes.length){let bd=1e9,be=null;for(const i of inT)for(let j=0;j<nodes.length;j++){if(inT.includes(j))continue;const d=Math.hypot(nodes[i][0]-nodes[j][0],nodes[i][1]-nodes[j][1]);if(d<bd){bd=d;be=[i,j]}}if(!be)break;inT.push(be[1]);edges.push(be)}
  for(const[i,j]of edges){const a=nodes[i],b=nodes[j];if(Math.hypot(a[0]-b[0],a[1]-b[1])>170)continue;try{carveRoad105(roadPath105(a[0],a[1],b[0],b[1]));RCG105=null}catch(e){}}}
-{const gr106=genReactor;genReactor=function(...a){const r=gr106.apply(this,a);if(typeof seeding!='undefined'&&seeding&&!inD&&CONT6()){try{zone105()}catch(e){}try{roads105()}catch(e){}try{ROOFC.clear()}catch(e){}}return r}}
+{const gr106=genReactor;genReactor=function(...a){const r=gr106.apply(this,a);if(typeof seeding!='undefined'&&seeding&&!inD&&CONT6()){try{zone105()}catch(e){}/* country roads are off for now: only the city has streets; the river gets footbridges */try{ROADS105=[];ROADT106=new Uint8Array(W*H);footBridges106()}catch(e){}try{ROOFC.clear()}catch(e){}}return r}}
 /* ---------- weather fades between regions: snow up north, sand storms down south, rain in between ---------- */
 var WB105={s:0,d:0,t:0};
 function wbTarget105(){const tx=Math.floor(P.x/T),ty=Math.floor(P.y/T);let s=0,d=0,n=0;for(let y=-16;y<=16;y+=2)for(let x=-16;x<=16;x+=2){if(x*x+y*y>256)continue;const X=tx+x,Y=ty+y;if(X<0||Y<0||X>=W||Y>=H)continue;const b=bm[Y*W+X];n++;if(b==1)s++;else if(b==2)d++}return n?[s/n,d/n]:[0,0]}
@@ -6992,7 +6997,7 @@ function park106(cx,cy){for(let r=4;r<16;r++)for(let a=0;a<12;a++){const x=Math.
   for(let k=0;k<3;k++)if(R()<.55)try{setFP({t:'wreck',r:0},x+1+k*3,y+1,2,3)}catch(e){}return}}
 function lamps106(path){for(let k=6;k<path.length-6;k+=5){if(R()<.5)continue;const[a,b]=path[k],[c,d]=path[k+1]||path[k],dx=d-b,dy=-(c-a),L=Math.hypot(dx,dy)||1,x=Math.round(a+dx/L*2.6),y=Math.round(b+dy/L*2.6),i=y*W+x;if(x<2||y<2||x>=W-2||y>=H-2||ob[i]||!(map[i]==0||map[i]==2))continue;ob[i]={t:'slamp',b:R()<.4?1:0}}}
 /* footbridges over the big river where no road crosses */
-function footBridges106(){if(!RPTS105.length)return;let made=0;for(let k=40;k<RPTS105.length-30;k+=52){const[x,y,an]=RPTS105[k];let nearB=false;for(let yy=Math.round(y)-14;yy<=Math.round(y)+14&&!nearB;yy++)for(let xx=Math.round(x)-14;xx<=Math.round(x)+14&&!nearB;xx++){if(xx<0||yy<0||xx>=W||yy>=H)continue;const m=map[yy*W+xx];if(m==12&&RIV105[yy*W+xx])nearB=true}if(nearB)continue;
+function footBridges106(){if(!RPTS105.length)return;let made=0;for(let k=30;k<RPTS105.length-24;k+=38){const[x,y,an]=RPTS105[k];let nearB=false;for(let yy=Math.round(y)-14;yy<=Math.round(y)+14&&!nearB;yy++)for(let xx=Math.round(x)-14;xx<=Math.round(x)+14&&!nearB;xx++){if(xx<0||yy<0||xx>=W||yy>=H)continue;const m=map[yy*W+xx];if(m==12&&RIV105[yy*W+xx])nearB=true}if(nearB)continue;
   if(RIC&&Math.hypot(x-RIC[0],y-RIC[1])<RIC[2]+10)continue;const px=-Math.sin(an),py=Math.cos(an);const cells=[];let ok=false;for(let s=-8;s<=8;s++){const X=Math.round(x+px*s),Y=Math.round(y+py*s);if(X<1||Y<1||X>=W-1||Y>=H-1)break;cells.push([X,Y,s])}
   const wat=cells.filter(c=>isWat106(map[c[1]*W+c[0]]));if(!wat.length||wat.length>9)continue;const s0=Math.min(...wat.map(c=>c[2]))-1,s1=Math.max(...wat.map(c=>c[2]))+1;
   const endA=cells.find(c=>c[2]==s0),endB=cells.find(c=>c[2]==s1);if(!endA||!endB)continue;if(!WALKM(map[endA[1]*W+endA[0]])||!WALKM(map[endB[1]*W+endB[0]]))continue;
