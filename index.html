@@ -510,13 +510,13 @@ function genLava(S){const want=biome==4?10:18;let n=0;
 function init0(){
  map=new Uint8Array(W*H);ob=new Array(W*H).fill(null);bm=new Uint8Array(W*H);const S=R()*999,isl=biome==4;mkISC();const RAD=isl?W*.185:W/2,dd=new Float32Array(W*H);
  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
-  let d=9,b=0;for(const c of ISC){const q=Math.hypot(x-c[0],y-c[1])/RAD;if(q<d){d=q;b=c[2]}}bm[y*W+x]=b;dd[y*W+x]=d;
+  let d=9,b=0;if(isl&&CONT){const wx=x+(ns(x*.5+S*3,y*.5,24)-.5)*150+(ns(x+S*8,y,9)-.5)*34+(ns(x+S*5,y,4)-.5)*10,wy=y+(ns(x*.5,y*.5+S*4,24)-.5)*150+(ns(x,y+S*9,9)-.5)*34+(ns(x,y+S*6,4)-.5)*10;let q0=1e9,q1=1e9,b2=-1;for(const c of ISC){const q=Math.hypot(wx-c[0],wy-c[1]);if(q<q0){q1=q0;b2=b;q0=q;b=c[2]}else if(q<q1){q1=q;b2=c[2]}}if((b==1&&b2==2||b==2&&b2==1)&&q1-q0<18)b=0;const ax=Math.abs(x+.5-W/2)/(W*.5),ay=Math.abs(y+.5-H/2)/(H*.5);d=Math.pow(ax*ax*ax*ax+ay*ay*ay*ay,.25)*1.04+(ns(x+S*7,y+S*7,13)-.5)*.16;if(b==3&&d>.86){let q1=1e9;for(const c of ISC){if(c[2]==3)continue;const q=Math.hypot(wx-c[0],wy-c[1]);if(q<q1){q1=q;b=c[2]}}}}else{for(const c of ISC){const q=Math.hypot(x-c[0],y-c[1])/RAD;if(q<d){d=q;b=c[2]}}}bm[y*W+x]=b;dd[y*W+x]=d;
   let e=ns(x+S,y+S,18)*.7+ns(x+S,y+S,6)*.3+.15-d*d*.5;
-  let t=0;if(e<.3||(b!=3&&d<.65&&ns(x+S*2,y,7)<.2))t=1;else if(e<.35)t=2;map[y*W+x]=t;
+  let t=0;if(e<.3||(b!=3&&d<.65&&ns(x+S*2,y,7)<(isl&&CONT?(b==2?.08:.15):.2)))t=1;else if(e<.35)t=2;map[y*W+x]=t;
   if(t==0){const f=ns(x+S+300,y+S,9),r=R();let o=null;
    const tt=(f>.5?.28:.04)*[1,1,.25,.15][b];if(r<tt)o={t:'tree',hp:6};else if(r<tt+(b==2?.05:b==3?.045:.02))o={t:'rock',hp:5};else if(b==2&&r<tt+.1)o={t:'cactus',hp:4};else if(r<.08)o={t:'bush',b:1,r:0};else if(r<.1)o={t:'flax',b:1,r:0};
    ob[y*W+x]=o}}
- holes=new Map();for(let i=0;i<W*H;i++)if(map[i]==1&&bm[i]==1&&dd[i]<(isl?.92+ns(i%W*1.7,(i/W|0)*1.7,6)*.32:9))map[i]=6;
+ holes=new Map();for(let i=0;i<W*H;i++)if(map[i]==1&&bm[i]==1&&dd[i]<(isl?(CONT?.86+ns(i%W*1.7,(i/W|0)*1.7,6)*.12:.92+ns(i%W*1.7,(i/W|0)*1.7,6)*.32):9))map[i]=6;
  for(const c of ISC)for(let y=c[1]-3;y<=c[1]+3;y++)for(let x=c[0]-3;x<=c[0]+3;x++){map[y*W+x]=0;ob[y*W+x]=null}
  inD=false;OW=null;loot=[];arrs=[];HB.fill(null);HB[0]='hand';hb=0;du={};invOpen=false;held=null;wea=0;genElev(S);cityGen();genLava(S);genReactor();upgradeCars();{const hq=[],rch=reachSeen();
  if(biome!=3)for(let n=0,i=0;n<4&&i<9000;i++){const x=8+Math.floor(R()*(W-16)),y=8+Math.floor(R()*(H-16)),ii=y*W+x,need=n<3&&i<6000;if(map[ii]==0&&!ob[ii]&&rch[ii]&&bm[ii]!=3&&Math.hypot(x-SX,y-SY)>14&&(!need||el[ii]>=1)&&hq.every(q=>Math.hypot(q[0]-x,q[1]-y)>40)){ob[ii]={t:'hatch'};hq.push([x,y]);n++}}
@@ -6759,6 +6759,127 @@ if(typeof npcGreet=='function'){const ng104=npcGreet;npcGreet=function(n){if(!n|
  return [h?'Üdv a kutatóállomáson! '+n.nm+' vagyok. A Zónát mérjük — odabent gázálarc nélkül percek alatt végez veled a sugárzás.':'Welcome to the research station! I\'m '+n.nm+'. We monitor the Zone — in there, without a mask, the radiation gets you in minutes.',
   h?n.nm+'. Ne gyere közelebb a műszerekhez… Ja, élő vagy? Akkor jó. Mit hoztál a Zónából?':n.nm+'. Careful with the instruments… Oh, you\'re alive? Good. What did you bring back from the Zone?',
   h?'Végre valaki! '+n.nm+' vagyok. Ha artifactot találsz a bányákban, nálunk jó helye van.':'Finally, someone! I\'m '+n.nm+'. If you find artifacts in the mines, we\'ll put them to good use.'][Math.floor(Math.random()*3)]}}
+
+/* ===== v105: one big continent with natural biome borders; camp NPCs with jobs ===== */
+GAMEV=113;
+var CONT=true;
+/* ---------- soft biome borders: the neighbour's ground bleeds in as a dithered fringe ---------- */
+var GCOL105=null;
+function gcol105(b){if(!GCOL105)GCOL105={};if(GCOL105[b])return GCOL105[b];let ti=-1;for(let i=0;i<W*H;i+=7)if(bm[i]==b&&map[i]==0&&!ob[i]){ti=i;break}
+ if(ti<0)return GCOL105[b]=null;const cv=document.createElement('canvas');cv.width=cv.height=16;const cg=cv.getContext('2d'),sg=g,sc=cam,tx=ti%W,ty=(ti/W)|0;g=cg;cam={x:tx*T,y:ty*T};try{BLN105=1;gTile(tx,ty,0)}catch(e){}finally{BLN105=0;g=sg;cam=sc}
+ const d=cg.getImageData(0,0,16,16).data,cols={};for(let i=0;i<d.length;i+=4){const k=(d[i]>>3)+','+(d[i+1]>>3)+','+(d[i+2]>>3);cols[k]=(cols[k]||0)+1}
+ const top=Object.entries(cols).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k])=>'#'+k.split(',').map(v=>((+v<<3)+4).toString(16).padStart(2,'0')).join(''));return GCOL105[b]=top}
+var BLN105=0;const NG105=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1],[2,0],[-2,0],[0,2],[0,-2]];
+function blend105(tx,ty){if(BLN105||inD||inC||!bm||!(typeof CONT!='undefined'&&CONT)||biome!=4)return;const i=ty*W+tx,a=bm[i];if(map[i]!=0)return;
+ let any=false;const nb=[];for(const[dx,dy]of NG105){const x=tx+dx,y=ty+dy;if(x<0||y<0||x>=W||y>=H)continue;const j=y*W+x,b=bm[j];if(b!=a&&b!=3&&a!=3&&map[j]==0){nb.push([dx,dy,b]);any=true}}if(!any)return;
+ const px=tx*T,py=ty*T;for(let cy=0;cy<8;cy++)for(let cx=0;cx<8;cx++){const lx=cx*2+1,ly=cy*2+1;let best=0,bb=-1;
+  for(const[dx,dy,b]of nb){const rx0=dx*16,ry0=dy*16,ddx=Math.max(rx0-lx,0,lx-(rx0+16)),ddy=Math.max(ry0-ly,0,ly-(ry0+16)),dist=Math.hypot(ddx,ddy),p=.62*Math.pow(Math.max(0,1-dist/22),1.3);if(p>best){best=p;bb=b}}
+  if(bb<0)continue;const h=hs(tx*8+cx+.37,ty*8+cy+.71);if(h<best){const C=gcol105(bb);if(!C)continue;const v=hs(tx*8+cx+9.1,ty*8+cy+3.3);W_(px+cx*2,py+cy*2,2,2,C[v<.6?0:v<.85?1:Math.min(2,C.length-1)]||C[0])}}}
+{const gt105=gTile;gTile=function(tx,ty,now){const r=gt105(tx,ty,now);try{blend105(tx,ty)}catch(e){}return r}}
+{const in105=init;init=function(...a){GCOL105=null;return in105.apply(this,a)}}
+{const ld105=load;load=function(){GCOL105=null;return ld105()}}
+/* ---------- the city turns green: overgrown yards, parks and street trees between the grey ---------- */
+function cityGreen105(){if(!(CONT&&biome==4))return;const S=wseed%997;
+ for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const i=y*W+x;if(bm[i]!=3||map[i]!=0)continue;const n=ns(x*.9+S,y*.9+S*2,9)*.7+ns(x+S*3,y,3)*.3;if(n<.3)continue;
+  bm[i]=0;const o=ob[i];if(o&&o.t=='tree'&&o.dead)delete o.dead;if(!o&&n>.62&&R()<.07)ob[i]={t:'tree',hp:6};else if(!o&&R()<.05)ob[i]={t:'bush',b:1,r:0}}
+ /* street trees on the inner edge of the pavement */
+ for(let y=2;y<H-2;y++)for(let x=2;x<W-2;x++){const i=y*W+x;if(map[i]!=14||ob[i]||bm[i]!=3)continue;if(hs(x*.53+S,y*.61)>.13)continue;let inner=false;for(const d of[1,-1,W,-W])if(map[i+d]==0||map[i+d]==24)inner=true;if(!inner)continue;let road=false;for(const d of[1,-1,W,-W])if(map[i+d]==3)road=true;if(!road)ob[i]={t:'tree',hp:6}}}
+{const cg105=cityGen;cityGen=function(){const r=cg105();try{cityGreen105()}catch(e){}return r}}
+/* ---------- small towns in the countryside (a snowy one, a desert one, a forest one) ---------- */
+var TOWNS105=[];const SOFT105={cone:1,barrier:1,slab:1,rubble:1,fence:1,wfence:1,wgate:1,trash:1,bag:1,papers:1,bones:1,cweb:1,sign:1,slamp:1,tlight:1,bstop:1,hydrant:1,bench:1,junk:1,crate:1,tire:1,log:1,stump:1,car:1,sbag:1,wpile:1,wreck:1,barrel:1,fbarrel:1,pallet:1};
+function townSpot105(b,TW,TH){const cand=[];for(let y=12;y<H-TH-14;y+=3)for(let x=12;x<W-TW-14;x+=3){const c=(y+(TH>>1))*W+x+(TW>>1);if(bm[c]!=b)continue;if(Math.hypot(x+TW/2-SX,y+TH/2-SY)<34)continue;if(RIC&&Math.hypot(x+TW/2-RIC[0],y+TH/2-RIC[1])<RIC[2]+22)continue;cand.push([x,y])}
+ for(let k=cand.length-1;k>0;k--){const j=Math.floor(R()*(k+1));[cand[k],cand[j]]=[cand[j],cand[k]]}const N=(TW+4)*(TH+4);
+ for(const[x,y]of cand.slice(0,1600)){let ok=true,own=0,bad=0;const e0=el?el[(y+(TH>>1))*W+x+(TW>>1)]:0;for(let yy=y-2;yy<y+TH+2&&ok;yy++)for(let xx=x-2;xx<x+TW+2&&ok;xx++){const i=yy*W+xx,m=map[i],o=ob[i];if(o){const t=o.pm!=null&&ob[o.pm]?ob[o.pm].t:o.t;if(!SOFT105[t]&&!{tree:1,rock:1,bush:1,flax:1,cactus:1,tgrass:1,shrub:1,flower:1}[t])ok=false}if(m==9||m==11||m==12||m==15||m==16)ok=false;if(!(m==0||m==2||m==3||m==14)||(el&&el[i]!==e0))bad++;if(bm[i]==b)own++}
+  if(!ok||bad>N*.16||own<N*.5)continue;if(BLD.some(q=>q.x<x+TW+4&&q.x+q.w>x-4&&q.y<y+TH+4&&q.y+q.h>y-4))continue;if(NPCS.some(n=>Math.abs(n.hx/T-x-TW/2)<TW/2+14&&Math.abs(n.hy/T-y-TH/2)<TH/2+14))continue;if(TOWNS105.some(t=>Math.hypot(t.x-x,t.y-y)<60))continue;return[x,y]}return null}
+function genTown105(b){let TW=31,TH=31,s=townSpot105(b,TW,TH);if(!s){TH=14;s=townSpot105(b,TW,TH)}if(!s){TW=14;TH=31;s=townSpot105(b,TW,TH)}if(!s)return;const[x,y]=s;
+ const e0=el?el[(y+(TH>>1))*W+x+(TW>>1)]:0;for(let yy=y-2;yy<y+TH+2;yy++)for(let xx=x-2;xx<x+TW+2;xx++){const i=yy*W+xx;if(map[i]!=0&&map[i]!=2)map[i]=0;if(el)el[i]=e0;const o=ob[i];if(o){const ai=o.pm!=null?o.pm:i,t=ob[ai]?ob[ai].t:o.t;if(SOFT105[t]){try{rmObj(ai)}catch(e){}ob[i]=null}else if(t=='tree'||t=='rock'||t=='cactus')ob[i]=null}}
+ const blocks=[];for(let by=y;by<y+TH;by+=17)for(let bx=x;bx<x+TW;bx+=17)blocks.push([bx,by]);
+ const inB=(xx,yy)=>blocks.some(([bx,by])=>xx>=bx&&xx<bx+14&&yy>=by&&yy<by+14);
+ for(let yy=y-2;yy<y+TH+2;yy++)for(let xx=x-2;xx<x+TW+2;xx++){const i=yy*W+xx;if(inB(xx,yy))continue;const road=(TW>14&&xx>=x+14&&xx<x+17&&yy>=y&&yy<y+TH)||(TH>14&&yy>=y+14&&yy<y+17&&xx>=x&&xx<x+TW)||((xx==x-1||xx==x+TW||yy==y-1||yy==y+TH)&&hs(xx*.7,yy*.9)<.55);if(road){map[i]=3;ob[i]=null}}
+ const cx=TW>14?x+14:x+5,cy=TH>14?y+14:y+5;for(let k=0;k<9;k++)for(const[ax,ay]of[[cx,y-3-k],[cx+1,y-3-k],[cx+2,y-3-k],[x-3-k,cy],[x-3-k,cy+1],[x-3-k,cy+2]]){if(ax<1||ay<1)continue;const i=ay*W+ax;if(map[i]!=0&&map[i]!=2||R()<k*.08)continue;map[i]=3;ob[i]=null}
+ const kinds=(b==2?['houses','shop','gas','villa']:b==1?['houses','villa','shop','church']:['houses','villa','shop','green']).slice();for(let k=kinds.length-1;k>0;k--){const j=Math.floor(R()*(k+1));[kinds[k],kinds[j]]=[kinds[j],kinds[k]]}
+ if(blocks.length<4&&!kinds.slice(0,blocks.length).includes('houses'))kinds[0]='houses';
+ const F={houses:bHouses,villa:bVilla,shop:bShop,gas:bGas,church:bChurch,green:bGreen};
+ blocks.forEach(([bx,by],k)=>{for(let yy=by;yy<by+14;yy++)for(let xx=bx;xx<bx+14;xx++){const j=yy*W+xx,ring=xx==bx||yy==by||xx==bx+13||yy==by+13;bm[j]=b;if(ring){map[j]=14;ob[j]=null}}
+  try{F[kinds[k]](bx+1,by+1)}catch(e){}try{streetFurn({bx,by})}catch(e){}
+  for(let yy=by+1;yy<by+13;yy++)for(let xx=bx+1;xx<bx+13;xx++){const j=yy*W+xx;if(map[j]==3&&!ob[j])map[j]=0;if(map[j]==24&&b!=0)map[j]=b==2?2:0}});
+ TOWNS105.push({x,y,b,n:blocks.length})}
+{const gr105=genReactor;genReactor=function(...a){const r=gr105.apply(this,a);if(typeof seeding!='undefined'&&seeding&&!inD&&CONT&&biome==4){TOWNS105=[];for(const b of[1,2,0])try{genTown105(b)}catch(e){}try{ROOFC.clear()}catch(e){}}return r}}
+/* snow on the roofs of the snowy town */
+if(typeof roofCanvas=='function'){const rc105=roofCanvas;roofCanvas=function(b,k){const had=ROOFC.has(k),cv=rc105(b,k);try{if(!had&&cv&&CONT&&bm&&bm[(b.y+1)*W+b.x+1]==1&&b.rf=='house'){const c=cv.getContext('2d'),w=b.w*T,h=(b.h-1)*T;for(let i=0;i<w*h/7;i++){const x=Math.floor(hs(b.x*3+i*.37,b.y+i*.13)*w),y=Math.floor(hs(b.x+i*.71,b.y*5+i*.29)*h);c.fillStyle=i%5?'rgba(240,246,250,.9)':'rgba(210,222,232,.9)';c.fillRect(x,y,3,2)}c.fillStyle='rgba(244,248,252,.85)';c.fillRect(0,0,w,3)}}catch(e){}return cv}}
+/* =================== camp jobs: everyone in a camp has work to do =================== */
+const JOB105={vezeto:['Vezető','Leader','flag'],orvos:['Orvos','Doctor','bed'],szakacs:['Szakács','Cook','fire'],kovacs:['Kovács','Blacksmith','furnace'],vadasz:['Vadász','Hunter','rack'],
+ epitesz:['Építész','Builder','workbench'],karbantarto:['Karbantartó','Mechanic','barrel'],oktato:['Lövészoktató','Shooting instructor','tgt105'],kereskedo:['Kereskedő','Trader',null]};
+const JORD105=['orvos','szakacs','kovacs','vadasz','epitesz','karbantarto','oktato'];
+const jT105=n=>{const j=JOB105[n.job];return j?(hu104()?j[0]:j[1]):''};
+var JOBOK105=false;
+/* shooting target: a placeable camp prop */
+Object.assign(LBL,{tgt105:'Shooting target'});Object.assign(LBLX,{tgt105:'Shooting target'});HU.unshift(['Shooting target','Lőcél']);if(!NEWK.includes('tgt105'))NEWK.push('tgt105');if(inv.tgt105==null)inv.tgt105=0;PL.tgt105=1;SOLID.tgt105=1;
+{const do105=drawObj;drawObj=function(o,x,y){if(o&&o.t=='tgt105'){W_(x+3,y+13,10,3,'rgba(0,0,0,.3)');W_(x+4,y+9,2,7,'#6a4a2a');W_(x+10,y+9,2,7,'#6a4a2a');W_(x+2,y-2,12,12,'#e8e0d0');W_(x+3,y-1,10,10,'#c8302a');W_(x+4,y,8,8,'#e8e0d0');W_(x+5,y+1,6,6,'#c8302a');W_(x+6,y+2,4,4,'#e8e0d0');W_(x+7,y+3,2,2,'#c8302a');if(o.hit105>performance.now())W_(x+8,y+3,1,1,'#1a1410');return}return do105(o,x,y)}}
+{const ic105=icon2;icon2=function(k,x,y){if(k=='tgt105'){Q(x+4,y+12,2,7,'#6a4a2a');Q(x+14,y+12,2,7,'#6a4a2a');Q(x+2,y+1,16,14,'#e8e0d0');Q(x+4,y+2,12,12,'#c8302a');Q(x+6,y+4,8,8,'#e8e0d0');Q(x+8,y+6,4,4,'#c8302a');return true}return ic105(k,x,y)}}
+function camps105(){const G=new Map();NPCS.forEach((n,i)=>{if(n.sci||n.gd||n.guard)return;const k=Math.round(n.hx||0)+','+Math.round(n.hy||0);if(!G.has(k))G.set(k,[]);G.get(k).push(i)});return G}
+function stationSpot105(cx,cy,t){const fp=FPR[t]||[1,1];for(let r=3;r<13;r++)for(let a=0;a<16;a++){const x=Math.round(cx+Math.cos(a/16*6.283+r)*r),y=Math.round(cy+Math.sin(a/16*6.283+r)*r*.8);let ok=true;
+  for(let yy=y-1;yy<=y+fp[1]&&ok;yy++)for(let xx=x-1;xx<=x+fp[0]&&ok;xx++){if(xx<1||yy<1||xx>=W-1||yy>=H-1){ok=false;break}const i=yy*W+xx;if(ob[i]||!WALKM(map[i])||map[i]==3||map[i]==14)ok=false}
+  if(ok)return[x,y]}return null}
+function assignJobs105(){const G=camps105();for(const[k,ids]of G){const ns=ids.map(i=>NPCS[i]);if(ns.every(n=>n.job))continue;
+  const h=nH(ns[0],5),pool=JORD105.slice();for(let i=pool.length-1;i>0;i--){const j=(h+i*7)%(i+1);[pool[i],pool[j]]=[pool[j],pool[i]]}
+  const cx=Math.round((ns[0].hx-8)/T),cy=Math.round((ns[0].hy-8)/T);let pi=0;
+  ns.forEach((n,ix)=>{if(n.job)return;let job;try{if(shopOf(n))job='kereskedo'}catch(e){}if(!job)job=(ix==0&&ns.length>=3)?'vezeto':pool[(pi++)%pool.length];n.job=job;
+   const t=JOB105[job][2];if(!t)return;if(t=='fire'){for(let yy=cy-7;yy<=cy+7;yy++)for(let xx=cx-7;xx<=cx+7;xx++){const o=ob[yy*W+xx];if(o&&o.t=='fire'&&n.stx==null){n.stx=xx;n.sty=yy}}}
+   if(n.stx==null){const s=stationSpot105(cx,cy,t);if(s){const[x,y]=s,o=t=='fire'?{t:'fire',hp:20,on:true,fl:999}:t=='furnace'?{t:'furnace',hp:60,on:false,it:{}}:{t,hp:60,r:0,on:true};if(FPR[t])setFP(o,x,y,FPR[t][0],FPR[t][1]);else ob[y*W+x]=o;n.stx=x;n.sty=y}}})}JOBOK105=true}
+{const up105=update;update=function(dt){const r=up105(dt);if(state!='play'||inD)return r;try{if(!JOBOK105&&NPCS.length&&map&&map.length)assignJobs105();jobTick105(dt)}catch(e){}return r}}
+{const in105j=init;init=function(...a){JOBOK105=false;return in105j.apply(this,a)}}
+{const sv105=save;save=function(){const r=sv105();try{localStorage.setItem(SKEY()+'_job',JSON.stringify(NPCS.map(n=>n.job?[n.job,n.stx==null?-1:n.stx,n.sty==null?-1:n.sty,n.q||0,n.jd||'',n.jm||'']:0)))}catch(e){}return r}}
+{const ld105j=load;load=function(){const r=ld105j();JOBOK105=false;try{const q=JSON.parse(localStorage.getItem(SKEY()+'_job')||'null');if(Array.isArray(q)&&q.length==NPCS.length){q.forEach((d,i)=>{if(!d)return;const n=NPCS[i];n.job=d[0];if(d[1]>=0){n.stx=d[1];n.sty=d[2]}n.q=d[3]||0;n.jd=d[4]||'';n.jm=d[5]||''})}}catch(e){}return r}}
+/* daytime: go to the workplace and work there */
+function jobTick105(dt){const day_=dk0()<.35,t=performance.now();for(const n of NPCS){if(!n.job||n.stx==null||n.sl||(TALK&&TALK.n===n))continue;const slot=(Math.floor(time*48)+nH(n,3))%10;if(!day_||slot>=7){n.atw=0;continue}
+  const tx=n.stx*T+8+((FPR[JOB105[n.job][2]]||[1])[0]-1)*8,ty=(n.sty+((FPR[JOB105[n.job][2]]||[1,1])[1]))*T+10,dx=tx-n.x,dy=ty-n.y,d=Math.hypot(dx,dy);
+  if(Math.hypot(P.x-n.x,P.y-n.y)>600)continue;
+  if(d>12){n.tx=tx;n.ty=ty;n.t=Math.max(n.t||0,1);if(d>40&&(n.jst=(n.jst||0)+dt)>25){n.jst=0;n.x=tx;n.y=ty}n.atw=0}
+  else{n.mv=0;n.tx=null;n.jst=0;n.fx=0;n.fy=-1;n.atw=1;n.t=2;if(Math.random()<dt*1.4){const sx=n.stx*T+8,sy=n.sty*T+6;
+    if(n.job=='kovacs'){for(let i=0;i<4;i++)parts.push({x:sx,y:sy,vx:(Math.random()-.5)*50,vy:-20-Math.random()*30,l:.4,c:Math.random()<.5?'#ffd060':'#ff8a2a'});try{if(Math.hypot(P.x-sx,P.y-sy)<120)snd('hit')}catch(e){}}
+    else if(n.job=='szakacs'||n.job=='karbantarto')parts.push({x:sx+(Math.random()-.5)*6,y:sy-6,vx:(Math.random()-.5)*6,vy:-14,l:1.2,c:n.job=='szakacs'?'rgba(230,230,230,.7)':'rgba(120,120,120,.6)'});
+    else if(n.job=='epitesz')for(let i=0;i<2;i++)parts.push({x:sx+4,y:sy,vx:(Math.random()-.5)*30,vy:-18,l:.35,c:'#c8a070'});
+    else if(n.job=='oktato'){const o=ob[n.sty*W+n.stx];if(o)o.hit105=t+600;try{if(Math.hypot(P.x-sx,P.y-sy)<140)snd('shoot')}catch(e){}}}}}}
+/* name tag shows the job */
+{const no105=npcOverlay;npcOverlay=function(){const sv=[];for(const n of OVQ)if(n.job){sv.push([n,n.nm,n.kn]);n.nm=n.kn?n.nm+' · '+jT105(n):jT105(n);n.kn=1}try{return no105()}finally{for(const[n,nm,kn]of sv){n.nm=nm;n.kn=kn}}}}
+/* ---- talking: each job offers its own service ---- */
+const cnt105=k=>inv[k]|0,nm105=k=>tr(LBL[k]||k).toLowerCase();
+function jobOffer105(n){const h=hu104(),d=day+'',B=(a,b)=>h?a:b;
+ switch(n.job){
+ case 'kovacs':{const it=Object.keys(inv).filter(k=>inv[k]>0&&DMAX[k]&&!ARM[k]&&du[k]!=null&&du[k]<DMAX[k]);if(!it.length)return{txt:B('Minden szerszámod és fegyvered ép. Ha kicsorbul valami, hozd ide!','All your tools and weapons are fine. Bring them when something gets chipped!')};
+  const iron=Math.ceil(it.length/2),stone=it.length*3,useI=cnt105('iron')>=iron;return{txt:B('Megjavítom mind a '+it.length+' szerszámodat — '+(useI?iron+' vasért':stone+' kőért')+'. Mehet?','I\'ll fix all '+it.length+' of your tools — for '+(useI?iron+' iron':stone+' stone')+'. Deal?'),
+   cost:useI?{iron}:{stone},run:()=>{for(const k of it)du[k]=DMAX[k];return B('Kész! Mint újkorában. Vigyázz rájuk!','Done! Good as new. Take care of them!')}}}
+ case 'karbantarto':{const it=Object.values(EQ).filter(k=>k&&DMAX[k]&&du[k]!=null&&du[k]<DMAX[k]);for(const k of['flash','mask','bpack','bpack2'])if(inv[k]>0&&DMAX[k]&&du[k]!=null&&du[k]<DMAX[k]&&!it.includes(k))it.push(k);
+  if(!it.length)return{txt:B('A ruhád, a páncélod és a felszerelésed rendben van. Itt minden működik, amit én tartok karban.','Your clothes, armour and gear are fine. Everything I look after works.')};
+  const cl=it.length,useC=cnt105('cloth')>=cl;return{txt:B('Rendbe hozom a '+cl+' darab felszerelésed (páncél, ruha, lámpa) — '+(useC?cl+' szövetért':cl*4+' fáért')+'.','I\'ll patch up your '+cl+' pieces of gear — for '+(useC?cl+' cloth':cl*4+' wood')+'.'),
+   cost:useC?{cloth:cl}:{wood:cl*4},run:()=>{for(const k of it)du[k]=DMAX[k];return B('Megvan. Leszíjaztam, kifoltoztam, beolajoztam.','There. Strapped, patched and oiled.')}}}
+ case 'szakacs':{const raw=cnt105('meat')+cnt105('fish'),meal=n.jd!==d;if(!raw&&!meal)return{txt:B('Ma már ettél nálam. Ha hozol nyers húst vagy halat, megsütöm.','You\'ve eaten here today. Bring raw meat or fish and I\'ll cook it.')};
+  return{txt:(meal?B('Ülj le, egyél velünk! ','Sit down and eat with us! '):'')+(raw?B('A '+raw+' nyers húst/halat megsütöm '+Math.ceil(raw/2)+' fáért.','I\'ll cook your '+raw+' raw meat/fish for '+Math.ceil(raw/2)+' wood.'):''),cost:raw?{wood:Math.ceil(raw/2)}:{},
+   run:()=>{let s='';if(meal){n.jd=d;P.food=Math.min(100,(P.food||0)+45);P.th=Math.min(100,(P.th||0)+25);s=B('Jó étvágyat! ','Enjoy! ')}if(raw){inv.cooked=(inv.cooked||0)+raw;inv.meat=0;inv.fish=0;s+=B('Itt a sült hús, még meleg.','Here\'s your roast, still warm.')}return s}}}
+ case 'orvos':{const need=P.hp<99||(P.inf||0)>1;if(!need)return{txt:B('Kutya bajod. De ha megsérülsz, tudod, hol találsz.','You\'re fit as a fiddle. If you get hurt, you know where to find me.')};
+  const free=(n.fr||0)>=3,cost=free?{}:cnt105('berry')>=3?{berry:3}:cnt105('cooked')>=1?{cooked:1}:{meat:1};
+  return{txt:B('Ellátom a sebeidet'+(free?', neked ingyen':' — '+Object.entries(cost).map(([k,v])=>v+' '+nm105(k)).join(', ')+' a díj')+'.','I\'ll treat your wounds'+(free?', free for you':' — '+Object.entries(cost).map(([k,v])=>v+' '+nm105(k)).join(', '))+'.'),cost,
+   run:()=>{P.hp=100;P.inf=0;for(let i=0;i<8;i++)parts.push({x:P.x+(Math.random()-.5)*12,y:P.y-14,vx:0,vy:-20,l:.7,c:'#7aff8a'});return B('Na, kész is. Pár napig ne birkózz farkasokkal.','There you go. No wrestling wolves for a few days.')}}}
+ case 'vadasz':{if(n.jd!==d&&(n.fr||0)>=2)return{txt:B('Ma reggel szerencsém volt. Kérsz a zsákmányból?','I got lucky this morning. Want some of the catch?'),cost:{},run:()=>{n.jd=d;inv.meat=(inv.meat||0)+2;if(Math.random()<.5){inv.leather=(inv.leather||0)+1}return B('Tessék, friss hús. A bőrt is elteheted, ha van.','Here, fresh meat. Keep the hide too, if there is one.')}};
+  return{txt:B('8 nyilat faragok neked 3 fáért és 1 kőért. A farkasok ellen jól jön.','I\'ll carve you 8 arrows for 3 wood and 1 stone. Handy against wolves.'),cost:{wood:3,stone:1},run:()=>{inv.arrow=(inv.arrow||0)+8;givehb('arrow');return B('Egyenesek, élesek. Célozz a fejére!','Straight and sharp. Aim for the head!')}}}
+ case 'oktato':{if(n.jd===d)return{txt:B('Mára elég volt. Holnap folytatjuk — addig gyakorolj a célon!','That\'s enough for today. More tomorrow — practise on the target till then!')};
+  return{txt:B('Megtanítalak rendesen lőni. Egy óra gyakorlás 6 fáért, a lőszert én adom.','I\'ll teach you to shoot properly. An hour of practice for 6 wood, the ammo is on me.'),cost:{wood:6},run:()=>{n.jd=d;gainXp(40+XS.lv*6);return B('Nem rossz! Lazább váll, nyugodtabb lélegzet. Érzed a különbséget?','Not bad! Looser shoulder, slower breath. Feel the difference?')}}}
+ case 'epitesz':return{txt:B('Összerakok neked egy faházat, nem kell hozzá barkácsasztal: 18 fa és 3 kő.','I\'ll put a cabin kit together for you, no crafting table needed: 18 wood and 3 stone.'),cost:{wood:18,stone:3},run:()=>{inv.cabin=(inv.cabin||0)+1;givehb('cabin');return B('Tessék. Sík terepre rakd le, és ha mellé teszel egy másikat, egybenőnek.','There. Put it on flat ground — place another beside it and they join up.')}};
+ case 'vezeto':{const Q=[['wood',20],['stone',15],['meat',4],['berry',10],['fiber',10],['cloth',3]];
+  if(!n.q){const q=Q[(nH(n,day)+day)%Q.length];return{txt:B('A tábornak kéne '+q[1]+' '+nm105(q[0])+'. Elhozod? Meghálálom.','The camp needs '+q[1]+' '+nm105(q[0])+'. Will you bring it? I\'ll make it worth your while.'),cost:{},run:()=>{n.q=q[0]+':'+q[1];return B('Köszönöm. Itt leszek, ha megvan.','Thank you. I\'ll be here when you have it.')}}}
+  const[k,c]=n.q.split(':'),cc=+c;if(cnt105(k)<cc)return{txt:B('Még várunk a '+cc+' '+nm105(k)+'ra. Most '+cnt105(k)+' van nálad.','We\'re still waiting for the '+cc+' '+nm105(k)+'. You have '+cnt105(k)+'.')};
+  return{txt:B('Megvan a '+cc+' '+nm105(k)+'? Add ide, a tábor nevében köszönöm!','You have the '+cc+' '+nm105(k)+'? Hand it over — thank you, from all of us!'),cost:{[k]:cc},run:()=>{n.q=0;gainXp(90);const camp=NPCS.filter(q=>Math.round(q.hx)==Math.round(n.hx)&&Math.round(q.hy)==Math.round(n.hy));for(const q of camp)q.fr=(q.fr||0)+1;
+   const rw=[['bandage',3],['arrow',12],['medkit',1],['canned',2]][(nH(n,day+1))%4];inv[rw[0]]=(inv[rw[0]]||0)+rw[1];try{givehb(rw[0])}catch(e){}return B('Ez sokat segít. Fogadd el ezt: '+rw[1]+' '+nm105(rw[0])+'. Az egész tábor a barátod lett.','This helps a lot. Take this: '+rw[1]+' '+nm105(rw[0])+'. The whole camp counts you as a friend now.')}}}}
+ return null}
+const JOBQ105={kovacs:['Megjavítanád a szerszámaimat?','Can you fix my tools?'],karbantarto:['Rendbe hoznád a felszerelésem?','Can you fix up my gear?'],szakacs:['Mit főztél?','What\'s cooking?'],orvos:['Megnéznéd a sebeimet?','Can you look at my wounds?'],vadasz:['Hogy ment a vadászat?','How was the hunt?'],oktato:['Megtanítasz lőni?','Will you teach me to shoot?'],epitesz:['Építenél nekem valamit?','Could you build me something?'],vezeto:['Tudok segíteni a tábornak?','Can I help the camp?']};
+{const to105=talkOpts;talkOpts=function(){const o=to105();if(TALK&&TALK.n.job&&JOBQ105[TALK.n.job]){const q=JOBQ105[TALK.n.job];o.splice(1,0,{k:'job',l:TALK.joff?both('Rendben, csináld!','Okay, do it!'):both(q[0],q[1])})}return o}}
+{const tp105=talkPick;talkPick=function(i){if(!TALK)return tp105(i);const o=talkOpts()[i];if(!o||o.k!='job'){if(TALK)TALK.joff=null;return tp105(i)}const n=TALK.n;TALK.sel=i;snd('ui');
+ if(!TALK.joff){const f=jobOffer105(n);if(!f)return;if(!f.run){talkSay(f.txt);return}TALK.joff=f;TALK.offer=false;talkSay(f.txt);return}
+ const f=TALK.joff;TALK.joff=null;const cost=f.cost||{};if(!Object.entries(cost).every(([k,v])=>(inv[k]|0)>=v)){talkSay(both('Ehhez nincs elég nálad: ','You don\'t have enough: ')+Object.entries(cost).map(([k,v])=>v+' '+nm105(k)).join(', '));return}
+ for(const[k,v]of Object.entries(cost))inv[k]-=v;const s=f.run();snd('craft');const gift=frUp(n,1);talkSay(s+(gift?' '+gift:''))}}
+/* the job also colours the first words */
+{const ng105=npcGreet;npcGreet=function(n){const first=n&&!n.kn,s=ng105(n);if(!n||!n.job||!first||n.job=='kereskedo')return s;const h=hu104();return s+' '+(h?'Én vagyok itt a '+jT105(n).toLowerCase()+'.':'I\'m the '+jT105(n).toLowerCase()+' here.')}}
 
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
