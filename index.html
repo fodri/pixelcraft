@@ -6707,7 +6707,10 @@ function gasAt(x,y){for(const c of GAS104){const dx=(x-c.x)/c.r,dy=(y-c.y)/(c.r*
  try{pzTag();const t=now104();
   /* spitters: slower, keep their distance, spit when they see you */
   for(const[z,ox,oy]of pre){if(!z.pz||z.hp<=0||zs.indexOf(z)<0)continue;const d=Math.hypot(P.x-z.x,P.y-z.y),ag=typeof zHit=='function'?zHit(z):true;
-   if(t-(z._spT||0)<900){z.x=ox;z.y=oy}else{z.x=ox+(z.x-ox)*.62;z.y=oy+(z.y-oy)*.62;if(ag&&d<46&&d>14){const k=dt*22/Math.max(1,d);z.x-= (P.x-z.x)*k;z.y-=(P.y-z.y)*k;if(typeof blocked=='function'&&blocked(z.x,z.y,4)){z.x=ox;z.y=oy}}}
+   if(t-(z._spT||0)<900){z.x=ox;z.y=oy}
+   else if(ag&&d<42&&d>12){/* back off, smoothly, instead of fighting the chase */const k=dt*20/Math.max(1,d),nx=ox-(P.x-ox)*k,ny=oy-(P.y-oy)*k;if(typeof blocked=='function'&&blocked(nx,ny,4)){z.x=ox;z.y=oy}else{z.x=nx;z.y=ny}z._back=1}
+   else if(ag&&d<62&&z._back){z.x=ox;z.y=oy;if(d>58)z._back=0}
+   else{z.x=ox+(z.x-ox)*.62;z.y=oy+(z.y-oy)*.62;z._back=0}
    if(ag&&d>30&&d<130&&t>(z._sp||0)&&!creative){z._sp=t+3800+Math.random()*1800;z._spT=t;z._st={x:P.x+(P.vx||0)*.3,y:P.y+(P.vy||0)*.3,dir:P.x>=z.x?1:-1};z._dir=z._st.dir;try{snd('hurt')}catch(e){}}
    if(z._st&&t-z._spT>380){const s=z._st;z._st=null;GLOB104.push({x:z.x+z._dir*6,y:z.y-17,sx:z.x+z._dir*6,sy:z.y-17,tx:s.x,ty:s.y,t:0,dur:Math.max(.3,Math.hypot(s.x-z.x,s.y-z.y)/150)})}}
   /* flying globs -> gas clouds */
@@ -6835,12 +6838,17 @@ function assignJobs105(){const G=camps105();for(const[k,ids]of G){const ns=ids.m
 function jobTick105(dt){const day_=dk0()<.35,t=performance.now();for(const n of NPCS){if(!n.job||n.stx==null||n.sl||(TALK&&TALK.n===n))continue;const slot=(Math.floor(time*48)+nH(n,3))%10;if(!day_||slot>=7){n.atw=0;continue}
   const tx=n.stx*T+8+((FPR[JOB105[n.job][2]]||[1])[0]-1)*8,ty=(n.sty+((FPR[JOB105[n.job][2]]||[1,1])[1]))*T+10,dx=tx-n.x,dy=ty-n.y,d=Math.hypot(dx,dy);
   if(Math.hypot(P.x-n.x,P.y-n.y)>600)continue;
-  if(d>12){n.tx=tx;n.ty=ty;n.t=Math.max(n.t||0,1);if(d>40&&(n.jst=(n.jst||0)+dt)>25){n.jst=0;n.x=tx;n.y=ty}n.atw=0}
-  else{n.mv=0;n.tx=null;n.jst=0;n.fx=0;n.fy=-1;n.atw=1;n.t=2;if(Math.random()<dt*1.4){const sx=n.stx*T+8,sy=n.sty*T+6;
+  if(n.atw&&d<26){n.mv=0;n.tx=n.x;n.ty=n.y;n.t=2;n.fx=0;n.fy=-1;workFx105(n,dt,t);continue}
+  if(d>12){/* walking there: progress check so nobody bumps against the workplace forever */
+   if(n._jd==null||d<n._jd-2){n._jd=d;n._jt=0}else n._jt=(n._jt||0)+dt;
+   if(n._jt>1.2){n._jt=0;n._jd=null;n.atw=1;n.tx=n.x;n.ty=n.y;n.mv=0;continue}
+   n.tx=tx;n.ty=ty;n.t=Math.max(n.t||0,1);n.atw=0}
+  else{n.mv=0;n.tx=n.x;n.ty=n.y;n._jd=null;n.fx=0;n.fy=-1;n.atw=1;n.t=2;workFx105(n,dt,t)}}}
+function workFx105(n,dt,t){{if(Math.random()<dt*1.4){const sx=n.stx*T+8,sy=n.sty*T+6;
     if(n.job=='kovacs'){for(let i=0;i<4;i++)parts.push({x:sx,y:sy,vx:(Math.random()-.5)*50,vy:-20-Math.random()*30,l:.4,c:Math.random()<.5?'#ffd060':'#ff8a2a'});try{if(Math.hypot(P.x-sx,P.y-sy)<120)snd('hit')}catch(e){}}
     else if(n.job=='szakacs'||n.job=='karbantarto')parts.push({x:sx+(Math.random()-.5)*6,y:sy-6,vx:(Math.random()-.5)*6,vy:-14,l:1.2,c:n.job=='szakacs'?'rgba(230,230,230,.7)':'rgba(120,120,120,.6)'});
     else if(n.job=='epitesz')for(let i=0;i<2;i++)parts.push({x:sx+4,y:sy,vx:(Math.random()-.5)*30,vy:-18,l:.35,c:'#c8a070'});
-    else if(n.job=='oktato'){const o=ob[n.sty*W+n.stx];if(o)o.hit105=t+600;try{if(Math.hypot(P.x-sx,P.y-sy)<140)snd('shoot')}catch(e){}}}}}}
+    else if(n.job=='oktato'){const o=ob[n.sty*W+n.stx];if(o)o.hit105=t+600;try{if(Math.hypot(P.x-sx,P.y-sy)<140)snd('shoot')}catch(e){}}}}}
 /* name tag shows the job */
 {const no105=npcOverlay;npcOverlay=function(){const sv=[];for(const n of OVQ)if(n.job){sv.push([n,n.nm,n.kn]);n.nm=n.kn?n.nm+' · '+jT105(n):jT105(n);n.kn=1}try{return no105()}finally{for(const[n,nm,kn]of sv){n.nm=nm;n.kn=kn}}}}
 /* ---- talking: each job offers its own service ---- */
@@ -6867,9 +6875,10 @@ function jobOffer105(n){const h=hu104(),d=day+'',B=(a,b)=>h?a:b;
   return{txt:B('Megtanítalak rendesen lőni. Egy óra gyakorlás 6 fáért, a lőszert én adom.','I\'ll teach you to shoot properly. An hour of practice for 6 wood, the ammo is on me.'),cost:{wood:6},run:()=>{n.jd=d;gainXp(40+XS.lv*6);return B('Nem rossz! Lazább váll, nyugodtabb lélegzet. Érzed a különbséget?','Not bad! Looser shoulder, slower breath. Feel the difference?')}}}
  case 'epitesz':return{txt:B('Összerakok neked egy faházat, nem kell hozzá barkácsasztal: 18 fa és 3 kő.','I\'ll put a cabin kit together for you, no crafting table needed: 18 wood and 3 stone.'),cost:{wood:18,stone:3},run:()=>{inv.cabin=(inv.cabin||0)+1;givehb('cabin');return B('Tessék. Sík terepre rakd le, és ha mellé teszel egy másikat, egybenőnek.','There. Put it on flat ground — place another beside it and they join up.')}};
  case 'vezeto':{const Q=[['wood',20],['stone',15],['meat',4],['berry',10],['fiber',10],['cloth',3]];
+  if(!n.q&&+n.jm>day){const left=+n.jm-day;return{txt:B('Most nincs több feladatom. Nézz vissza '+left+' nap múlva — addigra biztos kell valami.','No more work for now. Come back in '+left+' day'+(left>1?'s':'')+' — we\'ll need something by then.')}}
   if(!n.q){const q=Q[(nH(n,day)+day)%Q.length];return{txt:B('A tábornak kéne '+q[1]+' '+nm105(q[0])+'. Elhozod? Meghálálom.','The camp needs '+q[1]+' '+nm105(q[0])+'. Will you bring it? I\'ll make it worth your while.'),cost:{},run:()=>{n.q=q[0]+':'+q[1];return B('Köszönöm. Itt leszek, ha megvan.','Thank you. I\'ll be here when you have it.')}}}
   const[k,c]=n.q.split(':'),cc=+c;if(cnt105(k)<cc)return{txt:B('Még várunk a '+cc+' '+nm105(k)+'ra. Most '+cnt105(k)+' van nálad.','We\'re still waiting for the '+cc+' '+nm105(k)+'. You have '+cnt105(k)+'.')};
-  return{txt:B('Megvan a '+cc+' '+nm105(k)+'? Add ide, a tábor nevében köszönöm!','You have the '+cc+' '+nm105(k)+'? Hand it over — thank you, from all of us!'),cost:{[k]:cc},run:()=>{n.q=0;gainXp(90);const camp=NPCS.filter(q=>Math.round(q.hx)==Math.round(n.hx)&&Math.round(q.hy)==Math.round(n.hy));for(const q of camp)q.fr=(q.fr||0)+1;
+  return{txt:B('Megvan a '+cc+' '+nm105(k)+'? Add ide, a tábor nevében köszönöm!','You have the '+cc+' '+nm105(k)+'? Hand it over — thank you, from all of us!'),cost:{[k]:cc},run:()=>{n.q=0;n.jm=day+2+(nH(n,day)%2);gainXp(90);const camp=NPCS.filter(q=>Math.round(q.hx)==Math.round(n.hx)&&Math.round(q.hy)==Math.round(n.hy));for(const q of camp)q.fr=(q.fr||0)+1;
    const rw=[['bandage',3],['arrow',12],['medkit',1],['canned',2]][(nH(n,day+1))%4];inv[rw[0]]=(inv[rw[0]]||0)+rw[1];try{givehb(rw[0])}catch(e){}return B('Ez sokat segít. Fogadd el ezt: '+rw[1]+' '+nm105(rw[0])+'. Az egész tábor a barátod lett.','This helps a lot. Take this: '+rw[1]+' '+nm105(rw[0])+'. The whole camp counts you as a friend now.')}}}}
  return null}
 const JOBQ105={kovacs:['Megjavítanád a szerszámaimat?','Can you fix my tools?'],karbantarto:['Rendbe hoznád a felszerelésem?','Can you fix up my gear?'],szakacs:['Mit főztél?','What\'s cooking?'],orvos:['Megnéznéd a sebeimet?','Can you look at my wounds?'],vadasz:['Hogy ment a vadászat?','How was the hunt?'],oktato:['Megtanítasz lőni?','Will you teach me to shoot?'],epitesz:['Építenél nekem valamit?','Could you build me something?'],vezeto:['Tudok segíteni a tábornak?','Can I help the camp?']};
@@ -6883,21 +6892,22 @@ const JOBQ105={kovacs:['Megjavítanád a szerszámaimat?','Can you fix my tools?
 
 /* ===== v106: a world laid out by reasons — cold mountains in the north, forest in the middle, desert in the south,
    the city at a river mouth on the east coast, the reactor on a lake beside it, roads between settlements, weather that fades between regions ===== */
-GAMEV=114;
+GAMEV=115;
 var RCX105=0,RCY105=0,RIV105=null;
 const CONT6=()=>typeof CONT!='undefined'&&CONT&&biome==4;
 /* ---------- where things are ---------- */
 {const mk106=mkISC;mkISC=function(){mk106();if(!CONT6())return;ISC=[[Math.round(W*.2),Math.round(H*.53),0],[Math.round(W*.5),Math.round(H*.13),1],[Math.round(W*.42),Math.round(H*.86),2],[Math.round(W*.8),Math.round(H*.5),3]];
  SX=ISC[0][0];SY=ISC[0][1];RCX105=Math.round(W*.57);RCY105=Math.round(H*.44)}}
 /* ---------- the big river: from the northern mountains, through the reactor lake, across the city into the sea ---------- */
-function carveRiver105(){RIV105=new Uint8Array(W*H);if(!CONT6())return;const CC=ISC.find(c=>c[2]==3);if(!CC)return;
+var RPTS105=[];
+function carveRiver105(){RIV105=new Uint8Array(W*H);RPTS105=[];if(!CONT6())return;const CC=ISC.find(c=>c[2]==3);if(!CC)return;
  let sx=Math.round(W*(.38+R()*.22)),sy=Math.round(H*.1);for(let k=0;k<40&&map[sy*W+sx]!=0;k++)sy++;
  const wps=[[RCX105,RCY105],[CC[0]-6,CC[1]+Math.round((R()-.5)*16)],[W-2,CC[1]+Math.round((R()-.5)*30)]];let wi=0,x=sx,y=sy,an=Math.atan2(wps[0][1]-y,wps[0][0]-x);
  const carve=(cx,cy,st)=>{const ford=(st%64)<4;for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){const X=Math.round(cx)+dx,Y=Math.round(cy)+dy;if(X<1||Y<1||X>=W-1||Y>=H-1)continue;const j=Y*W+X,r=Math.hypot(dx,dy);if(r>3.2)continue;RIV105[j]=1;
    if(el)el[j]=0;if(bm[j]==3)bm[j]=0;if(r>2.3)continue;const o=ob[j];if(o&&{tree:1,rock:1,bush:1,flax:1,cactus:1}[o.t])ob[j]=null;const m=map[j];
    if(r<=1.05)map[j]=ford?20:1;else if(m==0||m==2||m==3||m==4)map[j]=20}};
  for(let st=0;st<1100;st++){const T_=wps[wi],ta=Math.atan2(T_[1]-y,T_[0]-x);an+=(ns(x*.13+st*.01,y*.13,4)-.5)*.55;an+=Math.atan2(Math.sin(ta-an),Math.cos(ta-an))*.14;
-  x+=Math.cos(an);y+=Math.sin(an);if(x<2||y<2||x>=W-2||y>=H-2)break;carve(x,y,st);if(Math.hypot(T_[0]-x,T_[1]-y)<5){wi++;if(wi>=wps.length)break}
+  x+=Math.cos(an);y+=Math.sin(an);if(x<2||y<2||x>=W-2||y>=H-2)break;carve(x,y,st);RPTS105.push([x,y,an]);if(Math.hypot(T_[0]-x,T_[1]-y)<5){wi++;if(wi>=wps.length)break}
   if(wi==2&&st>40){const j=Math.round(y)*W+Math.round(x+3);if(map[j]==1&&!RIV105[j]){let sea=true;for(let k=4;k<12;k++){const q=map[Math.round(y)*W+Math.round(x+k)];if(q!==1){sea=false;break}}if(sea)break}}}}
 {const ge106=genElev;genElev=function(S){const r=ge106(S);try{carveRiver105()}catch(e){}return r}}
 /* bridges: city roads carry on across the river on wooden decks */
@@ -6952,6 +6962,95 @@ function wbTarget105(){const tx=Math.floor(P.x/T),ty=Math.floor(P.y/T);let s=0,d
   for(let i=0;i<4;i++)Q(((nw/(40+i*15)+i*160)%(VW+200))-100,40+i*60,160,18,'rgba(225,235,240,'+(.06+.06*ws).toFixed(3)+')')}
  if(hv&&wr>.5&&Math.sin(nw/900)>.985)Q(0,0,VW,VH,'rgba(255,255,255,'+(.3*wr).toFixed(3)+')');if(frz)Q(0,0,VW,VH,'rgba(120,170,255,.18)')}}
 {const ld106=load;load=function(){const r=ld106();WB105.s=WB105.d=0;WB105.t=0;return r}}
+/* =================== roads you can recognise: markings, kerbs, signs, lamps, car parks; real bridges =================== */
+var PARK105=[];
+const isWat106=m=>m==1||m==20||m==6||m==7;
+/* paint on the ground (baked into the ground chunks) */
+function roadMark106(tx,ty){const i=ty*W+tx,m=map[i];if(inD||inC||!bm)return;const px=tx*T,py=ty*T,RD=j=>map[j]==3;
+ if(m==3&&bm[i]!=3){/* parking bays */for(const p of PARK105)if(tx>=p.x&&tx<p.x+p.w&&ty>=p.y&&ty<p.y+p.h){if(ty==p.y+1&&(tx-p.x)%3==0)W_(px,py+2,1,T-2,'#e8e4d8');if(ty==p.y+p.h-2&&(tx-p.x)%3==0)W_(px,py,1,T-2,'#e8e4d8');if(ty==p.y+1&&tx==p.x+1){W_(px+3,py+3,8,9,'#2a5aa8');W_(px+5,py+5,2,5,'#f0f0f0');W_(px+5,py+5,4,1,'#f0f0f0');W_(px+5,py+7,4,1,'#f0f0f0');W_(px+8,py+5,1,3,'#f0f0f0')}return}
+  const N=[[0,-1],[1,0],[0,1],[-1,0]];for(let k=0;k<4;k++){const[dx,dy]=N[k],x=tx+dx,y=ty+dy;if(x<0||y<0||x>=W||y>=H)continue;const j=y*W+x;
+   if(!RD(j)&&map[j]!=14&&map[j]!=12){/* kerb + white edge line */if(dy==-1){W_(px,py,T,1,'#8a8a84');W_(px,py+2,T,1,'#d8d4c8')}else if(dy==1){W_(px,py+T-1,T,1,'#5a5a56');W_(px,py+T-3,T,1,'#d8d4c8')}else if(dx==-1){W_(px,py,1,T,'#8a8a84');W_(px+2,py,1,T,'#d8d4c8')}else{W_(px+T-1,py,1,T,'#5a5a56');W_(px+T-3,py,1,T,'#d8d4c8')}}
+   else if(RD(j)){/* centre line: this edge is the middle of a two-lane road */const x2=tx+dx*2,y2=ty+dy*2,j2=y2*W+x2,ox=tx-dx,oy=ty-dy,jo=oy*W+ox;if(x2<0||y2<0||x2>=W||y2>=H)continue;
+    if(!RD(j2)&&!RD(jo)&&(k==1||k==2)){const dash=((tx+ty)&1)==0;if(dash){if(k==1)W_(px+T-1,py+4,2,8,'#e8c84a');else W_(px+4,py+T-1,8,2,'#e8c84a')}}}}}
+ /* bridges are drawn after the animated water (see railings106) */
+ if(false&&m==12){let wn=0;const N=[[0,-1],[1,0],[0,1],[-1,0]];for(const[dx,dy]of N){const x=tx+dx,y=ty+dy;if(x<0||y<0||x>=W||y>=H)continue;if(isWat106(map[y*W+x]))wn++}if(!wn)return;
+  for(let q=0;q<T;q+=4)W_(px,py+q,T,1,'rgba(60,36,16,.35)');
+  for(const[dx,dy]of N){const x=tx+dx,y=ty+dy;if(x<0||y<0||x>=W||y>=H||!isWat106(map[y*W+x]))continue;
+   if(dy!=0){const yy=dy<0?py:py+T-3;W_(px,yy,T,2,'#6a4220');W_(px,yy,T,1,'#9a6a3a');for(let q=1;q<T;q+=5)W_(px+q,yy-2,2,5,'#4a2c14')}
+   else{const xx=dx<0?px:px+T-3;W_(xx,py,2,T,'#6a4220');W_(xx,py,1,T,'#9a6a3a');for(let q=1;q<T;q+=5)W_(xx-1,py+q,5,2,'#4a2c14')}}}}
+{const gt106=gTile;gTile=function(tx,ty,now){const r=gt106(tx,ty,now);try{if(CONT6())roadMark106(tx,ty)}catch(e){}return r}}
+/* road signs: a post with a green board; E reads it */
+Object.assign(LBL,{rsg105:'Road sign'});Object.assign(LBLX,{rsg105:'Road sign'});HU.unshift(['Road sign','Útjelző tábla']);SOLID.rsg105=1;INT.rsg105=1;
+{const do106=drawObj;drawObj=function(o,x,y){if(o&&o.t=='rsg105'){W_(x+7,y+2,2,14,'#6a6a6e');W_(x+7,y+2,1,14,'#8a8a90');W_(x+1,y-5,14,8,'#f0f0ea');W_(x+2,y-4,12,6,'#2a7a3a');const r=o.dir>0;
+  W_(x+4,y-2,7,2,'#f0f0ea');if(r){W_(x+10,y-3,1,4,'#f0f0ea');W_(x+11,y-2,1,2,'#f0f0ea')}else{W_(x+4,y-3,1,4,'#f0f0ea');W_(x+3,y-2,1,2,'#f0f0ea')}W_(x+6,y+16,4,1,'rgba(0,0,0,.3)');return}return do106(o,x,y)}}
+{const uo106=useObj;useObj=function(n){if(n&&n.o&&n.o.t=='rsg105'){const o=n.o,h=hu104();say((h?'Útjelző tábla: ':'Road sign: ')+(o.to||'?')+(o.d?' — '+o.d+(h?' méter':' m'):'')+(o.dir>0?' →':' ←'));snd('ui');return}return uo106(n)}}
+function signFor106(x,y,tx,ty,name){const d=Math.round(Math.hypot(tx-x,ty-y)*1.6/10)*10;for(let r=3;r<7;r++)for(const[dx,dy]of[[r,0],[-r,0],[0,r],[0,-r],[r,r],[-r,-r]]){const X=x+dx,Y=y+dy,i=Y*W+X;if(X<2||Y<2||X>=W-2||Y>=H-2)continue;if(ob[i]||!(map[i]==0||map[i]==2))continue;ob[i]={t:'rsg105',hp:999,to:name,d,dir:tx>=X?1:-1};return true}return false}
+/* car parks next to towns and the city entrance, with a few wrecks; lamps along the road near settlements */
+function park106(cx,cy){for(let r=4;r<16;r++)for(let a=0;a<12;a++){const x=Math.round(cx+Math.cos(a/12*6.283)*r),y=Math.round(cy+Math.sin(a/12*6.283)*r);let ok=true,near=false;
+  for(let yy=y-1;yy<y+6&&ok;yy++)for(let xx=x-1;xx<x+10&&ok;xx++){const i=yy*W+xx;if(xx<2||yy<2||xx>=W-2||yy>=H-2){ok=false;break}if(yy>=y&&yy<y+5&&xx>=x&&xx<x+9){if(!(map[i]==0||map[i]==2)||ob[i]&&!{tree:1,rock:1,bush:1,flax:1,cactus:1,tgrass:1,shrub:1,flower:1}[ob[i].t]||(el&&el[i]!==el[y*W+x]))ok=false}else if(map[i]==3)near=true}
+  if(!ok||!near)continue;for(let yy=y;yy<y+5;yy++)for(let xx=x;xx<x+9;xx++){const i=yy*W+xx;map[i]=3;ob[i]=null}PARK105.push({x,y,w:9,h:5});
+  for(let k=0;k<3;k++)if(R()<.55)try{setFP({t:'wreck',r:0},x+1+k*3,y+1,2,3)}catch(e){}return}}
+function lamps106(path){for(let k=6;k<path.length-6;k+=5){if(R()<.5)continue;const[a,b]=path[k],[c,d]=path[k+1]||path[k],dx=d-b,dy=-(c-a),L=Math.hypot(dx,dy)||1,x=Math.round(a+dx/L*2.6),y=Math.round(b+dy/L*2.6),i=y*W+x;if(x<2||y<2||x>=W-2||y>=H-2||ob[i]||!(map[i]==0||map[i]==2))continue;ob[i]={t:'slamp',b:R()<.4?1:0}}}
+/* footbridges over the big river where no road crosses */
+function footBridges106(){if(!RPTS105.length)return;let made=0;for(let k=40;k<RPTS105.length-30;k+=52){const[x,y,an]=RPTS105[k];let nearB=false;for(let yy=Math.round(y)-14;yy<=Math.round(y)+14&&!nearB;yy++)for(let xx=Math.round(x)-14;xx<=Math.round(x)+14&&!nearB;xx++){if(xx<0||yy<0||xx>=W||yy>=H)continue;const m=map[yy*W+xx];if(m==12&&RIV105[yy*W+xx])nearB=true}if(nearB)continue;
+  if(RIC&&Math.hypot(x-RIC[0],y-RIC[1])<RIC[2]+10)continue;const px=-Math.sin(an),py=Math.cos(an);const cells=[];let ok=false;for(let s=-8;s<=8;s++){const X=Math.round(x+px*s),Y=Math.round(y+py*s);if(X<1||Y<1||X>=W-1||Y>=H-1)break;cells.push([X,Y,s])}
+  const wat=cells.filter(c=>isWat106(map[c[1]*W+c[0]]));if(!wat.length||wat.length>9)continue;const s0=Math.min(...wat.map(c=>c[2]))-1,s1=Math.max(...wat.map(c=>c[2]))+1;
+  const endA=cells.find(c=>c[2]==s0),endB=cells.find(c=>c[2]==s1);if(!endA||!endB)continue;if(!WALKM(map[endA[1]*W+endA[0]])||!WALKM(map[endB[1]*W+endB[0]]))continue;
+  for(let s=s0+1;s<s1;s++){for(const o of[0,1]){const X=Math.round(x+px*s+Math.cos(an)*o),Y=Math.round(y+py*s+Math.sin(an)*o),j=Y*W+X;if(isWat106(map[j])){map[j]=12;ob[j]=null}}}made++}return made}
+{const rd106=roads105;roads105=function(){PARK105=[];const r=rd106();try{footBridges106()}catch(e){}
+ try{/* signs at every settlement entrance, pointing to the next one along the network */const S=[];const CC=ISC.find(c=>c[2]==3);if(CC)S.push([CC[0]-34,CC[1],hu104()?'Város':'City']);for(const t of TOWNS105)S.push([t.x+15,t.y+15,hu104()?'Kisváros':'Town']);
+  const seen=new Set();for(const n of NPCS){if(n.sci)continue;const k=Math.round(n.hx)+','+Math.round(n.hy);if(seen.has(k))continue;seen.add(k);S.push([Math.round((n.hx-8)/T),Math.round((n.hy-8)/T),hu104()?'Tábor':'Camp'])}
+  for(const a of S){let best=null,bd=1e9;for(const b of S){if(a===b)continue;const d=Math.hypot(a[0]-b[0],a[1]-b[1]);if(d<bd&&d>20){bd=d;best=b}}if(!best)continue;const ang=Math.atan2(best[1]-a[1],best[0]-a[0]),sx=Math.round(a[0]+Math.cos(ang)*18),sy=Math.round(a[1]+Math.sin(ang)*18);
+   let rx=null,ry=null;for(let r=0;r<8&&rx==null;r++)for(let dy=-r;dy<=r&&rx==null;dy++)for(let dx=-r;dx<=r;dx++){const X=sx+dx,Y=sy+dy;if(X>1&&Y>1&&X<W-1&&Y<H-1&&map[Y*W+X]==3&&bm[Y*W+X]!=3){rx=X;ry=Y;break}}if(rx!=null)signFor106(rx,ry,best[0],best[1],best[2])}
+  for(const t of TOWNS105)park106(t.x+15,t.y+33);if(CC)park106(CC[0]-40,CC[1]+6)}catch(e){}return r}}
+
+{const sv106=save;save=function(){const r=sv106();try{localStorage.setItem(SKEY()+'_park',JSON.stringify(PARK105))}catch(e){}return r}}
+{const ld106b=load;load=function(){const r=ld106b();try{const q=JSON.parse(localStorage.getItem(SKEY()+'_park')||'[]');PARK105=Array.isArray(q)?q:[]}catch(e){PARK105=[]}return r}}
+{const in106=init;init=function(...a){PARK105=[];return in106.apply(this,a)}}
+function railings106(x0,y0){for(let ty=Math.max(1,y0-1);ty<=Math.min(H-2,y0+21);ty++)for(let tx=Math.max(1,x0-1);tx<=Math.min(W-2,x0+32);tx++){const i=ty*W+tx;if(map[i]!=12)continue;const N=[[0,-1],[1,0],[0,1],[-1,0]];let wn=0;for(const[dx,dy]of N)if(isWat106(map[i+dy*W+dx]))wn++;if(!wn)continue;const px=tx*T,py=ty*T;
+ for(const[dx,dy]of N){if(!isWat106(map[i+dy*W+dx]))continue;
+  if(dy!=0){const yy=dy<0?py:py+T-3;W_(px,yy+3,T,1,'rgba(0,0,0,.25)');W_(px,yy,T,2,'#6a4220');W_(px,yy,T,1,'#a8784a');for(let q=1;q<T;q+=5){W_(px+q,yy-3,2,5,'#4a2c14');W_(px+q,yy-3,1,1,'#8a5a30')}}
+  else{const xx=dx<0?px:px+T-3;W_(xx,py,2,T,'#6a4220');W_(xx,py,1,T,'#a8784a');for(let q=1;q<T;q+=5){W_(xx-1,py+q-2,4,4,'#4a2c14');W_(xx-1,py+q-2,1,1,'#8a5a30')}}}}}
+{const gd106=groundDraw;groundDraw=function(x0,y0,now){const r=gd106(x0,y0,now);try{if(!inD&&!inC)railings106(x0,y0)}catch(e){}return r}}
+/* =================== smooth, two-lane roads (wide enough for two cars side by side) =================== */
+var ROADS105=[],ROADT106=null;const RW106=2.15;/* half width in tiles: ~4.3 tiles = two car lanes */
+function smooth106(path){/* coarse A* path -> control points -> Chaikin curve -> evenly spaced samples with normals */
+ let P=[];for(let k=0;k<path.length;k+=3)P.push([path[k][0]+.5,path[k][1]+.5]);const L=path[path.length-1];P.push([L[0]+.5,L[1]+.5]);
+ for(let it=0;it<4;it++){const Q=[P[0]];for(let k=0;k<P.length-1;k++){const a=P[k],b=P[k+1];Q.push([a[0]*.75+b[0]*.25,a[1]*.75+b[1]*.25],[a[0]*.25+b[0]*.75,a[1]*.25+b[1]*.75])}Q.push(P[P.length-1]);P=Q}
+ const S=[];let acc=0;for(let k=0;k<P.length-1;k++){const a=P[k],b=P[k+1],d=Math.hypot(b[0]-a[0],b[1]-a[1]);if(d<1e-6)continue;let t=acc;while(t<d){S.push([a[0]+(b[0]-a[0])*t/d,a[1]+(b[1]-a[1])*t/d]);t+=.25}acc=t-d}S.push(P[P.length-1]);
+ return S.map((p,i)=>{const a=S[Math.max(0,i-2)],b=S[Math.min(S.length-1,i+2)],dx=b[0]-a[0],dy=b[1]-a[1],l=Math.hypot(dx,dy)||1;return[+p[0].toFixed(2),+p[1].toFixed(2),+(-dy/l).toFixed(3),+(dx/l).toFixed(3)]})}
+function rasterRoad106(S,carve){const NAT={tree:1,rock:1,bush:1,flax:1,cactus:1,tgrass:1,shrub:1,flower:1};if(!ROADT106||ROADT106.length!==W*H)ROADT106=new Uint8Array(W*H);
+ for(let k=0;k<S.length;k+=2){const[x,y]=S[k];for(let yy=Math.floor(y-RW106-1);yy<=Math.ceil(y+RW106+1);yy++)for(let xx=Math.floor(x-RW106-1);xx<=Math.ceil(x+RW106+1);xx++){if(xx<1||yy<1||xx>=W-1||yy>=H-1)continue;const d=Math.hypot(xx+.5-x,yy+.5-y);if(d>RW106+.35)continue;const i=yy*W+xx,m=map[i];
+  if(!carve){if((m==3&&bm[i]!=3)||m==12)ROADT106[i]=1;continue}
+  if(m==14||m==16||m==15||m==9||m==11)continue;if(m==3&&bm[i]==3)continue;const o=ob[i];if(o){const t=o.pm!=null&&ob[o.pm]?ob[o.pm].t:o.t;if(NAT[t]||SOFT105[t]||t=='fence'||t=='slamp'||t=='rsg105'){try{rmObj(o.pm!=null?o.pm:i)}catch(e){}ob[i]=null}else continue}
+  if(isWat106(m)||m==12){map[i]=12}else if(m!=12)map[i]=3;ROADT106[i]=1}}}
+carveRoad105=function(path){if(!path||path.length<2)return;const S=smooth106(path);if(S.length<4)return;rasterRoad106(S,true);ROADS105.push(S);
+ /* wrecks on the hard shoulder, lamps near settlements */
+ for(let k=60;k<S.length-60;k+=150){if(R()<.6)continue;const[x,y,nx,ny]=S[k],s=R()<.5?1:-1,ox=Math.round(x+nx*s*(RW106+1.6)),oy=Math.round(y+ny*s*(RW106+1.6));let ok=true;for(let yy=oy;yy<oy+3&&ok;yy++)for(let xx=ox;xx<ox+2&&ok;xx++){const i=yy*W+xx;if(xx<1||yy<1||xx>=W-1||yy>=H-1||ob[i]||!(map[i]==0||map[i]==2))ok=false}if(ok)try{setFP({t:'wreck',r:0},ox,oy,2,3)}catch(e){}}
+ for(const end of[0,1])for(let k=12;k<60;k+=16){const j=end?S.length-1-k:k;if(j<0||j>=S.length)continue;const[x,y,nx,ny]=S[j],X=Math.round(x+nx*(RW106+1.2)),Y=Math.round(y+ny*(RW106+1.2)),i=Y*W+X;if(X>1&&Y>1&&X<W-1&&Y<H-1&&!ob[i]&&(map[i]==0||map[i]==2))ob[i]={t:'slamp',b:0}}}
+/* painting the curves onto the ground chunks */
+var CH106=false,APAT106=null;
+function asphalt106(c){if(APAT106)return APAT106;const cv=document.createElement('canvas');cv.width=cv.height=32;const x=cv.getContext('2d');x.fillStyle='#5e5f63';x.fillRect(0,0,32,32);for(let i=0;i<90;i++){const v=Math.random();x.fillStyle=v<.5?'rgba(0,0,0,.12)':'rgba(255,255,255,.06)';x.fillRect(Math.floor(Math.random()*32),Math.floor(Math.random()*32),1,1)}APAT106=c.createPattern(cv,'repeat');return APAT106}
+function paintRoads106(cv,cx,cy){const x0=cx*GQS*T,y0=cy*GQS*T,x1=x0+GQS*T,y1=y0+GQS*T,M=RW106*T+8,c=cv.getContext('2d');c.save();c.translate(-x0,-y0);
+ for(const S of ROADS105){let hit=false;for(let k=0;k<S.length;k+=8){const px=S[k][0]*T,py=S[k][1]*T;if(px>x0-M&&px<x1+M&&py>y0-M&&py<y1+M){hit=true;break}}if(!hit)continue;
+  /* split into asphalt runs and bridge runs by the tile under each sample */
+  const runs=[];let cur=null;for(let k=0;k<S.length;k++){const[x,y]=S[k],m=map[Math.floor(y)*W+Math.floor(x)],br=m==12||isWat106(m);if(!cur||cur.br!==br){if(cur)cur.p.push(S[k]);cur={br,p:[S[k]]};runs.push(cur)}else cur.p.push(S[k])}
+  const line=(p,off,w,col,dash)=>{c.beginPath();for(let k=0;k<p.length;k++){const[x,y,nx,ny]=p[k],X=(x+nx*off)*T,Y=(y+ny*off)*T;if(k)c.lineTo(X,Y);else c.moveTo(X,Y)}c.lineWidth=w;c.strokeStyle=col;c.setLineDash(dash||[]);c.stroke()};
+  c.lineJoin='round';c.lineCap='butt';
+  for(const r of runs){if(r.p.length<2)continue;const W2=RW106*2*T;
+   if(!r.br){line(r.p,0,W2+4,'rgba(40,34,26,.35)');line(r.p,0,W2,asphalt106(c));line(r.p,RW106-.22,2,'#d8d4c8');line(r.p,-(RW106-.22),2,'#d8d4c8');line(r.p,0,2,'#e8c84a',[10,10])}
+   else{line(r.p,0,W2,'#7a5230');line(r.p,0,W2-2,'#8a5f36');c.setLineDash([]);c.strokeStyle='rgba(50,30,12,.45)';c.lineWidth=1;for(let k=0;k<r.p.length;k+=2){const[x,y,nx,ny]=r.p[k];c.beginPath();c.moveTo((x-nx*RW106)*T,(y-ny*RW106)*T);c.lineTo((x+nx*RW106)*T,(y+ny*RW106)*T);c.stroke()}
+    for(const s of[1,-1]){line(r.p,s*(RW106-.12),3,'#5a3418');line(r.p,s*(RW106-.12),1,'#b0804a');for(let k=0;k<r.p.length;k+=12){const[x,y,nx,ny]=r.p[k];c.fillStyle='#3e2410';c.fillRect((x+nx*s*(RW106-.12))*T-1.5,(y+ny*s*(RW106-.12))*T-1.5,3,3)}}}}}
+ c.restore()}
+{const gq106=gqChunk;gqChunk=function(cx,cy){CH106=false;const c=gq106(cx,cy);try{if(CH106&&ROADS105.length&&CONT6())paintRoads106(c.cv,cx,cy)}catch(e){}CH106=false;return c}}
+{const gt106b=gTile;gTile=function(tx,ty,now){CH106=true;const i=ty*W+tx;if(ROADT106&&ROADT106[i]&&!inD&&!inC&&(map[i]==3||map[i]==12)&&CONT6()){/* the curve is painted on top: underneath, the plain ground */const m=map[i];map[i]=0;try{return gt106b(tx,ty,now)}finally{map[i]=m}}return gt106b(tx,ty,now)}}
+/* no tile markings / tile railings under the curves */
+{const rm106=roadMark106;roadMark106=function(tx,ty){if(ROADT106&&ROADT106[ty*W+tx])return;return rm106(tx,ty)}}
+{const rl106=railings106;railings106=function(x0,y0){if(!ROADT106)return rl106(x0,y0);const sv=[];for(let ty=Math.max(1,y0-1);ty<=Math.min(H-2,y0+21);ty++)for(let tx=Math.max(1,x0-1);tx<=Math.min(W-2,x0+32);tx++){const i=ty*W+tx;if(ROADT106[i]&&map[i]==12){sv.push(i);map[i]=99}}try{return rl106(x0,y0)}finally{for(const i of sv)map[i]=12}}}
+{const rd106b=roads105;roads105=function(){ROADS105=[];ROADT106=new Uint8Array(W*H);APAT106=null;return rd106b()}}
+{const sv106c=save;save=function(){const r=sv106c();try{localStorage.setItem(SKEY()+'_roads',JSON.stringify(ROADS105))}catch(e){}return r}}
+{const ld106c=load;load=function(){const r=ld106c();try{const q=JSON.parse(localStorage.getItem(SKEY()+'_roads')||'[]');ROADS105=Array.isArray(q)?q:[];ROADT106=new Uint8Array(W*H);for(const S of ROADS105)rasterRoad106(S,false);try{GQC.clear()}catch(e){}}catch(e){ROADS105=[]}return r}}
+{const in106b=init;init=function(...a){ROADS105=[];ROADT106=null;return in106b.apply(this,a)}}
 
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
