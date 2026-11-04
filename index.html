@@ -6588,6 +6588,51 @@ function kzLeave(){if(!KZ)return;const s=KZ.snap,M=curMine;if(M){M.map=map;M.ob=
 {const hu101h=hud;hud=function(){hu101h();if(!KZ||state!='play')return;const b=zs.find(z=>z.kzb&&z.hp>0);if(!b||Math.hypot(b.x-P.x,b.y-P.y)>200)return;noTr=true;const w=160,x=VW/2-w/2,y=26;Q(x-1,y-1,w+2,8,'#1a0a08');Q(x,y,w*Math.max(0,b.hp/b.mx),6,'#c83a2a');txt(hu101()?'Kazamataőr':'Dungeon Guardian',VW/2,y-3,'#f0c0a0','center');noTr=false}}
 {const in101=init;init=function(...a){KZ=null;return in101.apply(this,a)}}
 
+/* ===== v102: the house kit is gone (the cabin is the one home you build), and the cabin looks like the town houses from outside ===== */
+GAMEV=108;
+/* ---------- house kit removed: no recipe; kits in old saves are refunded ---------- */
+{const i=REC.findIndex(r=>r[0]=='hkit');if(i>=0)REC.splice(i,1)}
+{const ix=NEWK.indexOf('hkit');if(ix>=0)NEWK.splice(ix,1)}
+function hkRefund(){const n=inv.hkit|0;if(n<=0){inv.hkit=0;return}inv.hkit=0;inv.wood=(inv.wood||0)+40*n;inv.stone=(inv.stone||0)+16*n;inv.boards=(inv.boards||0)+6*n;
+ for(let i=0;i<HB.length;i++)if(HB[i]=='hkit')HB[i]=null;
+ say(LANG=='hu'?'A ház építőkészlet megszűnt — visszakaptad az anyagát ('+40*n+' fa, '+16*n+' kő, '+6*n+' deszka). Építs faházat!':'The house kit is gone — you got its materials back ('+40*n+' wood, '+16*n+' stone, '+6*n+' boards). Build a cabin!')}
+{const ld102=load;load=function(){const r=ld102();try{hkRefund()}catch(e){}return r}}
+{const up102=update;update=function(dt){if(inv.hkit>0)try{hkRefund()}catch(e){}return up102(dt)}}
+
+/* ---------- cabin exterior = town house: shingle roof, plank facade, real windows and door ---------- */
+function cabIsC(j,self){const a=(j<0||j>=W*H)?-1:anchorOf(j);return a>=0&&ob[a]&&ob[a].t=='cabin'&&a!==self}
+/* one roof colour per joined house (from its first cabin), like the HROOF palette of the town houses */
+function cabRoofCol(o,ai){const now=performance.now();if(o._rc&&now-(o._rct||0)<1500)return o._rc;let k=ai;try{const cl=cabCluster(ai);for(const i of cl)if(i<k)k=i}catch(e){}
+ const q=((k*2654435761)>>>0)%5,pal=['#a8432c','#6a4a30','#3a5a8a','#8a5a2a','#4a6a3a'];o._rc=pal[q];o._rct=now;return o._rc}
+function cabRoof(x,rt,w,h,col,L,R){const lo=shade(col,.72),hi=shade(col,1.18),mid=rt+Math.floor(h/2);
+ W_(x,rt,w,mid-rt,hi);W_(x,mid,w,rt+h-mid,lo);for(let yy=rt+2;yy<rt+h;yy+=4)W_(x,yy,w,1,yy<mid?shade(col,1.05):shade(col,.62));
+ for(let yy=rt;yy<rt+h;yy+=4)for(let xx=(((yy-rt)/4)%2)*4;xx<w;xx+=8)W_(x+xx,yy,1,Math.min(4,rt+h-yy),'rgba(0,0,0,.12)');
+ W_(x,mid-1,w,2,shade(col,1.35));W_(x,rt,w,1,shade(col,1.3));W_(x,rt+h-1,w,1,shade(col,.45));if(L)W_(x,rt,1,h,shade(col,.55));if(R)W_(x+w-1,rt,1,h,shade(col,.55))}
+{const bc102=BIG.cabin;BIG.cabin=function(o,x,y){if(o.ab)return bc102(o,x,y);
+ const ax=Math.round(x/T),ay=Math.round(y/T),ai=ay*W+ax,hasL=ax>0&&(cabIsC(ai-1,ai)||cabIsC(ai+W-1,ai)),hasR=ax<W-4&&(cabIsC(ai+3,ai)||cabIsC(ai+W+3,ai)),loft=typeof cabHasLoft=='function'&&cabHasLoft(o);
+ let door=true;try{const cl=(hasL||hasR||cabIsC(ai+2*W,ai)||cabIsC(ai-W,ai))?cabCluster(ai):[ai];door=cl.length<2||clDoor(cl)===ai}catch(e){}
+ if(!(typeof noSh2D=='function'&&noSh2D()&&!CLASSIC))W_(x+(hasL?0:2),y+30,48-(hasL?0:2)+(hasR?0:2),4,'rgba(0,0,0,.25)');
+ /* facade: real wall / window / door tiles drawn by the same code as the town houses (swapped in for this draw only) */
+ const fk=o._fk102||(o._fk102={w:[{t:'wall',hp:99},{t:'wall',hp:99},{t:'wall',hp:99},{t:'wall',hp:99},{t:'wall',hp:99}],win:[{t:'win',hp:99},{t:'win',hp:99},{t:'win',hp:99},{t:'win',hp:99}],d:{t:'door',hp:99,open:false}});
+ const rows=loft?[ay,ay+1]:[ay+1],sw=[],put=(j,v)=>{sw.push([j,ob[j]]);ob[j]=v};
+ try{let wi=0,wl=0;for(const ry of rows){const ground=ry==ay+1;
+   for(let i=0;i<3;i++){const j=ry*W+ax+i;let v;if(ground&&i==1)v=door?fk.d:fk.win[wi++%4];else if(ground)v=door?fk.win[wi++%4]:fk.w[wl++%5];else v=i==1?fk.w[wl++%5]:fk.win[wi++%4];put(j,v)}
+   if(hasL)put(ry*W+ax-1,fk.w[4]);if(hasR)put(ry*W+ax+3,fk.w[3])}
+  for(const ry of rows)for(let i=0;i<3;i++){const j=ry*W+ax+i;drawObj(ob[j],(ax+i)*T,ry*T)}}
+ finally{for(let k=sw.length-1;k>=0;k--)ob[sw[k][0]]=sw[k][1]}
+ /* roof on top, flat like the town houses; joined cabins share one long roof */
+ const col=cabRoofCol(o,ai),top=loft?y-14:y-12,rh=(rows[0]*T)-top;cabRoof(x,top,48,rh,col,!hasL,!hasR);
+ if(!hasL){W_(x+33,top-3,7,9,'#6a5a50');W_(x+33,top-3,7,2,'#3a3028');W_(x+34,top,5,1,'#5a4a40')}
+ if(loft){W_(x,top+rh,48,1,'rgba(0,0,0,.35)')}}}
+/* the upper-storey overlay of v86 is now part of the drawing above (only abandoned log cabins keep the old look) */
+/* 3D Alpha: same plank walls and house roof colours */
+function plankTex102(){if(TX93.pl102)return TX93.pl102;return TX93.pl102=cv93(32,32,q=>{for(let r=0;r<8;r++){q(0,r*4,32,4,'#5a3d24');q(0,r*4+1,32,1,'#6e4c2c');q(0,r*4+3,32,1,'#3a2610')}q(15,0,1,32,'#3a2610');q(31,0,1,32,'#3a2610')})}
+if(typeof cabin93=='function'){const c93=cabin93;cabin93=function(o,tx,ty,h){const G=c93(o,tx,ty,h);if(o.ab)return G;try{const ai=ty*W+tx,col=cabRoofCol(o,ai),fw=o.fw||3;let n=0;
+  G.traverse(m=>{if(!m.isMesh||!m.material||!m.material.map)return;const mp=m.material.map;
+   if(n==0&&m.geometry===UB93){m.material=new THREE.MeshLambertMaterial({map:rep93(plankTex102(),fw/2,(m.scale.y||1.35)/1.4)});n++;return}
+   if(m.geometry===UB93&&m.scale.z>.5&&Math.abs(m.rotation.x)>.01){m.material=new THREE.MeshLambertMaterial({map:rep93(shingle93(col),fw,1.2)});return}
+   if(m.geometry&&m.geometry.type=='ShapeGeometry')m.material=new THREE.MeshLambertMaterial({map:rep93(plankTex102(),1,.7),side:THREE.DoubleSide})})}catch(e){}return G}}
+
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
 function fireList(){const n=performance.now();if(FL.ob!==ob||n-FL.t>500){FL.ob=ob;FL.t=n;FL.a=[];for(let i=0;i<ob.length;i++){const o=ob[i];if(o&&(o.t=='fire'&&o.on||o.t=='fbarrel'))FL.a.push([(i%W)*T+8,Math.floor(i/W)*T+8])}}return FL.a}
