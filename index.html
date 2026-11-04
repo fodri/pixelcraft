@@ -6117,9 +6117,133 @@ function dlDraw(){dlWatch();const e=DLG;if(!e)return;const now=performance.now()
 {const hu95=hud;hud=function(){hu95();try{dlDraw()}catch(err){DLG=null}}}
 /* E or a click on the box: show the whole line, then close it */
 function dlAdvance(){const e=DLG;if(!e)return false;if(!e.done){e.n=e.text.length;e.done=true;e.td=performance.now();return true}dlNext();return true}
-addEventListener('keydown',e=>{if(state!='play'||!DLG||e.repeat)return;if(e.code=='KeyE'||e.code=='Enter'){const near=DLG.kind!='npc';if(near||!DLG.done){e.stopImmediatePropagation();e.preventDefault();dlAdvance()}else{dlNext()}}},true);
-C.addEventListener('mousedown',e=>{if(state!='play'||!DLG)return;try{sc(e)}catch(_){}const r=dlRect();if(ms.x>=r.x&&ms.x<r.x+r.w&&ms.y>=r.y&&ms.y<r.y+r.h){e.stopImmediatePropagation();e.preventDefault();dlAdvance()}},true);
+addEventListener('keydown',e=>{if(state!='play'||!DLG||e.repeat||(typeof TALK!='undefined'&&TALK))return;if(e.code=='KeyE'||e.code=='Enter'){const near=DLG.kind!='npc';if(near||!DLG.done){e.stopImmediatePropagation();e.preventDefault();dlAdvance()}else{dlNext()}}},true);
+C.addEventListener('mousedown',e=>{if(state!='play'||!DLG||(typeof TALK!='undefined'&&TALK))return;try{sc(e)}catch(_){}const r=dlRect();if(ms.x>=r.x&&ms.x<r.x+r.w&&ms.y>=r.y&&ms.y<r.y+r.h){e.stopImmediatePropagation();e.preventDefault();dlAdvance()}},true);
 {const in95=init;init=function(...a){DLG=null;DLQ.length=0;return in95.apply(this,a)}}
+
+/* ===== v96: livelier NPCs — conversation menu, personalities, context-aware talk, friendship, ambient chatter, talking portraits ===== */
+GAMEV=101;
+const hu96=()=>LANG=='hu';
+function nH(n,k){let h=7+(k||0)*131;for(const c of String(n.nm||''))h=(h*31+c.charCodeAt(0))>>>0;h=(h+Math.round(n.hx||0)*17+Math.round(n.hy||0)*7)>>>0;return h}
+/* personalities: 0 cheerful, 1 grumpy, 2 nervous, 3 old-timer, 4 dreamer */
+function nPers(n){if(n.ps==null)n.ps=nH(n,1)%5;return n.ps}
+const PERS=[{hu:'vidám',en:'cheerful',cps:46,pm:1.08},{hu:'morcos',en:'grumpy',cps:36,pm:.82},{hu:'ideges',en:'nervous',cps:60,pm:1.2},{hu:'öreg motoros',en:'old-timer',cps:30,pm:.9},{hu:'álmodozó',en:'dreamer',cps:40,pm:1}];
+const pick=(a,n,k)=>a[(nH(n,k)+((n.g96=(n.g96||0)+1)))%a.length];
+const both=(h,e)=>hu96()?h:e;
+function heroCall(n){const nm=typeof customName=='function'?customName():'';if(STORY&&!heroKnown())return '';if(n.fr>=3&&nm)return nm;return ''}
+/* ---------- the lines ---------- */
+function npcGreet(n){const p=nPers(n),h=hu96(),now=time,nm=heroCall(n),you=nm?', '+nm:'';const night=dark()>.5,morning=now<.12;
+ if(!n.kn){n.kn=1;return [
+  both('Szia! Én '+n.nm+' vagyok. Örülök, hogy élő emberrel találkozom!','Hi! I\'m '+n.nm+'. So good to meet someone alive!'),
+  both(n.nm+'. Ennyit kell tudnod. Mit akarsz?',n.nm+'. That\'s all you need to know. What do you want?'),
+  both('Ó! Megijesztettél… '+n.nm+' vagyok. Ugye nem vagy fertőzött?','Oh! You scared me… I\'m '+n.nm+'. You\'re not infected, are you?'),
+  both('No lám, egy új arc. '+n.nm+' vagyok, már a tél előtt is itt éltem.','Well now, a new face. I\'m '+n.nm+', I lived here before the winter.'),
+  both('Szia… '+n.nm+' vagyok. Láttad ma az eget? Olyan, mintha festették volna.','Hi… I\'m '+n.nm+'. Did you see the sky today? Like a painting.')][p]}
+ const L=[];
+ if(night)L.push([both('Késő van'+you+'! Gyere a tűzhöz!','It\'s late'+you+'! Come to the fire!'),both('Éjjel is mászkálsz? Nem vagy normális.','Wandering at night? You\'re mad.'),both('Psszt! Hallottad ezt? Valami mozog odakint…','Shh! Did you hear that? Something\'s out there…'),both('Éjjel a hideg a legrosszabb. Tartsd a tüzet, fiam.','Nights are the worst for the cold. Keep the fire going.'),both('Nézd, mennyi csillag'+you+'…','Look at all the stars'+you+'…')][p]);
+ else if(morning)L.push([both('Jó reggelt'+you+'! Szép napunk lesz!','Good morning'+you+'! It\'ll be a fine day!'),both('Reggel van. Még kávé sincs. Mit akarsz?','It\'s morning. No coffee. What do you want?'),both('Túléltük az éjszakát… jó reggelt.','We survived the night… good morning.'),both('Korán kelsz. Ez jó. A korán kelőé a bogyó.','Up early. Good. The early bird gets the berries.'),both('Reggel mindig olyan csend van…','Mornings are always so quiet…')][p]);
+ if(n.fr>=5)L.push([both('Örülök, hogy újra látlak'+you+'!','Good to see you again'+you+'!'),both('Na, te legalább megbízható vagy'+you+'.','Well, at least you\'re reliable'+you+'.'),both('Te vagy az! Hála az égnek'+you+'.','It\'s you! Thank goodness'+you+'.'),both('Gyere csak'+you+', régi barátom.','Come here'+you+', old friend.'),both('Rád gondoltam ma'+you+'.','I was thinking of you today'+you+'.')][p]);
+ else L.push([both('Szia'+you+'! Mi szél hozott?','Hi'+you+'! What brings you here?'),both('Megint te. Na mi van?','You again. What is it?'),both('Ó, szia… minden rendben?','Oh, hi… everything all right?'),both('Szervusz'+you+'.','Hello there'+you+'.'),both('Hm? Ó, szia'+you+'.','Hm? Oh, hi'+you+'.')][p]);
+ return L[nH(n,(n.g96||0))%L.length]}
+function npcNews(n){const p=nPers(n),L=[],nm=heroCall(n);
+ if(P.hp<45)L.push([both('Úristen, vérzel! Kösd be magad, mielőtt elájulsz!','Goodness, you\'re bleeding! Bandage yourself before you faint!'),both('Szörnyen nézel ki. Egy kötszer csodákra képes.','You look awful. A bandage does wonders.'),both('Vér! Az odavonzza őket… kérlek, kösd be!','Blood! It draws them in… please bandage it!'),both('Láttam már ilyen sebet. Rongyból kötszer, gyorsan.','I\'ve seen wounds like that. Make a bandage from cloth, quick.'),both('Fáj? Ülj le egy kicsit a tűzhöz.','Does it hurt? Sit by the fire a while.')][p]);
+ if(surv&&P.food<35)L.push([both('Korog a gyomrod, hallom innen! Süss egy kis húst.','I can hear your stomach from here! Roast some meat.'),both('Éhes vagy. Mindenki az. Szedj bogyót.','You\'re hungry. Everyone is. Pick berries.'),both('Ha nem eszel, elgyengülsz… és akkor elkapnak.','If you don\'t eat you\'ll weaken… and then they\'ll get you.'),both('Régen a halászat tartott életben. Most is működik.','Fishing kept us alive in the old days. Still works.'),both('Én is éhes vagyok. Mindig éhes vagyok.','I\'m hungry too. I\'m always hungry.')][p]);
+ if(typeof PETS!='undefined'&&PETS.length){const d=PETS[0].nm;L.push([both('Milyen aranyos kutya! Hogy hívják? '+d+'? Szia, '+d+'!','What a lovely dog! What\'s its name? '+d+'? Hi, '+d+'!'),both('Tartsd távol tőlem azt a dögöt.','Keep that mutt away from me.'),both(d+' ugye nem harap?','Does '+d+' bite?'),both('Egy jó kutya többet ér, mint három puska.','A good dog is worth more than three rifles.'),both('Szerintem '+d+' érti, amit mondunk.','I think '+d+' understands what we say.')][p])}
+ if(wea==2&&cb==1)L.push([both('Ez a hóvihar! Gyere be valahova, megfagysz!','This blizzard! Get inside, you\'ll freeze!'),both('Hó, hó, hó. Utálom.','Snow, snow, snow. I hate it.'),both('Ilyenkor jönnek elő… a hóban nem hallani őket.','This is when they come… you can\'t hear them in the snow.'),both('Ilyen vihart utoljára a tél kezdetén láttam.','Last time I saw a storm like this was when the winter began.'),both('Mintha a hó suttogna valamit…','It\'s as if the snow is whispering…')][p]);
+ else if(wea)L.push([both('Esik? Legalább lesz víz!','Raining? At least we\'ll have water!'),both('Persze, hogy esik. Mi más.','Of course it\'s raining. What else.'),both('Az eső eltakarja a lépteket…','The rain hides footsteps…'),both('Eső előtt fájt a térdem. Mindig tudom.','My knee ached before the rain. I always know.'),both('Szeretem az eső hangját.','I love the sound of rain.')][p]);
+ if(STORY&&!STORY.done){const a=STORY.act;L.push([[both('Láttad azt a sok órát a városban? Mind 3:17-en állt meg.','Seen the clocks in the city? All stopped at 3:17.'),both('Azt mondják, a rádióban egy nő beszél. Biztos csak zaj.','They say a woman talks on the radio. Just static, surely.'),both('Az erőmű felől néha zöld fényt látni éjjel…','Sometimes there\'s a green glow from the plant at night…'),both('Az erőmű előtt nyáron sütött a nap. Három éve volt nyár.','Before the plant, summer had sun. Three years since summer.'),both('Szerinted vége lesz egyszer a télnek?','Do you think the winter will ever end?')][p],
+  [both('Hallottam, a városban maradt egy működő kocsi!','I heard there\'s a working car left in the city!'),both('A város tele van fertőzöttel. Én nem mennék.','The city is full of infected. I wouldn\'t go.'),both('A kórházban… ott történt valami. Ne menj be egyedül.','The hospital… something happened there. Don\'t go alone.'),both('A kórház alagsorában régen gyógyszerraktár volt.','The hospital basement used to hold the medicine stores.'),both('A rádióban egy hang a nevét mondta: Vera.','A voice on the radio said its name: Vera.')][p],
+  [both('Az erőmű felé tartasz? Bátor vagy!','Heading to the plant? You\'re brave!'),both('A reaktor közelében a hó zöld. Ne edd meg.','Near the reactor the snow is green. Don\'t eat it.'),both('Sugárzás! Maszk nélkül meg se közelítsd!','Radiation! Don\'t go near it without a mask!'),both('Bárdos igazgató… sosem bíztam benne.','Director Bárdos… never trusted the man.'),both('Azt álmodtam, hogy újra nyár van.','I dreamt it was summer again.')][p],
+  [both('Érzed? Mintha kicsit melegebb lenne a szél.','Feel that? The wind seems a little warmer.'),both('Ha te tényleg leállítod azt a magot… akkor tartozom egy sörrel.','If you really shut that core down… I owe you a beer.'),both('Lent a mélyben valami üvölt. Hallom éjjelente.','Something roars down in the depths. I hear it at night.'),both('Én is ott dolgoztam valaha. A harmadik műszakban.','I worked there once too. Third shift.'),both('Ha olvad a hó, virágot ültetek.','When the snow melts, I\'ll plant flowers.')][p]][Math.min(3,a)])}
+ if(STORY&&STORY.done)L.push([both('Hallod? Csepeg az eresz! Olvad a hó!','Hear that? The eaves are dripping! The snow is melting!'),both('Na jó. Ezt elismerem. Megcsináltad.','All right. I\'ll admit it. You did it.'),both('Már nem félek kimenni éjjel.','I\'m not afraid to go out at night any more.'),both('Ilyen tavaszt még nem láttam.','I\'ve never seen a spring like this.'),both('Láttam egy pillangót ma reggel!','I saw a butterfly this morning!')][p]);
+ const NL=NPCL[hu96()?'hu':'en'];L.push(NL[nH(n,9+(n.g96||0))%NL.length]);
+ return L[(n.g96=(n.g96||0)+1)%L.length]}
+const BACK={hu:['Tanítónő voltam a faluban. Most a túlélőket tanítom tüzet rakni.','Kamionos voltam. Ismertem minden utat — most mindet hó fedi.','Szakács voltam egy étteremben. Egy konzervből is tudok csodát főzni.','Az erőműben dolgoztam karbantartóként. Arról az éjszakáról… nem beszélek.','Ápoló voltam. Sokakat elvesztettünk az első télen.','Vadász voltam. A farkasok régen tisztelték az embert.','Postás voltam. Néha még most is kézbesítek leveleket — csak már senki nem válaszol.','Zenész voltam. A gitárom elégett, de a dalok megmaradtak.','Gazdálkodtam. Ha egyszer kiolvad a föld, újra vetek.','Diák voltam, amikor jött a tél. Azóta itt tanultam meg mindent.','Rendőr voltam. Most csak egy vagyok a sok közül.','Asztalos voltam. Ezt a házat is én foltoztam be.'],
+ en:['I was a village teacher. Now I teach survivors to build fires.','I was a truck driver. I knew every road — now they\'re all under snow.','I was a cook. I can make a miracle out of one tin can.','I did maintenance at the power plant. About that night… I don\'t talk about it.','I was a nurse. We lost so many in the first winter.','I was a hunter. Wolves used to respect people.','I was a postman. Sometimes I still deliver letters — no one writes back.','I was a musician. My guitar burned, but the songs stayed.','I was a farmer. When the ground thaws, I\'ll sow again.','I was a student when the winter came. I learned everything here.','I was a police officer. Now I\'m just one among many.','I was a carpenter. I patched up this very house.']};
+const BACK2={hu:['Volt egy kutyám is. Remélem, valahol jó helye van.','A családom délre indult. Azóta nem hallottam róluk.','Néha még álmodom a nyárról. Fűszag, tücsökzene…','Minden este elmondom magamban a nevüket, hogy ne felejtsem el.','Egyszer, ha vége lesz, újra kinyitom a műhelyem.'],en:['I had a dog once. I hope it\'s somewhere good.','My family headed south. I haven\'t heard from them since.','Sometimes I still dream of summer. Grass, crickets…','Every night I say their names to myself so I won\'t forget.','One day, when it\'s over, I\'ll open my workshop again.']};
+function npcAbout(n){const h=hu96()?'hu':'en';n.ab=(n.ab||0)+1;if(n.ab==1)return BACK[h][nH(n,3)%BACK[h].length];if(n.fr<2)return [both('Ennyi elég. Talán majd később.','That\'s enough. Maybe later.'),both('Mit érdekel az téged?','Why do you care?'),both('Én… nem szeretek magamról beszélni.','I… don\'t like talking about myself.'),both('Hosszú történet. Majd egyszer, a tűz mellett.','Long story. Some day, by the fire.'),both('Majd ha jobban ismerjük egymást.','When we know each other better.')][nPers(n)];return BACK2[h][nH(n,4+n.ab)%BACK2[h].length]}
+function npcTip(n){const L=[];try{if(STORY&&!STORY.done){const s=stCur();if(s){const t=s.h[hu96()?0:1];L.push([both('Ha a helyedben lennék: ','If I were you: '),both('Figyelj. ','Listen. '),both('Szerintem… ','I think… '),both('Egy öreg tanácsa: ','An old man\'s advice: '),both('Hm… talán: ','Hm… maybe: ')][nPers(n)]+t.charAt(0).toLowerCase()+t.slice(1)+'.')}}}catch(e){}
+ if(dark()>.5&&!nearWarm(140))L.push(both('Éjjel ne kószálj tűz nélkül. Egy tábortűz két fa meg egy kő.','Don\'t roam at night without a fire. A campfire is just wood and stone.'));
+ if(!(inv.axe>0))L.push(both('Szerezz egy fejszét — fával sokkal gyorsabban halad a munka.','Get an axe — wood comes much faster.'));
+ if(!(inv.bandage>0)&&!(inv.medkit>0))L.push(both('Két rongyból kötszert tudsz csinálni. Mindig legyen nálad.','Two pieces of cloth make a bandage. Always carry one.'));
+ if(cb==1&&!(EQ&&(EQ.c=='wcoat')))L.push(both('Ebben a hidegben téli kabát nélkül nem húzod sokáig.','In this cold you won\'t last without a winter coat.'));
+ if(!(typeof PETS!='undefined'&&PETS.length))L.push(both('A farkasokat meg lehet szelídíteni. Három csont, és barátod lesz.','Wolves can be tamed. Three bones and you\'ve got a friend.'));
+ L.push(both('Ásóval saját bányát áshatsz, a falra fáklyát tehetsz.','With a shovel you can dig your own mine, and hang torches on the walls.'));
+ return L[(n.g97=(n.g97||0)+1)%L.length]}
+/* ---------- friendship ---------- */
+function frUp(n,v){const d=day+'';n.fr=(n.fr||0)+v;if(n.fr>=6&&n.gd96!==d&&Math.random()<.35){n.gd96=d;const gifts=[['berry',3],['bandage',1],['canned',1],['meat',2],['coal',2]],g2=gifts[nH(n,day)%gifts.length];if(canAdd(g2[0])){inv[g2[0]]=(inv[g2[0]]||0)+g2[1];snd('pick');return both('Várj! Ezt neked tettem félre: ','Wait! I saved this for you: ')+g2[1]+' '+tr(LBL[g2[0]]||g2[0]).toLowerCase()+'.'}}return ''}
+function frName(n){const f=n.fr||0;return f>=6?both('Barát','Friend'):f>=3?both('Ismerős','Acquaintance'):both('Idegen','Stranger')}
+/* ---------- conversation ---------- */
+var TALK=null;
+function talkOpts(){const n=TALK.n,t=TRD[n.tr%TRD.length];return[
+ {k:'news',l:both('Mi újság?','What\'s new?')},
+ {k:'trade',l:TALK.offer?both('Elfogadom a cserét','Accept the trade'):both('Cseréljünk!','Let\'s trade!')},
+ {k:'about',l:both('Mesélj magadról','Tell me about yourself')},
+ {k:'tip',l:both('Van valami tanácsod?','Any advice?')},
+ {k:'bye',l:both('Viszlát!','Goodbye!')}]}
+function talkSay(text,hint){const n=TALK.n;n.line=text;n.sayT=0;dlSay('npc',n.nm,text,n,hint||'');const e=DLG&&DLG.src===n?DLG:null;if(e){const p=PERS[nPers(n)];e.cps=p.cps;e.ln=null;e.acc96=0;e.wait96=0;e.lt96=performance.now();e.nm2=0;if(e.voice)e.voice=[e.voice[0],e.voice[1]*p.pm]}}
+function talkOpen(n){if(typeof npcFix=='function')npcFix(n);K.KeyW=K.KeyA=K.KeyS=K.KeyD=K.ArrowUp=K.ArrowDown=K.ArrowLeft=K.ArrowRight=false;
+ const first=!n.kn,dd=day+'';TALK={n,sel:0,offer:false,t0:performance.now()};n.st=6;if(n.td96!==dd){n.td96=dd;n.fr=(n.fr||0)+1}
+ n.fx=Math.sign(P.x-n.x)||0;n.fy=Math.abs(P.x-n.x)>Math.abs(P.y-n.y)?0:Math.sign(P.y-n.y);snd('ui');talkSay(npcGreet(n),first?both('E / 1–5: válassz','E / 1–5: choose'):'')}
+function talkClose(say_){if(!TALK)return;const n=TALK.n;if(say_)talkSay(say_);TALK=null;if(DLG&&DLG.src===n&&!say_)dlNext()}
+function talkPick(i){if(!TALK)return;const o=talkOpts()[i];if(!o)return;const n=TALK.n,hu=hu96(),t=TRD[n.tr%TRD.length];TALK.sel=i;snd('ui');
+ if(o.k=='bye'){talkClose([both('Vigyázz magadra!','Take care!'),both('Na végre.','Finally.'),both('Gyere vissza épségben, jó?','Come back in one piece, okay?'),both('Isten veled, fiam.','Farewell, my child.'),both('Szia… majd álmodj valami szépet.','Bye… dream of something nice.')][nPers(n)]);return}
+ if(o.k=='news'){TALK.offer=false;talkSay(npcNews(n));return}
+ if(o.k=='about'){TALK.offer=false;talkSay(npcAbout(n));return}
+ if(o.k=='tip'){TALK.offer=false;talkSay(npcTip(n));return}
+ if(o.k=='trade'){if(!TALK.offer){TALK.offer=true;talkSay([both('Nézzük csak, mit tudok adni…','Let\'s see what I can offer…'),both('Csak tisztességes csere. Semmi alku.','Fair trade only. No haggling.'),both('Jó, de gyorsan, mielőtt jönnek…','Fine, but quickly, before they come…'),both('Régen ezt pénzért adtam volna.','In the old days I\'d have sold this for money.'),both('Ez a kedvencem… de neked odaadom.','It\'s my favourite… but you can have it.')][nPers(n)],offerTxt(t).replace(/\s*\(E[^)]*\)\s*$/,''));return}
+  TALK.offer=false;const give=t[0];if(!Object.entries(give).every(([k,v])=>(inv[k]|0)>=v)){talkSay([both('Ehhez sajnos nincs elég nálad. Majd legközelebb!','You don\'t have enough for that. Next time!'),both('Ennyiből? Ne nevettess.','With that? Don\'t make me laugh.'),both('Hm, ez nem elég… bocsi…','Hmm, that\'s not enough… sorry…'),both('Gyűjts még egy kicsit, aztán gyere.','Gather a bit more, then come back.'),both('Majd ha lesz elég, jó?','When you have enough, okay?')][nPers(n)]);return}
+  const nk=Object.keys(t[1]).filter(k=>!(inv[k]>0)).length;if(nk&&invUsed()+nk>invCap()){talkSay(both('A táskád tele van. Csinálj helyet!','Your bag is full. Make some room!'));return}
+  for(const[k,v]of Object.entries(give))inv[k]-=v;for(const[k,v]of Object.entries(t[1])){inv[k]=(inv[k]||0)+v;if(DMAX[k])du[k]=DMAX[k];if(TOOL[k]||PL[k])givehb(k)}snd('craft');const gift=frUp(n,2);
+  talkSay([both('Köszönöm! Öröm veled üzletelni!','Thank you! A pleasure doing business!'),both('Rendben. Megérte.','Fine. Worth it.'),both('Köszi! Ez nagyon kell majd…','Thanks! I really need this…'),both('Tisztességes csere. Így szeretem.','A fair trade. That\'s how I like it.'),both('Jaj, köszönöm! Olyan kedves vagy.','Oh, thank you! You\'re so kind.')][nPers(n)]+(gift?' '+gift:''));return}}
+/* E near a person opens the conversation (sleeping people keep their old message) */
+{const ne96=npcE;npcE=function(){if(inD||!NPCS.length)return ne96();if(TALK){talkPick(TALK.sel);return true}let b=null,bd=28;for(const n of NPCS){const d=Math.hypot(n.x-P.x,n.y-P.y);if(d<bd){bd=d;b=n}}if(!b||b.sl)return ne96();talkOpen(b);return true}}
+/* the box: keep the person's line open while talking; typing speed by personality; pauses at punctuation */
+{const dd96=dlDraw;dlDraw=function(){const e=DLG;if(e&&!e.done&&e.cps&&e.cps!==42){/* re-time the typing */const dt=(performance.now()-(e.lt96||e.t0))/1000;e.lt96=performance.now();const ch=e.text[Math.floor(e.n)]||'',pause=/[.!?…]/.test(ch)?.35:/[,;:—]/.test(ch)?.15:0;
+  if(!e.wait96||performance.now()>e.wait96){e.acc96=(e.acc96||0)+dt*e.cps;while(e.acc96>=1&&e.n<e.text.length){e.acc96--;const c=e.text[Math.floor(e.n)];e.n++;dlBlip(e,c);if(/[.!?…,;:—]/.test(c)){e.wait96=performance.now()+(/[.!?…]/.test(c)?260:110);e.acc96=0;break}}}
+  e.t0=performance.now()-e.n/42*1000;if(e.n>=e.text.length){e.done=true;e.td=performance.now()}}
+ if(TALK&&e&&e.src===TALK.n&&e.done)e.td=performance.now();
+ if(TALK){const n=TALK.n;n.st=6;n.sayT=0;if(Math.hypot(n.x-P.x,n.y-P.y)>70||state!='play'||inD&&!inC){TALK=null}}
+ dd96();if(TALK&&DLG&&DLG.src===TALK.n)talkMenu();talkFace()}}
+function talkRect(){const r=dlRect(),o=talkOpts(),w=150,h=o.length*13+8;return{x:r.x+r.w-w,y:r.y-h-4,w,h}}
+function talkMenu(){if(book||invOpen||stOpen||showMap)return;const q=talkRect(),o=talkOpts();noTr=true;Q(q.x-2,q.y-2,q.w+4,q.h+4,'#2a2218');Q(q.x,q.y,q.w,q.h,'#f7f3e8');
+ g.font=fnt(0,8);g.textAlign='left';for(let i=0;i<o.length;i++){const y=q.y+5+i*13,on=TALK.sel==i;if(on)Q(q.x+2,y-1,q.w-4,12,'#ffd84a');g.fillStyle=on?'#1e1a14':'#5a5040';g.fillText((i+1)+'.  '+o[i].l,q.x+7,y+8)}
+ const n=TALK.n;g.font=fnt(0,7);g.textAlign='right';g.fillStyle='#8a7a5a';const r=dlRect();g.fillText(frName(n)+' · '+PERS[nPers(n)][hu96()?'hu':'en'],r.x+r.w-8,r.y+12);g.textAlign='left';noTr=false}
+/* talking portraits: the mouth moves while typing, eyes blink now and then */
+function talkFace(){const e=DLG;if(!e||(e.kind!='npc'&&e.kind!='player')||book||invOpen||stOpen||showMap||state!='play')return;const pc=dlPortrait(e.kind,e.src);if(!pc)return;
+ if(!pc.f96){try{const d=pc.getContext('2d').getImageData(0,0,44,44).data,px=(x,y)=>{const i=(y*44+x)*4;return[d[i],d[i+1],d[i+2],d[i+3]]};const sk=px(22,20);pc.f96={ok:sk[3]>0&&sk[0]>90&&sk[0]>sk[2],sk:'rgb('+sk[0]+','+sk[1]+','+sk[2]+')'}}catch(_){pc.f96={ok:false}}}
+ if(!pc.f96.ok)return;const r=dlRect(),X=r.x+7,Y=r.y+8,now=performance.now();noTr=true;
+ if(!e.done&&Math.floor(now/90)%2){Q(X+20,Y+22,5,2,'#5a2a1a')}
+ if(now%3800<140){Q(X+18,Y+17,2,2,pc.f96.sk);Q(X+25,Y+17,2,2,pc.f96.sk);Q(X+18,Y+18,2,1,'#2a1a10');Q(X+25,Y+18,2,1,'#2a1a10')}noTr=false}
+/* keys and clicks while talking */
+addEventListener('keydown',e=>{if(!TALK||state!='play')return;const c=e.code,n=talkOpts().length;let used=true;
+ if(c=='ArrowUp'||c=='KeyW')TALK.sel=(TALK.sel+n-1)%n;else if(c=='ArrowDown'||c=='KeyS')TALK.sel=(TALK.sel+1)%n;else if(c=='ArrowLeft'||c=='ArrowRight'||c=='KeyA'||c=='KeyD'){}
+ else if(/^Digit[1-9]$/.test(c)){const i=+c.slice(5)-1;if(i<n){if(DLG&&!DLG.done)dlAdvance();talkPick(i)}}
+ else if(c=='KeyE'||c=='Enter'||c=='Space'){if(!e.repeat){if(DLG&&DLG.src===TALK.n&&!DLG.done)dlAdvance();else talkPick(TALK.sel)}}
+ else if(c=='Escape'){talkClose('')}else used=false;if(used){e.stopImmediatePropagation();e.preventDefault()}},true);
+C.addEventListener('mousedown',e=>{if(!TALK||state!='play')return;try{sc(e)}catch(_){}const q=talkRect();if(ms.x>=q.x&&ms.x<q.x+q.w&&ms.y>=q.y&&ms.y<q.y+q.h){const i=Math.floor((ms.y-q.y-4)/13);e.stopImmediatePropagation();e.preventDefault();if(i>=0&&i<talkOpts().length){if(DLG&&!DLG.done)dlAdvance();talkPick(i)}return}
+ const r=dlRect();if(ms.x>=r.x&&ms.x<r.x+r.w&&ms.y>=r.y&&ms.y<r.y+r.h){e.stopImmediatePropagation();e.preventDefault();if(DLG&&!DLG.done)dlAdvance()}},true);
+C.addEventListener('mousemove',()=>{if(!TALK)return;const q=talkRect();if(ms.x>=q.x&&ms.x<q.x+q.w&&ms.y>=q.y&&ms.y<q.y+q.h){const i=Math.floor((ms.y-q.y-4)/13);if(i>=0&&i<talkOpts().length)TALK.sel=i}});
+/* standing still while talking */
+{const up96=update;update=function(dt){if(TALK){K.KeyW=K.KeyA=K.KeyS=K.KeyD=K.ArrowUp=K.ArrowDown=K.ArrowLeft=K.ArrowRight=false}return up96(dt)}}
+/* ---------- ambient life: people talk to each other and greet you ---------- */
+let BARKT=6;
+function bark(n,text){n.line=text;n.sayT=3.2;n.bk96=1;n.off=0;try{if(SXS.ok&&vol>0){SXS.mul=(SVOL.e!=null?SVOL.e:1)*.35;const f=((n.sx=='f'?290:200)+nH(n)%110)*PERS[nPers(n)].pm;for(let i=0;i<4;i++)sxT('square',f*(1+(i%2)*.06),f,.04,.03,i*.09,0)}}catch(e){}finally{try{SXS.mul=1}catch(e){}}}
+const CHAT={hu:[['Hallottad, mi történt tegnap éjjel?','Ne is mondd…'],['Hideg van ma, mi?','Mint mindig.'],['Van még a konzervből?','Kettő. Talán.'],['Láttál farkast mostanában?','Egyet, a fenyvesnél.'],['Szerinted jön tavasz?','Egyszer biztos.'],['Ki főz ma?','Te. Tegnap én.'],['Kell még fa a tűzre.','Majd én hozok.'],['Ezt a hangot hallottad?','Csak a szél… remélem.']],
+ en:[['Did you hear what happened last night?','Don\'t even…'],['Cold today, huh?','As always.'],['Any tins left?','Two. Maybe.'],['Seen any wolves lately?','One, by the pines.'],['Think spring will come?','Some day, surely.'],['Who\'s cooking tonight?','You. I did yesterday.'],['We need more firewood.','I\'ll fetch some.'],['Did you hear that?','Just the wind… I hope.']]};
+function ambTick(dt){if(state!='play'||inD||TALK)return;BARKT-=dt;
+ for(const n of NPCS){const d=Math.hypot(n.x-P.x,n.y-P.y);if(n.kn&&d<60&&!n.near96&&!(n.sayT>0)&&!n.sl){n.near96=1;if((n.fr||0)>=2&&performance.now()-(n.gr96||0)>90000){n.gr96=performance.now();const nm=heroCall(n);bark(n,[both('Szia'+(nm?', '+nm:'')+'!','Hi'+(nm?', '+nm:'')+'!'),both('Megint te?','You again?'),both('Ó, szia!','Oh, hi!'),both('Szervusz!','Hello there!'),both('Hé, szia!','Hey, hi!')][nPers(n)])}}else if(d>110)n.near96=0}
+ if(BARKT>0)return;BARKT=10+Math.random()*14;const near=NPCS.filter(n=>!n.sl&&Math.hypot(n.x-P.x,n.y-P.y)<170&&!(n.sayT>0));if(near.length<2){if(near.length==1&&dark()>.5&&Math.random()<.5)bark(near[0],[both('Brr, de hideg…','Brr, so cold…'),both('Hol a takaróm?','Where\'s my blanket?'),both('Ki van ott?!','Who\'s there?!'),both('Régen ilyenkor tücskök ciripeltek.','Crickets used to sing at this hour.'),both('Hullócsillag!','A shooting star!')][nPers(near[0])]);return}
+ const a=near[Math.floor(Math.random()*near.length)];let b=null,bd=1e9;for(const q of near){if(q===a)continue;const d=Math.hypot(q.x-a.x,q.y-a.y);if(d<bd){bd=d;b=q}}if(!b||bd>110)return;
+ const L=CHAT[hu96()?'hu':'en'],c=L[Math.floor(Math.random()*L.length)];a.fx=Math.sign(b.x-a.x);a.fy=0;b.fx=Math.sign(a.x-b.x);b.fy=0;a.st=4;b.st=5;bark(a,c[0]);setTimeout(()=>{if(state=='play'&&!TALK)bark(b,c[1])},1500)}
+{const up96b=update;update=function(dt){up96b(dt);try{ambTick(dt)}catch(e){}}}
+/* chatter stays in speech bubbles, it never opens the dialogue box */
+{const dw96=dlWatch;dlWatch=function(){const sv=[];for(const n of NPCS)if(n.bk96&&n.sayT>0){sv.push(n);n._dlk=n.line+'|'+(n.off||0)}else if(n.bk96&&!(n.sayT>0))n.bk96=0;return dw96()}}
+{const in96=init;init=function(...a){TALK=null;return in96.apply(this,a)}}
+
+/* phones: tap the answers */
+C.addEventListener('touchstart',e=>{if(!TALK||state!='play'||!e.touches.length)return;const t=e.touches[0],r=C.getBoundingClientRect();ms.x=(t.clientX-r.left)/r.width*VW;ms.y=(t.clientY-r.top)/r.height*VH;const q=talkRect();
+ if(ms.x>=q.x&&ms.x<q.x+q.w&&ms.y>=q.y&&ms.y<q.y+q.h){const i=Math.floor((ms.y-q.y-4)/13);e.preventDefault();e.stopImmediatePropagation();if(i>=0&&i<talkOpts().length){if(DLG&&!DLG.done)dlAdvance();talkPick(i)}}},{capture:true,passive:false});
 
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
