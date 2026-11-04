@@ -444,7 +444,7 @@ const SPC=[['#2a3a46','#34475a','#1c2630','#ff3030'],['#4a3624','#5e4630','#2e20
 function fillCreative(){for(const k in inv)inv[k]=uq(k)?1:99;for(const k in DMAX)if(inv[k])du[k]=DMAX[k];['hand','diamond_pickaxe','diamond_sword','diamond_axe','diamond_shovel','bow','fire','snowball','stash'].forEach((k,i)=>HB[i]=k);P.hp=P.food=P.th=100}
 const ELT=[.8,.925];
 function genElev(S){const id=(x,y)=>y*W+x,nb=[[1,0],[-1,0],[0,1],[0,-1]],lv=new Uint8Array(W*H),ramp=new Set();
- const fld=new Float32Array(W*H);for(let y=0;y<H;y++)for(let x=0;x<W;x++)fld[id(x,y)]=ns(x+S*3,y+S*7,26)*.85+ns(x+S*5,y+S,12)*.15;
+ const fld=new Float32Array(W*H);for(let y=0;y<H;y++)for(let x=0;x<W;x++)fld[id(x,y)]=ns(x+S*3,y+S*7,26)*.85+ns(x+S*5,y+S,12)*.15+(typeof CONT!='undefined'&&CONT&&biome==4?Math.max(0,.34-y/H)*1.1-Math.max(0,y/H-.66)*.5:0);
  for(let p=0;p<3;p++){const f2=new Float32Array(W*H);for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){let q=0;for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++)q+=fld[id(x+a,y+b)];f2[id(x,y)]=q/9}fld.set(f2)}
  const el0=[];for(let y=2;y<H-2;y++)for(let x=2;x<W-2;x++){const i=id(x,y);if(map[i]!=0||bm[i]==3)continue;let dm=999;for(const c of ISC)dm=Math.min(dm,Math.hypot(x-c[0],y-c[1]));if(dm<13)continue;el0.push(i)}
  const qs=Float32Array.from(el0,i=>fld[i]).sort(),t1=qs[Math.floor(qs.length*ELT[0])]??9,t2=qs[Math.floor(qs.length*ELT[1])]??9;
@@ -510,7 +510,7 @@ function genLava(S){const want=biome==4?10:18;let n=0;
 function init0(){
  map=new Uint8Array(W*H);ob=new Array(W*H).fill(null);bm=new Uint8Array(W*H);const S=R()*999,isl=biome==4;mkISC();const RAD=isl?W*.185:W/2,dd=new Float32Array(W*H);
  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
-  let d=9,b=0;if(isl&&CONT){const wx=x+(ns(x*.5+S*3,y*.5,24)-.5)*150+(ns(x+S*8,y,9)-.5)*34+(ns(x+S*5,y,4)-.5)*10,wy=y+(ns(x*.5,y*.5+S*4,24)-.5)*150+(ns(x,y+S*9,9)-.5)*34+(ns(x,y+S*6,4)-.5)*10;let q0=1e9,q1=1e9,b2=-1;for(const c of ISC){const q=Math.hypot(wx-c[0],wy-c[1]);if(q<q0){q1=q0;b2=b;q0=q;b=c[2]}else if(q<q1){q1=q;b2=c[2]}}if((b==1&&b2==2||b==2&&b2==1)&&q1-q0<18)b=0;const ax=Math.abs(x+.5-W/2)/(W*.5),ay=Math.abs(y+.5-H/2)/(H*.5);d=Math.pow(ax*ax*ax*ax+ay*ay*ay*ay,.25)*1.04+(ns(x+S*7,y+S*7,13)-.5)*.16;if(b==3&&d>.86){let q1=1e9;for(const c of ISC){if(c[2]==3)continue;const q=Math.hypot(wx-c[0],wy-c[1]);if(q<q1){q1=q;b=c[2]}}}}else{for(const c of ISC){const q=Math.hypot(x-c[0],y-c[1])/RAD;if(q<d){d=q;b=c[2]}}}bm[y*W+x]=b;dd[y*W+x]=d;
+  let d=9,b=0;if(isl&&CONT){const lat=(y+(ns(x*.5+S*3,y*.5,24)-.5)*80+(ns(x+S*8,y,9)-.5)*26+(ns(x+S*5,y,4)-.5)*8)/H;b=lat<.31?1:lat>.69?2:0;const CC=ISC.find(c=>c[2]==3),cxw=x+(ns(x*.5,y*.5+S*4,24)-.5)*70+(ns(x,y+S*9,9)-.5)*22,cyw=y+(ns(x*.5+S*6,y*.5,24)-.5)*70+(ns(x+S*2,y,9)-.5)*22;if(CC&&Math.hypot(cxw-CC[0],(cyw-CC[1])*1.1)<68)b=3;const ax=Math.abs(x+.5-W/2)/(W*.5),ay=Math.abs(y+.5-H/2)/(H*.5);d=Math.pow(ax*ax*ax*ax+ay*ay*ay*ay,.25)*1.04+(ns(x+S*7,y+S*7,13)-.5)*.16;if(b==3&&d>.88)b=lat<.31?1:lat>.69?2:0}else{for(const c of ISC){const q=Math.hypot(x-c[0],y-c[1])/RAD;if(q<d){d=q;b=c[2]}}}bm[y*W+x]=b;dd[y*W+x]=d;
   let e=ns(x+S,y+S,18)*.7+ns(x+S,y+S,6)*.3+.15-d*d*.5;
   let t=0;if(e<.3||(b!=3&&d<.65&&ns(x+S*2,y,7)<(isl&&CONT?(b==2?.08:.15):.2)))t=1;else if(e<.35)t=2;map[y*W+x]=t;
   if(t==0){const f=ns(x+S+300,y+S,9),r=R();let o=null;
@@ -2118,7 +2118,7 @@ function cityGen3(){BLD=[];const NAT={tree:1,rock:1,bush:1,flax:1},LAND=m=>m==0|
    if(ok)blocks.push({bx,by,d:Math.max(gx<0?-gx-1:gx,gy<0?-gy-1:gy),r:R()})}
   blocks.sort((a,b)=>a.d-b.d||a.r-b.r);
   const used={};const pick=(d)=>{const r=R();if(d==0)return r<.75?'office':'shop';if(d==1)return r<.3?'office':r<.55?'shop':r<.7?'apt':r<.8?'park':r<.9?'lib':'ruin';if(d==2)return r<.4?'apt':r<.55?'shop':r<.65?'school':r<.73?'church':r<.8?'gas':r<.9?'green':'ruin';return r<.35?'houses':r<.62?'villa':r<.7?'green':r<.8?'ruin':r<.86?'camp':r<.92?'gas':'church'};
-  const want=[['plaza',0],['office',0],['office',0],['shop',1],['lib',1],['police',1],['fire',1],['school',2],['church',2],['gas',2],['houses',3],['green',2],['pocket',1],['pocket',2],['hospital',1]];const assign=new Map();
+  const want=[['plaza',0],['hospital',1],['office',0],['police',1],['shop',1],['office',0],['lib',1],['fire',1],['school',2],['church',2],['gas',2],['houses',3],['green',2],['pocket',1],['pocket',2]];const assign=new Map();
   for(const[k,d0]of want){let best=null;for(const b of blocks){if(assign.has(b))continue;if(b.d>=d0&&(!best||Math.abs(b.d-d0)<Math.abs(best.d-d0)))best=b}if(!best)for(const b of blocks)if(!assign.has(b)){best=b;break}if(best)assign.set(best,k)}
   for(const b of blocks){if(!used._s){used._s=1;for(const v of assign.values())used[v]=(used[v]||0)+1}let k=assign.get(b);if(!k){k=pick(b.d);const CAP={church:1,gas:2,school:1,lib:1,police:1,fire:1,hospital:1,plaza:1,camp:1};if(CAP[k]!=null&&(used[k]||0)>=CAP[k])k=b.d>=3?'houses':b.d==2?'apt':'shop';used[k]=(used[k]||0)+1}
    for(let yy=b.by;yy<b.by+14;yy++)for(let xx=b.bx;xx<b.bx+14;xx++){const j=yy*W+xx,ring=xx==b.bx||yy==b.by||xx==b.bx+13||yy==b.by+13;if(ring){map[j]=14;ob[j]=null}}
@@ -2335,7 +2335,7 @@ drawCar=function(c,x,y,rim){g.save();g.translate(Math.round(x),Math.round(y-4));
 {const lo0=loadOld;loadOld=function(){let s=null;try{s=localStorage.getItem(SKEY())}catch(e){}const m=s&&/"W":(\d+)/.exec(s);if(m){const w=+m[1];if(w>=96&&w<=512){W=w;H=w}}WLOCK=1;try{const r=lo0();if(!r){WLOCK=0;W=H=WDEF}return r}finally{WLOCK=0}}}
 /* ---------- reactor on its own island ---------- */
 var RIC=null;function reactorIsland(){const isl=biome==4;let cx,cy;
- if(isl){cx=W>>1;cy=H>>1}else{const cs=[[.14,.14],[.86,.14],[.14,.86],[.86,.86]];const k=Math.floor(R()*4);cx=Math.round(cs[k][0]*W);cy=Math.round(cs[k][1]*H)}
+ if(isl){cx=(typeof CONT!='undefined'&&CONT&&RCX105)?RCX105:W>>1;cy=(typeof CONT!='undefined'&&CONT&&RCY105)?RCY105:H>>1}else{const cs=[[.14,.14],[.86,.14],[.14,.86],[.86,.86]];const k=Math.floor(R()*4);cx=Math.round(cs[k][0]*W);cy=Math.round(cs[k][1]*H)}
  const RI=Math.max(15,Math.round(W*.065)),S=R()*99,sb=isl?2:(biome==3?0:biome);
  for(let y=cy-RI-8;y<=cy+RI+8;y++)for(let x=cx-RI-8;x<=cx+RI+8;x++){if(x<1||y<1||x>=W-1||y>=H-1)continue;const i=y*W+x,d=Math.hypot(x-cx,y-cy),e=RI+(ns(x+S,y+S,5)-.5)*5;
   if(d<e){map[i]=d>e-2.2?2:0;ob[i]=null;if(el)el[i]=0;bm[i]=sb==3?0:sb;if(d<e-3&&R()<.05)ob[i]={t:'tree',hp:6,dead:1};else if(d<e-3&&R()<.03)ob[i]={t:'rock',hp:5}}
@@ -6880,6 +6880,78 @@ const JOBQ105={kovacs:['Megjavítanád a szerszámaimat?','Can you fix my tools?
  for(const[k,v]of Object.entries(cost))inv[k]-=v;const s=f.run();snd('craft');const gift=frUp(n,1);talkSay(s+(gift?' '+gift:''))}}
 /* the job also colours the first words */
 {const ng105=npcGreet;npcGreet=function(n){const first=n&&!n.kn,s=ng105(n);if(!n||!n.job||!first||n.job=='kereskedo')return s;const h=hu104();return s+' '+(h?'Én vagyok itt a '+jT105(n).toLowerCase()+'.':'I\'m the '+jT105(n).toLowerCase()+' here.')}}
+
+/* ===== v106: a world laid out by reasons — cold mountains in the north, forest in the middle, desert in the south,
+   the city at a river mouth on the east coast, the reactor on a lake beside it, roads between settlements, weather that fades between regions ===== */
+GAMEV=114;
+var RCX105=0,RCY105=0,RIV105=null;
+const CONT6=()=>typeof CONT!='undefined'&&CONT&&biome==4;
+/* ---------- where things are ---------- */
+{const mk106=mkISC;mkISC=function(){mk106();if(!CONT6())return;ISC=[[Math.round(W*.2),Math.round(H*.53),0],[Math.round(W*.5),Math.round(H*.13),1],[Math.round(W*.42),Math.round(H*.86),2],[Math.round(W*.8),Math.round(H*.5),3]];
+ SX=ISC[0][0];SY=ISC[0][1];RCX105=Math.round(W*.57);RCY105=Math.round(H*.44)}}
+/* ---------- the big river: from the northern mountains, through the reactor lake, across the city into the sea ---------- */
+function carveRiver105(){RIV105=new Uint8Array(W*H);if(!CONT6())return;const CC=ISC.find(c=>c[2]==3);if(!CC)return;
+ let sx=Math.round(W*(.38+R()*.22)),sy=Math.round(H*.1);for(let k=0;k<40&&map[sy*W+sx]!=0;k++)sy++;
+ const wps=[[RCX105,RCY105],[CC[0]-6,CC[1]+Math.round((R()-.5)*16)],[W-2,CC[1]+Math.round((R()-.5)*30)]];let wi=0,x=sx,y=sy,an=Math.atan2(wps[0][1]-y,wps[0][0]-x);
+ const carve=(cx,cy,st)=>{const ford=(st%64)<4;for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){const X=Math.round(cx)+dx,Y=Math.round(cy)+dy;if(X<1||Y<1||X>=W-1||Y>=H-1)continue;const j=Y*W+X,r=Math.hypot(dx,dy);if(r>3.2)continue;RIV105[j]=1;
+   if(el)el[j]=0;if(bm[j]==3)bm[j]=0;if(r>2.3)continue;const o=ob[j];if(o&&{tree:1,rock:1,bush:1,flax:1,cactus:1}[o.t])ob[j]=null;const m=map[j];
+   if(r<=1.05)map[j]=ford?20:1;else if(m==0||m==2||m==3||m==4)map[j]=20}};
+ for(let st=0;st<1100;st++){const T_=wps[wi],ta=Math.atan2(T_[1]-y,T_[0]-x);an+=(ns(x*.13+st*.01,y*.13,4)-.5)*.55;an+=Math.atan2(Math.sin(ta-an),Math.cos(ta-an))*.14;
+  x+=Math.cos(an);y+=Math.sin(an);if(x<2||y<2||x>=W-2||y>=H-2)break;carve(x,y,st);if(Math.hypot(T_[0]-x,T_[1]-y)<5){wi++;if(wi>=wps.length)break}
+  if(wi==2&&st>40){const j=Math.round(y)*W+Math.round(x+3);if(map[j]==1&&!RIV105[j]){let sea=true;for(let k=4;k<12;k++){const q=map[Math.round(y)*W+Math.round(x+k)];if(q!==1){sea=false;break}}if(sea)break}}}}
+{const ge106=genElev;genElev=function(S){const r=ge106(S);try{carveRiver105()}catch(e){}return r}}
+/* bridges: city roads carry on across the river on wooden decks */
+function bridges105(){if(!CONT6()||!RIV105)return;const isW=m=>m==1||m==20;
+ for(let y=2;y<H-2;y++)for(let x=2;x<W-2;x++){const i=y*W+x;if(map[i]!=3)continue;for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){const j=i+dy*W+dx;if(!isW(map[j])||!RIV105[j])continue;
+   let k=1,ok=false;for(;k<12;k++){const X=x+dx*k,Y=y+dy*k;if(X<1||Y<1||X>=W-1||Y>=H-1)break;const m=map[Y*W+X];if(isW(m))continue;ok=(m==3||m==14||m==0||m==2);break}
+   if(ok&&k>1)for(let q=1;q<k;q++){const j2=(y+dy*q)*W+x+dx*q;map[j2]=12;ob[j2]=null}}}}
+{const cg106=cityGen;cityGen=function(){const r=cg106();try{bridges105()}catch(e){}return r}}
+/* ---------- the Zone: the land dies off towards the reactor; crates for the brave ---------- */
+function zone105(){if(!CONT6())return;const rc=locReactor();if(!rc)return;const RRZ=(typeof RR!='undefined'?RR:34),S=wseed%991;
+ for(let y=Math.max(1,rc.y-RRZ*2);y<Math.min(H-1,rc.y+RRZ*2);y++)for(let x=Math.max(1,rc.x-RRZ*2);x<Math.min(W-1,rc.x+RRZ*2);x++){const i=y*W+x,d=Math.hypot(x-rc.x,y-rc.y);if(d>RRZ*1.9)continue;
+  const f=1-d/(RRZ*1.9)+(ns(x*.8+S,y*.8,7)-.5)*.35,o=ob[i];if(map[i]==0&&f>.52&&bm[i]!=3&&!(RIC&&d<RIC[2]+1)){bm[i]=3}
+  if(o&&o.t=='tree'&&f>.25&&R()<f*1.2)o.dead=1;if(o&&(o.t=='bush'||o.t=='flax')&&f>.4&&R()<f)ob[i]=R()<.3?{t:'tree',hp:6,dead:1}:null}
+ let n=0;for(let a=0;a<600&&n<10;a++){const an=R()*6.283,r=(RIC?RIC[2]+9:18)+R()*RRZ*.9,x=Math.round(rc.x+Math.cos(an)*r),y=Math.round(rc.y+Math.sin(an)*r),i=y*W+x;if(x<2||y<2||x>=W-2||y>=H-2)continue;if(ob[i]||!(map[i]==0||map[i]==2))continue;ob[i]={t:'rcrate',hp:99};n++}}
+/* ---------- roads between the city, the towns, the villages and the start ---------- */
+function heap106(){const a=[];return{push(k,v){a.push([k,v]);let i=a.length-1;while(i>0){const p=(i-1)>>1;if(a[p][0]<=a[i][0])break;[a[p],a[i]]=[a[i],a[p]];i=p}},pop(){const t=a[0],l=a.pop();if(a.length){a[0]=l;let i=0;for(;;){const L=2*i+1,R_=L+1;let m=i;if(L<a.length&&a[L][0]<a[m][0])m=L;if(R_<a.length&&a[R_][0]<a[m][0])m=R_;if(m==i)break;[a[m],a[i]]=[a[i],a[m]];i=m}}return t},get n(){return a.length}}}
+var RCG105=null;
+function roadCost105(){const G=2,GW=Math.floor(W/G),GH=Math.floor(H/G),NAT={tree:1,rock:1,bush:1,flax:1,cactus:1,tgrass:1,shrub:1,flower:1},C=new Float32Array(GW*GH),E=new Int8Array(GW*GH);
+ for(let gy=0;gy<GH;gy++)for(let gx=0;gx<GW;gx++){const x=gx*G,y=gy*G,q=gy*GW+gx;E[q]=el?el[y*W+x]:0;if(x<2||y<2||x>=W-2||y>=H-2){C[q]=Infinity;continue}const i=y*W+x,m=map[i];
+  if(m==9||m==11||m==10||m==16||m==15){C[q]=Infinity;continue}const o=ob[i];if(o){const t=o.pm!=null&&ob[o.pm]?ob[o.pm].t:o.t;if(!NAT[t]&&!SOFT105[t]&&t!='fence'){C[q]=Infinity;continue}}
+  C[q]=m==12?3:(m==3||m==14)?.35:m==1?(RIV105&&RIV105[i]?14:45):m==20?4:m==6?3:1}return{G,GW,GH,C,E}}
+function roadPath105(ax,ay,bx,by){const{G,GW,GH,C,E}=RCG105||(RCG105=roadCost105());
+ const s=Math.floor(ay/G)*GW+Math.floor(ax/G),t=Math.floor(by/G)*GW+Math.floor(bx/G),tx=t%GW,ty=(t/GW)|0,D=new Float32Array(GW*GH).fill(Infinity),Pv=new Int32Array(GW*GH).fill(-1),done=new Uint8Array(GW*GH),h=heap106();
+ D[s]=0;h.push(0,s);const NB=[[1,0,1],[-1,0,1],[0,1,1],[0,-1,1],[1,1,1.42],[1,-1,1.42],[-1,1,1.42],[-1,-1,1.42]];
+ while(h.n){const[,c]=h.pop();if(done[c])continue;done[c]=1;if(c==t)break;const cx=c%GW,cy=(c/GW)|0,dk=D[c],e0=E[c];
+  for(const[dx,dy,w]of NB){const nx=cx+dx,ny=cy+dy;if(nx<1||ny<1||nx>=GW-1||ny>=GH-1)continue;const q=ny*GW+nx;if(done[q])continue;let k=C[q];if(!isFinite(k))continue;if(E[q]!==e0)k+=60;const nd=dk+k*w;
+   if(nd<D[q]){D[q]=nd;Pv[q]=c;h.push(nd+Math.hypot(nx-tx,ny-ty)*.8,q)}}}
+ if(!isFinite(D[t]))return null;const out=[];for(let c=t;c>=0;c=Pv[c])out.push([(c%GW)*G+1,((c/GW)|0)*G+1]);return out.reverse()}
+function carveRoad105(path){if(!path||path.length<2)return;const NAT={tree:1,rock:1,bush:1,flax:1,cactus:1,tgrass:1,shrub:1,flower:1};let last=null,run=0;
+ const put=(x,y)=>{if(x<1||y<1||x>=W-1||y>=H-1)return;const i=y*W+x,m=map[i];if(m==3||m==14||m==12||m==16||m==15||m==9||m==11)return;const o=ob[i];if(o){const t=o.pm!=null&&ob[o.pm]?ob[o.pm].t:o.t;if(NAT[t]||SOFT105[t]||t=='fence'){try{rmObj(o.pm!=null?o.pm:i)}catch(e){}ob[i]=null}else return}
+  if(m==1||m==20||m==6||m==7)map[i]=12;else map[i]=3};
+ for(let k=1;k<path.length;k++){const[a,b]=path[k-1],[c,d]=path[k],n=Math.max(Math.abs(c-a),Math.abs(d-b));for(let s=0;s<=n;s++){const x=Math.round(a+(c-a)*s/Math.max(1,n)),y=Math.round(b+(d-b)*s/Math.max(1,n));put(x,y);put(x+1,y);put(x,y+1);put(x+1,y+1)}
+  run++;if(run>34&&R()<.12){run=0;const dx=d-b,dy=-(c-a),L=Math.hypot(dx,dy)||1,ox=Math.round(c+dx/L*3),oy=Math.round(d+dy/L*3);let ok=true;for(let yy=oy;yy<oy+3&&ok;yy++)for(let xx=ox;xx<ox+2&&ok;xx++){const i=yy*W+xx;if(xx<1||yy<1||xx>=W-1||yy>=H-1||ob[i]||!(map[i]==0||map[i]==2))ok=false}if(ok)try{setFP({t:'wreck',r:0},ox,oy,2,3)}catch(e){}}}}
+function roads105(){if(!CONT6())return;RCG105=null;const nodes=[];const CC=ISC.find(c=>c[2]==3);if(CC){let best=null;for(let r=0;r<40&&!best;r++)for(let a=0;a<16&&!best;a++){const x=Math.round(CC[0]-30+Math.cos(a)*r),y=Math.round(CC[1]+Math.sin(a)*r);if(x>2&&y>2&&x<W-2&&y<H-2&&map[y*W+x]==3)best=[x,y]}if(best)nodes.push(best)}
+ for(const t of TOWNS105)nodes.push([t.x+15,t.y+15]);const seen=new Set();for(const n of NPCS){if(n.sci)continue;const k=Math.round(n.hx)+','+Math.round(n.hy);if(seen.has(k))continue;seen.add(k);nodes.push([Math.round((n.hx-8)/T),Math.round((n.hy-8)/T)])}
+ nodes.push([SX,SY+3]);if(nodes.length<2)return;
+ /* minimum spanning tree over straight-line distance, then each edge becomes a road */
+ const inT=[0],edges=[];while(inT.length<nodes.length){let bd=1e9,be=null;for(const i of inT)for(let j=0;j<nodes.length;j++){if(inT.includes(j))continue;const d=Math.hypot(nodes[i][0]-nodes[j][0],nodes[i][1]-nodes[j][1]);if(d<bd){bd=d;be=[i,j]}}if(!be)break;inT.push(be[1]);edges.push(be)}
+ for(const[i,j]of edges){const a=nodes[i],b=nodes[j];if(Math.hypot(a[0]-b[0],a[1]-b[1])>170)continue;try{carveRoad105(roadPath105(a[0],a[1],b[0],b[1]));RCG105=null}catch(e){}}}
+{const gr106=genReactor;genReactor=function(...a){const r=gr106.apply(this,a);if(typeof seeding!='undefined'&&seeding&&!inD&&CONT6()){try{zone105()}catch(e){}try{roads105()}catch(e){}try{ROOFC.clear()}catch(e){}}return r}}
+/* ---------- weather fades between regions: snow up north, sand storms down south, rain in between ---------- */
+var WB105={s:0,d:0,t:0};
+function wbTarget105(){const tx=Math.floor(P.x/T),ty=Math.floor(P.y/T);let s=0,d=0,n=0;for(let y=-16;y<=16;y+=2)for(let x=-16;x<=16;x+=2){if(x*x+y*y>256)continue;const X=tx+x,Y=ty+y;if(X<0||Y<0||X>=W||Y>=H)continue;const b=bm[Y*W+X];n++;if(b==1)s++;else if(b==2)d++}return n?[s/n,d/n]:[0,0]}
+{const up106=update;update=function(dt){const r=up106(dt);try{if(state=='play'&&!inD&&CONT6()){WB105.t-=dt;if(WB105.t<=0){WB105.t=.4;WB105.tg=wbTarget105()}const tg=WB105.tg||[0,0],k=Math.min(1,dt*.6);WB105.s+=(tg[0]-WB105.s)*k;WB105.d+=(tg[1]-WB105.d)*k}}catch(e){}return r}}
+{const we106=weather;weather=function(){if(!CONT6()||!wea||inD||(typeof WFORCE!='undefined'&&WFORCE[cb|0]))return we106();
+ const hv=wea==2,n=hv?150:60,ws=Math.max(0,Math.min(1,WB105.s)),wd=Math.max(0,Math.min(1-ws,WB105.d)),wr=Math.max(0,1-ws-wd);while(wp.length<n)wp.push({x:R()*VW,y:R()*VH,s:.6+R()*.8});
+ const nw=performance.now(),wnd=Math.sin(nw/2500)*.5+.5,wx=(200*wd+22*ws-40*wr)*(hv?2.2:1)*(.4+wnd);
+ if(wd>.02)Q(0,0,VW,VH,'rgba(190,140,70,'+((hv?.35:.15)*wd).toFixed(3)+')');if(wr+ws>.02)Q(0,0,VW,VH,'rgba(20,30,50,'+((hv?.28:.1)*(wr+ws*.4)).toFixed(3)+')');
+ for(let i=0;i<n;i++){const p=wp[i],u=i/n,ty=u<ws?1:u<ws+wd?2:0;p.y+=p.s*(ty==1?(hv?50:22):ty==2?8:(hv?230:160))*.016;p.x+=p.s*(ty==1?wx*.5:ty==2?wx:wx*.6)*.016;if(p.y>VH)p.y=0;if(p.x>VW)p.x=0;if(p.x<0)p.x=VW;
+  if(ty==1)Q(p.x,p.y,hv?3:2,2,'#eef4f6');else if(ty==2)Q(p.x,p.y,hv?9:6,1,'rgba(230,200,140,.6)');else Q(p.x,p.y,1,hv?7:5,'rgba(170,190,220,.6)')}
+ const fogA=ws*(hv?.75:.4)+(hv?.2*(1-ws):0);if(fogA>.02){const gr=g.createRadialGradient(VW/2,VH/2,hv?35:70,VW/2,VH/2,hv?150:260);gr.addColorStop(0,'rgba(225,235,240,0)');gr.addColorStop(1,'rgba(225,235,240,'+fogA.toFixed(3)+')');g.fillStyle=gr;g.fillRect(0,0,VW,VH);
+  for(let i=0;i<4;i++)Q(((nw/(40+i*15)+i*160)%(VW+200))-100,40+i*60,160,18,'rgba(225,235,240,'+(.06+.06*ws).toFixed(3)+')')}
+ if(hv&&wr>.5&&Math.sin(nw/900)>.985)Q(0,0,VW,VH,'rgba(255,255,255,'+(.3*wr).toFixed(3)+')');if(frz)Q(0,0,VW,VH,'rgba(120,170,255,.18)')}}
+{const ld106=load;load=function(){const r=ld106();WB105.s=WB105.d=0;WB105.t=0;return r}}
 
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
