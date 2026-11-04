@@ -6589,7 +6589,7 @@ function kzLeave(){if(!KZ)return;const s=KZ.snap,M=curMine;if(M){M.map=map;M.ob=
 {const in101=init;init=function(...a){KZ=null;return in101.apply(this,a)}}
 
 /* ===== v102: the house kit is gone (the cabin is the one home you build), and the cabin looks like the town houses from outside ===== */
-GAMEV=108;
+GAMEV=109;
 /* ---------- house kit removed: no recipe; kits in old saves are refunded ---------- */
 {const i=REC.findIndex(r=>r[0]=='hkit');if(i>=0)REC.splice(i,1)}
 {const ix=NEWK.indexOf('hkit');if(ix>=0)NEWK.splice(ix,1)}
@@ -6614,14 +6614,15 @@ function cabRoof(x,rt,w,h,col,L,R){const lo=shade(col,.72),hi=shade(col,1.18),mi
  if(!(typeof noSh2D=='function'&&noSh2D()&&!CLASSIC))W_(x+(hasL?0:2),y+30,48-(hasL?0:2)+(hasR?0:2),4,'rgba(0,0,0,.25)');
  /* facade: real wall / window / door tiles drawn by the same code as the town houses (swapped in for this draw only) */
  const fk=o._fk102||(o._fk102={w:[{t:'wall',hp:99},{t:'wall',hp:99},{t:'wall',hp:99},{t:'wall',hp:99},{t:'wall',hp:99}],win:[{t:'win',hp:99},{t:'win',hp:99},{t:'win',hp:99},{t:'win',hp:99}],d:{t:'door',hp:99,open:false}});
- const rows=loft?[ay,ay+1]:[ay+1],sw=[],put=(j,v)=>{sw.push([j,ob[j]]);ob[j]=v};
+ const rows=loft?[ay,ay+1]:[ay+1],sw=[],inW=ax>=0&&ay>=0&&ax<W&&ay<H,put=(j,v)=>{if(!inW||j<0||j>=W*H)return;sw.push([j,ob[j]]);ob[j]=v};
  try{let wi=0,wl=0;for(const ry of rows){const ground=ry==ay+1;
    for(let i=0;i<3;i++){const j=ry*W+ax+i;let v;if(ground&&i==1)v=door?fk.d:fk.win[wi++%4];else if(ground)v=door?fk.win[wi++%4]:fk.w[wl++%5];else v=i==1?fk.w[wl++%5]:fk.win[wi++%4];put(j,v)}
    if(hasL)put(ry*W+ax-1,fk.w[4]);if(hasR)put(ry*W+ax+3,fk.w[3])}
-  for(const ry of rows)for(let i=0;i<3;i++){const j=ry*W+ax+i;drawObj(ob[j],(ax+i)*T,ry*T)}}
+  const pick=(ry,i)=>{const gr=ry==ay+1;return gr&&i==1?(door?fk.d:fk.win[0]):gr?(door?fk.win[i?1:0]:fk.w[i]):(i==1?fk.w[1]:fk.win[i?3:2])};
+  for(const ry of rows)for(let i=0;i<3;i++){const j=ry*W+ax+i,v=inW?ob[j]:pick(ry,i);drawObj(v,x+i*T,y+(ry-ay)*T)}}
  finally{for(let k=sw.length-1;k>=0;k--)ob[sw[k][0]]=sw[k][1]}
  /* roof on top, flat like the town houses; joined cabins share one long roof */
- const col=cabRoofCol(o,ai),top=loft?y-14:y-12,rh=(rows[0]*T)-top;cabRoof(x,top,48,rh,col,!hasL,!hasR);
+ const col=cabRoofCol(o,ai),top=loft?y-14:y-12,rh=(y+(rows[0]-ay)*T)-top;cabRoof(x,top,48,rh,col,!hasL,!hasR);
  if(!hasL){W_(x+33,top-3,7,9,'#6a5a50');W_(x+33,top-3,7,2,'#3a3028');W_(x+34,top,5,1,'#5a4a40')}
  if(loft){W_(x,top+rh,48,1,'rgba(0,0,0,.35)')}}}
 /* the upper-storey overlay of v86 is now part of the drawing above (only abandoned log cabins keep the old look) */
@@ -6632,6 +6633,14 @@ if(typeof cabin93=='function'){const c93=cabin93;cabin93=function(o,tx,ty,h){con
    if(n==0&&m.geometry===UB93){m.material=new THREE.MeshLambertMaterial({map:rep93(plankTex102(),fw/2,(m.scale.y||1.35)/1.4)});n++;return}
    if(m.geometry===UB93&&m.scale.z>.5&&Math.abs(m.rotation.x)>.01){m.material=new THREE.MeshLambertMaterial({map:rep93(shingle93(col),fw,1.2)});return}
    if(m.geometry&&m.geometry.type=='ShapeGeometry')m.material=new THREE.MeshLambertMaterial({map:rep93(plankTex102(),1,.7),side:THREE.DoubleSide})})}catch(e){}return G}}
+/* cabin icon: hand-drawn little town house (roof, plank wall, window, door) so it reads at icon size */
+{const ic102=icon2;icon2=function(k,x,y){if(k!='cabin')return ic102(k,x,y);const S=(a,b,w,h,c)=>Q(x+a,y+b,w,h,c);
+ S(2,18,17,1,'rgba(0,0,0,.35)');
+ /* wall */S(3,10,14,8,'#5a3d24');for(let r=0;r<4;r++){S(3,10+r*2,14,1,'#6e4c2c')}S(3,17,14,1,'#2a1a0a');S(3,10,1,8,'#3a2610');S(16,10,1,8,'#3a2610');
+ /* door */S(8,12,4,6,'#3a2414');S(9,13,2,5,'#8a5a30');S(10,15,1,1,'#d9b84a');
+ /* windows */for(const wx of[4,13]){S(wx,12,3,3,'#7b8084');S(wx+.5|0,12,3,3,'#7b8084');S(wx,12,3,3,'#9ac0d4');S(wx,12,3,1,'#d4e8f0')}
+ /* roof */const c='#a8432c';S(1,8,18,2,shade(c,.6));S(2,4,16,4,shade(c,.85));S(3,2,14,2,shade(c,1.15));S(2,6,16,1,shade(c,.72));S(3,4,14,1,shade(c,1.0));S(3,2,14,1,shade(c,1.3));
+ /* chimney */S(13,1,3,3,'#6a5a50');S(13,1,3,1,'#3a3028');return true}}
 
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
