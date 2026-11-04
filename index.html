@@ -6692,131 +6692,17 @@ function tiGet(type,tier){const k=type+'|'+tier;if(TIC103.has(k))return TIC103.g
  if(type){const cv=tiGet(type,tier);if(cv){g.drawImage(cv,Math.round(x),Math.round(y));return true}}return ic103(k,x,y)}}
 try{if(typeof ICC!='undefined'&&ICC.clear)ICC.clear()}catch(e){}
 
-/* ===== v104: new animated sprites — wolf, poison spitter (gas clouds), hazmat scientists' research camp by the Zone ===== */
-GAMEV=111;
-const SPR104=(()=>{
-const FW=80,FH=60,GY=53,CX=34,OL='#15110e',L=[-.55,-.83];
-function Buf(){return{p:new Array(FW*FH).fill(null),t:new Uint8Array(FW*FH)}}
-function put(b,x,y,c,id){x|=0;y|=0;if(x<0||y<0||x>=FW||y>=FH)return;b.p[y*FW+x]=c;b.t[y*FW+x]=id||1}
-function tone(p,l){return l>.42?p[0]:l<-.32?p[2]:p[1]}
-function seg(b,a,c,r0,r1,pal,id,edge){const dx=c[0]-a[0],dy=c[1]-a[1],L2=dx*dx+dy*dy||1e-6,R=Math.max(r0,r1)+1;
- const x0=Math.floor(Math.min(a[0],c[0])-R),x1=Math.ceil(Math.max(a[0],c[0])+R),y0=Math.floor(Math.min(a[1],c[1])-R),y1=Math.ceil(Math.max(a[1],c[1])+R);
- for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const px=x+.5,py=y+.5;let t=((px-a[0])*dx+(py-a[1])*dy)/L2;t=t<0?0:t>1?1:t;const qx=a[0]+dx*t,qy=a[1]+dy*t,ex=px-qx,ey=py-qy,d=Math.hypot(ex,ey),r=r0+(r1-r0)*t;
-  if(d>r)continue;const lam=d>0?(ex*L[0]+ey*L[1])/d*Math.min(1,d/(r*.55)):0;const i=y*FW+x;
-  if(edge&&d>r-.85&&x>=0&&y>=0&&x<FW&&y<FH&&b.p[i]&&b.t[i]!==id){put(b,x,y,pal[3]||pal[2],id);continue}put(b,x,y,tone(pal,lam),id)}}
-function ell(b,cx,cy,rx,ry,pal,id,edge){for(let y=Math.floor(cy-ry-1);y<=cy+ry+1;y++)for(let x=Math.floor(cx-rx-1);x<=cx+rx+1;x++){const ex=(x+.5-cx)/rx,ey=(y+.5-cy)/ry,d=Math.hypot(ex,ey);if(d>1)continue;const i=y*FW+x;
-  if(edge&&d>.82&&x>=0&&y>=0&&x<FW&&y<FH&&b.p[i]&&b.t[i]!==id){put(b,x,y,pal[3]||pal[2],id);continue}put(b,x,y,tone(pal,d>0?(ex*L[0]+ey*L[1])/d*Math.min(1,d/.6):0),id)}}
-function mix(a,b,t){const p=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)],A=p(a),B=p(b);return'#'+A.map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,'0')).join('')}
-function finish(b,flash){const out=b.p.slice();for(let y=0;y<FH;y++)for(let x=0;x<FW;x++){const i=y*FW+x;if(b.p[i])continue;if((x>0&&b.p[i-1])||(x<FW-1&&b.p[i+1])||(y>0&&b.p[i-FW])||(y<FH-1&&b.p[i+FW]))out[i]=OL}
- const cv=document.createElement('canvas');cv.width=FW;cv.height=FH;const g2=cv.getContext('2d');for(let i=0;i<out.length;i++)if(out[i]){g2.fillStyle=flash&&out[i]!==OL?mix(out[i],'#ffffff',.55):out[i];g2.fillRect(i%FW,(i/FW)|0,1,1)}return cv}
-const P3=(m,l,d)=>[l,m,d,mix(d,'#000000',.35)],S=Math.sin,C=Math.cos,TAU=Math.PI*2;
-function rot(p,v,a){if(!a)return p;const x=p[0]-v[0],y=p[1]-v[1];return[v[0]+x*C(a)-y*S(a),v[1]+x*S(a)+y*C(a)]}
-/* ---- side-view humanoid ---- */
-function joints(sp,ps){const piv=[CX+(ps.dx||0),GY],R=p=>rot(p,piv,ps.rot||0),th=sp.thigh,sh=sp.shin;
- const P=[CX+(ps.dx||0),GY-th-sh+1+(ps.bob||0)+(ps.crouch||0)],lean=ps.lean||0;
- const leg=(a,k)=>{const K=[P[0]+th*S(a),P[1]+th*C(a)],A=[K[0]+sh*S(a-k),K[1]+sh*C(a-k)];return{K,A,F:[A[0]+3.8,A[1]+.3]}};
- const lf=leg(ps.lf[0],ps.lf[1]),lb=leg(ps.lb[0],ps.lb[1]),tl=sp.torso,N=[P[0]+tl*S(lean),P[1]-tl*C(lean)],Sh=[P[0]+(tl-2.2)*S(lean),P[1]-(tl-2.2)*C(lean)];
- const ht=lean+(ps.tilt||0),Hd=[N[0]+5*S(ht)+.5,N[1]-5*C(ht)];
- const arm=(u,e)=>{const E=[Sh[0]+6.6*S(u),Sh[1]+6.6*C(u)],W=[E[0]+6*S(u+e),E[1]+6*C(u+e)];return{E,W}};
- const J={P,N,Sh,Hd,lean,ht,lf,lb,af:arm(ps.af[0],ps.af[1]),ab:arm(ps.ab[0],ps.ab[1])};
- const rr=o=>{for(const k in o){const v=o[k];if(Array.isArray(v)&&typeof v[0]=='number')o[k]=R(v);else if(v&&typeof v=='object'&&!Array.isArray(v))rr(v)}};rr(J);J.ht+=ps.rot||0;J.lean+=ps.rot||0;return J}
-function human(sp,ps,flash){const b=Buf(),J=joints(sp,ps),c=sp.col,dk=p=>[p[1],p[2],mix(p[2],'#000000',.25),mix(p[2],'#000000',.45)];
- sp.back&&sp.back(b,J,ps);
- seg(b,J.Sh,J.ab.E,2.3,2.1,dk(c.sleeve),2);seg(b,J.ab.E,J.ab.W,2.1,1.9,dk(c.sleeve),2);ell(b,J.ab.W[0],J.ab.W[1],2,2,dk(c.hand),2);
- seg(b,J.P,J.lb.K,2.9,2.6,dk(c.leg),3);seg(b,J.lb.K,J.lb.A,2.6,2.3,dk(c.leg),3);seg(b,J.lb.A,J.lb.F,2.2,1.9,dk(c.boot),3);
- seg(b,J.P,J.N,sp.tw-.6,sp.tw,c.torso,4);sp.torsoDetail&&sp.torsoDetail(b,J,ps);
- seg(b,J.P,J.lf.K,3,2.7,c.leg,5,true);seg(b,J.lf.K,J.lf.A,2.7,2.4,c.leg,5,true);seg(b,J.lf.A,J.lf.F,2.3,2,c.boot,5,true);
- sp.belt&&seg(b,[J.P[0]-3.6,J.P[1]-1],[J.P[0]+3.6,J.P[1]-1],.8,.8,sp.belt,6);
- sp.head(b,J,ps);
- seg(b,J.Sh,J.af.E,2.5,2.3,c.sleeve,8,true);seg(b,J.af.E,J.af.W,2.3,2.1,c.sleeve,8,true);ell(b,J.af.W[0],J.af.W[1],2.1,2.1,c.hand,9,true);
- sp.prop&&sp.prop(b,J,ps);sp.fx&&sp.fx(b,J,ps);return finish(b,flash)}
-/* ---- hazmat scientist ---- */
-const YEL=P3('#dba824','#f4d25a','#9c7212'),BLK=P3('#26262a','#3e3e44','#141416'),VIS=P3('#3c5a6c','#a8d4e8','#24384a'),TANK=P3('#8a9096','#c0c6cc','#5a6066'),BELT=P3('#5a4a32','#7a6644','#3a2e1e');
-const sci={thigh:8.6,shin:8.6,torso:13,tw:6,col:{sleeve:YEL,hand:BLK,leg:YEL,boot:BLK,torso:YEL},belt:BELT,
- back:(b,J)=>{const a=[J.P[0]-4.8*C(J.lean)+1.5*S(J.lean),J.P[1]-6],t=[J.N[0]-5*C(J.lean),J.N[1]+1];seg(b,a,t,2.3,2.3,TANK,1);put(b,t[0],t[1]-2,'#c83a2a',1)},
- torsoDetail:(b,J)=>{for(let i=0;i<3;i++)put(b,J.P[0]+2.6+i*.6*S(J.lean),J.P[1]-5-i*3.4,'#9c7212',4)},
- head:(b,J)=>{const H=J.Hd;ell(b,H[0],H[1],5.4,5.6,YEL,7);ell(b,H[0]+2.6,H[1]+.2,3.8,3.9,BLK,7);ell(b,H[0]+2.9,H[1]+.1,3,3.1,VIS,7);put(b,H[0]+1.8,H[1]-1.8,'#e8f6ff',7);put(b,H[0]+2.8,H[1]-1.8,'#e8f6ff',7);put(b,H[0]+1.8,H[1]-.8,'#e8f6ff',7);seg(b,[H[0]-1,H[1]+4],[H[0]+2.6,H[1]+4.2],1.1,1.1,BLK,7)},
- prop:(b,J,ps)=>{if(!ps.meter)return;const W=J.af.W;seg(b,[W[0]-.5,W[1]-1.8],[W[0]+3.6,W[1]-1.8],2.2,2.2,P3('#3a3e44','#5a6068','#22262a'),10);put(b,W[0]+2,W[1]-2.5,'#9ad86a',10);put(b,W[0]+3,W[1]-2.5,'#9ad86a',10);if(ps.blink)put(b,W[0]+4,W[1]-3.2,'#ff4a3a',10);seg(b,[W[0]+4.2,W[1]-3],[W[0]+6.5,W[1]-6],.6,.6,BLK,10)}};
-/* front / back view of the scientist (symmetric body, legs side by side) */
-function sciFront(ps,back){const b=Buf(),th=8.6,sh=8.6,bob=ps.bob||0,P=[CX,GY-th-sh+1+bob],N=[CX,P[1]-13],dk=p=>[p[1],p[2],mix(p[2],'#000000',.25),mix(p[2],'#000000',.45)];
- for(const i of[-1,1]){const lift=(ps.lift&&ps.lift[i<0?0:1])||0,H=[CX+i*2.8,P[1]],A=[CX+i*3,GY-1.6-lift],K=[CX+i*3,(H[1]+A[1])/2];seg(b,H,K,3,2.8,YEL,3);seg(b,K,A,2.8,2.5,lift?dk(YEL):YEL,3);ell(b,A[0]+i*.2,A[1]+.6,2.7,1.9,BLK,3)}
- if(back){seg(b,[CX,N[1]+2],[CX,P[1]-2],6,6.4,YEL,4)}else seg(b,[CX,N[1]+2],[CX,P[1]-2],6,6.4,YEL,4);
- seg(b,[CX-6,P[1]-1],[CX+6,P[1]-1],.8,.8,BELT,4);
- if(back){seg(b,[CX,N[1]+2.5],[CX,P[1]-4],3.2,3.2,TANK,5);put(b,CX,N[1]+1,'#c83a2a',5);put(b,CX-1,N[1]+6,'#e0e6ea',5)}else{for(let k=0;k<4;k++)put(b,CX,N[1]+3+k*2.6,'#9c7212',4);seg(b,[CX-4.5,N[1]+2],[CX-4.5,P[1]-3],.5,.5,BELT,4);seg(b,[CX+4.5,N[1]+2],[CX+4.5,P[1]-3],.5,.5,BELT,4)}
- for(const i of[-1,1]){const sw=(ps.sw||0)*i,Sh=[CX+i*6.6,N[1]+3],E=[CX+i*7.6,N[1]+9+sw*.5],W=[CX+i*7.8,N[1]+14.5+sw];seg(b,Sh,E,2.5,2.3,YEL,6,true);seg(b,E,W,2.3,2.1,YEL,6,true);ell(b,W[0],W[1],2.1,2.1,BLK,6)}
- const H=[CX,N[1]-4.6];ell(b,H[0],H[1],5.6,5.6,YEL,7);
- if(!back){ell(b,H[0],H[1]+.4,4,3.7,BLK,7);ell(b,H[0],H[1]+.3,3.2,2.9,VIS,7);put(b,H[0]-1.6,H[1]-1.4,'#e8f6ff',7);put(b,H[0]-.6,H[1]-1.4,'#e8f6ff',7);put(b,H[0]-1.6,H[1]-.4,'#e8f6ff',7);ell(b,H[0],H[1]+4.6,2,1.2,BLK,7)}
- else{seg(b,[H[0]-3,H[1]-1],[H[0]+3,H[1]-1],.5,.5,P3('#c89a22','#e8c040','#8a6a12'),7)}
- return finish(b,false)}
-/* ---- poison infected ---- */
-const SICK=P3('#8a9a6c','#a8b888','#5e6c48'),RAG=P3('#6a5848','#86705a','#4a3c30'),PANT=P3('#4a4a44','#64645c','#30302c'),GAS=P3('#a8c030','#d8e860','#6a8a18');
-const spit={thigh:8.4,shin:8.4,torso:12.5,tw:5,col:{sleeve:SICK,hand:SICK,leg:PANT,boot:P3('#3a3428','#524a3a','#262018'),torso:RAG},
- torsoDetail:(b,J)=>{put(b,J.P[0]+1,J.P[1]-6,'#5e6c48',4);put(b,J.P[0]+2,J.P[1]-7,'#a8b888',4);put(b,J.P[0]-1,J.P[1]-9,'#5e6c48',4);seg(b,[J.N[0]-1,J.N[1]+1],[J.N[0]+2,J.N[1]+2],1.2,1.2,SICK,4)},
- head:(b,J,ps)=>{const H=J.Hd;ell(b,H[0],H[1],4.6,4.9,SICK,7);put(b,H[0]+2.2,H[1]-.6,'#e8f070',7);put(b,H[0]+1.4,H[1]-.6,'#2a2a14',7);
-  if(ps.mouth)seg(b,[H[0]+1.8,H[1]+2.4],[H[0]+3.6,H[1]+2.6],.9,1.1,P3('#2a1410','#3a1a14','#1a0a08'),7);else put(b,H[0]+2.8,H[1]+2.4,'#3a2a20',7);
-  for(let i=0;i<3;i++)put(b,H[0]-2+i*1.4,H[1]-4.2,'#6e7a52',7);put(b,H[0]-3,H[1]+1.2,'#6a3a2a',7)},
- fx:(b,J,ps)=>{if(!ps.cloud)return;const H=J.Hd,k=ps.cloud;let s=7;const r=()=>((s=(s*9301+49297)%233280)/233280);const cx=H[0]+5+k*5,cy=H[1]+1-k*1.4;
-  for(let i=0;i<4+k*3;i++){const a=r()*TAU,d=r()*k*3.2,rr=1.4+r()*k*.9;ell(b,cx+C(a)*d*1.2,cy+S(a)*d*.8,rr,rr,GAS,12)}for(let i=0;i<k*2;i++)put(b,cx-4+r()*10,cy-4-r()*6,'#d8e860',12)}};
-/* ---- wolf ---- */
-const FUR=P3('#86786a','#aa9c8a','#5c5046'),FURD=[FUR[1],FUR[2],mix(FUR[2],'#000000',.25),mix(FUR[2],'#000000',.45)],BELLY=P3('#b8ac98','#d4cab6','#8a7e6c');
-function wolf(ps,flash){const b=Buf(),r=ps.rot||0,piv=[CX,GY],R=p=>rot(p,piv,r),y0=GY-13+(ps.bob||0),lift=ps.lift||0;
- const Hp=R([CX-10,y0-lift+(ps.tiltB||0)]),Sh=R([CX+7,y0-1.5-lift-(ps.tiltF||0)]);
- const leg=(base,a,back)=>{if(back){const K=[base[0]+6*S(a+.35),base[1]+6*C(a+.35)],Hk=[K[0]+5*S(a-.6-(ps.hock||0)),K[1]+5*C(a-.6-(ps.hock||0))],A=[Hk[0]+4.2*S(a+.05),Hk[1]+4.2*C(a+.05)];return[R(base),R(K),R(Hk),R(A),R([A[0]+2,A[1]])]}
-  const K=[base[0]+5.6*S(a),base[1]+5.6*C(a)],A=[K[0]+6.6*S(a-.05),K[1]+6.6*C(a-.05)];return[R(base),R(K),R(A),R([A[0]+2.2,A[1]])]};
- const bH=[CX-10,y0-lift+(ps.tiltB||0)+1.5],bS=[CX+7,y0-1-lift-(ps.tiltF||0)+2.5],L4=ps.legs,lg=[leg(bH,L4[0],1),leg(bS,L4[1]),leg(bH,L4[2],1),leg(bS,L4[3])];
- const dl=(q,p)=>{if(q.length==5){seg(b,q[0],q[1],3,2.2,p,2);seg(b,q[1],q[2],1.9,1.5,p,2);seg(b,q[2],q[3],1.4,1.3,p,2);seg(b,q[3],q[4],1.4,1.2,p,2)}else{seg(b,q[0],q[1],2.6,1.9,p,2);seg(b,q[1],q[2],1.7,1.4,p,2);seg(b,q[2],q[3],1.4,1.2,p,2)}};
- const tb=R([CX-12,y0-2-lift]),ta=ps.tail||0;let p0=tb;for(let i=0;i<4;i++){const a=-2.3+ta+i*.22,p1=[p0[0]+3.2*S(a),p0[1]-3.2*C(a)];seg(b,p0,p1,2-i*.25,1.8-i*.3,i==3?BELLY:FUR,1);p0=p1}
- dl(lg[2],FURD);dl(lg[3],FURD);seg(b,Hp,Sh,5.2,6,FUR,4);seg(b,[(Hp[0]+Sh[0])/2-4,(Hp[1]+Sh[1])/2+3.4],[Sh[0]-.5,Sh[1]+3.6],2,2.8,BELLY,4);dl(lg[0],FUR);dl(lg[1],FUR);
- const hd=ps.head||0,N=R([CX+11,y0-4-lift-(ps.tiltF||0)+hd]),Hc=R([CX+14.5+(ps.lunge||0),y0-7-lift-(ps.tiltF||0)+hd*1.6]);
- seg(b,Sh,N,5,4.2,FUR,7,true);ell(b,Hc[0],Hc[1],4.4,3.9,FUR,7);const sn=R([Hc[0]+6.4,Hc[1]+1.6]);seg(b,[Hc[0]+1,Hc[1]+.8],sn,2.6,1.6,FUR,7);seg(b,[Hc[0]-2,Hc[1]+2.6],[Hc[0]+2,Hc[1]+3],1.4,1,BELLY,7);put(b,sn[0]+.6,sn[1]-.6,'#1a1410',7);
- if(ps.bite){seg(b,[Hc[0]+1.2,Hc[1]+2.6],R([Hc[0]+5.2,Hc[1]+4.6]),1.1,.8,FUR,7);put(b,Hc[0]+4,Hc[1]+2.6,'#f4f0e8',7);put(b,Hc[0]+3,Hc[1]+3.2,'#8a2a22',7)}
- const e1=R([Hc[0]-1.6,Hc[1]-3.6]);seg(b,e1,R([Hc[0]-2.4,Hc[1]-7.4]),1.8,.6,FUR,7);seg(b,R([Hc[0]+.6,Hc[1]-3.4]),R([Hc[0]+.2,Hc[1]-6.8]),1.5,.5,FURD,7);
- put(b,Hc[0]+1.6,Hc[1]-.8,ps.dead?'#3a2a20':'#e8c040',7);if(!ps.dead)put(b,Hc[0]+2.2,Hc[1]-.8,'#1a1410',7);return finish(b,flash)}
-/* ---- animation tables ---- */
-const N_=n=>Array.from({length:n},(_,i)=>i/n),stand={lf:[.1,.05],lb:[-.1,.05],af:[.08,.15],ab:[-.1,.2]};
-function walkPose(t,amp,lean){const ph=t*TAU,a=amp*S(ph);return{lf:[a,.12+.85*Math.max(0,C(ph))],lb:[-a,.12+.85*Math.max(0,-C(ph))],af:[-.55*S(ph),.3+.2*Math.max(0,-S(ph))],ab:[.55*S(ph),.3+.2*Math.max(0,S(ph))],bob:-Math.round(Math.abs(C(ph))),lean:lean||.06}}
-function fall(t){return Object.assign({},stand,{rot:-Math.min(1,t*1.15)*1.52,lf:[.15+t*.5,t*.9],lb:[-.1+t*.3,t*.6],af:[-.4-t*1.2,.4],ab:[-.9-t*1,.3],tilt:-.3*t,lean:-.15*t,crouch:Math.round(t*2)})}
-function hurt(t){return Object.assign({},stand,{lean:-.32*S(t*Math.PI+.3),tilt:-.35*S(t*Math.PI),af:[-.45,.5],ab:[-.7,.4],dx:-Math.round(S(t*Math.PI)*1.5)})}
-const DEF={
- sci:()=>({idle:N_(6).map(t=>human(sci,Object.assign({},stand,{bob:Math.round(-.5-.5*S(t*TAU))}))),walk:N_(8).map(t=>human(sci,walkPose(t,.5,.04))),
-  meas:N_(8).map((t,i)=>human(sci,Object.assign({},stand,{af:[Math.min(1.45,i*.45),.1+Math.max(0,.4-i*.1)],ab:[Math.min(.9,i*.3),.9],meter:i>0,blink:i>2&&i%2==1,tilt:i>2?.15:0,lean:.05}))),
-  fidle:[0,-1,-1,0].map(bb=>sciFront({bob:bb},false)),fwalk:[[2,0,-1,1],[0,0,0,0],[0,2,-1,-1],[0,0,0,0]].map(([a,c,bb,sw])=>sciFront({lift:[a,c],bob:bb,sw:sw*1.5},false)),
-  bidle:[0,-1,-1,0].map(bb=>sciFront({bob:bb},true)),bwalk:[[2,0,-1,1],[0,0,0,0],[0,2,-1,-1],[0,0,0,0]].map(([a,c,bb,sw])=>sciFront({lift:[a,c],bob:bb,sw:sw*1.5},true))}),
- spit:()=>({idle:N_(6).map(t=>human(spit,Object.assign({},stand,{lean:.5+.04*S(t*TAU),tilt:-.35,af:[.35+.05*S(t*TAU),.25],ab:[.15,.3],bob:Math.round(.5+.5*S(t*TAU)),lf:[.22,.25],lb:[-.15,.1]}))),
-  walk:N_(8).map(t=>{const w=walkPose(t,.38,.48);w.tilt=-.35;w.af=[.35+.15*S(t*TAU),.3];w.ab=[.2-.15*S(t*TAU),.3];w.lb[1]*=.4;return human(spit,w)}),
-  spit:N_(7).map((t,i)=>human(spit,Object.assign({},stand,{lean:[.5,.3,.15,.55,.6,.55,.5][i],tilt:[-.35,-.55,-.7,-.1,-.15,-.2,-.3][i],mouth:i>=2&&i<=5,cloud:i>=3?i-2:0,af:[.35,.3],ab:[.1,.4],lf:[.25,.25],lb:[-.18,.1]}))),
-  hurt:N_(3).map((t,i)=>human(spit,Object.assign(hurt(t),{lean:.3-.4*S(t*Math.PI),tilt:-.5}),i==0)),
-  dead:N_(5).map((t,i)=>human(spit,Object.assign(fall(i/4),{rot:Math.min(1,i/4*1.15)*1.45,lean:.4})))}),
- wolf:()=>({idle:N_(7).map(t=>wolf({legs:[.04,-.02,-.06,.05],bob:Math.round(.5+.5*S(t*TAU)),tail:.12*S(t*TAU),head:Math.round(S(t*TAU)*.6)})),
-  walk:N_(8).map(t=>{const p=t*TAU;return wolf({legs:[.45*S(p),.45*S(p+Math.PI*.5),.45*S(p+Math.PI),.45*S(p+Math.PI*1.5)],bob:-Math.round(Math.abs(S(p*2))*.8),tail:.15*S(p),head:Math.round(S(p*2)*.6)})}),
-  run:[[2,-1,3,0],[1,2,5,.6],[6,3,8,0],[7,0,7,-.3],[4,-3,4,0],[1,-1,1,.3]].map(([lift,tf,lg,hk],i)=>wolf({lift:Math.round(lift*.45),tiltF:tf*.6,tiltB:-tf*.3,legs:[-.9+lg*.03,.9+lg*.05,-.7,1.1],hock:hk,tail:-.4})),
-  bite:N_(5).map((t,i)=>wolf({legs:[.25,-.15,.05,.2],lunge:[0,1.5,3,2,0][i],head:[0,1,2,1,0][i],bite:i>=1&&i<=3,tail:-.3,tiltF:-[0,1,1,0,0][i]})),
-  hurt:[wolf({legs:[.1,-.1,0,.1],tiltF:2,head:-1,tail:-.6},true),wolf({legs:[.1,-.1,0,.1],tiltF:1,head:-1,tail:-.5})],
-  dead:N_(5).map((t,i)=>wolf({legs:[.6+i*.15,.6+i*.2,.9+i*.15,.9+i*.2],lift:-Math.min(5,i*1.6),tail:.6,head:Math.min(4,i),dead:i>=3,tiltF:-Math.min(3,i)}))})};
-const CACHE={};
-function get(k){return CACHE[k]||(CACHE[k]=DEF[k]())}
-/* draw a frame in world space: feet at (wx,wy), art pixel = .5 world px; dir -1 mirrors */
-function draw(cv,wx,wy,dir,alpha){const x=Math.round((wx-cam.x)*2)/2,y=Math.round((wy-cam.y)*2)/2;g.save();if(alpha!=null)g.globalAlpha=alpha;g.translate(x,y);g.scale((dir<0?-1:1)*.5,.5);g.drawImage(cv,-CX,-GY);g.restore()}
-return{get,draw,CX,GY,FW,FH}})();
+/* ===== v104: poison spitter (gas clouds) and hazmat scientists' research camp by the Zone — drawn in the game's own character style ===== */
+GAMEV=112;
 const now104=()=>performance.now(),hu104=()=>LANG=='hu';
-function fr104(arr,fps,t0){return arr[Math.floor(((now104()-(t0||0))/1000)*fps)%arr.length]}
-function shadow104(wx,wy,w){g.fillStyle='rgba(10,10,10,.28)';g.beginPath();g.ellipse(Math.round(wx-cam.x),Math.round(wy-cam.y),w,2.2,0,0,6.28);g.fill()}
-
-/* ---------- 1. wolf: new animated sprite ---------- */
-if(typeof drawWolf=='function'){const dwOld104=drawWolf;drawWolf=function(z){if(CLASSIC)return dwOld104(z);
- const A=SPR104.get('wolf'),d=Math.hypot(P.x-z.x,P.y-z.y),sp=Math.hypot(z.vx||0,z.vy||0),ag=typeof zHit=='function'?zHit(z):false,t=now104();
- if(Math.abs(z.vx||0)>3)z._dir=z.vx>0?1:-1;else if(z._dir==null||ag)z._dir=P.x>=z.x?1:-1;
- if(z._lh!=null&&z.hp<z._lh)z._hu=t;z._lh=z.hp;
- let cv;if(t-(z._hu||0)<260)cv=A.hurt[Math.floor((t-z._hu)/130)%2];else if(ag&&d<24)cv=fr104(A.bite,11);else if(ag&&sp>30)cv=fr104(A.run,12);else if(sp>2)cv=fr104(A.walk,10);else cv=fr104(A.idle,6);
- shadow104(z.x,z.y,9);SPR104.draw(cv,z.x,z.y+1,z._dir)}}
 
 /* ---------- 2. poison spitter ---------- */
-var GAS104=[],GLOB104=[],CORPSE104=[];
+var GAS104=[],GLOB104=[];
 function inZone104(x,y){try{const rc=locReactor();if(!rc)return false;return Math.hypot(x/T-rc.x,y/T-rc.y)<(typeof RR!='undefined'?RR:30)+14}catch(e){return false}}
-function pzTag(){for(const z of zs){if(z._c)continue;z._c=1;if(inD||z.w||z.sp||z.b||z.mu||z.boss||z.v==8||z.pet)continue;const ch=inZone104(z.x,z.y)?.3:.1;if(Math.random()<ch){z.pz=1;z.hp=Math.max(z.hp|0,8);z._sp=now104()+1500+Math.random()*2000}}}
+function pzTag(){for(const z of zs){if(z._c)continue;z._c=1;if(inD||z.w||z.sp||z.b||z.mu||z.boss||z.v==8||z.pet)continue;const ch=inZone104(z.x,z.y)?.3:.1;if(Math.random()<ch){z.pz=1;z.v=1;z.hp=Math.max(z.hp|0,8);z._sp=now104()+1500+Math.random()*2000}}}
 function gasAt(x,y){for(const c of GAS104){const dx=(x-c.x)/c.r,dy=(y-c.y)/(c.r*.7);if(dx*dx+dy*dy<1)return c}return null}
 {const up104=update;update=function(dt){
- const pre=[];if(zs&&zs.length)for(const z of zs)if(z.w||z.pz)pre.push([z,z.x,z.y]);
+ const pre=[];if(zs&&zs.length)for(const z of zs)if(z.pz)pre.push([z,z.x,z.y]);
  const r=up104(dt);if(state!='play')return r;
  try{pzTag();const t=now104();
   /* spitters: slower, keep their distance, spit when they see you */
@@ -6829,23 +6715,21 @@ function gasAt(x,y){for(const c of GAS104){const dx=(x-c.x)/c.r,dy=(y-c.y)/(c.r*
   for(let i=GAS104.length-1;i>=0;i--){const c=GAS104[i];c.l-=dt;if(c.l<=0){GAS104.splice(i,1);continue}if(Math.random()<dt*14)parts.push({x:c.x+(Math.random()-.5)*c.r*1.6,y:c.y+(Math.random()-.5)*c.r,vx:(Math.random()-.5)*6,vy:-8-Math.random()*8,l:.9,c:Math.random()<.5?'#c8d840':'#8aa828'})}
   if(!creative&&P.hp>0){const c=gasAt(P.x,P.y);if(c){const mk=EQ&&EQ.mk=='mask';P._gas=(P._gas||0)+dt*(mk?1.1:6.5);if(P._gas>=2){hurtP(P._gas);P._gas=0}
     if(!(P._gasMsg>t)){P._gasMsg=t+12000;say(hu104()?(mk?'Mérgező gáz — a gázálarc nagyrészt kiszűri':'Mérgező gáz! Lépj ki belőle — gázálarc véd ellene'):(mk?'Poison gas — your mask filters most of it':'Poison gas! Step out — a gas mask protects you'))}}}
-  /* corpses: wolves and spitters play their death animation */
-  for(const[z]of pre)if(z.hp<=0&&zs.indexOf(z)<0&&!z._gone){z._gone=1;CORPSE104.push({k:z.w?'wolf':'spit',x:z.x,y:z.y,dir:z._dir||1,t0:t})}
-  for(let i=CORPSE104.length-1;i>=0;i--)if(t-CORPSE104[i].t0>9000)CORPSE104.splice(i,1)}catch(e){}
+  }catch(e){}
  return r}}
-{const dz104=drawZ;drawZ=function(z){if(!z||!z.pz||z.mu||z.boss)return dz104(z);const A=SPR104.get('spit'),t=now104(),sp=Math.hypot(z.vx||0,z.vy||0);
- if(Math.abs(z.vx||0)>3&&t-(z._spT||0)>900)z._dir=z.vx>0?1:-1;else if(z._dir==null)z._dir=P.x>=z.x?1:-1;if(z._lh!=null&&z.hp<z._lh)z._hu=t;z._lh=z.hp;
- let cv;const ds=t-(z._spT||0);if(ds<900)cv=A.spit[Math.min(6,Math.floor(ds/1000*9))];else if(t-(z._hu||0)<300)cv=A.hurt[Math.min(2,Math.floor((t-z._hu)/100))];else if(sp>2)cv=fr104(A.walk,7);else cv=fr104(A.idle,6);
- shadow104(z.x,z.y,7);SPR104.draw(cv,z.x,z.y+1,z._dir)}}
-/* clouds, globs and corpses in the world layer */
-{const dp104=drawP;drawP=function(){try{if(!inD||true){const t=now104();for(const c of CORPSE104){const A=SPR104.get(c.k),f=Math.min(4,Math.floor((t-c.t0)/125)),al=t-c.t0>7000?Math.max(0,1-(t-c.t0-7000)/2000):1;SPR104.draw(A.dead[f],c.x,c.y+1,c.dir,al)}}}catch(e){}
+{const dz104=drawZ;drawZ=function(z){const r=dz104(z);if(!z||!z.pz||z.mu||z.boss)return r;const t=now104(),x=Math.round(z.x-cam.x),y=Math.round(z.y-cam.y),ds=t-(z._spT||0),dir=P.x>=z.x?1:-1;
+ if(Math.floor(t/300+z.x)%3==0)Q(x+dir*2,y-11,1,2,'#c8e060');
+ if(ds<700){const k=Math.min(1,ds/350),cx=x+dir*(4+k*4),cy=y-15;Q(cx-2,cy-1,4,3,'#8aa828');Q(cx-1,cy-2,3,2,'#d8e860');if(k>.5){Q(cx+dir*3,cy-3,2,2,'#a8c030');Q(cx+dir*2,cy+1,2,2,'#6a8a18')}}
+ return r}}
+/* clouds and globs in the world layer */
+{const dp104=drawP;drawP=function(){
  const r=dp104.apply(this,arguments);
  try{const t=now104();for(const c of GAS104){const a=Math.min(1,c.l/1.2)*Math.min(1,(c.ml-c.l)/.4),X=c.x-cam.x,Y=c.y-cam.y;for(let k=0;k<7;k++){const ang=k/7*6.28+t/1400+k,rr=c.r*(.45+.25*Math.sin(t/500+k)),bx=X+Math.cos(ang)*c.r*.5,by=Y+Math.sin(ang)*c.r*.3-4;
     g.fillStyle='rgba('+(k%2?'168,192,48':'120,150,30')+','+(.26*a)+')';g.beginPath();g.ellipse(bx,by,rr,rr*.7,0,0,6.28);g.fill()}
    g.fillStyle='rgba(216,232,96,'+(.18*a)+')';g.beginPath();g.ellipse(X,Y-3,c.r*.7,c.r*.42,0,0,6.28);g.fill()}
   for(const b of GLOB104){const X=b.x-cam.x,Y=b.y-cam.y;g.fillStyle='#6a8a18';g.fillRect(Math.round(X)-2,Math.round(Y)-2,4,4);g.fillStyle='#d8e860';g.fillRect(Math.round(X)-1,Math.round(Y)-2,2,2)}}catch(e){}
  return r}}
-{const in104=init;init=function(...a){GAS104=[];GLOB104=[];CORPSE104=[];SCI104=null;return in104.apply(this,a)}}
+{const in104=init;init=function(...a){GAS104=[];GLOB104=[];SCI104=null;return in104.apply(this,a)}}
 
 /* ---------- 3. hazmat scientists: a research camp just outside the Zone ---------- */
 var SCI104=null;
@@ -6864,16 +6748,10 @@ function sciBuild(){const s=sciSpot();if(!s){SCI104={none:1};return}const{x,y}=s
  if(SCI104&&SCI104.ids)for(const n of NPCS)if(n.sci&&n.sl){n.sl=0;n.bd=null}return r}}
 {const sv104=save;save=function(){const r=sv104();try{if(SCI104&&SCI104.ids)localStorage.setItem(SKEY()+'_sci',JSON.stringify({x:SCI104.x,y:SCI104.y,ids:SCI104.ids}))}catch(e){}return r}}
 {const ld104=load;load=function(){const r=ld104();try{SCI104=null;const q=JSON.parse(localStorage.getItem(SKEY()+'_sci')||'null');if(q&&Array.isArray(q.ids)){SCI104=q;for(const i of q.ids)if(NPCS[i])NPCS[i].sci=1}}catch(e){}return r}}
-/* drawing: side / front / back sprite; now and then a scientist takes a reading */
-{const dn104=drawNPC;drawNPC=function(n){if(!n||!n.sci)return dn104(n);const x=n.x-cam.x,y=n.y-cam.y;if(x<-30||y<-40||x>VW/ZM+30||y>VH/ZM+40)return;
- const A=SPR104.get('sci'),fx=isFinite(n.fx)?n.fx:0,fy=isFinite(n.fy)?n.fy:1,t=now104();let cv,dir=1;
- if(!n.mv&&t>(n._mt||0)){if(!n._mt){n._mt=t+3000+Math.random()*6000}else{n._ms=t;n._mt=t+7000+Math.random()*9000}}
- const measuring=!n.mv&&t-(n._ms||-1e9)<1600;
- if(measuring){cv=A.meas[Math.min(7,Math.floor((t-n._ms)/200))];dir=(n._md=n._md||(Math.random()<.5?-1:1))}
- else if(Math.abs(fy)>Math.abs(fx)*1.1){const set=fy<0?(n.mv?A.bwalk:A.bidle):(n.mv?A.fwalk:A.fidle);cv=fr104(set,n.mv?7:3)}
- else{dir=fx<0?-1:1;cv=n.mv?fr104(A.walk,10):fr104(A.idle,5)}
- if(!measuring)n._md=0;
- try{if(typeof castShadow=='function')castShadow(n.x,n.y,16)}catch(e){}shadow104(n.x,n.y,6);SPR104.draw(cv,n.x,n.y+1,dir);OVQ.push(n)}}
+/* drawing: the usual character, wearing a hazmat suit */
+Object.assign(TP,{hzm:['#d8a820','#f2cc48','#a07810'],hzb:['#26262a','#3e3e44','#141416']});
+OUTFITS.sci=[{h:'hzm',c:'hzm',l:'hzm',b:'hzb',sh:'#d8a820',m:1}];
+{const nt104=npcTheme;npcTheme=function(n){if(n&&n.sci){n._th='sci';return 'sci'}return nt104(n)}}
 /* name tag: "Tudós" until you meet them */
 {const no104=npcOverlay;npcOverlay=function(){const sv=[];for(const n of OVQ)if(n.sci&&!n.kn){sv.push([n,n.nm]);n.nm=hu104()?'Tudós':'Scientist';n.kn=1;n._tk=1}try{return no104()}finally{for(const[n,nm]of sv){n.nm=nm;n.kn=0;delete n._tk}}}}
 /* first words */
@@ -6881,9 +6759,6 @@ if(typeof npcGreet=='function'){const ng104=npcGreet;npcGreet=function(n){if(!n|
  return [h?'Üdv a kutatóállomáson! '+n.nm+' vagyok. A Zónát mérjük — odabent gázálarc nélkül percek alatt végez veled a sugárzás.':'Welcome to the research station! I\'m '+n.nm+'. We monitor the Zone — in there, without a mask, the radiation gets you in minutes.',
   h?n.nm+'. Ne gyere közelebb a műszerekhez… Ja, élő vagy? Akkor jó. Mit hoztál a Zónából?':n.nm+'. Careful with the instruments… Oh, you\'re alive? Good. What did you bring back from the Zone?',
   h?'Végre valaki! '+n.nm+' vagyok. Ha artifactot találsz a bányákban, nálunk jó helye van.':'Finally, someone! I\'m '+n.nm+'. If you find artifacts in the mines, we\'ll put them to good use.'][Math.floor(Math.random()*3)]}}
-/* portrait for the dialogue box */
-if(typeof dlPortrait=='function'){const dp104=dlPortrait;dlPortrait=function(kind,src){if(kind!='npc'||!src||!src.sci)return dp104(kind,src);const key='sci:'+(src.nm||'');let cv=DPORT.get(key);if(cv)return cv;
- cv=document.createElement('canvas');cv.width=cv.height=44;const c=cv.getContext('2d');c.imageSmoothingEnabled=false;const f=SPR104.get('sci').fidle[0];c.drawImage(f,SPR104.CX-11,10,22,22,0,1,44,44);DPORT.set(key,cv);return cv}}
 
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
