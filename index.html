@@ -1295,7 +1295,7 @@ function genM(sub){loot=[];map=new Uint8Array(W*H).fill(5);ob=new Array(W*H).fil
  else{rs.forEach((r,i)=>{if(i&&r.w>=6&&r.h>=5&&(rich.has(i)||rn(4)==0)){const rc=rich.has(i);pitRoom(r,11,a=>rc?(a?{t:'ore',k:'diamond',hp:6,jm:1}:{t:'chest',jm:1}):{t:'ore',k:a?'gold':'iron',hp:6,jm:1})}});zs=zs.filter(z=>map[Math.floor(z.y/T)*W+Math.floor(z.x/T)]!=11)}
  const d1=dist();for(let i=0;i<W*H;i++){const o=ob[i];if(o&&(o.t=='chest'||o.t=='ore'||o.t=='bag'||o.t=='trash')&&!o.jm&&![i-1,i+1,i-W,i+W].some(n=>d1[n]>=0))ob[i]=null}}
 const hasSave2=0;
-const hasSave=()=>{try{return !!localStorage.getItem('pxc_save')}catch(e){return false}};
+const hasSave=()=>{try{return typeof rawHas=='function'?rawHas(typeof SLOTK=='string'?SLOTK:'pxc_save'):!!localStorage.getItem('pxc_save')}catch(e){return false}};
 function load(){const r=loadOld();if(r)try{ensureReactor();upgradeCars()}catch(e){}return r}
 function rleE(v){let o='';for(let i=0;i<v.length;){const c=v[i];let j=i+1;while(j<v.length&&v[j]===c)j++;const n=j-i,ch=c.toString(36);o+=n>=4?'~'+ch+n.toString(36)+'.':ch.repeat(n);i=j}return o}
 function rleD(s){const a=[];for(let i=0;i<s.length;){if(s[i]=='~'){const c=parseInt(s[i+1],36),e=s.indexOf('.',i+2),n=parseInt(s.slice(i+2,e),36);for(let k=0;k<n;k++)a.push(c);i=e+1}else{a.push(parseInt(s[i],36));i++}}return Uint8Array.from(a)}
@@ -3779,7 +3779,7 @@ HU.unshift(['Flashlight: ON','Zseblámpa: BE'],['Flashlight: OFF','Zseblámpa: K
 /* ===== v61: co-op worlds are saved per room and can be continued; recent rooms in the lobby; co-op autosave ===== */
 GAMEV=62;
 var CSLOT=null,CFORCE=false;
-function SKEY(){return CSLOT&&(net||CFORCE)?CSLOT:'pxc_save'}
+function SKEY(){return CSLOT&&(net||CFORCE)?CSLOT:(typeof SLOTK=='string'?SLOTK:'pxc_save')}
 function roomsGet(){try{const a=JSON.parse(localStorage.getItem('pxc_rooms')||'[]');return Array.isArray(a)?a.filter(r=>r&&/^[A-Z0-9]{5}$/.test(r.c)):[]}catch(e){return[]}}
 function roomsPut(c,h){try{const a=roomsGet().filter(r=>r.c!==c);a.unshift({c,h:h?1:0,t:Date.now()});localStorage.setItem('pxc_rooms',JSON.stringify(a.slice(0,5)))}catch(e){}}
 function roomHasSave(c){try{return !!localStorage.getItem('pxc_coop_'+c)}catch(e){return false}}
@@ -4014,7 +4014,7 @@ ruinRoofs=function(){const want=[];for(let i=0;i<W*H;i++){const o=ob[i];if(o&&o.
 /* more abandoned houses on the bigger map */
 {const gr10=genRuins;genRuins=function(want){return gr10(want||(W>=300?8:W>=240?6:4))}}
 /* keep localStorage small enough on the bigger map: only the 3 most recent co-op slots are kept */
-{const cs10=coopStart;coopStart=function(code,host){try{const keep=new Set(roomsGet().slice(0,2).map(r=>'pxc_coop_'+r.c));keep.add('pxc_coop_'+String(code||'').toUpperCase());for(let i=localStorage.length-1;i>=0;i--){const k=localStorage.key(i);if(k&&k.startsWith('pxc_coop_')&&!keep.has(k))localStorage.removeItem(k)}}catch(e){}return cs10(code,host)}}
+{const cs10=coopStart;coopStart=function(code,host){try{const keep=new Set(roomsGet().slice(0,5).map(r=>'pxc_coop_'+r.c));keep.add('pxc_coop_'+String(code||'').toUpperCase());for(let i=localStorage.length-1;i>=0;i--){const k=localStorage.key(i);if(k&&k.startsWith('pxc_coop_')&&!keep.has(k.slice(0,14)))localStorage.removeItem(k)}}catch(e){}return cs10(code,host)}}
 /* make sure every plateau can be reached after all world features were placed (cuts a ramp through a cliff where needed) */
 function fixReach(){if(!el)return;const walk=i=>{const m=map[i];return m==0||m==2||m==3||m==4||m==6||m==12||m==14||m==15||m==16||m==17||m==18||m==20||m==24};
  const bfs=()=>{const s=new Uint8Array(W*H),q=[];for(const c of ISC){const st=c[1]*W+c[0];if(st>=0&&st<W*H&&walk(st)&&!s[st]){s[st]=1;q.push(st)}}for(let k=0;k<q.length;k++){const c=q[k];for(const n of[c-1,c+1,c-W,c+W])if(n>=0&&n<W*H&&!s[n]&&walk(n)){s[n]=1;q.push(n)}}return s};
@@ -4639,7 +4639,7 @@ tcTick=function(){
  const portrait=innerHeight>innerWidth*1.05;TCH.po.style.display=portrait?'flex':'none';if(portrait){const el=document.getElementById('mhot');const t=hu71()?'Fordítsd el a telefont fekvő helyzetbe! (Koppints a teljes képernyőhöz)':'Turn your phone sideways! (Tap for fullscreen)';if(el.textContent!==t)el.textContent=t}
  TCH.u=Math.max(4,Math.min(innerWidth/108,innerHeight/54))*MH.sz;tc.style.setProperty('--u',TCH.u+'px');const u=TCH.u,cr=C.getBoundingClientRect();
  const playing=state=='play',ov=overlayOpen()||!!CKO||!!CHP||!!FLPK||!!chatOpen||!!DTAG||(typeof SJ!='undefined'&&(!!SJ||!!SEND||!!(STORY&&STORY.intro))),dead=state=='dead';
- tc.style.display=(playing||dead||['title','opts','sndo','gfxo','keys','wthr','char','lobby'].includes(state))?'block':'none';
+ tc.style.display=(playing||dead||['title','opts','sndo','gfxo','slots','keys','wthr','char','lobby'].includes(state))?'block':'none';
  tc.style.opacity=1;const full=playing&&!ov&&!TCH.hide&&!MH.panel,R_=MH.lh?'l':'r',L_=MH.lh?'r':'l';
  for(const k in TCH.b){const d=TCH.b[k];d.style.opacity=(k=='esc'||k=='cfg'||k=='res'||k=='tfs')?Math.max(.8,MH.op):MH.op}
  const it=HB[hb],gun=!!(it&&GUN[it])&&inv[it]>0,pl=!!(it&&PL[it]&&inv[it]>0),fl=it=='flash'&&inv.flash>0;
@@ -6279,6 +6279,81 @@ function carryPick(o,tx,ty,cx,cy){const it={};for(const k in (o.it||{}))if(o.it[
 {const ld97=load;load=function(){const r=ld97();try{const c=JSON.parse(localStorage.getItem(SKEY()+'_carry')||'[]');CARRY=Array.isArray(c)?c.filter(x=>x&&x.it):[];const q=JSON.parse(localStorage.getItem(SKEY()+'_npc2')||'[]');if(Array.isArray(q)&&q.length==NPCS.length)q.forEach((d,i)=>{const n=NPCS[i];if(!d||!n)return;n.fr=d.fr|0;if(d.ps!=null)n.ps=d.ps;n.ab=d.ab|0;n.td96=d.td;n.gd96=d.gd;if(d.kn)n.kn=1})}catch(e){CARRY=[]}return r}}
 {const in97=init;init=function(...a){CARRY=[];return in97.apply(this,a)}}
 
+/* ===== v98: save & load menus — 3 single-player slots and co-op saves; saves are compressed so many fit in the browser ===== */
+GAMEV=103;
+/* ---------- LZW compression for the big save strings (15 bits per char, never a surrogate) ---------- */
+function lzC(s){if(!s)return '';const d=new Map();let ds=65536,w='',bits=[],acc=0,nb=0,out=[],cnt=0;
+ const emit=c=>{let wd=1;while((1<<wd)<=ds)wd++;for(let b=wd-1;b>=0;b--){acc=(acc<<1)|((c>>b)&1);nb++;if(nb==15){out.push(String.fromCharCode(acc+32));acc=0;nb=0}}cnt++};
+ for(let i=0;i<s.length;i++){const c=s[i],wc=w+c;if(!w){w=c;continue}if(d.has(wc)){w=wc;continue}emit(w.length==1?w.charCodeAt(0):d.get(w));d.set(wc,ds++);w=c}
+ if(w)emit(w.length==1?w.charCodeAt(0):d.get(w));if(nb){out.push(String.fromCharCode((acc<<(15-nb))+32))}
+ let o='',CH=8192;for(let i=0;i<out.length;i+=CH)o+=out.slice(i,i+CH).join('');return '\u0001LZ1:'+cnt+':'+o}
+function lzD(z){const m=/^\u0001LZ1:(\d+):/.exec(z);if(!m)return z;const cnt=+m[1];let p=m[0].length,acc=0,nb=0;const dict=[],res=[];
+ const rd=wd=>{let v=0;for(let b=0;b<wd;b++){if(!nb){acc=z.charCodeAt(p++)-32;nb=15}nb--;v=(v<<1)|((acc>>nb)&1)}return v};
+ let ds=65536,wd=()=>{let x=1;while((1<<x)<=ds)x++;return x};let c=rd(wd()),w=c<65536?String.fromCharCode(c):'';res.push(w);
+ for(let i=1;i<cnt;i++){ds=65536+i;c=rd(wd());let e;if(c<65536)e=String.fromCharCode(c);else{const k=c-65536;e=k<dict.length?dict[k]:w+w[0]}res.push(e);dict.push(w+e[0]);w=e}return res.join('')}
+const SAVEK=k=>typeof k=='string'&&(/^pxc_save(_s[23])?$/.test(k)||/^pxc_coop_[A-Z0-9]{5}$/.test(k));
+{const SP=Storage.prototype,gi=SP.getItem,si=SP.setItem;let cacheK=null,cacheR=null,cacheV=null;
+ SP.setItem=function(k,v){if(this===localStorage&&SAVEK(k)&&typeof v=='string'&&v.length>2000){try{const z=lzC(v);if(lzD(z).length===v.length){cacheK=k;cacheR=z;cacheV=v;return si.call(this,k,z)}}catch(e){}}return si.call(this,k,v)};
+ SP.getItem=function(k){const r=gi.call(this,k);if(this!==localStorage||r==null||r.charCodeAt(0)!==1||!SAVEK(k))return r;if(cacheK===k&&cacheR===r)return cacheV;try{const v=lzD(r);cacheK=k;cacheR=r;cacheV=v;return v}catch(e){return null}}}
+/* ---------- single-player slots ---------- */
+const SSLOT=['pxc_save','pxc_save_s2','pxc_save_s3'];var SLOTK='pxc_save';try{const s=localStorage.getItem('pxc_slot');if(SSLOT.includes(s))SLOTK=s}catch(e){}
+const SUFX=['_meta','_story','_anx','_pets','_carry','_npc2'];
+function rawHas(k){try{for(let i=0;i<localStorage.length;i++)if(localStorage.key(i)===k)return true}catch(e){}return false}
+const METAC=new Map();
+function slotMeta(k){if(!rawHas(k))return null;let m=METAC.get(k);if(m)return m;try{m=JSON.parse(localStorage.getItem(k+'_meta')||'null')}catch(e){m=null}
+ if(!m){try{const d=JSON.parse(localStorage.getItem(k));m={d:d.day|0,b:d.biome|0,s:0,t:0}}catch(e){m={d:0,b:0,s:0,t:0}}try{if(localStorage.getItem(k+'_story'))m.s=1}catch(e){}}METAC.set(k,m);return m}
+function writeMeta(){try{const k=SKEY(),m={d:day|0,b:biome|0,s:STORY?1:0,sa:STORY?STORY.act|0:0,sd:STORY&&STORY.done?1:0,t:Date.now(),cr:creative?1:0,n:String(uname||'').slice(0,12)};localStorage.setItem(k+'_meta',JSON.stringify(m));METAC.set(k,m)}catch(e){}}
+{const sv98=save;save=function(){const r=sv98();writeMeta();return r}}
+function useSlot(k){SLOTK=k;try{localStorage.setItem('pxc_slot',k)}catch(e){}}
+function delSlot(k){try{localStorage.removeItem(k);for(const s of SUFX)localStorage.removeItem(k+s)}catch(e){}METAC.delete(k)}
+/* new game: go to an empty slot if the current one is taken */
+if(typeof startMode=='function'){const sm98=startMode;startMode=function(story){if(rawHas(SLOTK)){const e=SSLOT.find(k=>!rawHas(k));if(e)useSlot(e)}return sm98(story)}}
+/* ---------- menus ---------- */
+const BIOMN={hu:['Szigetek','Hómező','Sivatag','Város','Vegyes'],en:['Islands','Snowfield','Desert','City','Mixed']};
+function metaLine(m){const h=LANG=='hu';if(!m)return h?'— üres —':'— empty —';const dt=m.t?new Date(m.t):null,ds=dt?(dt.getMonth()+1+'.'+String(dt.getDate()).padStart(2,'0')+'. '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0')):'';
+ const mode=m.s?(h?'Sztori':'Story')+(m.sd?' ✔':' '+['I','II','III','IV'][Math.min(3,m.sa|0)]):m.cr?(h?'Kreatív':'Creative'):(h?'Túlélő':'Survival');return (h?m.d+'. nap':'Day '+m.d)+' · '+((BIOMN[h?'hu':'en'][m.b])||'')+' · '+mode+(ds?' · '+ds:'')}
+function coopKeys(){const a=[];try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(/^pxc_coop_[A-Z0-9]{5}$/.test(k))a.push(k)}}catch(e){}const R=roomsGet(),ord=c=>{const i=R.findIndex(r=>r.c===c);return i<0?99:i};return a.sort((x,y)=>ord(x.slice(9))-ord(y.slice(9)))}
+var SVM=null;/* {mode:'save'|'load', tab:'single'|'coop', sel, cf:{i,t}} */
+function svRows(){const h=LANG=='hu',R=[];
+ if(SVM.tab=='single'){SSLOT.forEach((k,i)=>R.push({k,lab:(h?'Mentés ':'Slot ')+(i+1)+(k===SLOTK&&started&&!net?(h?' (jelenlegi)':' (current)'):''),sub:metaLine(slotMeta(k)),has:rawHas(k)}))}
+ else{if(SVM.mode=='save'){if(net&&CSLOT)R.push({k:CSLOT,coop:1,lab:(h?'Jelenlegi szoba: ':'Current room: ')+CSLOT.slice(9),sub:metaLine(slotMeta(CSLOT)),has:true,now:1});else R.push({k:null,lab:h?'Nem vagy co-op játékban':'You are not in a co-op game',sub:h?'Lépj be az „Online együtt” menüben, ott tudsz menteni':'Join one in “Online co-op”, then you can save here',dis:1})}
+  else{const ks=coopKeys();if(!ks.length)R.push({k:null,lab:h?'Még nincs co-op mentés':'No co-op saves yet',sub:h?'Co-op játék közben 5 percenként magától is ment':'Co-op games also save themselves every 5 minutes',dis:1});
+   const RG=roomsGet();for(const k of ks){const c=k.slice(9),r=RG.find(q=>q.c===c);R.push({k,coop:1,lab:(h?'Szoba ':'Room ')+c+(r?(r.h?(h?' — te voltál a host':' — you hosted'):(h?' — csatlakoztál':' — you joined')):''),sub:metaLine(slotMeta(k)),has:true})}}}
+ R.push({back:1,lab:h?'Vissza':'Back'});return R}
+function svOpen(mode){SVM={mode,tab:net?'coop':'single',sel:0,cf:null};state='slots';snd('ui')}
+function svAct(i,del){const R=svRows(),r=R[i];if(!r)return;const h=LANG=='hu',now=performance.now();if(r.back){state='title';SVM=null;snd('ui');return}if(r.dis||!r.k){snd('ui');return}
+ const ask=(t)=>{if(SVM.cf&&SVM.cf.i===i&&SVM.cf.d===!!del&&now<SVM.cf.t)return true;SVM.cf={i,t:now+3000,d:!!del,msg:t};snd('ui');return false};
+ if(del){if(!r.has)return;if(r.now){say(h?'A futó szoba mentését nem törölheted':'You can’t delete the room you are playing in');return}if(!ask(h?'Biztosan törlöd? Nyomd meg újra':'Delete it? Press again'))return;delSlot(r.k);SVM.cf=null;snd('hit');say(h?'Mentés törölve':'Save deleted');return}
+ if(SVM.mode=='save'){if(!canSave()){say(h?'Nincs futó játék, amit menteni lehetne':'No running game to save');return}
+  if(r.coop){doSave();SVM.cf=null;say(h?'Co-op világ mentve: '+r.k.slice(9):'Co-op world saved: '+r.k.slice(9));return}
+  if(net){say(h?'Co-op közben a Co-op fülön ments':'In co-op, save on the Co-op tab');return}
+  if(r.has&&r.k!==SLOTK&&!ask(h?'Felülírod ezt a mentést? Nyomd meg újra':'Overwrite this save? Press again'))return;useSlot(r.k);doSave();SVM.cf=null;say(h?'Mentve: '+(SSLOT.indexOf(r.k)+1)+'. hely':'Saved to slot '+(SSLOT.indexOf(r.k)+1));return}
+ /* load */
+ if(!r.has)return;if(started&&!(r.k===SLOTK&&!net)&&!ask(h?'A mostani játék nem mentett része elvész. Nyomd meg újra':'Unsaved progress will be lost. Press again'))return;SVM.cf=null;
+ if(r.coop){const c=r.k.slice(9);if(net){try{net.r.leave().catch(()=>{})}catch(e){}net=null}lcode=c;if(!String(uname||'').trim())uname='Player';state='lobby';lf=1;lobbyGo();say(h?'Csatlakozás a(z) '+c+' szobához…':'Joining room '+c+'…');return}
+ if(net){try{net.r.leave().catch(()=>{})}catch(e){}net=null}useSlot(r.k);STQ=null;STORY=null;let ok=false;try{ok=load()}catch(e){ok=false}if(!ok){say(h?'Ezt a mentést nem sikerült betölteni':'This save could not be loaded');return}
+ try{if(typeof stLoad=='function')stLoad()}catch(e){}started=true;tut=0;state='play';SVM=null;snd('ui');say(h?'Betöltve: '+(SSLOT.indexOf(r.k)+1)+'. hely':'Loaded slot '+(SSLOT.indexOf(r.k)+1))}
+const svY=i=>96+i*30;
+function svMenu(){if(!SVM)return;const moved=ms.x!=lmx||ms.y!=lmy;lmx=ms.x;lmy=ms.y;const h=LANG=='hu',R=svRows(),x=70,w=VW-140;Q(0,0,VW,VH,'rgba(6,10,6,.9)');
+ const ti=SVM.mode=='save'?(h?'Mentés':'Save game'):(h?'Betöltés':'Load game');g.font=fnt(1,20);g.textAlign='center';g.fillStyle='#a8321f';g.fillText(ti,VW/2+2,42);g.fillStyle=fcol('#d8e4c8');g.fillText(ti,VW/2,40);noTr=true;
+ /* tabs */const tabs=[['single',h?'Egyjátékos':'Single player'],['coop','Co-op']];tabs.forEach(([k,l],i)=>{const tx=VW/2-122+i*124,on=SVM.tab==k,hov=ms.x>=tx&&ms.x<tx+120&&ms.y>=56&&ms.y<74;Q(tx-1,55,122,20,on?'#ffd84a':'#3a4634');Q(tx,56,120,18,on?'#4a3722':hov?'#2a2618':'#1c1a12');txt(l,tx+60,68,on?'#ffd84a':'#cfd8c0','center')});
+ if(SVM.sel>=R.length)SVM.sel=0;for(let i=0;i<R.length;i++){const r=R[i],y=svY(i)+(r.back?8:0),hh=r.back?16:26;if(moved&&ms.x>=x&&ms.x<x+w&&ms.y>=y&&ms.y<y+hh)SVM.sel=i;const on=SVM.sel==i;
+  Q(x-1,y-1,w+2,hh+2,on?'#ffd84a':'#3a4634');Q(x,y,w,hh,on?'#4a3722':'#1c1a12');if(r.back){txt(r.lab,VW/2,y+11,on?'#ffd84a':'#cfd8c0','center');continue}
+  txt(r.lab,x+8,y+11,r.dis?'#6f7c62':on?'#ffd84a':'#e8dcc0');g.font=fnt(0,8);txt(r.sub,x+8,y+22,r.dis?'#5a6a52':r.has?'#a8b898':'#6f7c62');
+  if(on&&r.has&&!r.now){txt(h?'Del: törlés':'Del: delete',x+w-6,y+11,'#8a7a5a','right')}
+  if(SVM.cf&&SVM.cf.i===i&&performance.now()<SVM.cf.t)txt(SVM.cf.msg,x+w-6,y+22,'#ffb08a','right')}
+ txt(h?'A/D: fül   W/S: választás   Enter vagy kattintás: '+(SVM.mode=='save'?'mentés':'betöltés')+'   Esc: vissza':'A/D: tab   W/S: choose   Enter or click: '+(SVM.mode=='save'?'save':'load')+'   Esc: back',VW/2,VH-14,'#8fa07f','center');noTr=false}
+function svKey(c){if(!SVM)return;const n=svRows().length;if(c=='Escape'){state='title';SVM=null;return}if(c=='ArrowUp'||c=='KeyW')SVM.sel=(SVM.sel+n-1)%n;else if(c=='ArrowDown'||c=='KeyS')SVM.sel=(SVM.sel+1)%n;
+ else if(c=='ArrowLeft'||c=='KeyA'||c=='ArrowRight'||c=='KeyD'||c=='Tab'){SVM.tab=SVM.tab=='single'?'coop':'single';SVM.sel=0;SVM.cf=null;snd('ui')}else if(c=='Enter'||c=='Space')svAct(SVM.sel);else if(c=='Delete'||c=='Backspace'||c=='KeyX')svAct(SVM.sel,true)}
+function svClick(){if(!SVM)return;for(let i=0;i<2;i++){const tx=VW/2-122+i*124;if(ms.x>=tx&&ms.x<tx+120&&ms.y>=56&&ms.y<74){SVM.tab=i?'coop':'single';SVM.sel=0;SVM.cf=null;snd('ui');return}}
+ const R=svRows(),x=70,w=VW-140;for(let i=0;i<R.length;i++){const y=svY(i)+(R[i].back?8:0),hh=R[i].back?16:26;if(ms.x>=x&&ms.x<x+w&&ms.y>=y&&ms.y<y+hh){SVM.sel=i;svAct(i);return}}}
+addEventListener('keydown',e=>{if(state!='slots')return;e.stopImmediatePropagation();e.preventDefault();svKey(e.code)},true);
+C.addEventListener('mousedown',e=>{if(state!='slots')return;try{sc(e)}catch(_){}e.stopImmediatePropagation();svClick()},true);
+/* main menu: "Save" and "Load" entries (they replace the old quick "Save game" row) */
+{const ml98=mainLabels;mainLabels=function(){const L=ml98(),h=LANG=='hu',ex=L.pop(),base=L.slice(0,6);if(canSave())base.push(h?'Mentés':'Save');base.push(h?'Betöltés':'Load');base.push(ex);return base}}
+{const ma98=menuAct;menuAct=function(i){const L=mainLabels(),lab=L[i],h=LANG=='hu';if(lab===(h?'Mentés':'Save')){svOpen('save');return}if(lab===(h?'Betöltés':'Load')){svOpen('load');return}if(i===L.length-1){doExit();return}return ma98(i)}}
+/* the touch HUD shows during the save menu too */
+
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
 function fireList(){const n=performance.now();if(FL.ob!==ob||n-FL.t>500){FL.ob=ob;FL.t=n;FL.a=[];for(let i=0;i<ob.length;i++){const o=ob[i];if(o&&(o.t=='fire'&&o.on||o.t=='fbarrel'))FL.a.push([(i%W)*T+8,Math.floor(i/W)*T+8])}}return FL.a}
@@ -6469,7 +6544,7 @@ requestAnimationFrame(tcTick);
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
- if(state=='title')menu();if(state=='opts')optsMenu();if(state=='sndo')sndMenu();if(state=='gfxo')gfxMenu();if(state=='keys')keysMenu();if(state=='wthr')wthrMenu();if(state=='char')charMenu();if(state=='lobby')drawLobby();if(state=='hb'){Q(0,0,VW,VH,'rgba(6,10,6,.6)');drawHB()}if(0)title('ASHFALL',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Hold the fire. Survive the nights.','','WASD move \u2022 Space chop / fish / attack \u2022 Tab recipes','Press any key']);
+ if(state=='title')menu();if(state=='opts')optsMenu();if(state=='sndo')sndMenu();if(state=='gfxo')gfxMenu();if(state=='slots')svMenu();if(state=='keys')keysMenu();if(state=='wthr')wthrMenu();if(state=='char')charMenu();if(state=='lobby')drawLobby();if(state=='hb'){Q(0,0,VW,VH,'rgba(6,10,6,.6)');drawHB()}if(0)title('ASHFALL',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Hold the fire. Survive the nights.','','WASD move \u2022 Space chop / fish / attack \u2022 Tab recipes','Press any key']);
  if(state=='dead')title('YOU DIED',['Days survived: '+day,deathAt!=null?'Your belongings wait in a tombstone where you fell (see map: M)':'',home?'Press R to respawn at your base':'Press R to respawn']);
  fx();requestAnimationFrame(loop)})(last);
 </script></body></html>
