@@ -140,7 +140,7 @@ function drawChar(x,y,c,w,fx,fy,s,e){if(c&&c.bk==1&&typeof drawBlocky=='function
   if(BPK&&fr){Q(-8,-40,3,18,'#4a3018');Q(5,-40,3,18,'#4a3018');Q(-8,-40,1,18,'#6b4a2b');Q(5,-40,1,18,'#6b4a2b')}
   Q(-3,-42,6,3,skd);Q(-8,-58,16,17,sk);Q(-8,-44,16,3,skd);
   if(fr){Q(-9,-52,1,4,skd);Q(8,-52,1,4,skd);Q(-5,-51,3,3,'#ece8dc');Q(2,-51,3,3,'#ece8dc');Q(-4,-51,2,3,'#16181a');Q(3,-51,2,3,'#16181a');Q(-5,-54,4,1,hcd);Q(1,-54,4,1,hcd);Q(-1,-49,2,3,skd);Q(-3,-45,6,1,shade(sk,.55));Q(-7,-48,2,2,skl);Q(5,-48,2,2,skl)}
-  hair();acc();beardF(c,sk);
+  hair();acc();if(!bk)beardF(c,sk);
   if(tH){Q(-10,-62,20,10,tH[0]);Q(-9,-62,18,2,tH[1]);Q(-10,-53,20,2,tH[2]);Q(-10,-52,3,7,tH[0]);Q(7,-52,3,7,tH[0]);if(fr&&e.h=='diamond')Q(-6,-52,12,3,'#7af4ff');else if(fr)Q(-5,-52,10,2,tH[2]);if(bk)Q(-9,-52,18,5,tH[0])}
   if(e.m){if(fr){Q(-8,-52,16,12,'#3f4e35');Q(-8,-52,16,1,'#5a6a4a');Q(-6,-51,5,4,'#0c0f10');Q(1,-51,5,4,'#0c0f10');Q(-5,-51,2,1,'#9ad0d8');Q(2,-51,2,1,'#9ad0d8');Q(-3,-46,6,6,'#25291f');Q(-2,-45,4,1,'#4a5040');Q(-2,-43,4,1,'#4a5040');Q(-8,-47,3,4,'#2a2e24');Q(5,-47,3,4,'#2a2e24')}else if(bk)Q(-8,-51,16,2,'#222')}
  }else{
@@ -6641,6 +6641,56 @@ if(typeof cabin93=='function'){const c93=cabin93;cabin93=function(o,tx,ty,h){con
  /* windows */for(const wx of[4,13]){S(wx,12,3,3,'#7b8084');S(wx+.5|0,12,3,3,'#7b8084');S(wx,12,3,3,'#9ac0d4');S(wx,12,3,1,'#d4e8f0')}
  /* roof */const c='#a8432c';S(1,8,18,2,shade(c,.6));S(2,4,16,4,shade(c,.85));S(3,2,14,2,shade(c,1.15));S(2,6,16,1,shade(c,.72));S(3,4,14,1,shade(c,1.0));S(3,2,14,1,shade(c,1.3));
  /* chimney */S(13,1,3,3,'#6a5a50');S(13,1,3,1,'#3a3028');return true}}
+
+/* ===== v103: NPCs keep one look (no more hi-vis outfit until you talk to them), no beard from behind, readable tool icons ===== */
+GAMEV=110;
+/* ---------- NPC look: settle it once, before you ever meet them ---------- */
+function npcSeed102(n){let h=2166136261;const s=(n.nm||'')+'|'+(n.hx|0)+'|'+(n.hy|0)+'|'+(n.c||'');for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}
+ let a=h>>>0;return()=>{a=(a+0x6D2B79F5)>>>0;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296}}
+function npcNorm(n){if(!n||n.sx=='f'||n.sx=='m')return;const R_=npcSeed102(n);n.sx=NMF.includes(n.nm)?'f':NMM.includes(n.nm)?'m':(R_()<.5?'f':'m');
+ if(!NMF.includes(n.nm)&&!NMM.includes(n.nm))n.nm=(n.sx=='f'?NMF:NMM)[Math.floor(R_()*12)];try{n.c=lookFor(n.sx,R_)}catch(e){n.c=lookFor(n.sx)}}
+function npcNormAll(){try{for(const n of NPCS)npcNorm(n)}catch(e){}}
+{const in103=init;init=function(...a){const r=in103.apply(this,a);npcNormAll();return r}}
+{const ld103=load;load=function(){const r=ld103();npcNormAll();return r}}
+{const up103=update;update=function(dt){if(NPCS.length&&(up103.k=(up103.k|0)+1)%30==0)npcNormAll();return up103(dt)}}
+{const dn103=drawNPC;drawNPC=function(n){if(n&&n.sx!='f'&&n.sx!='m')npcNorm(n);return dn103(n)}}
+
+/* ---------- tool icons: proper pickaxe / axe / shovel / sword / spear / hoe / bow / rod ---------- */
+const TIC103=new Map();
+function tiPaint(type,tier){const C=(typeof TIERC!='undefined'&&TIERC[tier])||['#8a9092','#b4babc','#5a6062'],G=[];for(let i=0;i<20;i++)G.push(new Array(20).fill(null));
+ const P=(x,y,c)=>{x=Math.round(x);y=Math.round(y);if(x>=0&&y>=0&&x<20&&y<20)G[y][x]=c};
+ const HD='#7a5228',HL='#a8784a',HK='#4e3418',U=[.7071,-.7071],V=[-.7071,-.7071];
+ const loc=(x,y,hx,hy)=>{const dx=x+.5-hx,dy=y+.5-hy;return[dx*U[0]+dy*U[1],dx*V[0]+dy*V[1]]};
+ const handle=(x0,y0,n,grip)=>{for(let i=0;i<n;i++){P(x0+i,y0-i,i%4==1?HL:HD);P(x0+i+1,y0-i,HK);if(grip&&i<3){P(x0+i,y0-i,'#3a2a1c');P(x0+i+1,y0-i,'#2a1c10')}}};
+ const region=(hx,hy,fn)=>{for(let y=0;y<20;y++)for(let x=0;x<20;x++){const[u,v]=loc(x,y,hx,hy),c=fn(u,v);if(c)P(x,y,c)}};
+ if(type=='pickaxe'){handle(3,17,11,true);const cx=8.6,cy=10.9,R0=6.9;
+  for(let y=0;y<20;y++)for(let x=0;x<20;x++){const dx=x+.5-cx,dy=y+.5-cy,d=Math.hypot(dx,dy),a=Math.atan2(dy,dx)*180/Math.PI;if(a<-116||a>26)continue;
+   const f=1-Math.min(1,Math.abs(a+45)/71),t=.7+2.3*Math.pow(f,.7);if(Math.abs(d-R0)>t/2)continue;P(x,y,d>R0+t/2-1?C[1]:d<R0-t/2+1&&t>1.6?C[2]:C[0])}
+  P(14,5,HD);P(15,5,HK)}
+ else if(type=='axe'){handle(3,17,12,true);
+  region(12.6,7.4,(u,v)=>{if(v>.6&&v<6.4&&Math.abs(u)<1.4+.42*v-(v>5.6?(v-5.6)*1.6:0))return v>5.2?C[1]:v<1.7?C[2]:(u<-.9-.3*v?C[2]:C[0]);if(v>-2.4&&v<=.6&&Math.abs(u)<1.25)return v<-1.6?C[2]:C[0];return null})}
+ else if(type=='shovel'){handle(3,17,10,false);region(4.0,17.0,(u,v)=>u>-1.2&&u<.2&&Math.abs(v)<2.1?'#3a2a1c':null);
+  region(12.4,7.6,(u,v)=>{if(u<.2||u>7.6)return null;const w=u<4.4?2.55:2.55*Math.max(0,(7.6-u)/3.2);if(Math.abs(v)>w)return null;return v>w-1?C[1]:v<-w+1?C[2]:(Math.abs(v)<.5&&u<5?C[2]:C[0])})}
+ else if(type=='hoe'){handle(3,17,12,true);region(13.6,6.4,(u,v)=>{if(u>-.2&&u<2.0&&v<.8&&v>-5.4)return u>1.2?C[1]:v<-4.4?C[2]:C[0];return null})}
+ else if(type=='spear'){for(let i=0;i<12;i++){P(2+i,18-i,i%4==1?HL:HD);P(3+i,18-i,HK)}
+  region(14.2,5.8,(u,v)=>{if(u<-.6||u>5.6)return null;if(u<.6)return Math.abs(v)<1.3?'#c8b48a':null;const w=1.9*(1-Math.abs(u-2.1)/3.6);if(Math.abs(v)>Math.max(.5,w))return null;return v>0?C[1]:C[0]})}
+ else if(type=='sword'){region(6.8,13.2,(u,v)=>{if(u<.6||u>13.6)return null;const w=u>12?Math.max(.4,(13.6-u)*.7):1.15;if(Math.abs(v)>w)return null;return v>.25?C[1]:(v<-.6?C[2]:C[0])});
+  region(6.6,13.4,(u,v)=>Math.abs(u)<.75&&Math.abs(v)<3.2?(Math.abs(v)>2.4?'#d8b040':'#6a4a2a'):null);
+  region(6.6,13.4,(u,v)=>u<-.6&&u>-4.2&&Math.abs(v)<.8?(u<-3.3?'#d8b040':u%1.4<-.7?'#3a2a1c':'#5a3a20'):null)}
+ else if(type=='bow'){const cx=4.2,cy=15.8,R0=11.6;for(let y=0;y<20;y++)for(let x=0;x<20;x++){const dx=x+.5-cx,dy=y+.5-cy,d=Math.hypot(dx,dy),a=Math.atan2(dy,dx)*180/Math.PI;if(a<-98||a>8)continue;const f=1-Math.min(1,Math.abs(a+45)/53),t=.8+1.3*f;if(Math.abs(d-R0)>t/2)continue;P(x,y,Math.abs(a+45)<7?'#3a2414':d>R0?HL:HD)}
+  const t1=[cx+R0*Math.cos(-98*Math.PI/180),cy+R0*Math.sin(-98*Math.PI/180)],t2=[cx+R0*Math.cos(8*Math.PI/180),cy+R0*Math.sin(8*Math.PI/180)];for(let i=1;i<16;i++){const s=i/16;const x=t1[0]+(t2[0]-t1[0])*s,y=t1[1]+(t2[1]-t1[1])*s;if(!G[Math.floor(y)]||!G[Math.floor(y)][Math.floor(x)])P(Math.floor(x),Math.floor(y),'#e8e4d8')}}
+ else if(type=='rod'){for(let i=0;i<15;i++){P(2+i,18-i,i<4?'#3a2a1c':i%3?HD:HL);if(i<9)P(3+i,18-i,HK)}P(5,16,'#9aa0a6');P(6,16,'#6a7076');P(5,17,'#6a7076');P(6,15,'#c8ccd0');
+  for(let y=4;y<14;y++)P(17,y,'rgba(232,228,216,.85)');P(17,14,'#e8e4d8');P(16,15,'#c83a2a');P(17,15,'#c83a2a');P(16,16,'#f4f0e8');P(17,16,'#f4f0e8')}
+ else return null;
+ /* dark outline so the shape reads on any background */
+ const out=[];for(let y=0;y<20;y++)for(let x=0;x<20;x++){if(G[y][x])continue;let n=0;for(const[a,b]of[[1,0],[-1,0],[0,1],[0,-1]]){const yy=y+b,xx=x+a;if(yy>=0&&xx>=0&&yy<20&&xx<20&&G[yy][xx]&&G[yy][xx].indexOf('rgba')<0)n++}if(n)out.push([x,y])}
+ const cv=document.createElement('canvas');cv.width=cv.height=20;const c=cv.getContext('2d');c.fillStyle='rgba(18,13,9,.82)';for(const[x,y]of out)c.fillRect(x,y,1,1);
+ for(let y=0;y<20;y++)for(let x=0;x<20;x++)if(G[y][x]){c.fillStyle=G[y][x];c.fillRect(x,y,1,1)}return cv}
+function tiGet(type,tier){const k=type+'|'+tier;if(TIC103.has(k))return TIC103.get(k);const cv=tiPaint(type,tier);TIC103.set(k,cv);return cv}
+{const ic103=icon2;icon2=function(k,x,y){let m=/^(wood|stone|iron|gold|diamond)_(sword|spear|axe|pickaxe|shovel)$/.exec(k),type=null,tier='stone';
+ if(m){type=m[2];tier=m[1]}else if(k=='axe'||k=='pickaxe'||k=='shovel'||k=='spear'||k=='sword'){type=k}else if(k=='hoe'){type='hoe';tier='iron'}else if(k=='bow'||k=='rod'){type=k}
+ if(type){const cv=tiGet(type,tier);if(cv){g.drawImage(cv,Math.round(x),Math.round(y));return true}}return ic103(k,x,y)}}
+try{if(typeof ICC!='undefined'&&ICC.clear)ICC.clear()}catch(e){}
 
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
