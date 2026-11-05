@@ -7057,6 +7057,39 @@ function paintRoads106(cv,cx,cy){const x0=cx*GQS*T,y0=cy*GQS*T,x1=x0+GQS*T,y1=y0
 {const ld106c=load;load=function(){const r=ld106c();try{const q=JSON.parse(localStorage.getItem(SKEY()+'_roads')||'[]');ROADS105=Array.isArray(q)?q:[];ROADT106=new Uint8Array(W*H);for(const S of ROADS105)rasterRoad106(S,false);try{GQC.clear()}catch(e){}}catch(e){ROADS105=[]}return r}}
 {const in106b=init;init=function(...a){ROADS105=[];ROADT106=null;return in106b.apply(this,a)}}
 
+/* ===== v107: toilet reviews — after every WC or outhouse visit the hero gives it a score out of 10, with a reason ===== */
+GAMEV=117;
+function wcRate107(o,i,kind){const h=LANG=='hu',B=(a,b)=>h?a:b,tx=i%W,ty=(i/W)|0,wx=tx*T+8,wy=ty*T+8;
+ /* every toilet has its own character, always the same for the same toilet */
+ const hh=k=>{let v=(tx*73856093)^(ty*19349663)^(k*83492791);v=(v^(v>>>13))*1274126177;return((v^(v>>>16))>>>0)/4294967296};
+ let s=kind=='wc'?6.5:4;const pros=[],cons=[];
+ const add=(v,txt)=>{s+=v;(v>=0?pros:cons).push([Math.abs(v),txt])};
+ /* cleanliness */const cl=hh(1);if(cl<.18)add(-3,B('olyan koszos volt, hogy inkább guggoltam','so filthy I hovered the whole time'));else if(cl<.4)add(-1.5,B('láttam már tisztábbat is','I\'ve seen cleaner'));else if(cl>.85)add(2,B('meglepően tiszta, szinte csillogott','surprisingly clean, it practically sparkled'));
+ /* the smell */const sm=hh(2);if(kind=='budi'&&sm<.45)add(-2,B('a szag még most is az orromban van','the smell is still in my nose'));else if(sm>.9)add(1,B('valaki levendulát tett mellé — kedves','someone left lavender beside it — sweet'));
+ /* paper */const pp=hh(3);if(pp<.3)add(-2,B('papír nem volt, maradt a falevél','no paper, so… leaves it was'));else if(pp>.8)add(1.5,B('volt papír! A világvége után ez luxus','there was paper! After the apocalypse that\'s luxury'));
+ /* where it is */const inR=typeof underRoof=='function'&&underRoof(tx,ty);if(inC)add(2,B('a saját faházamban vagyok, itthon minden jobb','it\'s in my own cabin — home is best'));else if(kind=='wc'&&inR)add(.5,B('fedél volt a fejem felett','a roof over my head'));
+ if(kind=='wc'){let sink=false;for(let y=ty-3;y<=ty+3&&!sink;y++)for(let x=tx-3;x<=tx+3;x++){const q=ob[y*W+x];if(q&&q.t=='sink'){sink=true;break}}if(sink)add(1,B('kezet is moshattam','I could even wash my hands'));else cons.push([.5,B('kézmosó sehol','no sink anywhere')])}
+ /* the world outside */const dk=typeof dark=='function'?dark():0;if(dk>.55)add(-1,B('koromsötét volt, inkább nem tudom, mibe ültem','pitch dark — I\'d rather not know what I sat on'));
+ if(wea&&!inR&&!inC){if(cb==1)add(-1.5,B('befújt a hó, jéghideg volt az ülőke','snow blew in and the seat was ice cold'));else if(cb==2)add(-1,B('homok került mindenhová. Mindenhová.','sand got everywhere. Everywhere.'));else add(-1,B('beázott a tető, csöpögött a nyakamba','the roof leaked right down my neck'))}
+ else if(cb==1&&kind=='budi')add(-1,B('hideg ülőke, gyors látogatás','cold seat, quick visit'));
+ if(cb==2&&kind=='budi'&&hh(4)<.5)add(-.5,B('egy skorpió figyelt a sarokból','a scorpion watched from the corner'));
+ let zn=0;for(const z of zs)if(z.hp>0&&!z.pet&&Math.hypot(z.x-wx,z.y-wy)<130)zn++;if(zn)add(-Math.min(3,zn*1.5),zn>1?B('fertőzöttek nyögtek az ajtó előtt — nem volt idő elmerülni','infected groaning at the door — no time to relax'):B('egy fertőzött kaparta az ajtót','an infected was scratching at the door'));
+ if((P.rate||0)>.5)add(-2,B('a Geiger-számláló végig kattogott','the Geiger counter clicked the whole time'));
+ if(hh(5)>.93)add(1.5,B('a falon egy régi újság volt, végre olvastam valamit','an old newspaper on the wall — finally something to read'));
+ if(kind=='budi'&&hh(6)>.75)add(1,B('a szív alakú ablakon át szép volt a kilátás','lovely view through the little heart-shaped window'));
+ if(kind=='wc'&&hh(7)<.15)add(-1.5,B('a lehúzó csak harmadikra működött','the flush only worked on the third try'));
+ /* memories: the same toilet again */
+ const prev=o.wcr107;o.wcr107=Math.max(0,Math.min(10,Math.round(s)));const sc=o.wcr107;
+ pros.sort((a,b)=>b[0]-a[0]);cons.sort((a,b)=>b[0]-a[0]);
+ let why;if(pros.length&&cons.length)why=(sc>=5?pros[0][1]+B(', bár ',', although ')+cons[0][1]:cons[0][1]+B(', de legalább ',', but at least ')+pros[0][1]);else if(cons.length)why=cons[0][1]+(cons[1]?B(', ráadásul ',', and ')+cons[1][1]:'');else if(pros.length)why=pros[0][1]+(pros[1]?B(', és ',', and ')+pros[1][1]:'');else why=B('teljesen átlagos élmény','a perfectly average experience');
+ const verdict=sc>=10?B(' Ötcsillagos, mindenkinek ajánlom!',' Five stars, would recommend!'):sc>=8?B(' Visszajövök.',' Will return.'):sc<=1?B(' Soha többé.',' Never again.'):sc<=3?B(' Csak végszükség esetén.',' Emergencies only.'):'';
+ const again=prev!=null?(prev<sc?B(' (Múltkor '+prev+'/10 volt — fejlődik!)',' (Last time '+prev+'/10 — improving!)'):prev>sc?B(' (Múltkor még '+prev+'/10 volt…)',' (It was '+prev+'/10 last time…)'):''):'';
+ const what=kind=='wc'?B('Vécé','Toilet'):B('Budi','Outhouse');
+ const txt=what+': '+sc+'/10 — '+why.charAt(0).toUpperCase()+why.slice(1)+'.'+verdict+again;
+ try{if(typeof dlSay=='function')dlSay('player',heroName(),txt,null,'');else say(txt)}catch(e){say(txt)}}
+{const uo107=useObj;useObj=function(n){const o=n&&n.o;if(o&&(o.t=='wc'||o.t=='budi'||(o.pm!=null&&ob[o.pm]&&(ob[o.pm].t=='wc'||ob[o.pm].t=='budi')))){const ai=o.pm!=null?o.pm:(n.ty*W+n.tx),q=ob[ai]||o,kind=q.t,now=performance.now();const r=uo107(n);
+  if(!(q.wct107>now)){q.wct107=now+15000;setTimeout(()=>{try{if(state=='play')wcRate107(q,ai,kind)}catch(e){}},kind=='wc'?1700:2100)}return r}return uo107(n)}}
+
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
 function fireList(){const n=performance.now();if(FL.ob!==ob||n-FL.t>500){FL.ob=ob;FL.t=n;FL.a=[];for(let i=0;i<ob.length;i++){const o=ob[i];if(o&&(o.t=='fire'&&o.on||o.t=='fbarrel'))FL.a.push([(i%W)*T+8,Math.floor(i/W)*T+8])}}return FL.a}
