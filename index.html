@@ -7499,7 +7499,7 @@ var KZSEEN111={};
 var ST111={};
 
 /* ===== v112: the world fights back — supply drops, blood moons, treasure maps; daily challenges with streaks; milestones with toasts ===== */
-GAMEV=124;
+GAMEV=125;
 const WOB112=()=>inD&&OW?OW.ob:ob,WMAP112=()=>inD&&OW?OW.map:map,ABS112=()=>day+time;
 Object.assign(LBL,{tmap:'Treasure map',adrop:'Supply drop',tcache:'Buried cache'});Object.assign(LBLX,{tmap:'Treasure map',adrop:'Supply drop',tcache:'Buried cache'});Object.assign(NMX,{adrop:'supply drop',tcache:'buried cache'});
 HU.unshift(['Treasure map','Kincses térkép'],['treasure map','kincses térkép'],['Supply drop','Ellátmányláda'],['supply drop','ellátmányláda'],['Buried cache','Elásott rejtekhely'],['buried cache','elásott rejtekhely']);
@@ -7620,7 +7620,7 @@ function hud112(){const now=performance.now(),busy=invOpen||(typeof showMap!='un
  /* the plane */
  if(EV112.plane&&now-EV112.plane<7000&&!inD){const u=(now-EV112.plane)/7000,x=-60+u*(VW+120),y=46+Math.sin(u*3)*3;Q(x+10,y+40,46,4,'rgba(0,0,0,.18)');Q(x,y,48,6,'#3a4038');Q(x+40,y-3,10,4,'#3a4038');Q(x+18,y-10,8,26,'#323830');Q(x+42,y-8,4,10,'#323830');Q(x+4,y+1,30,1,'#59614f');Q(x+50,y+1,3,4,'#20241e');
   if(u>.4&&u<.6){const k=(u-.4)/.2;Q(x-6-k*12,y+8+k*30,6,6,'#4a5a32');Q(x-14-k*12,y-2+k*30,22,6,'#e8e4dc')}}
- if(!inD&&bmOn112()){const p=.6+.4*Math.sin(now/300);noTr=true;txt(B111('VÉRHOLD','BLOOD MOON'),6,58,'rgba(255,'+Math.round(70+40*p)+',60,1)');noTr=false;g.fillStyle='rgba(200,30,20,.25)';g.beginPath();g.arc(VW-30,24,13,0,6.283);g.fill();g.fillStyle='#b8281a';g.beginPath();g.arc(VW-30,24,8,0,6.283);g.fill();g.fillStyle='#e0503a';g.beginPath();g.arc(VW-32,22,3,0,6.283);g.fill()}
+ if(!inD&&bmOn112()){const p=.6+.4*Math.sin(now/300);noTr=true;txt(B111('VÉRHOLD','BLOOD MOON'),6,58,'rgba(255,'+Math.round(70+40*p)+',60,1)');noTr=false;g.fillStyle='rgba(200,30,20,.25)';g.beginPath();g.arc(VW-134,18,13,0,6.283);g.fill();g.fillStyle='#b8281a';g.beginPath();g.arc(VW-134,18,8,0,6.283);g.fill();g.fillStyle='#e0503a';g.beginPath();g.arc(VW-136,16,3,0,6.283);g.fill()}
  if(busy)return;
  /* compass marks */
  if(!inD){if(EV112.ad){const o=ob[EV112.ad.y*W+EV112.ad.x];if(o&&!o.op)arrow112(EV112.ad.x*T+8,EV112.ad.y*T+8,'#ff6a4a',B111('Láda','Crate'))}if(TM112)arrow112(TM112.x*T+8,TM112.y*T+8,'#ffd84a','X');
@@ -7629,10 +7629,13 @@ function hud112(){const now=performance.now(),busy=invOpen||(typeof showMap!='un
  if(!inD){const px=Math.floor(P.x/T),py=Math.floor(P.y/T);for(let y=py-14;y<=py+14;y++)for(let x=px-20;x<=px+20;x++){if(x<0||y<0||x>=W||y>=H)continue;const o=ob[y*W+x];if(!o||o.t!='adrop'||o.op)continue;const sx=(x*T+8-cam.x)*ZM,sy=(y*T+4-cam.y)*ZM;
    for(let k=0;k<9;k++){const ph=(now/1000*.35+k/9)%1,yy=sy-ph*90,xx=sx+Math.sin(k*2.1+ph*4)*7*ph+ph*10,sz=(3+ph*12)*ZM;g.fillStyle=(o.bm?'rgba(255,60,40,':'rgba(230,60,50,')+(.55*(1-ph)).toFixed(3)+')';g.fillRect(xx-sz/2,yy-sz/2,sz,sz)}}}
  /* challenges */
- if(DQ112.L.length){const x=VW-6,y0=100;noTr=true;const H=['NAPI KIHÍVÁSOK','DAILY CHALLENGES'],w=150;Q(x-w,y0-9,w+2,14+DQ112.L.length*11,'rgba(10,12,16,.55)');Q(x-w,y0-9,w+2,1,'rgba(255,216,74,.5)');
-  txt(B111(H[0],H[1])+(DQ112.streak?' · '+DQ112.streak+B111(' nap',' d'):''),x-w+4,y0,'#ffd84a');
-  DQ112.L.forEach((q,i)=>{const p=dqProg112(q),y=y0+11+i*11;let s=dqTxt112(q);g.font=fnt(0,9);while(g.measureText(s).width>w-40&&s.length>6)s=s.slice(0,-2);if(s!==dqTxt112(q))s+='…';txt((q.done?'✓ ':'• ')+s,x-w+4,y,q.done?'#7adf6a':'#e8e4d8');txt(q.done?'':p+'/'+q.g,x-2,y,'#9ab8d0','right')});
-  txt(B111('Felszerelés: ','Gear: ')+gs111()+B111(' FP',' GP')+B111('   Mérföldkő ','   Milestones ')+Object.keys(ACHG112).length+'/'+ACH112.length,x-w+4,y0+13+DQ112.L.length*11,'#9ab8d0');noTr=false}
+ if(DQ112.L.length){/* small panel in the top-right corner */const w=112,x=VW-w-3,y0=3,lh=8,n=DQ112.L.length,hgt=11+n*lh+9;
+  const ts=(s,tx,ty,c,al)=>{g.font=fnt(0,6.5);g.textAlign=al||'left';g.textBaseline='alphabetic';g.fillStyle='rgba(0,0,0,.85)';g.fillText(s,tx+.5,ty+.5);g.fillStyle=c;g.fillText(s,tx,ty)};
+  Q(x,y0,w,hgt,'rgba(10,12,16,.5)');Q(x,y0,w,1,'rgba(255,216,74,.55)');
+  ts(B111('KIHÍVÁSOK','CHALLENGES')+(DQ112.streak?'  ·  '+DQ112.streak+B111(' nap',' d'):''),x+3,y0+8,'#ffd84a');
+  DQ112.L.forEach((q,i)=>{const p=dqProg112(q),y=y0+8+(i+1)*lh;let s=dqTxt112(q);g.font=fnt(0,6.5);const full=s;while(g.measureText(s).width>w-26&&s.length>6)s=s.slice(0,-2);if(s!==full)s+='…';
+   ts((q.done?'✓ ':'· ')+s,x+3,y,q.done?'#7adf6a':'#e8e4d8');ts(q.done?'':p+'/'+q.g,x+w-3,y,'#9ab8d0','right')});
+  ts(gs111()+B111(' FP',' GP')+'   ★ '+Object.keys(ACHG112).length+'/'+ACH112.length,x+3,y0+8+(n+1)*lh+1,'#9ab8d0');g.textAlign='left'}
  /* toasts */
  if(TQ112.length){const q=TQ112[0];if(!q.t0)q.t0=now;const e=(now-q.t0)/1000;if(e>4.2){TQ112.shift()}else{const sl=e<.3?e/.3:e>3.8?(4.2-e)/.4:1,w=Math.max(200,Math.min(VW-20,(q.sub.length*4.6|0)+60)),x=VW/2-w/2,y=-30+sl*66;
   Q(x,y,w,30,'rgba(12,10,8,.88)');Q(x,y,w,1,q.col);Q(x,y+29,w,1,q.col);Q(x+8,y+7,12,9,q.col);Q(x+11,y+16,6,3,q.col);Q(x+9,y+19,10,2,q.col);Q(x+6,y+8,2,5,q.col);Q(x+20,y+8,2,5,q.col);Q(x+10,y+9,3,3,'rgba(255,255,255,.6)');
