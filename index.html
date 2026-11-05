@@ -7305,6 +7305,344 @@ sfxMunch109=function(){rsPlay110('munch',.4,0,.03)};
 var RSW110=0,RST110=0;
 {const up110=update;update=function(dt){const r=up110(dt);try{if(RSW110<4&&SXS.ok&&AC){RST110+=dt;if(RST110>1){RST110=0;const k=['munch','slurp','toot','flush'][RSW110++];if(!RSB110[k]||!RSB110[k].length){const d=RS110[k](AC.sampleRate),buf=AC.createBuffer(1,d.length,AC.sampleRate);buf.copyToChannel(d,0);(RSB110[k]=RSB110[k]||[]).push(buf)}}}}catch(e){}return r}}
 
+/* ===== v111: Dungeons 2.0 — three tiers behind a gear check, wall darts on pressure plates, spike waves, flame jets, lever and brazier puzzles, elite enemies, a guardian and a vault; they repopulate ===== */
+GAMEV=124;
+const h111=()=>LANG=='hu',B111=(a,b)=>LANG=='hu'?a:b;
+const KZN111={hu:['','Elfeledett kripta','Ősi kazamata','A Mélység'],en:['','Forgotten Crypt','Ancient Dungeon','The Abyss']};
+const KZREQ111=[0,12,18,25],KZHM111=[1,1.6,2.4,3.4],KZDM111=[1,1.25,1.55,1.9],KZCOL111=['#fff','#7adf6a','#ffb040','#ff4a3a'];
+const KZMOD111={hu:['','Hemzsegő (több ellenfél)','Sötétség (kevés fáklya)','Csapdás (több csapda)'],en:['','Teeming (more enemies)','Darkness (few torches)','Trapped (more traps)']};
+var KZTRAP111=0,KZC111=0,KZA111=[],KZROOMS111=null,KZNT111=1,KZNM111=0;
+/* ---------- gear score: armour points + your best weapon ---------- */
+function wScore111(){let b=0;const MT={wood:2,stone:4,iron:6,gold:7,diamond:9},GS={pistol:4,revolver:6,shotgun:7,smg:7,ak47:9,rifle:9,bow:3};
+ const has=k=>inv[k]>0||HB.includes(k);for(const t in MT)for(const kd of['sword','spear','axe']){const k=t+'_'+kd;if(has(k))b=Math.max(b,MT[t]+(kd=='sword'?1:0))}
+ for(const k in GS)if(has(k))b=Math.max(b,GS[k]);if(has('spear')||has('axe'))b=Math.max(b,1);return b}
+function gs111(){return (typeof armPts=='function'?armPts():0)+wScore111()}
+function gearOk111(t){const a=armPts(),w=wScore111(),s=a+w,req=KZREQ111[t];if(s>=req)return true;
+ say(B111('A kapu nem nyílik… '+KZN111.hu[t]+': legalább '+req+' felszerelés-pont kell. Neked: páncél '+a+' + fegyver '+w+' = '+s+'.','The gate won\'t open… '+KZN111.en[t]+' needs '+req+' gear points. You have: armour '+a+' + weapon '+w+' = '+s+'.'));
+ try{sfx(()=>{sxT('sawtooth',90,60,.5,.3);sxN(.6,'lowpass',400,120,1,.4)})}catch(e){}return false}
+/* ---------- labels ---------- */
+{const L={kzdart:'Dart trap',kzplate:'Pressure plate',kzspike:'Spike trap',kzflame:'Flame jet',kzlever:'Lever',kztab:'Stone tablet',kzseal:'Sealed gate',kzbraz:'Brazier',kzstair:'Ancient stairway'};Object.assign(LBL,L);Object.assign(LBLX,L);Object.assign(NMX,{kzdart:'dart trap',kzplate:'pressure plate',kzspike:'spike trap',kzflame:'flame jet',kzlever:'lever',kztab:'stone tablet',kzseal:'sealed gate',kzbraz:'brazier',kzstair:'ancient stairway'});
+ HU.unshift(['Dart trap','Nyílcsapda'],['dart trap','nyílcsapda'],['Pressure plate','Nyomólap'],['pressure plate','nyomólap'],['Spike trap','Tüskecsapda'],['spike trap','tüskecsapda'],['Flame jet','Lángcsóva'],['flame jet','lángcsóva'],['Lever','Kar'],['lever','kar'],['Stone tablet','Kőtábla'],['stone tablet','kőtábla'],['Sealed gate','Lezárt kőkapu'],['sealed gate','lezárt kőkapu'],['Brazier','Parázstartó'],['brazier','parázstartó'],['Ancient stairway','Ősi lejárat'],['ancient stairway','ősi lejárat']);
+ Object.assign(INT,{kzlever:1,kztab:1,kzseal:1,kzbraz:1,kzstair:1});Object.assign(SOLID,{kzlever:1,kztab:1,kzseal:1,kzbraz:1,kzstair:1,kzdart:1,kzflame:1});try{Object.assign(STYSKIP,{kzdart:1,kzplate:1,kzspike:1,kzflame:1,kzlever:1,kztab:1,kzseal:1,kzbraz:1,kzstair:1})}catch(e){}}
+/* ---------- drawing ---------- */
+const SYM111=(x,y,s,c)=>{/* 0 circle, 1 triangle, 2 square, 3 cross — 5x5 */if(s==0){W_(x+1,y,3,1,c);W_(x,y+1,1,3,c);W_(x+4,y+1,1,3,c);W_(x+1,y+4,3,1,c)}else if(s==1){W_(x+2,y,1,1,c);W_(x+1,y+1,3,1,c);W_(x+1,y+2,1,1,c);W_(x+3,y+2,1,1,c);W_(x,y+3,5,1,c);W_(x,y+4,5,1,c)}else if(s==2){W_(x,y,5,1,c);W_(x,y+4,5,1,c);W_(x,y,1,5,c);W_(x+4,y,1,5,c)}else{W_(x+2,y,1,5,c);W_(x,y+2,5,1,c)}};
+function spikeU111(o){return((KZC111+(o.ph||0))%2.6)/2.6}
+function flameOn111(o){const u=((KZC111+(o.ph||0))%3.2)/3.2;return u>.55&&u<.9?2:u>.45&&u<=.55?1:0}
+Object.assign(DRAWX,{
+ kzdart(o,x,y){const d=o.dir|0,cx=x+8,cy=y+8;W_(x+3,y+3,10,10,'#3a3630');W_(x+4,y+4,8,8,'#57514a');W_(x+4,y+4,8,1,'#6e675e');
+  const ox=d==0?5:d==2?-5:0,oy=d==1?5:d==3?-5:0;W_(cx-2+ox,cy-2+oy,4,4,'#0c0a08');W_(cx-1+ox,cy-1+oy,2,2,'#1a1612');if(o.fl>0){W_(cx-3+ox,cy-3+oy,6,6,'rgba(220,200,160,.35)')}},
+ kzplate(o,x,y){const dn=o.dn;W_(x+2,y+2,12,12,dn?'#2c2924':'#3c3830');W_(x+3,y+3,10,10,dn?'#3a362f':'#4a453c');if(!dn){W_(x+3,y+3,10,1,'#5c564b');W_(x+3,y+12,10,1,'#2c2924')}W_(x+6,y+7,4,1,'rgba(0,0,0,.25)')},
+ kzspike(o,x,y){const u=spikeU111(o);W_(x+1,y+1,14,14,'#2a2622');for(let a=0;a<3;a++)for(let b=0;b<3;b++)W_(x+3+a*4,y+3+b*4,2,2,'#121010');
+  if(u>.55){const up=u>.7,hgt=up?5:2;for(let a=0;a<3;a++)for(let b=0;b<3;b++){const px=x+3+a*4,py=y+4+b*4;W_(px,py-hgt,2,hgt,up?'#c8ccd0':'#8a8e92');W_(px,py-hgt,1,1,'#f4f6f8')}}},
+ kzflame(o,x,y){const d=o.dir|0,cx=x+8,cy=y+8,s=flameOn111(o);W_(x+3,y+3,10,10,'#3a2a22');W_(x+4,y+4,8,8,'#5a3a2a');const ox=d==0?5:d==2?-5:0,oy=d==1?5:d==3?-5:0;W_(cx-2+ox,cy-2+oy,4,4,s?'#ff9a30':'#1a0e08');if(s==1)W_(cx-1+ox,cy-1+oy,2,2,'#ffe080')},
+ kzlever(o,x,y){W_(x+3,y+11,10,4,'#3a3630');W_(x+4,y+11,8,1,'#5a544a');const dn=o.dn;if(dn){W_(x+7,y+8,2,4,'#6a5a40');W_(x+9,y+11,5,2,'#8a7a5a');W_(x+13,y+10,2,3,'#c83a2a')}else{W_(x+7,y+3,2,9,'#8a7a5a');W_(x+6,y+1,4,3,'#c83a2a');W_(x+7,y+1,1,1,'#ff8a7a')}
+  W_(x+4,y-7,9,8,'#2a2620');SYM111(x+6,y-6,o.sym|0,o.dn?'#7adf6a':'#e8d8a0')},
+ kztab(o,x,y){W_(x+2,y+14,12,2,'rgba(0,0,0,.3)');W_(x+2,y-12,12,27,'#5a564e');W_(x+3,y-11,10,25,'#6e6a60');W_(x+3,y-11,10,1,'#8a857a');
+  if(o.pk=='braz'){for(let k=0;k<4;k++){const lit=o.braz&&ob[o.braz[k]]&&ob[o.braz[k]].lit>KZC111;W_(x+4+(k%2)*5,y+1+(k>>1)*6,3,4,lit?'#ffb040':'#3a3630');W_(x+5+(k%2)*5,y+(k>>1)*6,1,2,lit?'#ffe080':'#3a3630')}}
+  else if(o.seq){for(let k=0;k<4;k++){const c=k<(o.prog|0)||o.done?'#7adf6a':'#e8d8a0';SYM111(x+6,y-9+k*6,o.seq[k],c)}}},
+ kzseal(o,x,y){const t=performance.now()/1000,gl=.45+.35*Math.sin(t*2+x*.1);W_(x,y-6,16,22,'#2a2620');W_(x+1,y-5,14,20,'#4a463e');for(let k=0;k<4;k++)W_(x+1,y-4+k*5,14,1,'#3a362f');W_(x+6,y-1,4,8,'rgba(120,220,255,'+gl.toFixed(2)+')');W_(x+7,y,2,6,'rgba(220,250,255,'+(gl*.8).toFixed(2)+')')},
+ kzbraz(o,x,y){const lit=o.lit>KZC111,t=performance.now();W_(x+3,y+13,10,3,'rgba(0,0,0,.35)');W_(x+6,y+8,4,6,'#4a3a2a');W_(x+3,y+5,10,4,'#5a4a36');W_(x+3,y+5,10,1,'#7a6a4e');
+  if(lit){const left=Math.max(0,(o.lit-KZC111)/(o.burn||10)),hgt=4+Math.round(8*left);for(let k=0;k<3;k++){const f=Math.sin(t/80+k*2)*1.5;W_(x+4+k*3,y+5-hgt+Math.abs(f),3,hgt-Math.abs(f),k==1?'#ffd040':'#ff7a20')}W_(x+7,y+5-hgt+2,2,2,'#fff4c0')}else W_(x+4,y+4,8,1,'#2a1a10')},
+ kzstair(o,x,y){const t=performance.now()/1000,c=KZCOL111[o.tier|0]||'#fff',gl=.5+.5*Math.sin(t*2.2);W_(x-5,y+12,26,5,'rgba(0,0,0,.3)');W_(x-4,y-8,24,22,'#3e3a34');W_(x-3,y-7,22,20,'#6a655c');W_(x-3,y-7,22,2,'#8a8478');
+  W_(x+1,y-3,14,16,'#0e0c0a');for(let k=0;k<4;k++)W_(x+2,y+1+k*3,12,2,k%2?'#2a2622':'#3a3630');W_(x-4,y-8,3,22,'#4e4a42');W_(x+17,y-8,3,22,'#4e4a42');
+  for(let k=0;k<(o.tier|0);k++){W_(x+4+k*4-((o.tier|0)-1)*2+2,y-6,3,3,c);W_(x+5+k*4-((o.tier|0)-1)*2+2,y-5,1,1,'#fff')}
+  g.globalAlpha=.25+.25*gl;W_(x+1,y-3,14,16,c);g.globalAlpha=1}});
+/* ---------- the dungeon layout ---------- */
+const KZSEQ111=[null,['ent','darts','horde','lever','guard','vault'],['ent','darts','spikes','horde','chasm','braz','guard','vault'],['ent','darts','spikes','horde','lever','lava','braz','elite','guard','vault']];
+const KZSZ111={ent:[9,7],darts:[18,3],spikes:[14,9],horde:[13,10],lever:[11,9],chasm:[14,10],lava:[14,10],braz:[11,11],elite:[13,10],guard:[15,12],vault:[10,8]};
+function genKZ2(seed,t,mod){loot=[];map=new Uint8Array(W*H).fill(5);ob=new Array(W*H).fill(null);deer=[];zs=[];let sd=(seed>>>0)||1;const rnd=()=>{sd=(sd*1664525+1013904223)>>>0;return sd/4294967296},rn=n=>Math.floor(rnd()*n);
+ const seq=KZSEQ111[t],per=4,rooms=[],hm=KZHM111[t]*(mod==1?1.15:1);
+ seq.forEach((k,i)=>{const row=Math.floor(i/per),c=row%2?per-1-i%per:i%per,[w,h]=KZSZ111[k],cx=24+c*28,cy=20+row*22;rooms.push({k,x:cx-(w>>1),y:cy-(h>>1),w,h,cx,cy})});
+ for(const r of rooms)kzRoom(r.x,r.y,r.w,r.h);for(let k=0;k<rooms.length-1;k++)kzCorr(rooms[k].cx,rooms[k].cy,rooms[k+1].cx,rooms[k+1].cy);
+ const F=(x,y)=>map[y*W+x]==3,put=(x,y,o)=>{ob[y*W+x]=o;return y*W+x};
+ const zomb=(x,y,m)=>{const v=[0,1,2,7][rn(4)];zs.push({id:nid(),x:x*T+8,y:y*T+8,hp:Math.round((VHP[v]||9)*hm*(m||1)),a:0,t:0,vx:0,vy:0,z:1,v,kze:t})};
+ const spid=(x,y)=>zs.push({id:nid(),x:x*T+8,y:y*T+8,hp:Math.round(6*hm),a:0,t:0,vx:0,vy:0,z:1,sp:1,cv:rn(SPC.length),kze:t});
+ const mut=(k,x,y,m)=>{const z=mkMut(k,x*T+8,y*T+8);z.hp=z.mx=Math.round(MUHP[k]*hm*(m||1));z.kze=t;zs.push(z);return z};
+ const rpos=r=>{for(let k=0;k<40;k++){const x=r.x+1+rn(r.w-2),y=r.y+1+rn(r.h-2);if(F(x,y)&&!ob[y*W+x])return[x,y]}return[r.cx,r.cy]};
+ const nE=b=>Math.round(b*(mod==1?1.5:1));
+ /* torches along the top walls */
+ for(const r of rooms){if(mod==2&&r.k!='ent'&&r.k!='vault'&&r.k!='guard')continue;for(let xx=r.x+1;xx<r.x+r.w-1;xx+=5)if(map[(r.y-1)*W+xx]==5&&F(xx,r.y))ob[(r.y-1)*W+xx]={t:'wtorch',on:true}}
+ const seals=[];
+ for(let ri=0;ri<rooms.length;ri++){const r=rooms[ri],k=r.k;
+  if(k=='ent'){put(r.x+1,r.cy,{t:'kzexit'})}
+  else if(k=='darts'){const darts=[];for(let xx=r.x+2;xx<=r.x+r.w-3;xx+=2){const top=((xx-r.x)>>1)%2==0,yy=top?r.y-1:r.y+r.h;if(map[yy*W+xx]==5)darts.push([xx,put(xx,yy,{t:'kzdart',dir:top?1:3,per:(t>=2&&rnd()<.4)||mod==3?1:0,ph:rnd()*2.2})])}
+   const np=4+t+(mod==3?3:0);for(let q=0;q<np;q++){const xx=r.x+2+rn(r.w-4),yy=r.y+rn(r.h);if(ob[yy*W+xx])continue;put(xx,yy,{t:'kzplate',dl:darts.filter(d=>Math.abs(d[0]-xx)<=2).map(d=>d[1])})}}
+  else if(k=='spikes'){for(let yy=r.y;yy<r.y+r.h;yy++)for(let xx=r.x+2;xx<=r.x+r.w-3;xx++)put(xx,yy,{t:'kzspike',ph:(xx-r.x)*.3+(mod==3?(yy%2)*.4:0)});
+   for(let q=0;q<1+t;q++){const[x,y]=rpos(r);zomb(x,y)}
+   if(t>=3||mod==3)for(let xx=r.x+3;xx<r.x+r.w-2;xx+=4)if(map[(r.y-1)*W+xx]==5&&!ob[(r.y-1)*W+xx])put(xx,r.y-1,{t:'kzflame',dir:1,ph:rnd()*3})}
+  else if(k=='horde'||k=='elite'){const el=k=='elite',n=nE(el?8:[0,6,9,12][t]);for(let q=0;q<n;q++){const[x,y]=rpos(r);zomb(x,y,el?1.4:1)}for(let q=0;q<nE(1+t);q++){const[x,y]=rpos(r);spid(x,y)}
+   if(t>=2){const[x,y]=rpos(r);mut('c',x,y)}if(t>=3||el){const[x,y]=rpos(r);mut('s',x,y)}if(el){const[x,y]=rpos(r);mut('c',x,y,1.3)}}
+  else if(k=='lever'){const tab=put(r.cx,r.y+r.h-2,{t:'kztab',pk:'lever',seq:[0,1,2,3].sort(()=>rnd()-.5),prog:0,seals:[]});const syms=[0,1,2,3].sort(()=>rnd()-.5);
+   for(let q=0;q<4;q++)put(r.x+2+q*2+(q>1?1:0),r.y,{t:'kzlever',sym:syms[q],pz:tab,dn:0});seals.push([ri,tab]);if(t>=3){const[x,y]=rpos(r);zomb(x,y)}}
+  else if(k=='braz'){const tab=put(r.cx,r.y+1,{t:'kztab',pk:'braz',braz:[],seals:[],burn:t>=3?7:10});for(const[x,y]of[[r.x+1,r.y+1],[r.x+r.w-2,r.y+1],[r.x+1,r.y+r.h-2],[r.x+r.w-2,r.y+r.h-2]])ob[tab].braz.push(put(x,y,{t:'kzbraz',pz:tab,lit:0,burn:ob[tab].burn}));
+   seals.push([ri,tab]);for(let q=0;q<1+t;q++){const[x,y]=rpos(r);zomb(x,y)}if(t>=3){const[x,y]=rpos(r);spid(x,y)}}
+  else if(k=='chasm'){for(let yy=r.y;yy<r.y+r.h;yy++)for(let xx=r.cx-1;xx<=r.cx+1;xx++)map[yy*W+xx]=11;const[x,y]=[r.x+r.w-2,r.cy];spid(x,y);spid(x,y-2);if(t>=2)mut('c',r.x+r.w-3,r.cy+2)}
+  else if(k=='lava'){for(let yy=r.y;yy<r.y+r.h;yy++)for(let xx=r.x+2;xx<r.x+r.w-2;xx++)if(rnd()<.6)map[yy*W+xx]=9;let py=r.cy;for(let xx=r.x;xx<r.x+r.w;xx++){map[py*W+xx]=3;if(xx>r.x+1&&xx<r.x+r.w-2&&rnd()<.35){const ny=Math.max(r.y+1,Math.min(r.y+r.h-2,py+(rnd()<.5?-1:1)));map[ny*W+xx]=3;py=ny}map[py*W+xx]=3}
+   for(let yy=r.cy;yy<=r.cy+1;yy++){map[yy*W+r.x]=3;map[yy*W+r.x+1]=3;map[yy*W+r.x+r.w-1]=3;map[yy*W+r.x+r.w-2]=3}
+   if(t>=3)for(let xx=r.x+3;xx<r.x+r.w-2;xx+=3){if(map[(r.y-1)*W+xx]==5)put(xx,r.y-1,{t:'kzflame',dir:1,ph:rnd()*3});if(map[(r.y+r.h)*W+xx+1]==5)put(xx+1,r.y+r.h,{t:'kzflame',dir:3,ph:rnd()*3})}
+   mut('c',r.x+r.w-3,r.cy)}
+  else if(k=='guard'){const b=mut('b',r.cx,r.cy);b.hp=b.mx=[0,150,260,400][t];b.kzb=1;b.kzt=t;mut('c',r.x+2,r.y+2);if(t>=2)mut('s',r.x+r.w-3,r.y+r.h-3);if(t>=3)mut('c',r.x+r.w-3,r.y+2);
+   for(const[x,y]of[[r.x+3,r.y+3],[r.x+r.w-4,r.y+3],[r.x+3,r.y+r.h-4],[r.x+r.w-4,r.y+r.h-4]])if(!ob[y*W+x])put(x,y,{t:'pillar',hp:99})}
+  else if(k=='vault'){for(let q=0;q<3;q++)put(r.x+2+q*3,r.y+1,{t:'kzchest',tier:1});put(r.cx,r.cy+1,{t:'kzchest',tier:3})}}
+ /* seal the exit of every puzzle room: the corridor mouth that leads on to the next room */
+ for(const[ri,tab]of seals){const r=rooms[ri],n=rooms[ri+1];if(!n)continue;const inR=(x,y)=>x>=r.x&&x<r.x+r.w&&y>=r.y&&y<r.y+r.h,seen=new Uint8Array(W*H),q=[n.cy*W+n.cx];seen[q[0]]=1;
+  while(q.length){const i=q.pop(),x=i%W,y=(i/W)|0;for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){const X=x+dx,Y=y+dy,j=Y*W+X;if(X<1||Y<1||X>=W-1||Y>=H-1||seen[j]||map[j]==5||inR(X,Y))continue;seen[j]=1;q.push(j)}}
+  for(let y=r.y-1;y<=r.y+r.h;y++)for(let x=r.x-1;x<=r.x+r.w;x++){if(inR(x,y))continue;const j=y*W+x;if(!seen[j])continue;if(inR(x+1,y)||inR(x-1,y)||inR(x,y+1)||inR(x,y-1)){ob[j]={t:'kzseal',hp:999};ob[tab].seals.push(j)}}}
+ KZROOMS111=rooms.map(r=>({k:r.k,x:r.x,y:r.y,w:r.w,h:r.h}));return rooms}
+genKZ=function(seed){return genKZ2(seed,KZNT111||1,KZNM111||0)};
+/* ---------- entering: from the mines (old gates) and from the surface stairways ---------- */
+function kzFresh111(M){return !M||!M.map||!M.ob||(M.clr&&day>=M.clr+2)}
+function kzIntro111(M,again){const t=M.t||1,h=h111();KZC111=0;KZA111.length=0;
+ say(again?B111('Vissza: '+KZN111.hu[t],'Back in '+KZN111.en[t]):B111(KZN111.hu[t]+' ('+['','I','II','III'][t]+'. fokozat)'+(M.mod?' — '+KZMOD111.hu[M.mod]:'')+'. Ellenfelek erősebbek, csapdák mindenhol. A mélyén a kincstár vár.',KZN111.en[t]+' (tier '+['','I','II','III'][t]+')'+(M.mod?' — '+KZMOD111.en[M.mod]:'')+'. Stronger enemies, traps everywhere. The vault waits at the bottom.'));
+ try{sfx(()=>{sxT('sine',110,82,1.4,.25);sxT('sine',165,124,1.2,.12,.1);sxN(1.6,'lowpass',300,90,1,.3)})}catch(e){}}
+{const ke101=kzEnter;kzEnter=function(gi){const o=ob[gi];const t=o&&o.tier?o.tier:(o?(o.tier=(typeof curDM!='undefined'&&curDM)?2:1+((gi*2654435761>>>0)%2)):1);if(!gearOk111(t))return;
+  const key='kz:'+curM+'@'+gi;if(MINES[key]&&kzFresh111(MINES[key])&&MINES[key].clr)delete MINES[key];const was=!!MINES[key];KZNT111=t;KZNM111=was?0:Math.floor(Math.random()*4);
+  ke101(gi);const M=curMine;if(M&&!M.t){M.t=t;M.mod=KZNM111;M.rooms=KZROOMS111}if(KZ)KZ.t=M.t||t;kzIntro111(M,was)}}
+function kzEnterS111(o,i){const t=o.tier|0||1;if(!gearOk111(t))return;const key='kzs'+t+'@'+i;let M=MINES[key];const again=!kzFresh111(M);
+ OW={map,ob,deer,zs,loot,x:P.x,y:P.y+T};inD=true;fishing=null;sit=null;curSub=false;curRx=0;LSx=null;curOf=null;if(typeof curPH!='undefined')curPH=null;if(typeof curDM!='undefined')curDM=null;
+ if(again){map=M.map;ob=M.ob;zs=M.zs||[];loot=M.loot||[];deer=[]}else{let s=7;for(const c of key)s=(s*31+c.charCodeAt(0))>>>0;const mod=Math.floor(Math.random()*4);genKZ2(s^(wseed|0)^Math.imul(day+1,7919),t,mod);M=MINES[key]={mined:{},map,ob,zs,loot,left:0,kz:1,t,mod,rooms:KZROOMS111}}
+ curMine=M;curM=key;KZ={surf:1,key,t};const ex=ob.findIndex(q=>q&&q.t=='kzexit');if(ex>=0){P.x=(ex%W+1)*T+8;P.y=Math.floor(ex/W)*T+8}P.cd=.8;snd('door');kzIntro111(M,again)}
+{const kl101=kzLeave;kzLeave=function(){if(KZ&&KZ.surf){const M=curMine;if(M){M.map=map;M.ob=ob;M.zs=zs;M.loot=loot}KZA111.length=0;leave();KZ=null;return}KZA111.length=0;return kl101()}}
+/* ---------- loot ---------- */
+function give111(L,head){const got=[];for(const[k,n]of L){if(!n)continue;if(!(inv[k]>0)&&!canAdd(k)){addLoot({x:P.x+(Math.random()-.5)*16,y:P.y-10,k,n});got.push(n+' '+tr(LBL[k]||LBLX[k]||k).toLowerCase()+B111(' (a földön)',' (on the ground)'));continue}inv[k]=(inv[k]||0)+n;if(DMAX[k])du[k]=DMAX[k];if(TOOL[k])givehb(k);got.push(n+' '+tr(LBL[k]||LBLX[k]||k).toLowerCase())}
+ say((head||'')+got.join(', '));return got}
+const pk111=a=>a[Math.floor(Math.random()*a.length)],ri111=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+function armPiece111(tier){return tier+'_'+pk111(['helmet','chestplate','leggings','boots'])}
+kzLoot=function(o){const t=(curMine&&curMine.t)||(KZ&&KZ.t)||1,big=(o.tier|0)>=3,L=[];
+ if(t==1){L.push(['a9',ri111(8,14)],['bandage',2],['iron_ingot',ri111(2,3)],['gold',ri111(1,3)]);if(big)L.push([armPiece111('iron'),1],['medkit',1],['diamond',ri111(1,2)],['tmap',1])}
+ else if(t==2){L.push(['a762',ri111(6,10)],['medkit',1],['diamond',ri111(1,2)],['gold',ri111(2,4)]);if(big)L.push([armPiece111(Math.random()<.6?'gold':'iron'),1],[pk111(['smg','shotgun','ak47']),1],['diamond',ri111(3,4)],['tmap',1])}
+ else{L.push(['diamond',ri111(2,3)],['a762',ri111(10,14)],['medkit',ri111(1,2)]);if(big)L.push([armPiece111('diamond'),1],['diamond',ri111(6,8)],[pk111(['rifle','ak47']),1],['a762',12],['tmap',2]);if(big&&Math.random()<.3)L.push(['diamond_sword',1])}
+ o.op=1;snd('craft');try{gainXp((big?60:20)*t)}catch(e){}give111(L,B111('Kincs! ','Treasure! '));
+ if(ob.every(q=>!q||q.t!='kzchest'||q.op))kzClear111()};
+function kzClear111(){const M=curMine,t=(M&&M.t)||1;if(!M||M.clr&&day<M.clr+2)return;M.clr=day;try{gainXp([0,150,350,700][t])}catch(e){}
+ try{ST111['kz'+t]=(ST111['kz'+t]|0)+1;if(!(KZ&&KZ.th))ST111.clean=(ST111.clean|0)+1}catch(e){}
+ setTimeout(()=>say(B111(KZN111.hu[t]+' teljesítve! +'+[0,150,350,700][t]+' XP. Két nap múlva újra benépesül — más elrendezéssel.',KZN111.en[t]+' cleared! +'+[0,150,350,700][t]+' XP. It repopulates in two days, with a new layout.')),1800);
+ try{sfx(()=>{[523,659,784,1047].forEach((f,i)=>sxT('square',f,f,.18,.12,i*.12));sxT('triangle',1047,1047,.6,.1,.5)})}catch(e){}}
+/* ---------- puzzles & interaction ---------- */
+const SYMN111={hu:['kör','háromszög','négyzet','kereszt'],en:['circle','triangle','square','cross']};
+function openSeals111(tab){if(tab.done)return;tab.done=1;for(const j of tab.seals||[])if(ob[j]&&ob[j].t=='kzseal')ob[j]=null;try{gainXp(40)}catch(e){}try{ST111.puz=(ST111.puz|0)+1}catch(e){}
+ try{sfx(()=>{sxN(1.6,'lowpass',260,70,1,.5);sxT('sawtooth',60,40,1.4,.18);[392,523,659].forEach((f,i)=>sxT('triangle',f,f,.25,.08,.5+i*.15))})}catch(e){}shk=Math.min(.4,shk+.3);say(B111('Csikorogva felemelkedik a kőkapu!','The stone gate grinds open!'))}
+{const uo111=useObj;useObj=function(n){const o=n&&n.o;if(!o)return uo111(n);const i=n.ty*W+n.tx;
+  if(o.t=='kzstair'&&!inD){kzEnterS111(o,i);return}
+  if(o.t=='kzseal'){say(B111('Lezárt kőkapu. Oldd meg a terem rejtvényét, és kinyílik.','A sealed stone gate. Solve this room\'s puzzle to open it.'));return}
+  if(o.t=='kztab'){if(o.pk=='braz')say(B111('A táblán négy láng: gyújtsd meg mind a négy parázstartót, mielőtt kialszanak ('+o.burn+' mp)!','Four flames on the tablet: light all four braziers before they go out ('+o.burn+' s)!'));
+   else if(o.seq){const N=SYMN111[LANG=='hu'?'hu':'en'];say(B111('A táblára vésve: ','Carved into the tablet: ')+o.seq.map(s=>N[s]).join(' → ')+B111('. Ebben a sorrendben húzd meg a karokat.','. Pull the levers in this order.'))}return}
+  if(o.t=='kzlever'){const tab=ob[o.pz];if(!tab||tab.done){o.dn=o.dn?0:1;snd('ui');return}if(o.dn){say(B111('Ezt már lehúztad','Already pulled'));return}
+   try{sfx(()=>{sxN(.08,'bandpass',900,600,2,.4);sxT('square',140,90,.08,.15,.02)})}catch(e){}
+   if(o.sym===tab.seq[tab.prog|0]){o.dn=1;tab.prog=(tab.prog|0)+1;if(tab.prog>=4)openSeals111(tab);else say(B111('Kattan valami a falban… ('+tab.prog+'/4)','Something clicks inside the wall… ('+tab.prog+'/4)'))}
+   else{tab.prog=0;for(let y=-12;y<=12;y++)for(let x=-12;x<=12;x++){const q=ob[i+y*W+x];if(q&&q.t=='kzlever'&&q.pz===o.pz)q.dn=0}
+    say(B111('Rossz sorrend! A karok visszaugranak, és a falból valami kimászik…','Wrong order! The levers snap back, and something crawls out of the wall…'));try{sfx(()=>{sxT('sawtooth',120,50,.5,.3);sxN(.5,'lowpass',500,100,1,.4)})}catch(e){}
+    const t=(curMine&&curMine.t)||1;for(let k=0;k<1+(t>=2?1:0);k++){const v=[0,1,2][k%3];zs.push({id:nid(),x:o.x0||n.tx*T+8,y:(n.ty+2)*T+8,hp:Math.round((VHP[v]||9)*KZHM111[t]),a:0,t:0,vx:0,vy:0,z:1,v,kze:t})}}return}
+  if(o.t=='kzbraz'){const tab=ob[o.pz];if(o.lit>KZC111){say(B111('Már ég','Already burning'));return}o.lit=KZC111+(o.burn||10);try{sfx(()=>{sxN(.5,'bandpass',600,1800,1,.45);sxT('triangle',200,320,.3,.08)})}catch(e){}
+   if(tab&&!tab.done){const all=(tab.braz||[]).every(j=>ob[j]&&ob[j].lit>KZC111);if(all){openSeals111(tab);for(const j of tab.braz)if(ob[j])ob[j].lit=1e9}else{const nl=(tab.braz||[]).filter(j=>ob[j]&&ob[j].lit>KZC111).length;say(B111('Fellobban a parázstartó ('+nl+'/4) — siess!','The brazier flares up ('+nl+'/4) — hurry!'))}}return}
+  return uo111(n)}}
+/* ---------- traps, arrows, room hints, guardian tricks ---------- */
+function hurtT111(n){if(P.hp<=0)return;KZTRAP111=1;try{hurtP(n)}finally{KZTRAP111=0}if(KZ)KZ.th=(KZ.th|0)+1}
+{const hp111=hurtP;hurtP=function(n){if(KZ&&KZ.t&&!KZTRAP111&&inD)n*=KZDM111[KZ.t]||1;return hp111(n)}}
+function kzNear111(x,y){return Math.max(0,1-Math.hypot(x-P.x,y-P.y)/260)}
+function fireDart111(j){const o=ob[j];if(!o)return;const d=o.dir|0,x=(j%W)*T+8,y=Math.floor(j/W)*T+8,vx=d==0?1:d==2?-1:0,vy=d==1?1:d==3?-1:0,t=(KZ&&KZ.t)||1;
+ KZA111.push({x:x+vx*9,y:y+vy*9,vx:vx*240,vy:vy*240,l:1.6,d:[0,9,12,16][t]});o.fl=.15;const v=kzNear111(x,y);if(v>0)try{sfx(()=>{sxN(.09,'highpass',3000,1800,1,.35*v);sxT('square',900,300,.05,.05*v)})}catch(e){}}
+var KZR111=-1;
+function kzTick111(dt){if(!KZ||!inD)return;KZC111+=dt;const ptx=Math.floor(P.x/T),pty=Math.floor(P.y/T),air=typeof J!='undefined'&&J&&typeof jumpZ=='function'&&jumpZ()>3;
+ if(P.spk111>0)P.spk111-=dt;if(P.fla111>0)P.fla111-=dt;
+ /* traps near the player only (the rest sleep) */
+ const x0=Math.max(1,ptx-22),x1=Math.min(W-2,ptx+22),y0=Math.max(1,pty-16),y1=Math.min(H-2,pty+16);
+ for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const j=y*W+x,o=ob[j];if(!o)continue;const tt=o.t;
+  if(tt=='kzplate'){const on=ptx==x&&pty==y&&!air;if(on&&!o.dn){o.dn=1;try{sfx(()=>sxN(.05,'bandpass',700,500,2,.4))}catch(e){}for(const d of o.dl||[])fireDart111(d)}else if(!on)o.dn=0}
+  else if(tt=='kzdart'){if(o.fl>0)o.fl-=dt;if(o.per){o.pt=(o.pt==null?o.ph||0:o.pt)-dt;if(o.pt<=0){o.pt=2.2;fireDart111(j)}}}
+  else if(tt=='kzspike'){const u=spikeU111(o),up=u>.7;if(up){if(ptx==x&&pty==y&&!air&&!(P.spk111>0)){P.spk111=.55;hurtT111([0,12,15,19][KZ.t||1]);hit(P.x,P.y-4,'#c8ccd0')}
+    for(const z of zs)if(z.hp>0&&Math.floor(z.x/T)==x&&Math.floor(z.y/T)==y&&!(z._spk>performance.now())){z._spk=performance.now()+550;z.hp-=4}
+    if(!o._snd&&u<.74){o._snd=1;const v=kzNear111(x*T+8,y*T+8);if(v>.4&&((x+y)%4==0))try{sfx(()=>sxN(.12,'highpass',4200,2600,1,.12*v))}catch(e){}}}else o._snd=0}
+  else if(tt=='kzflame'){const s=flameOn111(o);if(s==2){const d=o.dir|0,vx=d==0?1:d==2?-1:0,vy=d==1?1:d==3?-1:0;for(let k=1;k<=3;k++){const fx=x+vx*k,fy=y+vy*k;if(map[fy*W+fx]==5)break;
+     if(ptx==fx&&pty==fy&&!(P.fla111>0)){P.fla111=.4;hurtT111([0,8,10,13][KZ.t||1]);hit(P.x,P.y-6,'#ff8a30')}for(const z of zs)if(z.hp>0&&Math.floor(z.x/T)==fx&&Math.floor(z.y/T)==fy&&!(z._fla>performance.now())){z._fla=performance.now()+400;z.hp-=3}}
+    if(!o._snd){o._snd=1;const v=kzNear111(x*T+8,y*T+8);if(v>.2)try{sfx(()=>{sxN(1,'bandpass',500,900,.8,.3*v,0,0,.08)})}catch(e){}}}else o._snd=0}}
+ /* arrows */
+ for(let k=KZA111.length-1;k>=0;k--){const a=KZA111[k];a.x+=a.vx*dt;a.y+=a.vy*dt;a.l-=dt;if(a.l<=0||solid(a.x,a.y)){if(a.l>0)hit(a.x,a.y,'#8a7a5a');KZA111.splice(k,1);continue}
+  if(!air&&Math.hypot(a.x-P.x,a.y+6-P.y)<6.5){hurtT111(a.d);KZA111.splice(k,1);continue}
+  let hz=false;for(const z of zs)if(z.hp>0&&Math.hypot(a.x-z.x,a.y-z.y)<7){z.hp-=a.d*.6;hit(z.x,z.y-6,'#a02020');hz=true;break}if(hz)KZA111.splice(k,1)}
+ /* the room you're in: a hint the first time */
+ const M=curMine;if(M&&M.rooms){let ri=-1;for(let k=0;k<M.rooms.length;k++){const r=M.rooms[k];if(ptx>=r.x&&ptx<r.x+r.w&&pty>=r.y&&pty<r.y+r.h){ri=k;break}}
+  if(ri>=0&&ri!==KZR111){KZR111=ri;const r=M.rooms[ri];if(!r.seen){r.seen=1;const HN={darts:['Nyomólapok a padlón — a falból nyilak lőnek. Ugorj át rajtuk, vagy csalogasd rájuk a fertőzötteket!','Pressure plates on the floor — darts fire from the walls. Jump over them, or lure the infected onto them!'],
+    spikes:['Tüskecsapdák. Figyeld a ritmust — a hullám mögött biztonságos.','Spike traps. Watch the rhythm — it\'s safe right behind the wave.'],lever:['Karok és egy kőtábla. Olvasd el a táblát!','Levers and a stone tablet. Read the tablet!'],braz:['Négy parázstartó és egy lezárt kapu.','Four braziers and a sealed gate.'],
+    chasm:['Szakadék! Verj létrahidat, vagy ugorj át nekifutásból.','A chasm! Bridge it with ladders, or take a running jump.'],lava:['Láva. Egyetlen keskeny ösvény vezet át.','Lava. A single narrow path leads across.'],elite:['Valami nagyon dühös vár itt…','Something very angry waits here…'],guard:['A kazamata őre!','The guardian of the dungeon!'],vault:['A kincstár!','The vault!']}[r.k];
+   if(HN)say(B111(HN[0],HN[1]))}}else if(ri<0)KZR111=-1}
+ /* the guardian: calls for help when hurt; in the Abyss it also hurls rings of bile */
+ for(const z of zs){if(!z.kzb||z.hp<=0)continue;const t=z.kzt||1,d=Math.hypot(z.x-P.x,z.y-P.y);if(d>220)continue;z._sm=(z._sm==null?6:z._sm)-dt;z._rg=(z._rg==null?4:z._rg)-dt;
+  if(t>=2&&z.hp<z.mx*.7&&z._sm<=0){z._sm=11;for(let k=0;k<2;k++){const a=Math.random()*6.28;const m=mkMut('c',z.x+Math.cos(a)*30,z.y+Math.sin(a)*30);m.hp=m.mx=Math.round(MUHP.c*KZHM111[t]);m.kze=t;zs.push(m)}say(B111('Az őr segítséget hív!','The guardian calls for help!'))}
+  if(t>=3&&z._rg<=0){z._rg=z.hp<z.mx*.5?3.2:5;const n=10,o0=Math.random();for(let k=0;k<n;k++)ebShoot(z.x,z.y-8,(k+o0)/n*6.283,105,9,0);try{sfx(()=>sxN(.4,'lowpass',600,200,1.5,.3))}catch(e){}}}}
+{const up111=update;update=function(dt){const r=up111(dt);try{if(state=='play')kzTick111(dt)}catch(e){console.error(e)}return r}}
+/* arrows and flames in the world */
+{const dn111=drawDmgN;drawDmgN=function(){const r=dn111.apply(this,arguments);try{if(KZ&&inD){for(const a of KZA111){g.save();g.translate(Math.round(a.x-cam.x),Math.round(a.y-cam.y));g.rotate(Math.atan2(a.vy,a.vx));g.fillStyle='#6a5030';g.fillRect(-7,-.5,9,1);g.fillStyle='#c8ccd0';g.fillRect(2,-1,2,2);g.fillStyle='#e8e0d0';g.fillRect(-8,-1.5,2,1);g.fillRect(-8,.5,2,1);g.restore()}
+  const ptx=Math.floor(P.x/T),pty=Math.floor(P.y/T),t=performance.now();for(let y=pty-14;y<=pty+14;y++)for(let x=ptx-20;x<=ptx+20;x++){if(x<0||y<0||x>=W||y>=H)continue;const o=ob[y*W+x];if(!o||o.t!='kzflame')continue;const s=flameOn111(o);if(s!=2)continue;const d=o.dir|0,vx=d==0?1:d==2?-1:0,vy=d==1?1:d==3?-1:0;
+   for(let k=1;k<=3;k++){const fx=x+vx*k,fy=y+vy*k;if(map[fy*W+fx]==5)break;for(let q=0;q<5;q++){const jx=Math.sin(t/60+q*1.7+k)*3,jy=Math.cos(t/70+q*2.3+k)*3,sz=7-k+((q*3+k)%3);W_(fx*T+8+jx-sz/2,fy*T+8+jy-sz/2,sz,sz,q%3==0?'#fff2a0':q%2?'#ff9a30':'#ff5a10')}}}}}catch(e){}return r}}
+/* light from lit braziers and flame jets */
+{const lg111=lavaGlow;lavaGlow=function(d2,x0,y0){const r=lg111.apply(this,arguments);try{if(KZ&&inD){for(let y=y0-4;y<y0+24;y++)for(let x=x0-4;x<x0+36;x++){if(x<0||y<0||x>=W||y>=H)continue;const o=ob[y*W+x];if(!o)continue;
+  if(o.t=='kzbraz'&&o.lit>KZC111)LIT(d2,x*T+8-cam.x,y*T+2-cam.y,70+Math.sin(performance.now()/90+x)*5,1);else if(o.t=='kzflame'&&flameOn111(o)==2){const d=o.dir|0;LIT(d2,(x+(d==0?2:d==2?-2:0))*T+8-cam.x,(y+(d==1?2:d==3?-2:0))*T+8-cam.y,60,.9)}else if(o.t=='kzseal')LIT(d2,x*T+8-cam.x,y*T+4-cam.y,22,.5)}}}catch(e){}return r}}
+/* ---------- surface stairways: one of each tier, placed with the world ---------- */
+function kzSurf111(){if(inD)return;if(ob.some(o=>o&&o.t=='kzstair'))return;let sd=((wseed|0)^0x5bd1e995)>>>0||7;const rnd=()=>{sd=(sd*1664525+1013904223)>>>0;return sd/4294967296};
+ const sx=(typeof SX!='undefined'?SX:P.x/T)|0,sy=(typeof SY!='undefined'?SY:P.y/T)|0;let rc=null;try{rc=locReactor()}catch(e){}
+ const okT=(x,y)=>{if(x<4||y<4||x>=W-4||y>=H-4)return false;for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++){const j=(y+b)*W+x+a,m=map[j];if(m!=0&&m!=2&&m!=3)return false;const q=ob[j];if(q&&!(q.t=='tree'||q.t=='rock'||q.t=='bush'||q.t=='tgrass'||q.t=='flower'||q.t=='grass'))return false}
+  try{if(inAnyBld(x*T+8,y*T+8)||inAnyBld(x*T+8,(y+2)*T+8))return false}catch(e){}if(map[(y+1)*W+x]==1)return false;return true};
+ const placed=[];for(const t of[1,2,3]){let best=null;for(let k=0;k<4000&&!best;k++){const x=4+Math.floor(rnd()*(W-8)),y=4+Math.floor(rnd()*(H-8));if(!okT(x,y))continue;const ds=Math.hypot(x-sx,y-sy);
+   if(t==1&&(ds<38||ds>95||(typeof bm!='undefined'&&bm&&bm[y*W+x]!=0&&k<2500)))continue;
+   if(t==2&&(ds<70||(typeof bm!='undefined'&&bm&&bm[y*W+x]!=1&&bm[y*W+x]!=2&&k<2500)))continue;
+   if(t==3){if(!rc)continue;const dr=Math.hypot(x-rc.x,y-rc.y);if(dr<RR*1.15||dr>RR*2.1)continue}
+   if(placed.some(p=>Math.hypot(p[0]-x,p[1]-y)<30))continue;best=[x,y]}
+  if(!best)continue;const[x,y]=best;for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++)ob[(y+b)*W+x+a]=null;ob[(y+1)*W+x]=null;ob[y*W+x]={t:'kzstair',tier:t,hp:999};placed.push(best)}
+ return placed}
+{const in111=init;init=function(...a){const r=in111.apply(this,a);try{kzSurf111()}catch(e){console.error(e)}KZA111.length=0;return r}}
+{const ld111=load;load=function(){const r=ld111();try{if(!inD)kzSurf111()}catch(e){}return r}}
+/* say it when you walk near a stairway for the first time */
+var KZSEEN111={};
+{const up111b=update;update=function(dt){const r=up111b(dt);try{if(state=='play'&&!inD&&Math.random()<.05){const px=Math.floor(P.x/T),py=Math.floor(P.y/T);for(let y=py-14;y<=py+14;y++)for(let x=px-20;x<=px+20;x++){const o=ob[y*W+x];if(o&&o.t=='kzstair'&&!o.seen){o.seen=1;const t=o.tier|0;
+  say(B111('Egy ősi lejárat a közelben: '+KZN111.hu[t]+' — legalább '+KZREQ111[t]+' felszerelés-pont kell hozzá (neked '+gs111()+').','An ancient stairway nearby: '+KZN111.en[t]+' — it needs at least '+KZREQ111[t]+' gear points (you have '+gs111()+').'))}}}}catch(e){}return r}}
+var ST111={};
+
+/* ===== v112: the world fights back — supply drops, blood moons, treasure maps; daily challenges with streaks; milestones with toasts ===== */
+GAMEV=124;
+const WOB112=()=>inD&&OW?OW.ob:ob,WMAP112=()=>inD&&OW?OW.map:map,ABS112=()=>day+time;
+Object.assign(LBL,{tmap:'Treasure map',adrop:'Supply drop',tcache:'Buried cache'});Object.assign(LBLX,{tmap:'Treasure map',adrop:'Supply drop',tcache:'Buried cache'});Object.assign(NMX,{adrop:'supply drop',tcache:'buried cache'});
+HU.unshift(['Treasure map','Kincses térkép'],['treasure map','kincses térkép'],['Supply drop','Ellátmányláda'],['supply drop','ellátmányláda'],['Buried cache','Elásott rejtekhely'],['buried cache','elásott rejtekhely']);
+Object.assign(INT,{adrop:1,tcache:1});Object.assign(SOLID,{adrop:1});try{Object.assign(STYSKIP,{adrop:1,tcache:1})}catch(e){}
+{const ic112=icon2;icon2=function(k,x,y){if(k=='tmap'){Q(x+3,y+4,14,12,'#c8b080');Q(x+4,y+5,12,10,'#e8d8a8');Q(x+3,y+4,2,12,'#a08858');Q(x+15,y+4,2,12,'#a08858');Q(x+6,y+8,3,1,'#7a8a5a');Q(x+7,y+11,4,1,'#5a7aa0');for(let i=0;i<4;i++){Q(x+10+i,y+6+i,1,1,'#c02020');Q(x+13-i,y+6+i,1,1,'#c02020')}return true}return ic112(k,x,y)}}
+Object.assign(DRAWX,{
+ adrop(o,x,y){const op=o.op;W_(x,y+12,17,4,'rgba(0,0,0,.3)');if(!op){W_(x-8,y+10,9,4,'#e8e4dc');W_(x-8,y+10,9,1,'#ff6a3a');W_(x-6,y+12,5,1,'#c8c4bc')}
+  W_(x+1,y+2,15,12,'#4a5a32');W_(x+1,y+2,15,2,op?'#2a3420':'#6a7a48');W_(x+1,y+8,15,1,'#3a4626');W_(x+3,y+4,1,9,'#3a4626');W_(x+13,y+4,1,9,'#3a4626');if(!op){W_(x+6,y+5,5,5,'#e8e0c0');W_(x+8,y+5,1,5,'#c02020');W_(x+6,y+7,5,1,'#c02020')}else W_(x+2,y+3,13,3,'#1a1e12');
+  if(o.bm&&!op){W_(x+1,y+2,15,1,'#c02020')}},
+ tcache(o,x,y){W_(x+2,y+9,12,5,'#6a5034');W_(x+3,y+8,10,2,'#7a6040');for(let i=0;i<5;i++){W_(x+4+i*2,y+7+i,2,1,'#c8c0b0');W_(x+12-i*2,y+7+i,2,1,'#c8c0b0')}}});
+/* ---------- stats (per save) ---------- */
+ST111=ST111||{};const st112=(k,n)=>{ST111[k]=(ST111[k]||0)+(n==null?1:n)};
+var EV112={nad:1.6,ad:null,plane:0,bmd:-1,bmDied:0,bms:0},TM112=null,DQ112={d:-1,L:[],full:0,streak:0},TQ112=[],LD112=null;
+/* ---------- toasts ---------- */
+function toast112(title,sub,col){TQ112.push({title,sub,col:col||'#ffd84a',t0:0});if(TQ112.length>4)TQ112.shift()}
+function fanfare112(){try{sfx(()=>{[659,784,988,1319].forEach((f,i)=>sxT('square',f,f,.14,.1,i*.09));sxT('triangle',1319,1319,.5,.08,.36)})}catch(e){}}
+/* ---------- milestones (kept across all saves) ---------- */
+const ACH112=[
+ ['first','Első vér','First blood','Ölj meg egy fertőzöttet','Kill an infected',()=>ST111.kills>=1],
+ ['k100','Mészáros','Butcher','100 legyőzött ellenfél','Defeat 100 enemies',()=>ST111.kills>=100],
+ ['k500','Egyszemélyes hadsereg','One-man army','500 legyőzött ellenfél','Defeat 500 enemies',()=>ST111.kills>=500],
+ ['d7','Egy hét a pokolban','A week in hell','Élj meg 7 napot','Live to see day 7',()=>day>=7],
+ ['d30','Veterán','Veteran','Élj meg 30 napot','Live to see day 30',()=>day>=30],
+ ['bm1','Vérhold-túlélő','Blood moon survivor','Éld túl a Vérholdat','Survive a blood moon',()=>ST111.bm>=1],
+ ['bm3','Vörös hajnal','Red dawn','Éld túl 3 Vérholdat','Survive 3 blood moons',()=>ST111.bm>=3],
+ ['ad1','Csomag érkezett','Special delivery','Nyiss ki egy ellátmányládát','Open a supply drop',()=>ST111.ad>=1],
+ ['ad10','Törzsvásárló','Frequent flyer','Nyiss ki 10 ellátmányládát','Open 10 supply drops',()=>ST111.ad>=10],
+ ['tc1','Kincsvadász','Treasure hunter','Áss ki egy elásott kincset','Dig up a buried cache',()=>ST111.tc>=1],
+ ['tc5','Kalóz','Pirate','Áss ki 5 elásott kincset','Dig up 5 buried caches',()=>ST111.tc>=5],
+ ['kz1','Kriptarabló','Crypt raider','Teljesítsd az Elfeledett kriptát','Clear a Forgotten Crypt',()=>ST111.kz1>=1],
+ ['kz2','Kazamataúr','Dungeon lord','Teljesítsd az Ősi kazamatát','Clear an Ancient Dungeon',()=>ST111.kz2>=1],
+ ['kz3','A Mélység ura','Master of the Abyss','Teljesítsd a Mélységet','Clear the Abyss',()=>ST111.kz3>=1],
+ ['clean','Hajszál híján','By a hair','Teljesíts egy kazamatát csapdasérülés nélkül','Clear a dungeon without a trap hit',()=>ST111.clean>=1],
+ ['puz3','Rejtvényfejtő','Puzzle solver','Oldj meg 3 kazamata-rejtvényt','Solve 3 dungeon puzzles',()=>ST111.puz>=3],
+ ['wc10','A tökéletes vécé','The perfect toilet','Találj egy 10/10-es vécét','Find a 10/10 toilet',()=>ST111.wc10>=1],
+ ['wc15','Budi-kritikus','Toilet critic','Értékelj 15 vécét','Review 15 toilets',()=>ST111.wc>=15],
+ ['gs25','Felfegyverkezve','Armed to the teeth','Érj el 25 felszerelés-pontot','Reach 25 gear points',()=>gs111()>=25],
+ ['st3','Kitartó','Dedicated','3 napos kihívás-sorozat','A 3-day challenge streak',()=>DQ112.streak>=3],
+ ['st7','Megszállott','Obsessed','7 napos kihívás-sorozat','A 7-day challenge streak',()=>DQ112.streak>=7],
+ ['lv10','Tapasztalt','Seasoned','Érd el a 10. szintet','Reach level 10',()=>XS.lv>=10],
+ ['walk','Vándor','Wanderer','Tegyél meg 5000 métert','Walk 5000 metres',()=>ST111.walk>=5000],
+ ['fish','Horgászmester','Master angler','Fogj 25 halat','Catch 25 fish',()=>ST111.fish>=25]];
+var ACHG112={};try{ACHG112=JSON.parse(localStorage.getItem('pxc_ach')||'{}')||{}}catch(e){ACHG112={}}
+function achTick112(){for(const a of ACH112){if(ACHG112[a[0]])continue;let ok=false;try{ok=a[5]()}catch(e){}if(!ok)continue;ACHG112[a[0]]=Date.now();try{localStorage.setItem('pxc_ach',JSON.stringify(ACHG112))}catch(e){}
+  toast112(B111('Mérföldkő: ','Milestone: ')+B111(a[1],a[2]),B111(a[3],a[4]),'#ffd84a');fanfare112();try{gainXp(30)}catch(e){}}}
+/* ---------- daily challenges ---------- */
+const DQP112=[
+ ['kills',15,'Győzz le {n} ellenfelet','Defeat {n} enemies'],['nk',8,'Győzz le {n} ellenfelet éjjel','Defeat {n} enemies at night'],['dk',10,'Győzz le {n} ellenfelet kazamatában','Defeat {n} enemies in a dungeon',()=>gs111()>=12],
+ ['wood',40,'Gyűjts {n} fát','Gather {n} wood'],['stone',30,'Gyűjts {n} követ','Gather {n} stone'],['fish',3,'Fogj {n} halat','Catch {n} fish'],['walk',600,'Tegyél meg {n} métert','Walk {n} metres'],
+ ['eat',4,'Egyél {n} alkalommal','Eat {n} times'],['drink',4,'Igyál {n} alkalommal','Drink {n} times'],['wc',2,'Értékelj {n} vécét','Review {n} toilets'],['ad',1,'Nyiss ki egy ellátmányládát','Open a supply drop',()=>!!EV112.ad],['puz',1,'Oldj meg egy kazamata-rejtvényt','Solve a dungeon puzzle',()=>gs111()>=12]];
+const DQR112=[['a9',12],['bandage',2],['medkit',1],['a762',6],['canned',2],['diamond',1],['iron_ingot',3],['a12',6],['gold',2]];
+function dqNew112(){const pool=DQP112.filter(p=>!p[4]||p[4]()),L=[],sc=1+Math.min(day,20)*.05;while(L.length<3&&pool.length){const p=pool.splice(Math.floor(Math.random()*pool.length),1)[0];const g=Math.max(1,Math.round(p[1]*(p[1]>3?sc:1)));L.push({k:p[0],g,s0:ST111[p[0]]||0,done:0})}DQ112.d=day;DQ112.L=L;DQ112.full=0}
+function dqTxt112(q){const p=DQP112.find(p=>p[0]==q.k);return p?B111(p[2],p[3]).replace('{n}',q.g):q.k}
+function dqProg112(q){return Math.min(q.g,(ST111[q.k]||0)-q.s0)}
+function dqTick112(){if(DQ112.d!==day){if(DQ112.d>=0&&DQ112.L.length&&!DQ112.full&&DQ112.streak){DQ112.streak=0}dqNew112()}
+ for(const q of DQ112.L){if(q.done||dqProg112(q)<q.g)continue;q.done=1;const rw=DQR112[Math.floor(Math.random()*DQR112.length)];inv[rw[0]]=(inv[rw[0]]||0)+rw[1];if(DMAX[rw[0]])du[rw[0]]=DMAX[rw[0]];try{gainXp(50+day*3)}catch(e){}
+  toast112(B111('Kihívás teljesítve!','Challenge complete!'),dqTxt112(q)+' — +'+rw[1]+' '+tr(LBL[rw[0]]||LBLX[rw[0]]||rw[0]).toLowerCase(),'#7adfff');try{sfx(()=>{sxT('square',784,784,.1,.1);sxT('square',1175,1175,.18,.1,.1)})}catch(e){}}
+ if(!DQ112.full&&DQ112.L.length&&DQ112.L.every(q=>q.done)){DQ112.full=1;DQ112.streak++;inv.tmap=(inv.tmap||0)+1;try{gainXp(Math.min(6,DQ112.streak)*80)}catch(e){}
+  toast112(B111('Minden napi kihívás kész! Sorozat: '+DQ112.streak+' nap','All daily challenges done! Streak: '+DQ112.streak+' days'),B111('Jutalom: kincses térkép és +'+Math.min(6,DQ112.streak)*80+' XP','Reward: a treasure map and +'+Math.min(6,DQ112.streak)*80+' XP'),'#ffd84a');fanfare112()}}
+/* ---------- picking a spot out in the world ---------- */
+function spot112(dmin,dmax){const M=WMAP112(),O=WOB112(),px=(inD&&OW?OW.x:P.x)/T,py=(inD&&OW?OW.y:P.y)/T;
+ for(let k=0;k<600;k++){const a=Math.random()*6.283,d=dmin+Math.random()*(dmax-dmin),x=Math.round(px+Math.cos(a)*d),y=Math.round(py+Math.sin(a)*d);if(x<4||y<4||x>=W-4||y>=H-4)continue;let ok=true;
+  for(let b=-1;b<=1&&ok;b++)for(let c=-1;c<=1&&ok;c++){const j=(y+b)*W+x+c,m=M[j];if(m!=0&&m!=2&&m!=3)ok=false;const q=O[j];if(q&&SOLID[q.t]&&!(q.t=='tree'||q.t=='rock'))ok=false}
+  if(!ok)continue;try{if(inAnyBld(x*T+8,y*T+8))continue}catch(e){}try{const rc=locReactor();if(rc&&Math.hypot(x-rc.x,y-rc.y)<RR*.9)continue}catch(e){}return[x,y]}return null}
+/* ---------- supply drops ---------- */
+function adLoot112(o){const L=[[pk111(['a9','a12','a762']),ri111(8,16)],['medkit',1],['bandage',ri111(1,3)],[pk111(['canned','bottle']),2]];const r=Math.random();
+ if(r<.5)L.push([pk111(['pistol','revolver','shotgun','smg']),1]);else if(r<.65)L.push([pk111(['ak47','rifle']),1]);
+ if(Math.random()<.45)L.push([armPiece111(pk111(['iron','gold','copper'])),1]);if(Math.random()<.35)L.push(['tmap',1]);L.push(['diamond',ri111(0,2)]);
+ if(o.bm){L.push(['diamond',ri111(2,4)],['medkit',1],[armPiece111(pk111(['gold','diamond'])),1]);if(Math.random()<.5)L.push(['tmap',1])}return L}
+function adSpawn112(){const s=spot112(30,58);if(!s)return false;const[x,y]=s,O=WOB112();for(let b=-1;b<=1;b++)for(let c=-1;c<=1;c++){const q=O[(y+b)*W+x+c];if(q&&(q.t=='tree'||q.t=='rock'))O[(y+b)*W+x+c]=null}
+ O[y*W+x]={t:'adrop',hp:999};EV112.ad={x,y,t0:ABS112()};EV112.plane=performance.now();
+ say(B111('Repülőgép zúg el a fejed felett… ellátmányládát dobtak le! Kövesd a vörös füstöt — de nem csak te hallottad.','A plane roars overhead… a supply crate was dropped! Follow the red smoke — but you weren\'t the only one who heard it.'));
+ try{sfx(()=>{sxT('sawtooth',78,66,5.5,.22,0,0,1.4,320);sxT('sawtooth',79,67,5.5,.16,0,0,1.4,300);sxN(5.5,'lowpass',500,250,.7,.12,0,0,1.4)})}catch(e){}return true}
+function adTick112(){const A=ABS112();if(!EV112.ad){if(A>=EV112.nad&&!inD&&dk0()<.3&&!creative){if(adSpawn112())EV112.nad=A+1+Math.random()*1.1;else EV112.nad=A+.1}return}
+ const ad=EV112.ad,O=WOB112(),o=O[ad.y*W+ad.x];if(!o||o.t!='adrop'){EV112.ad=null;return}
+ if(!o.op&&A>ad.t0+1.4){O[ad.y*W+ad.x]=null;EV112.ad=null;if(!inD)say(B111('Valaki más vitte el az ellátmányládát…','Someone else took the supply crate…'));return}
+ if(o.op&&A>ad.t0+.4){O[ad.y*W+ad.x]=null;EV112.ad=null;return}
+ if(!inD&&!o.op&&!o.amb&&Math.hypot(P.x/T-ad.x,P.y/T-ad.y)<18){o.amb=1;const n=Math.min(10,4+Math.floor(day/3));for(let k=0;k<n;k++){const a=Math.random()*6.283,r=4+Math.random()*4,x=(ad.x+Math.cos(a)*r)*T,y=(ad.y+Math.sin(a)*r)*T;if(blocked(x,y,5))continue;const v=pickV(x,y);zs.push({id:nid(),x,y,hp:VHP[v],a:0,t:0,vx:0,vy:0,z:1,v,al:20})}
+  if(day>6)zs.push(Object.assign(mkMut('c',(ad.x+5)*T,(ad.y+1)*T),{al:20}));say(B111('A ládát már körbeállták a fertőzöttek!','The infected got to the crate first!'))}}
+/* ---------- blood moon ---------- */
+function bmOn112(){return EV112.bmd===day&&dk0()>.45}
+function bmTick112(dt){if(bmOn112()){if(P.hp<=0)EV112.bmDied=1;if(!inD){EV112.bms-=dt;if(EV112.bms<=0){EV112.bms=1.5;if(zs.length<12+day*.8){const a=Math.random()*6.283,x=P.x+Math.cos(a)*SPR109(),y=P.y+Math.sin(a)*SPR109();if(!blocked(x,y,5)){const v=pickV(x,y);zs.push({id:nid(),x,y,hp:Math.round(VHP[v]*1.5),a:0,t:0,vx:0,vy:0,z:1,v,bmz:1,al:30})}}}}}}
+function onDay112(){if(day>=5&&day%5==0){EV112.bmd=day;EV112.bmDied=0;setTimeout(()=>{say(B111('Különös vörös fény a láthatáron… Ma éjjel VÉRHOLD kel. Készülj fel!','A strange red glow on the horizon… Tonight a BLOOD MOON rises. Get ready!'));try{sfx(()=>{for(const at of[0,1.6,3.2])sxT('sine',98,96,1.5,.3,at);sxT('sine',147,145,4.5,.08)})}catch(e){}},1500)}
+ if(EV112.bmd===day-1){if(!EV112.bmDied){st112('bm');try{gainXp(150+day*5)}catch(e){}const O=WOB112(),s=(()=>{const px=Math.floor((inD&&OW?OW.x:P.x)/T),py=Math.floor((inD&&OW?OW.y:P.y)/T);for(let r=2;r<6;r++)for(let k=0;k<12;k++){const a=k/12*6.283,x=Math.round(px+Math.cos(a)*r),y=Math.round(py+Math.sin(a)*r),j=y*W+x,m=WMAP112()[j];if(!O[j]&&(m==0||m==2||m==3||m==12||m==14))return[x,y]}return null})();
+   if(s)O[s[1]*W+s[0]]={t:'adrop',hp:999,bm:1,op:0};toast112(B111('Túlélted a Vérholdat!','You survived the blood moon!'),B111('Egy jutalomláda vár a közelben','A reward crate waits nearby'),'#ff6a5a');fanfare112()}EV112.bmd=-1}}
+/* ---------- treasure maps ---------- */
+function tmTick112(){if(TM112){const O=WOB112(),o=O[TM112.y*W+TM112.x];if(!o||o.t!='tcache')TM112=null;return}if(!(inv.tmap>0)||inD)return;const s=spot112(34,80);if(!s)return;const[x,y]=s;
+ const O=WOB112();O[y*W+x]={t:'tcache',hp:999};TM112={x,y};inv.tmap--;if(inv.tmap<=0)delete inv.tmap;
+ say(B111('Kiterítetted a kincses térképet: egy vörös X jelöl egy helyet a vadonban. Vigyél ásót!','You unfold the treasure map: a red X marks a spot in the wild. Bring a shovel!'));try{sfx(()=>{sxN(.4,'bandpass',2400,1200,1,.25);sxT('triangle',660,880,.2,.06,.2)})}catch(e){}}
+function hasShovel112(){for(const k in inv)if(inv[k]>0&&/shovel/.test(k))return true;return HB.some(k=>k&&/shovel/.test(k))}
+function tcLoot112(){const L=[['diamond',ri111(2,4)],['gold',ri111(3,6)],['iron_ingot',ri111(2,4)],[pk111(['a9','a762','a12']),ri111(8,14)]];if(Math.random()<.3)L.push([armPiece111(pk111(['gold','diamond'])),1]);if(Math.random()<.3)L.push([pk111(['revolver','smg','ak47','rifle','shotgun']),1]);if(Math.random()<.2)L.push(['tmap',1]);return L}
+/* ---------- using the new things ---------- */
+{const uo112=useObj;useObj=function(n){const o=n&&n.o;if(!o)return uo112(n);
+  if(o.t=='adrop'){if(o.op){say(B111('Üres láda','An empty crate'));return}o.op=1;st112('ad');try{gainXp(o.bm?80:40)}catch(e){}try{sfx(()=>{sxN(.25,'bandpass',800,400,1.2,.4);sxT('square',220,330,.12,.08,.1)})}catch(e){}give111(adLoot112(o),B111(o.bm?'Vérhold-jutalom: ':'Ellátmány: ',o.bm?'Blood moon reward: ':'Supplies: '));if(EV112.ad&&EV112.ad.x==n.tx&&EV112.ad.y==n.ty)EV112.ad.t0=Math.min(EV112.ad.t0,ABS112()-1);return}
+  if(o.t=='tcache'){if(!hasShovel112()){say(B111('Itt van elásva valami… ásó kell hozzá!','Something is buried here… you need a shovel!'));return}ob[n.ty*W+n.tx]=null;TM112=null;st112('tc');try{gainXp(70)}catch(e){}
+   try{sfx(()=>{for(const at of[0,.25,.5])sxN(.18,'lowpass',900,300,1,.45,at);sxT('square',523,784,.25,.08,.8)})}catch(e){}for(let k=0;k<8;k++)parts.push({x:n.tx*T+8,y:n.ty*T+8,vx:(Math.random()-.5)*80,vy:-Math.random()*60,l:.6,c:'#7a6040'});give111(tcLoot112(),B111('Kiástad a kincset! ','You dug up the treasure! '));return}
+  return uo112(n)}}
+/* ---------- watching what happens ---------- */
+var IP112={},PP112=null;
+{const wc112=wcRate107;wcRate107=function(o,i,kind){const r=wc112.apply(this,arguments);st112('wc');if(o&&o.wcr107>=10)st112('wc10');return r}}
+{const up112=update;update=function(dt){const pre=zs,ids=pre.slice(),pf=P.food,pth=P.th,px=P.x,py=P.y,night=dk0()>.5&&!inD,dun=!!(KZ&&inD);const r=up112(dt);
+  try{if(state=='play'){const now=new Set(zs);for(const z of ids){if(z._k112)continue;if(z.hp<=0&&(!now.has(z)||pre===zs)){z._k112=1;st112('kills');if(night)st112('nk');if(dun)st112('dk')}}for(const z of zs)if(z.hp<=0&&!z._k112){z._k112=1;st112('kills');if(night)st112('nk');if(dun)st112('dk')}
+   for(const k of['wood','stone','fish']){const v=inv[k]|0,d=v-(IP112[k]==null?v:IP112[k]);if(d>0&&d<=12)st112(k,d);IP112[k]=v}
+   const dd=Math.hypot(P.x-px,P.y-py);if(dd<24)ST111._w=(ST111._w||0)+dd;if(ST111._w>=T){st112('walk',Math.floor(ST111._w/T));ST111._w%=T}
+   if(P.food-pf>4)st112('eat');if((P.th??0)-(pth??0)>4)st112('drink');
+   if(LD112!==day){if(LD112!=null)onDay112();LD112=day}
+   adTick112();bmTick112(dt);tmTick112();dqTick112();if(Math.random()<.04)achTick112()}}catch(e){console.error(e)}return r}}
+/* ---------- HUD: blood-moon tint, the plane, compass marks, challenge panel, toasts ---------- */
+function arrow112(tx,ty,col,lab){const sx=(tx-cam.x)*ZM,sy=(ty-cam.y)*ZM,cx=(P.x-cam.x)*ZM,cy=(P.y-cam.y-8)*ZM,d=Math.round(Math.hypot(tx-P.x,ty-P.y)/T);
+ if(sx>14&&sy>20&&sx<VW-14&&sy<VH-30){const b=Math.round(Math.sin(performance.now()/200)*2);g.fillStyle=col;g.beginPath();g.moveTo(sx,sy-14+b);g.lineTo(sx-5,sy-22+b);g.lineTo(sx+5,sy-22+b);g.closePath();g.fill();return}
+ const a=Math.atan2(sy-cy,sx-cx),R=Math.min(VW,VH)/2-26,ax=Math.max(16,Math.min(VW-16,cx+Math.cos(a)*R)),ay=Math.max(24,Math.min(VH-40,cy+Math.sin(a)*R));
+ g.save();g.translate(ax,ay);g.rotate(a);g.fillStyle='rgba(0,0,0,.5)';g.beginPath();g.moveTo(9,1);g.lineTo(-5,-6);g.lineTo(-2,1);g.lineTo(-5,8);g.closePath();g.fill();g.fillStyle=col;g.beginPath();g.moveTo(8,0);g.lineTo(-6,-7);g.lineTo(-3,0);g.lineTo(-6,7);g.closePath();g.fill();g.restore();
+ noTr=true;txt(lab+' '+d+'m',ax,ay+16,col,'center');noTr=false}
+{const hd112=hud;hud=function(){if(state=='play'&&!inD&&bmOn112()&&GMODE!=3&&!view){g.save();g.setTransform(1,0,0,1,0,0);const cv=g.canvas,p=.5+.12*Math.sin(performance.now()/900);g.globalCompositeOperation='multiply';g.fillStyle='rgba(255,110,100,'+(.75*p).toFixed(3)+')';g.fillRect(0,0,cv.width,cv.height);g.globalCompositeOperation='screen';g.fillStyle='rgba(90,0,0,'+(.18*p).toFixed(3)+')';g.fillRect(0,0,cv.width,cv.height);g.globalCompositeOperation='source-over';
+   const vg=g.createRadialGradient(cv.width/2,cv.height/2,Math.min(cv.width,cv.height)*.3,cv.width/2,cv.height/2,Math.max(cv.width,cv.height)*.7);vg.addColorStop(0,'rgba(120,0,0,0)');vg.addColorStop(1,'rgba(90,0,0,'+(.45*p).toFixed(3)+')');g.fillStyle=vg;g.fillRect(0,0,cv.width,cv.height);g.restore()}
+  const r=hd112.apply(this,arguments);if(state!='play')return r;try{hud112()}catch(e){console.error(e)}return r}}
+function hud112(){const now=performance.now(),busy=invOpen||(typeof showMap!='undefined'&&showMap)||book||(typeof stOpen!='undefined'&&stOpen)||tut;
+ /* the plane */
+ if(EV112.plane&&now-EV112.plane<7000&&!inD){const u=(now-EV112.plane)/7000,x=-60+u*(VW+120),y=46+Math.sin(u*3)*3;Q(x+10,y+40,46,4,'rgba(0,0,0,.18)');Q(x,y,48,6,'#3a4038');Q(x+40,y-3,10,4,'#3a4038');Q(x+18,y-10,8,26,'#323830');Q(x+42,y-8,4,10,'#323830');Q(x+4,y+1,30,1,'#59614f');Q(x+50,y+1,3,4,'#20241e');
+  if(u>.4&&u<.6){const k=(u-.4)/.2;Q(x-6-k*12,y+8+k*30,6,6,'#4a5a32');Q(x-14-k*12,y-2+k*30,22,6,'#e8e4dc')}}
+ if(!inD&&bmOn112()){const p=.6+.4*Math.sin(now/300);noTr=true;txt(B111('VÉRHOLD','BLOOD MOON'),6,58,'rgba(255,'+Math.round(70+40*p)+',60,1)');noTr=false;g.fillStyle='rgba(200,30,20,.25)';g.beginPath();g.arc(VW-30,24,13,0,6.283);g.fill();g.fillStyle='#b8281a';g.beginPath();g.arc(VW-30,24,8,0,6.283);g.fill();g.fillStyle='#e0503a';g.beginPath();g.arc(VW-32,22,3,0,6.283);g.fill()}
+ if(busy)return;
+ /* compass marks */
+ if(!inD){if(EV112.ad){const o=ob[EV112.ad.y*W+EV112.ad.x];if(o&&!o.op)arrow112(EV112.ad.x*T+8,EV112.ad.y*T+8,'#ff6a4a',B111('Láda','Crate'))}if(TM112)arrow112(TM112.x*T+8,TM112.y*T+8,'#ffd84a','X');
+  const O=ob,px=Math.floor(P.x/T),py=Math.floor(P.y/T);for(let y=py-8;y<=py+8;y++)for(let x=px-8;x<=px+8;x++){const o=O[y*W+x];if(o&&o.t=='adrop'&&o.bm&&!o.op)arrow112(x*T+8,y*T+8,'#ff6a5a',B111('Jutalom','Reward'))}}
+ /* smoke from unopened crates (screen space, so it is visible above everything) */
+ if(!inD){const px=Math.floor(P.x/T),py=Math.floor(P.y/T);for(let y=py-14;y<=py+14;y++)for(let x=px-20;x<=px+20;x++){if(x<0||y<0||x>=W||y>=H)continue;const o=ob[y*W+x];if(!o||o.t!='adrop'||o.op)continue;const sx=(x*T+8-cam.x)*ZM,sy=(y*T+4-cam.y)*ZM;
+   for(let k=0;k<9;k++){const ph=(now/1000*.35+k/9)%1,yy=sy-ph*90,xx=sx+Math.sin(k*2.1+ph*4)*7*ph+ph*10,sz=(3+ph*12)*ZM;g.fillStyle=(o.bm?'rgba(255,60,40,':'rgba(230,60,50,')+(.55*(1-ph)).toFixed(3)+')';g.fillRect(xx-sz/2,yy-sz/2,sz,sz)}}}
+ /* challenges */
+ if(DQ112.L.length){const x=VW-6,y0=100;noTr=true;const H=['NAPI KIHÍVÁSOK','DAILY CHALLENGES'],w=150;Q(x-w,y0-9,w+2,14+DQ112.L.length*11,'rgba(10,12,16,.55)');Q(x-w,y0-9,w+2,1,'rgba(255,216,74,.5)');
+  txt(B111(H[0],H[1])+(DQ112.streak?' · '+DQ112.streak+B111(' nap',' d'):''),x-w+4,y0,'#ffd84a');
+  DQ112.L.forEach((q,i)=>{const p=dqProg112(q),y=y0+11+i*11;let s=dqTxt112(q);g.font=fnt(0,9);while(g.measureText(s).width>w-40&&s.length>6)s=s.slice(0,-2);if(s!==dqTxt112(q))s+='…';txt((q.done?'✓ ':'• ')+s,x-w+4,y,q.done?'#7adf6a':'#e8e4d8');txt(q.done?'':p+'/'+q.g,x-2,y,'#9ab8d0','right')});
+  txt(B111('Felszerelés: ','Gear: ')+gs111()+B111(' FP',' GP')+B111('   Mérföldkő ','   Milestones ')+Object.keys(ACHG112).length+'/'+ACH112.length,x-w+4,y0+13+DQ112.L.length*11,'#9ab8d0');noTr=false}
+ /* toasts */
+ if(TQ112.length){const q=TQ112[0];if(!q.t0)q.t0=now;const e=(now-q.t0)/1000;if(e>4.2){TQ112.shift()}else{const sl=e<.3?e/.3:e>3.8?(4.2-e)/.4:1,w=Math.max(200,Math.min(VW-20,(q.sub.length*4.6|0)+60)),x=VW/2-w/2,y=-30+sl*66;
+  Q(x,y,w,30,'rgba(12,10,8,.88)');Q(x,y,w,1,q.col);Q(x,y+29,w,1,q.col);Q(x+8,y+7,12,9,q.col);Q(x+11,y+16,6,3,q.col);Q(x+9,y+19,10,2,q.col);Q(x+6,y+8,2,5,q.col);Q(x+20,y+8,2,5,q.col);Q(x+10,y+9,3,3,'rgba(255,255,255,.6)');
+  noTr=true;txt(q.title,x+28,y+12,q.col);txt(q.sub,x+28,y+23,'#e8e4d8');noTr=false}}}
+/* ---------- save / load ---------- */
+{const sv112=save;save=function(){const r=sv112.apply(this,arguments);try{localStorage.setItem(SKEY()+'_k111',JSON.stringify({st:ST111,ev:EV112,tm:TM112,dq:DQ112}))}catch(e){}return r}}
+function rd112(){try{const d=JSON.parse(localStorage.getItem(SKEY()+'_k111')||'null');if(!d)return false;ST111=d.st||{};EV112=Object.assign({nad:day+1.2,ad:null,plane:0,bmd:-1,bmDied:0,bms:0},d.ev||{});EV112.plane=0;TM112=d.tm||null;DQ112=Object.assign({d:-1,L:[],full:0,streak:0},d.dq||{});return true}catch(e){return false}}
+{const in112=init;init=function(...a){ST111={};EV112={nad:1.6,ad:null,plane:0,bmd:-1,bmDied:0,bms:0};TM112=null;DQ112={d:-1,L:[],full:0,streak:0};TQ112.length=0;LD112=null;IP112={};const r=in112.apply(this,a);LD112=day;return r}}
+{const ld112=load;load=function(){const r=ld112();ST111={};EV112={nad:day+1.2,ad:null,plane:0,bmd:-1,bmDied:0,bms:0};TM112=null;DQ112={d:-1,L:[],full:0,streak:0};rd112();LD112=day;IP112={};return r}}
+
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
 function fireList(){const n=performance.now();if(FL.ob!==ob||n-FL.t>500){FL.ob=ob;FL.t=n;FL.a=[];for(let i=0;i<ob.length;i++){const o=ob[i];if(o&&(o.t=='fire'&&o.on||o.t=='fbarrel'))FL.a.push([(i%W)*T+8,Math.floor(i/W)*T+8])}}return FL.a}
