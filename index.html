@@ -5967,11 +5967,11 @@ optsMenu=function(){const moved=ms.x!=lmx||ms.y!=lmy;lmx=ms.x;lmy=ms.y;const hu=
  noTr=true;for(let r=0;r<OPV.length;r++){const i=OPV[r],y=obY(r)+(i==14?6:0);if(moved&&ms.x>=OPB.x&&ms.x<OPB.x+OPB.w&&ms.y>=y&&ms.y<y+OPB.h)osel=r;const on=osel==r;
   Q(OPB.x-1,y-1,OPB.w+2,OPB.h+2,on?'#ffd84a':'#3a4634');Q(OPB.x,y,OPB.w,OPB.h,on?'#4a3722':'#1c1a12');
   if(i==14)txt(OPN[hu?'hu':'en'][14],VW/2,y+10,on?'#ffd84a':'#cfd8c0','center');
-  else if(i==5||i==2||i==10||i==11){txt(OPN[hu?'hu':'en'][i].replace(/\s*>$/,'')+(i==5?'':''),OPB.x+8,y+10,on?'#ffd84a':i==5?'#e8d8a0':'#b8c8a8');txt('>',OPB.x+OPB.w-8,y+10,on?'#ffd84a':'#cfd8c0','center');if(i==2)txt(optVal(2).replace(/\s*>$/,''),OPB.x+OPB.w-60,y+10,'#f0e6b8','center')}
+  else if(i==5||i==2||i==10||i==11||i==15){txt(OPN[hu?'hu':'en'][i].replace(/\s*>$/,'')+(i==5?'':''),OPB.x+8,y+10,on?'#ffd84a':i==5?'#e8d8a0':'#b8c8a8');txt('>',OPB.x+OPB.w-8,y+10,on?'#ffd84a':'#cfd8c0','center');if(i==2)txt(optVal(2).replace(/\s*>$/,''),OPB.x+OPB.w-60,y+10,'#f0e6b8','center')}
   else{txt(OPN[hu?'hu':'en'][i],OPB.x+8,y+10,on?'#ffd84a':'#b8c8a8');txt('<',OPB.x+OPB.w-118,y+10,on?'#ffd84a':'#5a6a52','center');txt(optVal(i),OPB.x+OPB.w-60,y+10,i==12&&DIFF==0?'#9be07d':i==12&&DIFF==3?'#ff8a6a':'#f0e6b8','center');txt('>',OPB.x+OPB.w-8,y+10,on?'#ffd84a':'#5a6a52','center')}}
  txt(hu?'W/S: választás   A/D: változtatás   Esc: vissza':'W/S choose   A/D change   Esc back',VW/2,obY(OPV.length)+15,'#8fa07f','center');noTr=false};
 optsKey=function(c){const n=OPV.length;if(c=='Escape'){state='title';return}if(osel>=n)osel=0;if(c=='ArrowUp'||c=='KeyW')osel=(osel+n-1)%n;else if(c=='ArrowDown'||c=='KeyS')osel=(osel+1)%n;else if(c=='ArrowLeft'||c=='KeyA')optStep(OPV[osel],-1);else if(c=='ArrowRight'||c=='KeyD'||c=='Enter'||c=='Space')optStep(OPV[osel],1)};
-optsClick=function(){for(let r=0;r<OPV.length;r++){const i=OPV[r],y=obY(r)+(i==14?6:0);if(ms.x>=OPB.x&&ms.x<OPB.x+OPB.w&&ms.y>=y&&ms.y<y+OPB.h){osel=r;optStep(i,ms.x<OPB.x+OPB.w-60&&i!=5&&i!=6&&i!=7&&i!=1&&i!=2&&i!=10&&i!=11&&i!=14?-1:1);return}}};
+optsClick=function(){for(let r=0;r<OPV.length;r++){const i=OPV[r],y=obY(r)+(i==14?6:0);if(ms.x>=OPB.x&&ms.x<OPB.x+OPB.w&&ms.y>=y&&ms.y<y+OPB.h){osel=r;optStep(i,ms.x<OPB.x+OPB.w-60&&i!=5&&i!=6&&i!=7&&i!=1&&i!=2&&i!=10&&i!=11&&i!=14&&i!=15?-1:1);return}}};
 OPB.y=52;OPB.h=15;OPB.g=2;
 /* ---------- Graphics settings: main page + Video page + Shadows & lights page ---------- */
 let gsel=0,GPG='main';
@@ -7098,7 +7098,7 @@ DVOICE.critic=DVOICE.player;
  q(22,16,1,1,'#111114');q(14,15,1,2,'#111114');q(30,15,1,2,'#111114');q(15,15,1,1,'#c8ccd2');q(29,15,1,1,'#c8ccd2');DPORT.set(key,cv);return cv}}
 
 /* ===== v108: a gloomier world (no jump scares): washed-out colours, cold tint, vignette, drifting mist, darker nights, a quiet unsettling soundscape ===== */
-GAMEV=119;
+GAMEV=120;
 var MOOD=1,MDS=.7;try{const a=localStorage.getItem('pxc_mood'),b=localStorage.getItem('pxc_mds');if(a!=null&&a!=='')MOOD=+a;if(b!=null&&b!=='')MDS=Math.max(0,Math.min(1,+b))}catch(e){}
 function mdSave(){try{localStorage.setItem('pxc_mood',String(MOOD));localStorage.setItem('pxc_mds',String(MDS))}catch(e){}}
 /* settings: Graphics → Mood */
@@ -7138,6 +7138,20 @@ function ambTick108(dt){const want=MOOD&&MDS>0&&state=='play'&&vol>0&&!document.
   else{sxT('sawtooth',150,110,.5,.018);sxT('triangle',250,190,.45,.012,.07)}/* something creaks somewhere */
  }catch(e){}finally{try{SXS.mul=1}catch(e){}}}
 {const up108=update;update=function(dt){const r=up108(dt);try{ambTick108(dt)}catch(e){}return r}}
+/* ---------- Settings → Gameplay: mode, hunger, difficulty, mood + gloom slider in one place ---------- */
+try{const M=GPAGES.main.rows;for(const k of['mood','mds']){const ix=M.findIndex(r=>r.k==k);if(ix>=0)M.splice(ix,1)}
+ GPAGES.play={t:['Játékmenet','Gameplay'],rows:[
+  {k:'gm',l:['Mód','Mode'],ty:'cyc',get:()=>optVal(6),step:d=>optStep(6,d<0?-1:1)},
+  {k:'hg',l:['Éhség és szomjúság','Hunger & thirst'],ty:'tog',get:()=>optVal(7),step:d=>optStep(7,d<0?-1:1)},
+  {k:'df',l:['Nehézség','Difficulty'],ty:'cyc',get:()=>optVal(12),step:d=>optStep(12,d<0?-1:1)},
+  {k:'mood',l:['Hangulat','Mood'],ty:'cyc',get:()=>MOOD?(hu_()?'Komor':'Gloomy'):(hu_()?'Klasszikus':'Classic'),step:()=>{MOOD=MOOD?0:1;mdSave()},desc:()=>hu_()?'Fakóbb színek, hideg tónus, köd és nyugtalan háttérhangok — ijesztgetés nélkül':'Washed-out colours, a cold tint, mist and an uneasy soundscape — no jump scares'},
+  {k:'mds',l:['Komorság erőssége','Gloom strength'],ty:'sld',dis:()=>!MOOD,get:()=>MDS,set:v=>{MDS=v;mdSave()}},
+  {k:'back',ty:'back'}]};
+ OPN.en[15]='Gameplay';OPN.hu[15]='Játékmenet';for(const i of[6,7,12]){const p=OPV.indexOf(i);if(p>=0)OPV.splice(p,1)}OPV.splice(Math.max(0,OPV.indexOf(5)+1),0,15)}catch(e){}
+{const ov108=optVal;optVal=function(i){if(i==15)return '>';return ov108(i)}}
+{const os108=optStep;optStep=function(i,d){if(i==15){state='gfxo';GPG='play';gsel=0;try{snd('ui')}catch(e){}return}return os108(i,d)}}
+{const gs108=gfxStep;gfxStep=function(i,dir){const r=gRows()[i];if(GPG=='play'&&r&&r.ty=='back'){state='opts';GPG='main';try{snd('ui')}catch(e){}return}return gs108(i,dir)}}
+addEventListener('keydown',e=>{if(state=='gfxo'&&GPG=='play'&&(e.code=='Escape'||e.code=='Backspace')){e.stopImmediatePropagation();e.preventDefault();state='opts';GPG='main'}},true);
 
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
