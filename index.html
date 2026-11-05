@@ -7499,7 +7499,7 @@ var KZSEEN111={};
 var ST111={};
 
 /* ===== v112: the world fights back — supply drops, blood moons, treasure maps; daily challenges with streaks; milestones with toasts ===== */
-GAMEV=125;
+GAMEV=127;
 const WOB112=()=>inD&&OW?OW.ob:ob,WMAP112=()=>inD&&OW?OW.map:map,ABS112=()=>day+time;
 Object.assign(LBL,{tmap:'Treasure map',adrop:'Supply drop',tcache:'Buried cache'});Object.assign(LBLX,{tmap:'Treasure map',adrop:'Supply drop',tcache:'Buried cache'});Object.assign(NMX,{adrop:'supply drop',tcache:'buried cache'});
 HU.unshift(['Treasure map','Kincses térkép'],['treasure map','kincses térkép'],['Supply drop','Ellátmányláda'],['supply drop','ellátmányláda'],['Buried cache','Elásott rejtekhely'],['buried cache','elásott rejtekhely']);
@@ -7560,10 +7560,15 @@ function dqTick112(){if(DQ112.d!==day){if(DQ112.d>=0&&DQ112.L.length&&!DQ112.ful
  if(!DQ112.full&&DQ112.L.length&&DQ112.L.every(q=>q.done)){DQ112.full=1;DQ112.streak++;inv.tmap=(inv.tmap||0)+1;try{gainXp(Math.min(6,DQ112.streak)*80)}catch(e){}
   toast112(B111('Minden napi kihívás kész! Sorozat: '+DQ112.streak+' nap','All daily challenges done! Streak: '+DQ112.streak+' days'),B111('Jutalom: kincses térkép és +'+Math.min(6,DQ112.streak)*80+' XP','Reward: a treasure map and +'+Math.min(6,DQ112.streak)*80+' XP'),'#ffd84a');fanfare112()}}
 /* ---------- picking a spot out in the world ---------- */
-function spot112(dmin,dmax){const M=WMAP112(),O=WOB112(),px=(inD&&OW?OW.x:P.x)/T,py=(inD&&OW?OW.y:P.y)/T;
+/* flood over walkable ground from the player, so a crate never lands somewhere you can't reach */
+function reach112(px,py,R){const M=WMAP112(),O=WOB112(),x0=Math.max(1,px-R),y0=Math.max(1,py-R),x1=Math.min(W-2,px+R),y1=Math.min(H-2,py+R),bw=x1-x0+1,s=new Uint8Array(bw*(y1-y0+1)),q=[];
+ const pass=(x,y)=>{const j=y*W+x,m=M[j];if(m==5||m==8||m==1||m==7||m==11||m==9)return false;const o=O[j];return !(o&&SOLID[o.t]&&!o.open)};
+ if(px<x0||py<y0||px>x1||py>y1)return null;s[(py-y0)*bw+px-x0]=1;q.push(px,py);while(q.length){const y=q.pop(),x=q.pop();for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){const X=x+dx,Y=y+dy;if(X<x0||Y<y0||X>x1||Y>y1)continue;const k=(Y-y0)*bw+X-x0;if(s[k]||!pass(X,Y))continue;s[k]=1;q.push(X,Y)}}
+ return {ok:(x,y)=>x>=x0&&y>=y0&&x<=x1&&y<=y1&&s[(y-y0)*bw+x-x0]==1}}
+function spot112(dmin,dmax){const M=WMAP112(),O=WOB112(),px=(inD&&OW?OW.x:P.x)/T,py=(inD&&OW?OW.y:P.y)/T,RC=reach112(Math.floor(px),Math.floor(py),Math.ceil(dmax)+3);
  for(let k=0;k<600;k++){const a=Math.random()*6.283,d=dmin+Math.random()*(dmax-dmin),x=Math.round(px+Math.cos(a)*d),y=Math.round(py+Math.sin(a)*d);if(x<4||y<4||x>=W-4||y>=H-4)continue;let ok=true;
   for(let b=-1;b<=1&&ok;b++)for(let c=-1;c<=1&&ok;c++){const j=(y+b)*W+x+c,m=M[j];if(m!=0&&m!=2&&m!=3)ok=false;const q=O[j];if(q&&SOLID[q.t]&&!(q.t=='tree'||q.t=='rock'))ok=false}
-  if(!ok)continue;try{if(inAnyBld(x*T+8,y*T+8))continue}catch(e){}try{const rc=locReactor();if(rc&&Math.hypot(x-rc.x,y-rc.y)<RR*.9)continue}catch(e){}return[x,y]}return null}
+  if(!ok)continue;if(RC&&!(RC.ok(x,y+1)||RC.ok(x-1,y)||RC.ok(x+1,y)||RC.ok(x,y-1)))continue;try{if(inAnyBld(x*T+8,y*T+8))continue}catch(e){}try{const rc=locReactor();if(rc&&Math.hypot(x-rc.x,y-rc.y)<RR*.9)continue}catch(e){}return[x,y]}return null}
 /* ---------- supply drops ---------- */
 function adLoot112(o){const L=[[pk111(['a9','a12','a762']),ri111(8,16)],['medkit',1],['bandage',ri111(1,3)],[pk111(['canned','bottle']),2]];const r=Math.random();
  if(r<.5)L.push([pk111(['pistol','revolver','shotgun','smg']),1]);else if(r<.65)L.push([pk111(['ak47','rifle']),1]);
@@ -7593,7 +7598,7 @@ function hasShovel112(){for(const k in inv)if(inv[k]>0&&/shovel/.test(k))return 
 function tcLoot112(){const L=[['diamond',ri111(2,4)],['gold',ri111(3,6)],['iron_ingot',ri111(2,4)],[pk111(['a9','a762','a12']),ri111(8,14)]];if(Math.random()<.3)L.push([armPiece111(pk111(['gold','diamond'])),1]);if(Math.random()<.3)L.push([pk111(['revolver','smg','ak47','rifle','shotgun']),1]);if(Math.random()<.2)L.push(['tmap',1]);return L}
 /* ---------- using the new things ---------- */
 {const uo112=useObj;useObj=function(n){const o=n&&n.o;if(!o)return uo112(n);
-  if(o.t=='adrop'){if(o.op){say(B111('Üres láda','An empty crate'));return}o.op=1;st112('ad');try{gainXp(o.bm?80:40)}catch(e){}try{sfx(()=>{sxN(.25,'bandpass',800,400,1.2,.4);sxT('square',220,330,.12,.08,.1)})}catch(e){}give111(adLoot112(o),B111(o.bm?'Vérhold-jutalom: ':'Ellátmány: ',o.bm?'Blood moon reward: ':'Supplies: '));if(EV112.ad&&EV112.ad.x==n.tx&&EV112.ad.y==n.ty)EV112.ad.t0=Math.min(EV112.ad.t0,ABS112()-1);return}
+  if(o.t=='adrop'){if(o.op){say(B111('Üres láda','An empty crate'));return}o.op=1;st112('ad');try{gainXp(o.bm?80:40)}catch(e){}try{sfx(()=>{sxN(.25,'bandpass',800,400,1.2,.4);sxT('square',220,330,.12,.08,.1)})}catch(e){}give111(adLoot112(o),B111(o.bm?'Vérhold-jutalom: ':'Ellátmány: ',o.bm?'Blood moon reward: ':'Supplies: '));if(EV112.ad&&EV112.ad.x==n.tx&&EV112.ad.y==n.ty)EV112.ad.t0=Math.min(EV112.ad.t0,ABS112()-.32);return}
   if(o.t=='tcache'){if(!hasShovel112()){say(B111('Itt van elásva valami… ásó kell hozzá!','Something is buried here… you need a shovel!'));return}ob[n.ty*W+n.tx]=null;TM112=null;st112('tc');try{gainXp(70)}catch(e){}
    try{sfx(()=>{for(const at of[0,.25,.5])sxN(.18,'lowpass',900,300,1,.45,at);sxT('square',523,784,.25,.08,.8)})}catch(e){}for(let k=0;k<8;k++)parts.push({x:n.tx*T+8,y:n.ty*T+8,vx:(Math.random()-.5)*80,vy:-Math.random()*60,l:.6,c:'#7a6040'});give111(tcLoot112(),B111('Kiástad a kincset! ','You dug up the treasure! '));return}
   return uo112(n)}}
@@ -7616,10 +7621,23 @@ function arrow112(tx,ty,col,lab){const sx=(tx-cam.x)*ZM,sy=(ty-cam.y)*ZM,cx=(P.x
 {const hd112=hud;hud=function(){if(state=='play'&&!inD&&bmOn112()&&GMODE!=3&&!view){g.save();g.setTransform(1,0,0,1,0,0);const cv=g.canvas,p=.5+.12*Math.sin(performance.now()/900);g.globalCompositeOperation='multiply';g.fillStyle='rgba(255,110,100,'+(.75*p).toFixed(3)+')';g.fillRect(0,0,cv.width,cv.height);g.globalCompositeOperation='screen';g.fillStyle='rgba(90,0,0,'+(.18*p).toFixed(3)+')';g.fillRect(0,0,cv.width,cv.height);g.globalCompositeOperation='source-over';
    const vg=g.createRadialGradient(cv.width/2,cv.height/2,Math.min(cv.width,cv.height)*.3,cv.width/2,cv.height/2,Math.max(cv.width,cv.height)*.7);vg.addColorStop(0,'rgba(120,0,0,0)');vg.addColorStop(1,'rgba(90,0,0,'+(.45*p).toFixed(3)+')');g.fillStyle=vg;g.fillRect(0,0,cv.width,cv.height);g.restore()}
   const r=hd112.apply(this,arguments);if(state!='play')return r;try{hud112()}catch(e){console.error(e)}return r}}
+var PLN112=null;
+function plane112(){if(PLN112)return PLN112;const mk=sh=>{const c=document.createElement('canvas');c.width=72;c.height=64;const x=c.getContext('2d'),R=(a,b,w,h,col)=>{x.fillStyle=sh?'#000':col;x.fillRect(a,b,w,h)};
+  const O='#20261a',D='#3e4834',M='#5a6648',L='#76825e',H='#8e9a72';
+  /* wings: long, slightly tapered, with flaps */R(30,3,11,58,O);R(31,4,9,56,M);R(31,4,3,56,L);R(38,6,2,52,D);for(const yy of[4,59])R(32,yy,6,1,O);R(33,26,5,12,M);
+  /* tailplane */R(5,19,9,26,O);R(6,20,7,24,M);R(6,20,2,24,L);
+  /* fuselage */R(3,28,62,9,O);R(4,29,61,7,M);R(4,29,61,2,L);R(4,34,61,2,D);R(63,29,4,7,O);R(64,30,4,5,M);R(66,31,3,3,O);
+  /* cockpit + roundels + fin */R(60,30,3,1,'#9ec8e8');R(60,33,3,1,'#9ec8e8');R(61,31,2,2,'#6a98b8');R(2,31,12,3,O);R(3,32,10,1,D);for(const yy of[12,49]){R(34,yy,5,5,O);R(35,yy+1,3,3,'#e8e4d8');R(36,yy+2,1,1,O)}R(22,31,5,3,H);
+  /* four engines out front of the wing */for(const yy of[8,18,42,52]){R(39,yy,9,6,O);R(40,yy+1,7,4,D);R(40,yy+1,7,1,M);R(47,yy+1,2,4,'#2a2e24')}
+  return c};PLN112={c:mk(false),sh:mk(true)};return PLN112}
 function hud112(){const now=performance.now(),busy=invOpen||(typeof showMap!='undefined'&&showMap)||book||(typeof stOpen!='undefined'&&stOpen)||tut;
  /* the plane */
- if(EV112.plane&&now-EV112.plane<7000&&!inD){const u=(now-EV112.plane)/7000,x=-60+u*(VW+120),y=46+Math.sin(u*3)*3;Q(x+10,y+40,46,4,'rgba(0,0,0,.18)');Q(x,y,48,6,'#3a4038');Q(x+40,y-3,10,4,'#3a4038');Q(x+18,y-10,8,26,'#323830');Q(x+42,y-8,4,10,'#323830');Q(x+4,y+1,30,1,'#59614f');Q(x+50,y+1,3,4,'#20241e');
-  if(u>.4&&u<.6){const k=(u-.4)/.2;Q(x-6-k*12,y+8+k*30,6,6,'#4a5a32');Q(x-14-k*12,y-2+k*30,22,6,'#e8e4dc')}}
+ if(EV112.plane&&now-EV112.plane<8000&&!inD){const u=(now-EV112.plane)/8000,sp=plane112(),x=-90+u*(VW+180),y=58+Math.sin(u*3)*3,bank=Math.sin(u*2.4)*.04;
+  g.save();g.globalAlpha=.22;g.translate(Math.round(x+26),Math.round(y+46));g.rotate(bank);g.scale(.92,.92);g.drawImage(sp.sh,-36,-32);g.restore();
+  if(u>.42&&u<.75){const k=(u-.42)/.33,cx=x-20-k*30,cy=y+6+k*70,sc=1-k*.45;g.fillStyle='#e8e4dc';g.fillRect(cx-10*sc,cy-14*sc,20*sc,7*sc);g.fillStyle='#ff6a3a';g.fillRect(cx-10*sc,cy-14*sc,20*sc,2*sc);g.fillStyle='rgba(60,50,40,.7)';g.fillRect(cx-7*sc,cy-7*sc,1,7*sc);g.fillRect(cx+6*sc,cy-7*sc,1,7*sc);g.fillStyle='#4a5a32';g.fillRect(cx-5*sc,cy,10*sc,8*sc);g.fillStyle='#6a7a48';g.fillRect(cx-5*sc,cy,10*sc,2*sc)}
+  g.save();g.translate(Math.round(x),Math.round(y));g.rotate(bank);g.drawImage(sp.c,-36,-32);
+  const pa=now/18;for(const py of[-21,-11,13,23]){g.fillStyle='rgba(200,205,195,.22)';g.beginPath();g.arc(13,py,5,0,6.283);g.fill();g.strokeStyle='rgba(30,34,26,.75)';g.lineWidth=1;g.beginPath();g.moveTo(13+Math.cos(pa+py)*5,py+Math.sin(pa+py)*5);g.lineTo(13-Math.cos(pa+py)*5,py-Math.sin(pa+py)*5);g.stroke()}
+  if(Math.floor(now/500)%2){g.fillStyle='#ff3a2a';g.fillRect(-1,-31,2,2);g.fillStyle='#3aff6a';g.fillRect(-1,29,2,2)}g.restore()}
  if(!inD&&bmOn112()){const p=.6+.4*Math.sin(now/300);noTr=true;txt(B111('VÉRHOLD','BLOOD MOON'),6,58,'rgba(255,'+Math.round(70+40*p)+',60,1)');noTr=false;g.fillStyle='rgba(200,30,20,.25)';g.beginPath();g.arc(VW-134,18,13,0,6.283);g.fill();g.fillStyle='#b8281a';g.beginPath();g.arc(VW-134,18,8,0,6.283);g.fill();g.fillStyle='#e0503a';g.beginPath();g.arc(VW-136,16,3,0,6.283);g.fill()}
  if(busy)return;
  /* compass marks */
@@ -7645,9 +7663,11 @@ function hud112(){const now=performance.now(),busy=invOpen||(typeof showMap!='un
 function rd112(){try{const d=JSON.parse(localStorage.getItem(SKEY()+'_k111')||'null');if(!d)return false;ST111=d.st||{};EV112=Object.assign({nad:day+1.2,ad:null,plane:0,bmd:-1,bmDied:0,bms:0},d.ev||{});EV112.plane=0;TM112=d.tm||null;DQ112=Object.assign({d:-1,L:[],full:0,streak:0},d.dq||{});return true}catch(e){return false}}
 {const in112=init;init=function(...a){ST111={};EV112={nad:1.6,ad:null,plane:0,bmd:-1,bmDied:0,bms:0};TM112=null;DQ112={d:-1,L:[],full:0,streak:0};TQ112.length=0;LD112=null;IP112={};const r=in112.apply(this,a);LD112=day;return r}}
 {const ld112=load;load=function(){const r=ld112();ST111={};EV112={nad:day+1.2,ad:null,plane:0,bmd:-1,bmDied:0,bms:0};TM112=null;DQ112={d:-1,L:[],full:0,streak:0};rd112();LD112=day;IP112={};return r}}
+/* clicking works too (not only E): crates, caches, stairways, levers, braziers, tablets */
+{const CLK112={adrop:1,tcache:1,kzstair:1,kzlever:1,kzbraz:1,kztab:1,kzseal:1};const a112=act;act=function(){try{if(state=='play'&&edge&&P.cd<=0&&!drv&&mtx>=0&&mty>=0&&mtx<W&&mty<H){const o=ob[mty*W+mtx];if(o&&CLK112[o.t]&&Math.hypot(mtx*T+8-P.x,mty*T+8-P.y)<46){P.cd=.3;useObj({o,tx:mtx,ty:mty});return}}}catch(e){}return a112.apply(this,arguments)}}
 
 /* ===== v113: a smaller dialogue box — narrower, centred, smaller portrait and text, height follows the text ===== */
-GAMEV=126;
+GAMEV=127;
 function dlTW113(){return Math.min(310,VW-40)-48}
 dlRect=function(){const e=DLG,bw=Math.min(310,VW-40),n=e&&e.ln?Math.min(4,e.ln.length):2,bh=Math.max(38,16+n*8+(e&&e.hint&&e.done?7:0));return{x:Math.round(VW/2-bw/2),y:VH-34-bh,w:bw,h:bh}};
 dlDraw=function(){dlWatch();const e=DLG;if(!e)return;const now=performance.now();
