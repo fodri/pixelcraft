@@ -7115,12 +7115,12 @@ function mood108(){if(!MOOD||MDS<=0||state!='play'||GMODE==3||view)return;const 
    const gr=g.createRadialGradient(cx,cy,0,cx,cy,r);const mc=[196,206,204].map((v,i)=>Math.round(v+([40,46,58][i]-v)*Math.min(1,dk*1.4))).join(',');gr.addColorStop(0,'rgba('+mc+','+fa.toFixed(3)+')');gr.addColorStop(1,'rgba('+mc+',0)');g.fillStyle=gr;g.fillRect(cx-r,cy-r,r*2,r*2)}}
  /* wash the colour out, cool it down */
  g.globalCompositeOperation='saturation';g.fillStyle='rgba(128,128,128,'+(.5*s+.12*zone*s).toFixed(3)+')';g.fillRect(0,0,w,h);
- g.globalCompositeOperation='multiply';g.fillStyle='rgba('+[150,170,162].join(',')+','+(.55*s).toFixed(3)+')';g.fillRect(0,0,w,h);
+ g.globalCompositeOperation='multiply';g.fillStyle='rgba('+[214,224,220].join(',')+','+(.45*s).toFixed(3)+')';g.fillRect(0,0,w,h);
  if(zone>0){g.fillStyle='rgba(190,200,150,'+(.35*zone*s).toFixed(3)+')';g.fillRect(0,0,w,h)}
  g.globalCompositeOperation='source-over';
  /* nights are darker, the edges of the view close in */
- if(dk>.3)g.fillStyle='rgba(4,6,12,'+((dk-.3)*.35*s).toFixed(3)+')',g.fillRect(0,0,w,h);
- const vg=g.createRadialGradient(w/2,h/2,Math.min(w,h)*.32,w/2,h/2,Math.max(w,h)*.72);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,'+((.5+.2*dk+.15*zone)*s).toFixed(3)+')');g.fillStyle=vg;g.fillRect(0,0,w,h);
+ 
+ const vg=g.createRadialGradient(w/2,h/2,Math.min(w,h)*.32,w/2,h/2,Math.max(w,h)*.72);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,'+((.26+.06*dk+.12*zone)*s).toFixed(3)+')');g.fillStyle=vg;g.fillRect(0,0,w,h);
  g.restore()}
 {const hd108=hud;hud=function(){try{mood108()}catch(e){}return hd108.apply(this,arguments)}}
 /* ---------- sound: a low drone and distant, quiet noises (never loud, never sudden) ---------- */
@@ -7152,6 +7152,22 @@ try{const M=GPAGES.main.rows;for(const k of['mood','mds']){const ix=M.findIndex(
 {const os108=optStep;optStep=function(i,d){if(i==15){state='gfxo';GPG='play';gsel=0;try{snd('ui')}catch(e){}return}return os108(i,d)}}
 {const gs108=gfxStep;gfxStep=function(i,dir){const r=gRows()[i];if(GPG=='play'&&r&&r.ty=='back'){state='opts';GPG='main';try{snd('ui')}catch(e){}return}return gs108(i,dir)}}
 addEventListener('keydown',e=>{if(state=='gfxo'&&GPG=='play'&&(e.code=='Escape'||e.code=='Backspace')){e.stopImmediatePropagation();e.preventDefault();state='opts';GPG='main'}},true);
+
+/* ===== v109: close the gaps beside inner doors of the old houses; gloom is lighter and off by default ===== */
+GAMEV=121;
+const WALL109={wall:1,sblock:1,twall:1,iwall:1,gwall:1,win:1},JUNK109={deco:1,papers:1,cweb:1,rubble:1,bones:1,trash:1,bag:1};
+function doorGaps109(){if(inD||!BLD.length)return 0;let fixed=0;
+ for(const b of BLD){if(b.rf!='ruin'&&b.rf!='house'&&b.rf!='hut')continue;for(let y=b.y+1;y<b.y+b.h-1;y++)for(let x=b.x+1;x<b.x+b.w-1;x++){const i=y*W+x,o=ob[i];if(!o||o.t!='door')continue;
+  for(const[ax,ay]of[[1,0],[0,1]]){const A=ob[i+ay*W+ax],Bq=ob[i-ay*W-ax],wA=A&&WALL109[A.t],wB=Bq&&WALL109[Bq.t];if(wA&&wB)continue;if(!wA&&!wB)continue;
+   const s=wA?-1:1,wt=(wA?A:Bq).t=='win'?'twall':(wA?A:Bq).t,run=[];let ok=false;
+   for(let k=1;k<=3;k++){const X=x+ax*s*k,Y=y+ay*s*k;if(X<=b.x-1||Y<=b.y-1||X>=b.x+b.w||Y>=b.y+b.h)break;const j=Y*W+X,q=ob[j];if(q&&(WALL109[q.t]||q.t=='door')){ok=true;break}if(q&&!JUNK109[q.t])break;run.push(j)}
+   if(ok&&run.length&&run.length<=3){for(const j of run){ob[j]={t:wt,hp:60,nb:1};if(map[j]==16)map[j]=12}fixed+=run.length}}}}
+ return fixed}
+{const ir109=init;init=function(...a){const r=ir109.apply(this,a);try{doorGaps109()}catch(e){}return r}}
+{const ld109=load;load=function(){const r=ld109();try{doorGaps109()}catch(e){}return r}}
+/* gloom: off by default, and much lighter when switched on */
+try{const v=localStorage.getItem('pxc_mood2');MOOD=v==='1'?1:0;const s=localStorage.getItem('pxc_mds2');MDS=s!=null&&s!==''?Math.max(0,Math.min(1,+s)):.5}catch(e){MOOD=0;MDS=.5}
+mdSave=function(){try{localStorage.setItem('pxc_mood2',String(MOOD));localStorage.setItem('pxc_mds2',String(MDS))}catch(e){}};
 
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
