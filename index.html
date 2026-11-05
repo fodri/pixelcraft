@@ -7207,6 +7207,104 @@ function sfxMunch109(){sfx(()=>{for(const at of[0,.2,.4]){sxN(.07,'bandpass',190
 var LTH109=null,LFD109=null,LST109='';
 {const up109=update;update=function(dt){const r=up109(dt);try{if(state=='play'&&LST109=='play'&&LTH109!=null){if(P.th-LTH109>4)sfxSlurp109();if(P.food-LFD109>4)sfxMunch109()}LST109=state;LTH109=P.th;LFD109=P.food}catch(e){}return r}}
 
+/* ===== v110: lifelike toilet / eating / drinking sounds, synthesised sample by sample (bubbles, turbulence, buzzing air) ===== */
+GAMEV=123;
+var RS110=(function(){
+ const rnd=(a,b)=>a+Math.random()*(b-a),lrnd=(a,b)=>Math.exp(rnd(Math.log(a),Math.log(b)));
+ /* RBJ biquad, run in place */
+ function bq(x,sr,type,f,Q,f1){const n=x.length;let x1=0,x2=0,y1=0,y2=0,b0,b1,b2,a1,a2;
+  const set=fr=>{const w=2*Math.PI*Math.min(fr,sr*.45)/sr,c=Math.cos(w),al=Math.sin(w)/(2*Q),a0=1+al;
+   if(type=='lp'){b0=(1-c)/2/a0;b1=(1-c)/a0;b2=b0;}else if(type=='hp'){b0=(1+c)/2/a0;b1=-(1+c)/a0;b2=b0;}else{b0=al/a0;b1=0;b2=-al/a0;}a1=-2*c/a0;a2=(1-al)/a0};
+  set(f);for(let i=0;i<n;i++){if(f1&&(i&63)==0)set(f*Math.pow(f1/f,i/n));const v=x[i],y=b0*v+b1*x1+b2*x2-a1*y1-a2*y2;x2=x1;x1=v;y2=y1;y1=y;x[i]=y}return x}
+ const noise=n=>{const a=new Float32Array(n);for(let i=0;i<n;i++)a[i]=Math.random()*2-1;return a};
+ /* smooth random wander, k = how fast it moves */
+ function wander(n,k){const a=new Float32Array(n);let v=0,t=0;for(let i=0;i<n;i++){if(--t<=0){t=k;}v+=(Math.random()*2-1)*.02;v*=.9995;a[i]=v}let m=0;for(const q of a)m=Math.max(m,Math.abs(q));for(let i=0;i<n;i++)a[i]/=m||1;return a}
+ /* a single bubble: Minnaert resonance, pitch rising as it nears the surface */
+ function bubble(o,sr,t0,f0,tau,amp,rise){const i0=Math.floor(t0*sr),len=Math.min(o.length-i0,Math.floor(tau*7*sr));let ph=0;
+  for(let i=0;i<len;i++){const t=i/sr,f=f0*(1+rise*t/tau),e=Math.exp(-t/tau)*Math.min(1,i/(sr*.0008));ph+=2*Math.PI*f/sr;o[i0+i]+=Math.sin(ph)*e*amp}}
+ const add=(o,src,at,g)=>{const i0=Math.floor(at);for(let i=0;i<src.length&&i0+i<o.length;i++)o[i0+i]+=src[i]*g};
+ const env=(n,sr,pts)=>{/* pts: [[t,v],...] linear */const e=new Float32Array(n);let k=0;for(let i=0;i<n;i++){const t=i/sr;while(k<pts.length-2&&t>pts[k+1][0])k++;const[a,va]=pts[k],[b,vb]=pts[k+1];const u=b>a?Math.max(0,Math.min(1,(t-a)/(b-a))):1;e[i]=va+(vb-va)*u*u*(3-2*u)}return e};
+ function norm(o,pk){let m=0;for(const v of o)m=Math.max(m,Math.abs(v));const k=pk/(m||1);for(let i=0;i<o.length;i++)o[i]*=k;
+  /* soft fades so nothing clicks */const f=Math.min(200,o.length>>3);for(let i=0;i<f;i++){o[i]*=i/f;o[o.length-1-i]*=i/f}return o}
+
+ /* ---------- the toilet flush: lever clunk, a swelling rush, a storm of bubbles, the swirl-down gurgle, then the tank refilling ---------- */
+ function flush(sr){const D=5.2,n=Math.floor(D*sr),o=new Float32Array(n);
+  /* lever: plastic clack + a tiny ping of the handle */
+  {const c=noise(Math.floor(.025*sr));bq(c,sr,'bp',2600,2.5);for(let i=0;i<c.length;i++)c[i]*=Math.exp(-i/(sr*.004));add(o,c,0,1.1);
+   bubble(o,sr,.004,1350,.012,.35,0);const c2=noise(Math.floor(.03*sr));bq(c2,sr,'bp',900,3);for(let i=0;i<c2.length;i++)c2[i]*=Math.exp(-i/(sr*.008));add(o,c2,.09*sr,.55)}
+  /* rush of water: two noise layers, a hissing top and a heavy body, swelling softly */
+  {const hi=noise(n);bq(hi,sr,'lp',700,.7,2300);bq(hi,sr,'hp',260,.7);const lo=noise(n);bq(lo,sr,'lp',220,.9);bq(lo,sr,'lp',260,.7);
+   const e=env(n,sr,[[0,0],[.22,0],[.75,1],[1.9,.95],[2.7,.55],[3.2,.18],[3.6,0],[D,0]]),wv=wander(n,0);
+   for(let i=0;i<n;i++){const m=1+.18*wv[i];o[i]+=(hi[i]*.55+lo[i]*1.5)*e[i]*m}}
+  /* bubbles: many, small and high while the water churns; fewer and lower as it drains */
+  for(let k=0;k<170;k++){const t=rnd(.3,3.1),dens=t<2.4?1:Math.max(0,(3.1-t)/.7);if(Math.random()>dens)continue;const f=lrnd(t<2.2?380:220,t<2.2?1700:900),tau=.9/f*rnd(6,14);bubble(o,sr,t,f,tau,rnd(.04,.16)*(f<500?1.3:1),rnd(.15,.6))}
+  /* the last gulp of the bowl: a few big, low gurgles */
+  for(let k=0;k<7;k++){const t=2.75+k*rnd(.06,.11),f=lrnd(140,320);bubble(o,sr,t,f,rnd(.018,.035),rnd(.22,.4),rnd(.3,.9))}
+  {const sw=noise(Math.floor(1*sr));bq(sw,sr,'bp',700,4,240);for(let i=0;i<sw.length;i++){const t=i/sr;sw[i]*=Math.sin(Math.PI*t)*(1+.6*Math.sin(t*38))}add(o,sw,2.5*sr,.9)}
+  /* the tank refilling: a thin steady hiss through the valve */
+  {const s0=Math.floor(3.2*sr),m=n-s0,f=noise(m);bq(f,sr,'bp',4200,1.4);bq(f,sr,'hp',1800,.7);const e=env(m,sr,[[0,0],[.35,1],[1.4,.9],[2,0]]);for(let i=0;i<m;i++)o[s0+i]+=f[i]*e[i]*.16;
+   for(let k=0;k<18;k++)bubble(o,sr,rnd(3.3,4.9),lrnd(1500,2600),rnd(.002,.004),rnd(.01,.03),.3)}
+  return norm(o,.9)}
+
+ /* ---------- a fart: a buzzing, wobbling column of air through a soft valve, muffled by clothes ---------- */
+ function toot(sr){const D=rnd(.55,1.05),n=Math.floor((D+.35)*sr),o=new Float32Array(n),air=noise(n);bq(air,sr,'lp',900,.7);
+  let ph=0,f0=rnd(85,130),drift=0,gap=0,amp=0;const fend=f0*rnd(.6,.85),wob=rnd(5,9),wobA=rnd(.04,.11);
+  for(let i=0;i<n;i++){const t=i/sr,u=t/D;
+   /* pitch: settles down over time, wobbles, little random wanders (the "sputter") */
+   if((i&255)==0){drift+=(Math.random()*2-1)*.06;drift*=.92;if(u>.55&&Math.random()<.035)gap=Math.floor(rnd(.012,.04)*sr)}
+   const f=(f0+(fend-f0)*Math.min(1,u))*(1+wobA*Math.sin(2*Math.PI*wob*t)+drift);
+   const target=t<.025?t/.025:u<.7?1-.25*u:Math.max(0,(1-u)/.3)*(.6+.4*Math.random()*(u<1?1:0));amp+=(target-amp)*.004;
+   const pr=ph;ph+=f/sr*(1+(Math.random()-.5)*.08);if(ph>=1)ph-=1;
+   /* valve opens for part of each cycle: a soft, asymmetric pulse */
+   const open=.42+.12*Math.sin(t*3.1),pulse=ph<open?Math.pow(Math.sin(Math.PI*ph/open),1.6):0;
+   let v=pulse*1.0+air[i]*(.22+.5*pulse)*(u>.75?1.6:1);
+   if(gap>0){gap--;v*=.08}
+   o[i]=v*amp*(t<D?1:Math.max(0,1-(t-D)/.12))}
+  /* a little breathy tail as it trails off */
+  {const tl=noise(Math.floor(.3*sr));bq(tl,sr,'bp',500,1.2,260);for(let i=0;i<tl.length;i++)tl[i]*=Math.exp(-i/(sr*.07))*.35;add(o,tl,(D-.05)*sr,1)}
+  /* body + cloth: a low resonance and heavy muffling */
+  const b=Float32Array.from(o);bq(b,sr,'bp',rnd(170,260),2.2);bq(o,sr,'lp',rnd(650,900),.8);bq(o,sr,'hp',55,.7);for(let i=0;i<n;i++)o[i]=o[i]*.75+b[i]*1.3;
+  return norm(o,.85)}
+
+ /* ---------- drinking: a slurp from the rim, then two or three gulps down the throat, and a little breath out ---------- */
+ function slurp(sr){const n=Math.floor(1.45*sr),o=new Float32Array(n);
+  {const m=Math.floor(.32*sr),s=noise(m);bq(s,sr,'bp',700,2.2,2400);const fl=wander(m,0);for(let i=0;i<m;i++){const t=i/sr;s[i]*=Math.sin(Math.PI*Math.min(1,t/.32))*(.6+.4*Math.abs(Math.sin(t*90+fl[i]*4)))}add(o,s,.01*sr,.9);
+   for(let k=0;k<26;k++)bubble(o,sr,rnd(.03,.3),lrnd(900,3200),rnd(.0015,.004),rnd(.03,.09),.4)}
+  const gulps=2+(Math.random()<.5?1:0);
+  for(let g=0;g<gulps;g++){const t=.42+g*rnd(.28,.34);
+   /* the swallow: a deep wet "glk" — a big low bubble and a throaty click */
+   bubble(o,sr,t,rnd(150,210),rnd(.022,.03),.65,rnd(.6,1.1));bubble(o,sr,t+.03,rnd(320,420),.012,.25,.8);
+   const c=noise(Math.floor(.02*sr));bq(c,sr,'bp',1500,3);for(let i=0;i<c.length;i++)c[i]*=Math.exp(-i/(sr*.003));add(o,c,(t-.012)*sr,.5);
+   const w=noise(Math.floor(.1*sr));bq(w,sr,'lp',500,1);for(let i=0;i<w.length;i++)w[i]*=Math.sin(Math.PI*i/w.length);add(o,w,(t+.01)*sr,.25)}
+  {const t=.42+gulps*.31+.05,m=Math.floor(.35*sr),a=noise(m);bq(a,sr,'bp',1100,.9);bq(a,sr,'lp',2200,.7);for(let i=0;i<m;i++){const u=i/m;a[i]*=Math.min(1,u*8)*Math.pow(1-u,2)}add(o,a,t*sr,.32)}
+  return norm(o,.75)}
+
+ /* ---------- eating: crunchy bites (a burst of tiny fractures) that turn into soft, wet chewing ---------- */
+ function munch(sr){const bites=3+(Math.random()<.4?1:0),n=Math.floor((bites*.3+.35)*sr),o=new Float32Array(n);
+  for(let b=0;b<bites;b++){const t0=.02+b*rnd(.26,.33),crunch=Math.max(0,1-b*.3);
+   /* fractures: dozens of tiny clicks packed into a few hundredths of a second */
+   const cn=Math.floor(rnd(40,80)*crunch)+6,len=rnd(.05,.1);
+   for(let k=0;k<cn;k++){const t=t0+Math.pow(Math.random(),1.6)*len,m=Math.floor(rnd(.0006,.0025)*sr),c=noise(m);bq(c,sr,'bp',lrnd(1400,5200),rnd(1,3));
+    for(let i=0;i<m;i++)c[i]*=Math.exp(-i/(m*.25));add(o,c,t*sr,rnd(.15,.6)*(1-(t-t0)/len*.5))}
+   /* the jaw closing and the wet squish of the food */
+   bubble(o,sr,t0,rnd(85,110),.012,.25,0);
+   const m=Math.floor(.16*sr),w=noise(m);bq(w,sr,'lp',rnd(500,800),1.4);bq(w,sr,'bp',420,1.1);const fl=wander(m,0);for(let i=0;i<m;i++){const u=i/m;w[i]*=Math.sin(Math.PI*u)*(.5+.5*Math.abs(fl[i]))}add(o,w,(t0+.04)*sr,.55+.5*(1-crunch));
+   for(let k=0;k<5;k++)bubble(o,sr,t0+rnd(.05,.17),lrnd(700,1600),rnd(.002,.004),rnd(.03,.07),.5)}
+  return norm(o,.8)}
+ return{flush,toot,slurp,munch}})();
+/* a few variations of each, made once on first use */
+var RSB110={};
+function rsPlay110(kind,gain,at,rv){try{if(!SXS.ok||!AC||vol<=0)return;const L=RSB110[kind]||(RSB110[kind]=[]);let buf;
+  if(L.length<3){const d=RS110[kind](AC.sampleRate);buf=AC.createBuffer(1,d.length,AC.sampleRate);buf.copyToChannel(d,0);L.push(buf)}else buf=L[Math.floor(Math.random()*L.length)];
+  const s=AC.createBufferSource(),gn=AC.createGain();s.buffer=buf;s.playbackRate.value=.95+Math.random()*.1;gn.gain.value=gain*vol*(SVOL.a||.2)*2.2*.6;s.connect(gn);gn.connect(sxOut(rv||0));s.start(AC.currentTime+(at||0))}catch(e){}}
+sfxFlush=function(){rsPlay110('flush',.5,.15,.12)};
+sfxToot=function(){rsPlay110('toot',.38,0,.06)};
+sfxSlurp109=function(){rsPlay110('slurp',.36,0,.04)};
+sfxMunch109=function(){rsPlay110('munch',.4,0,.03)};
+/* make one of each in the background (one per second) so the first flush doesn't stutter the game */
+var RSW110=0,RST110=0;
+{const up110=update;update=function(dt){const r=up110(dt);try{if(RSW110<4&&SXS.ok&&AC){RST110+=dt;if(RST110>1){RST110=0;const k=['munch','slurp','toot','flush'][RSW110++];if(!RSB110[k]||!RSB110[k].length){const d=RS110[k](AC.sampleRate),buf=AC.createBuffer(1,d.length,AC.sampleRate);buf.copyToChannel(d,0);(RSB110[k]=RSB110[k]||[]).push(buf)}}}}catch(e){}return r}}
+
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
 function fireList(){const n=performance.now();if(FL.ob!==ob||n-FL.t>500){FL.ob=ob;FL.t=n;FL.a=[];for(let i=0;i<ob.length;i++){const o=ob[i];if(o&&(o.t=='fire'&&o.on||o.t=='fbarrel'))FL.a.push([(i%W)*T+8,Math.floor(i/W)*T+8])}}return FL.a}
