@@ -7689,6 +7689,31 @@ dlDraw=function(){dlWatch();const e=DLG;if(!e)return;const now=performance.now()
  if(DLQ.length){g.font=fnt(0,6);g.textAlign='right';g.fillStyle='#a89a80';g.fillText('+'+DLQ.length,r.x+r.w-4,r.y+8);g.textAlign='left'}
  g.globalAlpha=1;noTr=false};
 
+/* ===== v114: split firewood stacks up on a wood store right beside the chopping block (made automatically if there isn't one) ===== */
+GAMEV=128;
+function chpIdx114(){if(!CHP||!CHP.o)return -1;const px=Math.floor(P.x/T),py=Math.floor(P.y/T);for(let y=py-4;y<=py+4;y++)for(let x=px-4;x<=px+4;x++){if(x<0||y<0||x>=W||y>=H)continue;if(ob[y*W+x]===CHP.o)return y*W+x}return -1}
+function chpStore114(bi){const bx=bi%W,by=(bi/W)|0;let best=-1,bd=99;
+ for(let y=by-2;y<=by+2;y++)for(let x=bx-2;x<=bx+2;x++){const o=ob[y*W+x];if(o&&o.t=='wpile'){const d=Math.abs(x-bx)+Math.abs(y-by)+(o.fws?0:.5);if(d<bd){bd=d;best=y*W+x}}}if(best>=0)return best;
+ /* none yet: build a small firewood store next to the block */
+ for(const[dx,dy]of[[1,0],[-1,0],[0,-1],[0,1],[1,-1],[-1,-1],[1,1],[-1,1]]){const x=bx+dx,y=by+dy,j=y*W+x;if(x<1||y<1||x>=W-1||y>=H-1||ob[j])continue;const m=map[j];if(m==1||m==5||m==7||m==8||m==9||m==11)continue;
+  if(Math.floor(P.x/T)==x&&Math.floor(P.y/T)==y)continue;ob[j]={t:'wpile',n:0,fw:0,fws:1,hp:10};return j}return -1}
+{const ch114=chpHit;chpHit=function(){const f0=inv.fwood||0,bi=chpIdx114();const r=ch114.apply(this,arguments);try{const gnt=(inv.fwood||0)-f0;if(gnt>0&&bi>=0){const si=chpStore114(bi);if(si>=0){const s=ob[si];s.fw=(s.fw||0)+gnt;inv.fwood-=gnt;if(inv.fwood<=0)inv.fwood=0;
+   for(let k=0;k<4;k++)parts.push({x:(si%W)*T+8,y:((si/W)|0)*T+6,vx:(Math.random()-.5)*40,vy:-Math.random()*30,l:.4,c:'#e8c890'})}}}catch(e){}return r}}
+/* the "done" line says where the firewood went */
+{const up114=update;update=function(dt){const r=up114(dt);try{if(typeof msg=='string'&&/^(Hasítás kész|Done splitting)/.test(msg)&&!/farakás|wood pile/.test(msg))msg+=LANG=='hu'?' — a farakásra került a tuskó mellett':' — stacked on the wood pile by the block'}catch(e){}return r}}
+/* drawing: a little roofed rack, filled with split logs as the stack grows */
+{const wp114=DRAWX.wpile;DRAWX.wpile=function(o,x,y){if(!o.fws&&!(o.fw>0))return wp114(o,x,y);const n=o.fw|0;
+  W_(x,y+13,17,3,'rgba(0,0,0,.25)');/* rack */W_(x+1,y-2,2,16,'#5a3a1e');W_(x+14,y-2,2,16,'#5a3a1e');W_(x,y-4,17,3,'#6a4424');W_(x,y-4,17,1,'#8a6034');W_(x+1,y+13,15,1,'#4a2e16');
+  const rows=Math.min(4,Math.ceil(n/4));for(let r=0;r<rows;r++){const inRow=Math.min(4,n-r*4);for(let i=0;i<inRow;i++){const xx=x+3+i*3,yy=y+10-r*3;W_(xx,yy,3,3,'#8a5a30');W_(xx,yy,2,2,'#e8c890');W_(xx,yy,1,1,'#f4dcae')}}
+  if(n>16)for(let i=0;i<4;i++)W_(x+3+i*3,y-1,3,2,'#c89a60');
+  if(o.n>0)for(let i=0;i<Math.min(3,o.n);i++){W_(x+3+i*4,y+11,4,3,'#7a5030');W_(x+4+i*4,y+12,2,1,'#c89a60')}}}
+/* taking from it: firewood (and any round logs) go to your bag, the store stays */
+{const uo114=useObj;useObj=function(n){const o=n&&n.o;if(o&&o.t=='wpile'&&(o.fws||o.fw>0)){const h=LANG=='hu',f=o.fw|0,w=o.n|0;if(f<=0&&w<=0){say(h?'A farakás üres — hasíts fát a tuskón, és ide kerül':'The wood store is empty — split wood on the block and it lands here');return}
+  if(f>0){inv.fwood=(inv.fwood||0)+f;o.fw=0}if(w>0){inv.wood=(inv.wood||0)+w;o.n=0}snd('pick');say((h?'Elvetted a farakásról: ':'Took from the wood store: ')+[f?f+' '+tr(LBL.fwood).toLowerCase():'',w?w+' '+tr(LBL.wood||'wood').toLowerCase():''].filter(Boolean).join(', '));return}return uo114(n)}}
+/* an eaten can leaves its tin behind: +1 scrap metal */
+{const ek114=eatK;eatK=function(k){const n0=inv[k]|0;const r=ek114.apply(this,arguments);try{if(k=='canned'&&(inv[k]|0)<n0){if(canAdd('iron')){inv.iron=(inv.iron||0)+1}else addLoot({x:P.x,y:P.y-8,k:'iron',n:1});
+  setTimeout(()=>{try{const h=LANG=='hu';say(h?'Megetted a konzervet — az üres doboz fémhulladék lett (+1)':'You ate the canned food — the empty tin is scrap metal now (+1)')}catch(e){}},250)}}catch(e){}return r}}
+
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
 function fireList(){const n=performance.now();if(FL.ob!==ob||n-FL.t>500){FL.ob=ob;FL.t=n;FL.a=[];for(let i=0;i<ob.length;i++){const o=ob[i];if(o&&(o.t=='fire'&&o.on||o.t=='fbarrel'))FL.a.push([(i%W)*T+8,Math.floor(i/W)*T+8])}}return FL.a}
