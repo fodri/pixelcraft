@@ -1383,8 +1383,8 @@ function update(dt){
   if(d<90){e.vx=dx/d*62;e.vy=dy/d*62}else if(e.t<=0){e.t=1+R()*2;const a=R()*6.28,s=R()<.5?0:14;e.vx=Math.cos(a)*s;e.vy=Math.sin(a)*s}
   if(e.kx){e.x+=e.kx*dt;e.kx*=.8;e.ky*=.8;if(Math.abs(e.kx)<2)e.kx=0}
   mv(e,e.vx*dt,e.vy*dt,4)}
- spawnT-=dt;if(!inD&&!PEACE()&&spawnT<=0&&zs.length<(dk0()>.5?3+day*1.5:1+day*.4)*pls.length*DF().sp){spawnT=4;const a=R()*6.28,cp=pls[Math.floor(R()*pls.length)],x=cp.x+Math.cos(a)*230,y=cp.y+Math.sin(a)*230;if(!blocked(x,y,5)){const v=pickV(x,y);zs.push({id:nid(),x,y,hp:VHP[v],a:0,t:0,vx:0,vy:0,z:1,v})}}
- if(!inD&&!PEACE()&&R()<dt*(cb==1?.04:.012)*DF().sp&&zs.filter(q=>q.w).length<2){const a=R()*6.28,cp=pls[Math.floor(R()*pls.length)],x=cp.x+Math.cos(a)*230,y=cp.y+Math.sin(a)*230;if(!blocked(x,y,5))zs.push({id:nid(),x,y,hp:5,a:0,t:0,vx:0,vy:0,z:1,w:1})}
+ spawnT-=dt;if(!inD&&!PEACE()&&spawnT<=0&&zs.length<(dk0()>.5?3+day*1.5:1+day*.4)*pls.length*DF().sp){spawnT=4;const a=R()*6.28,cp=pls[Math.floor(R()*pls.length)],x=cp.x+Math.cos(a)*SPR109(),y=cp.y+Math.sin(a)*SPR109();if(!blocked(x,y,5)){const v=pickV(x,y);zs.push({id:nid(),x,y,hp:VHP[v],a:0,t:0,vx:0,vy:0,z:1,v})}}
+ if(!inD&&!PEACE()&&R()<dt*(cb==1?.04:.012)*DF().sp&&zs.filter(q=>q.w).length<2){const a=R()*6.28,cp=pls[Math.floor(R()*pls.length)],x=cp.x+Math.cos(a)*SPR109(),y=cp.y+Math.sin(a)*SPR109();if(!blocked(x,y,5))zs.push({id:nid(),x,y,hp:5,a:0,t:0,vx:0,vy:0,z:1,w:1})}
  const fires=zs.length?fireList():[];
  for(let i=zs.length-1;i>=0;i--){const z=zs[i];if(z.hp<=0){if(!(z.mu||z.boss))xpKill(z);if(z.mu||z.boss)mutDeath(z);else if(z.w)addLoot({x:z.x,y:z.y,k:'meat',n:2});else if(z.sp){if(R()<.8)drop(z.x,z.y,z)}else if(z.b){if(R()<.3)drop(z.x,z.y,z)}else if(R()<.6)drop(z.x,z.y,z);addCorpse(z);zs.splice(i,1);continue}
   if(z.stn>0)continue;if(z.fz>0&&Math.random()<.5)continue;if(z.mu||z.boss){muTick(z,dt,pls);continue}if(z.al>0)z.al-=dt;const q=nearP(z.x,z.y,pls),dx=q.x-z.x,dy=q.y-z.y,d=Math.hypot(dx,dy);let vx=0,vy=0;
@@ -5466,7 +5466,7 @@ function genAdit(){loot=[];map=new Uint8Array(W*H).fill(5);ob=new Array(W*H).fil
 let NZ83=0;
 function inAnyBld(x,y){const tx=Math.floor(x/T),ty=Math.floor(y/T);for(const b of BLD)if(tx>=b.x&&tx<b.x+b.w&&ty>=b.y&&ty<b.y+b.h)return true;return false}
 {const up83=update;update=function(dt){up83(dt);if(state!='play'||inD||DIFF>=3||(net&&!net.dead&&!net.isHost))return;NZ83-=dt;if(NZ83>0)return;NZ83=.5;if(dk0()>.35)return;
- const rc=locReactor();for(let i=zs.length-1;i>=0;i--){const z=zs[i];if(z.w||z.boss||z.mu||z.id==='tutz'||z.st79||z.hp<=0)continue;if(rc&&Math.hypot(z.x/T-rc.x,z.y/T-rc.y)<RR)continue;if(inAnyBld(z.x,z.y))continue;if(Math.hypot(z.x-P.x,z.y-P.y)<200)continue;zs.splice(i,1)}}}
+ const rc=locReactor();for(let i=zs.length-1;i>=0;i--){const z=zs[i];if(z.w||z.boss||z.mu||z.id==='tutz'||z.st79||z.hp<=0)continue;if(rc&&Math.hypot(z.x/T-rc.x,z.y/T-rc.y)<RR)continue;if(inAnyBld(z.x,z.y))continue;if(Math.hypot(z.x-P.x,z.y-P.y)<SPR109()-12)continue;zs.splice(i,1)}}}
 /* the story's scripted first infected stay, whatever the hour */
 {const sa83=stAdvance;stAdvance=function(){const n0=zs.length;const r=sa83();setTimeout(()=>{for(const z of zs)if(!z.w&&!z.st79&&Math.hypot(z.x-P.x,z.y-P.y)<200)z.st79=1},4700);return r}}
 
@@ -7154,20 +7154,58 @@ try{const M=GPAGES.main.rows;for(const k of['mood','mds']){const ix=M.findIndex(
 addEventListener('keydown',e=>{if(state=='gfxo'&&GPG=='play'&&(e.code=='Escape'||e.code=='Backspace')){e.stopImmediatePropagation();e.preventDefault();state='opts';GPG='main'}},true);
 
 /* ===== v109: close the gaps beside inner doors of the old houses; gloom is lighter and off by default ===== */
-GAMEV=121;
-const WALL109={wall:1,sblock:1,twall:1,iwall:1,gwall:1,win:1},JUNK109={deco:1,papers:1,cweb:1,rubble:1,bones:1,trash:1,bag:1};
+GAMEV=122;
+/* spawn / cull radius: just outside what the screen shows, so nothing pops in or out in plain sight */
+function SPR109(){try{const z=ZM||1;return Math.max(230,Math.hypot(VW,VH)/z/2+28)}catch(e){return 260}}
+const WALL109={wall:1,sblock:1,twall:1,iwall:1,gwall:1,win:1,cubw:1},JUNK109={deco:1,papers:1,cweb:1,rubble:1,bones:1,trash:1,bag:1};
+/* holes in the inner walls of houses (mostly at bathroom corners beside the door): fill them, but only if every room stays reachable */
+function reach109(b0){/* flood from the ground just outside the house, in through its doors */const b={x:b0.x-2,y:b0.y-2,w:b0.w+4,h:b0.h+4},x0=b.x,y0=b.y,w=b.w,h=b.h,seen=new Uint8Array(w*h),q=[];
+ const pass=(x,y)=>{if(x<0||y<0||x>=W||y>=H)return false;const o=ob[y*W+x];if(!o)return map[y*W+x]!=1;if(o.t=='door')return true;if(WALL109[o.t])return false;return !SOLID[o.t]||JUNK109[o.t]};
+ for(let x=x0;x<x0+w;x++)for(const y of[y0,y0+h-1])if(pass(x,y)){seen[(y-y0)*w+x-x0]=1;q.push([x,y])}
+ for(let y=y0;y<y0+h;y++)for(const x of[x0,x0+w-1])if(pass(x,y)&&!seen[(y-y0)*w+x-x0]){seen[(y-y0)*w+x-x0]=1;q.push([x,y])}
+ while(q.length){const[x,y]=q.pop();for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){const X=x+dx,Y=y+dy;if(X<x0||Y<y0||X>=x0+w||Y>=y0+h)continue;const k=(Y-y0)*w+X-x0;if(seen[k]||!pass(X,Y))continue;seen[k]=1;q.push([X,Y])}}return seen}
+/* a filled gap would cut off a corner (usually the spot beside the bed): move the piece of furniture that blocks that corner to another free spot by a wall */
+function shift109(b,base,grp,now){const bw=b.w+4,kx=k=>b.x-2+k%bw,ky=k=>b.y-2+((k/bw)|0),lost=[];
+ for(let k=0;k<base.length;k++)if(base[k]&&!now[k]&&!grp.includes(ky(k)*W+kx(k)))lost.push(ky(k)*W+kx(k));if(!lost.length||lost.length>4)return false;
+ const inside=j=>{const x=j%W,y=(j/W)|0;return x>=b.x&&y>=b.y-1&&x<b.x+b.w&&y<=b.y+b.h},hasPart=j=>{for(let y=b.y;y<b.y+b.h;y++)for(let x=b.x;x<b.x+b.w;x++){const q=ob[y*W+x];if(q&&q.pm==j)return true}return false};
+ const allOk=(skip)=>{const r=reach109(b);for(let k=0;k<base.length;k++){if(!base[k])continue;const j=ky(k)*W+kx(k);if(grp.includes(j)||skip.includes(j))continue;if(!r[k])return false}return true};
+ const blockers=new Set();for(const j of lost)for(const d of[1,-1,W,-W]){const f=j+d,q=ob[f];if(q&&inside(f)&&SOLID[q.t]&&!WALL109[q.t]&&q.t!='door'&&q.pm==null&&!hasPart(f))blockers.add(f)}
+ for(const f of blockers){const o=ob[f];ob[f]=null;if(!allOk([])){ob[f]=o;continue}
+  /* only within the same room (walls and doors split rooms), so nothing ends up in the bathroom */
+  const room=new Set([f]),rq=[f];while(rq.length){const j=rq.pop();for(const d of[1,-1,W,-W]){const n=j+d;if(room.has(n)||!inside(n))continue;const q=ob[n];if(q&&(WALL109[q.t]||q.t=='door'))continue;room.add(n);rq.push(n)}}
+  const spots=[];for(let y=b.y-1;y<=b.y+b.h;y++)for(let x=b.x;x<b.x+b.w;x++){const j=y*W+x;if(!room.has(j)||j==f||ob[j]&&!JUNK109[ob[j].t]||grp.includes(j)||lost.includes(j))continue;let wl=0,nd=0;for(const d of[1,-1,W,-W]){const q=ob[j+d];if(q&&WALL109[q.t])wl++;if(q&&q.t=='door')nd=1}if(!nd)spots.push([wl+(ob[j]?.5:0),Math.abs(x-f%W)+Math.abs(y-((f/W)|0)),j])}
+  spots.sort((a,c)=>c[0]-a[0]||a[1]-c[1]);
+  for(const[,,j]of spots){const was=ob[j];ob[j]=o;if(allOk([j])){if(map[f]==16)map[f]=12;return true}ob[j]=was}
+  /* nowhere to put it: a plain piece of furniture (nothing stored in it) can go */
+  if(!o.inv&&!o.items&&!o.loot&&o.t!='chest'&&o.t!='crate'){if(map[f]==16)map[f]=12;return true}
+  ob[f]=o}
+ return false}
 function doorGaps109(){if(inD||!BLD.length)return 0;let fixed=0;
- for(const b of BLD){if(b.rf!='ruin'&&b.rf!='house'&&b.rf!='hut')continue;for(let y=b.y+1;y<b.y+b.h-1;y++)for(let x=b.x+1;x<b.x+b.w-1;x++){const i=y*W+x,o=ob[i];if(!o||o.t!='door')continue;
-  for(const[ax,ay]of[[1,0],[0,1]]){const A=ob[i+ay*W+ax],Bq=ob[i-ay*W-ax],wA=A&&WALL109[A.t],wB=Bq&&WALL109[Bq.t];if(wA&&wB)continue;if(!wA&&!wB)continue;
-   const s=wA?-1:1,wt=(wA?A:Bq).t=='win'?'twall':(wA?A:Bq).t,run=[];let ok=false;
-   for(let k=1;k<=3;k++){const X=x+ax*s*k,Y=y+ay*s*k;if(X<=b.x-1||Y<=b.y-1||X>=b.x+b.w||Y>=b.y+b.h)break;const j=Y*W+X,q=ob[j];if(q&&(WALL109[q.t]||q.t=='door')){ok=true;break}if(q&&!JUNK109[q.t])break;run.push(j)}
-   if(ok&&run.length&&run.length<=3){for(const j of run){ob[j]={t:wt,hp:60,nb:1};if(map[j]==16)map[j]=12}fixed+=run.length}}}}
+ for(const b of BLD){if(b.rf!='ruin'&&b.rf!='house'&&b.rf!='hut')continue;if(b.w*b.h>140)continue;const isW=j=>ob[j]&&WALL109[ob[j].t],isD=j=>ob[j]&&ob[j].t=='door',cand=[];
+  for(let y=b.y;y<b.y+b.h;y++)for(let x=b.x;x<b.x+b.w;x++){const i=y*W+x,o=ob[i];if(o&&!JUNK109[o.t])continue;
+   const L=i-1,Rr=i+1,U=i-W,D=i+W;
+   /* a straight one-tile gap in a wall, open on both sides */const op=j=>{const q=ob[j];return !q||JUNK109[q.t]||!SOLID[q.t]&&!WALL109[q.t]&&q.t!='door'};const straight=(isW(L)||isD(L))&&(isW(Rr)||isD(Rr))&&op(U)&&op(D)||(isW(U)||isD(U))&&(isW(D)||isD(D))&&op(L)&&op(Rr);
+   /* the end of a partition that stops one tile short of the door */const corner=(isD(L)||isD(Rr))&&(isW(U)||isW(D))||(isD(U)||isD(D))&&(isW(L)||isW(Rr));
+   if(straight||corner){let wt='twall';for(const j of[L,Rr,U,D])if(isW(j)&&ob[j].t!='win'){wt=ob[j].t;break}cand.push([[i],wt])}}
+  /* a door whose wall stops 1–3 tiles short on one side */
+  for(let y=b.y+1;y<b.y+b.h-1;y++)for(let x=b.x+1;x<b.x+b.w-1;x++){const i=y*W+x;if(!isD(i))continue;for(const[ax,ay]of[[1,0],[0,1]]){const A=i+ay*W+ax,Bq=i-ay*W-ax;if(isW(A)==isW(Bq))continue;const s_=isW(A)?-1:1,wt=ob[isW(A)?A:Bq].t=='win'?'twall':ob[isW(A)?A:Bq].t,run=[];let ok=false;
+   for(let k=1;k<=3;k++){const X=x+ax*s_*k,Y=y+ay*s_*k;if(X<=b.x||Y<=b.y||X>=b.x+b.w-1||Y>=b.y+b.h-1)break;const j=Y*W+X,q=ob[j];if(q&&(WALL109[q.t]||q.t=='door')){ok=true;break}if(q&&!JUNK109[q.t])break;run.push(j)}if(ok&&run.length)cand.push([run,wt])}}
+  if(!cand.length)continue;const base=reach109(b);
+  for(const[grp,wt]of cand){if(grp.some(i=>ob[i]&&WALL109[ob[i].t]))continue;const old=grp.map(i=>ob[i]);for(const i of grp)ob[i]={t:wt,hp:60,nb:1};const now=reach109(b);let ok=true;
+   for(let k=0;k<base.length&&ok;k++){if(!base[k])continue;const X=b.x-2+k%(b.w+4),Y=b.y-2+((k/(b.w+4))|0);if(grp.includes(Y*W+X))continue;if(!now[k])ok=false}
+   if(!ok)ok=shift109(b,base,grp,now);
+   if(ok){for(const i of grp)if(map[i]==16)map[i]=12;fixed+=grp.length}else grp.forEach((i,n)=>ob[i]=old[n])}}
  return fixed}
 {const ir109=init;init=function(...a){const r=ir109.apply(this,a);try{doorGaps109()}catch(e){}return r}}
 {const ld109=load;load=function(){const r=ld109();try{doorGaps109()}catch(e){}return r}}
 /* gloom: off by default, and much lighter when switched on */
 try{const v=localStorage.getItem('pxc_mood2');MOOD=v==='1'?1:0;const s=localStorage.getItem('pxc_mds2');MDS=s!=null&&s!==''?Math.max(0,Math.min(1,+s)):.5}catch(e){MOOD=0;MDS=.5}
 mdSave=function(){try{localStorage.setItem('pxc_mood2',String(MOOD));localStorage.setItem('pxc_mds2',String(MDS))}catch(e){}};
+/* sounds: a slurp when you drink, munching when you eat */
+function sfxSlurp109(){sfx(()=>{sxN(.32,'bandpass',600,1500,4,.42);for(const at of[.12,.32,.52])sxT('sine',250,170,.08,.16,at)})}
+function sfxMunch109(){sfx(()=>{for(const at of[0,.2,.4]){sxN(.07,'bandpass',1900,900,1.6,.42,at);sxT('triangle',150,90,.06,.12,at+.01)}})}
+var LTH109=null,LFD109=null,LST109='';
+{const up109=update;update=function(dt){const r=up109(dt);try{if(state=='play'&&LST109=='play'&&LTH109!=null){if(P.th-LTH109>4)sfxSlurp109();if(P.food-LFD109>4)sfxMunch109()}LST109=state;LTH109=P.th;LFD109=P.food}catch(e){}return r}}
 
 /* ---- animation & feel ---- */
 let dsT=0,shk=0,corpses=[],dmgN=[];const FL={ob:null,t:0,a:[]};
