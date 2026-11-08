@@ -7960,7 +7960,7 @@ const JNC=[['Küldetések','Quests','#a83a2a'],['Beszélgetések','Talks','#3a6a
 /* ---- what gets written into the journal ---- */
 function jnTalk(n,t,k){if(!t)return;t=String(t);const L=JNT[0];if(L&&L.n===n&&L.t===t)return;JNT.unshift({d:day,n:n||'?',t,k:k||'npc'});if(JNT.length>120)JNT.length=120}
 {const ds131=dlSay;dlSay=function(kind,name,text,src,hint){try{if(kind=='npc'||kind=='radio')jnTalk(name||(kind=='radio'?JB('Rádió','Radio'):'?'),text,kind)}catch(e){}return ds131.apply(this,arguments)}}
-function jnFind(k,th,te,dh,de){if(JND[k])return;JND[k]={th,te,dh,de,d:day};JNDO.push(k);try{TQ112.push({title:JB('Napló — új felfedezés','Journal — new discovery'),sub:JB(th,te),col:'#d8b070'})}catch(e){}try{snd('ui')}catch(e){}}
+function jnFind(k,th,te,dh,de){if(JND[k])return;JND[k]={th,te,dh,de,d:day};JNDO.push(k);try{TQ112.push({title:/^lk_/.test(k)?JB('Napló — új tudás','Journal — new know-how'):JB('Napló — új felfedezés','Journal — new discovery'),sub:JB(th,te),col:'#d8b070'})}catch(e){}try{snd('ui')}catch(e){}}
 const JNBIO=[['Erdő','Forest','Fák, bokrok, vadak és folyók. Nappal a legbiztonságosabb vidék — éjjel ez is megváltozik.','Trees, bushes, game and rivers. The safest land by day — by night that changes too.'],
  ['Hómező','Snowfield','Fagy és csend. Tűz és meleg ruha nélkül kihűlsz. A befagyott vízen át lehet kelni.','Frost and silence. Without fire and warm clothes you freeze. You can walk across frozen water.'],
  ['Sivatag','Desert','Homok, kaktusz, kevés árnyék. Gyorsan szomjazol — a kaktusz vizet ad.','Sand, cactus, little shade. You get thirsty fast — cactus gives water.'],
@@ -7999,9 +7999,9 @@ function jnDiscs(){const L=[];jnHead(L,JB('Felfedezések','Discoveries'),'#3a5a2
  for(const k of JNDO){const e=JND[k];L.push({gap:1,h:4});jnText(L,'◆ '+(jh()?e.th:e.te),{b:1,c:'#2a1a10',sz:9});jnText(L,JB(e.d+'. nap','Day '+e.d),{c:'#8a7a5a',sz:7,in:8});jnText(L,jh()?e.dh:e.de,{in:8})}return jnFlow(L)}
 function jnGuide(){const L=[];jnHead(L,JB('Útmutató','Guide'),'#6a4a1a');try{for(const t of HB_TABS){if(t.d=='practice')continue;const lines=jh()?t.thu:t.ten;if(!lines)continue;jnGap(L,4);jnText(L,jh()?t.hu:t.en,{b:1,c:'#5a2a18',sz:9});for(const s of lines)jnText(L,'· '+s,{in:4})}}catch(e){}
  try{for(const p of (jh()?TUT.hu:TUT.en)){if(!Array.isArray(p))continue;jnGap(L,4);jnText(L,p[0],{b:1,c:'#5a2a18',sz:9});for(const s of p.slice(1))jnText(L,'· '+s,{in:4})}}catch(e){}return jnFlow(L)}
-function jnSkills(){const L=[];jnHead(L,JB('Képességek','Skills'),'#4a2a6a');try{jnText(L,JB('Szint ','Level ')+XS.lv+'  ·  '+XS.xp+'/'+xpNeed(XS.lv)+' XP  ·  '+JB('Pont: ','Points: ')+XS.sp,{b:1,c:XS.sp>0?'#8a5a10':'#2a1a10'});jnText(L,JB('Kattints ide, vagy nyomd meg a K-t a teljes képességfához.','Click here or press K for the full skill tree.'),{c:'#6a5a40',sz:7});
+function jnSkills(){const L=[];jnHead(L,JB('Képességek','Skills'),'#4a2a6a');try{jnText(L,JB('Szint ','Level ')+XS.lv+'  ·  '+XS.xp+'/'+xpNeed(XS.lv)+' XP  ·  '+JB('Pont: ','Points: ')+XS.sp,{b:1,c:XS.sp>0?'#8a5a10':'#2a1a10'});jnText(L,JB('A teljes képességfa a beragasztott képen van — lapozz az elejére, és kattints rá.','The full skill tree is the photo taped in at the front — click it.'),{c:'#6a5a40',sz:7});
  for(let i=0;i<SKTN.length;i++){jnGap(L,3);jnText(L,SKTN[i][jh()?1:0],{b:1,c:SKTC[i]=='#ffd84a'?'#8a6a10':'#3a2a18',sz:9});for(const n of SKT)if(n[1]==i)jnText(L,(SK[n[0]]?'✓ ':skAvail(n)?'○ ':'· ')+(jh()?n[8]:n[5]),{c:SK[n[0]]?'#4a7a3a':skAvail(n)?'#8a5a10':'#8a7a5a',in:4,sz:7})}}catch(e){jnText(L,'—')}return jnFlow(L)}
-function jnMap(){const L=[{page:1,h:JPH,draw:jnDrawMap}],R=[];jnHead(R,JB('Térkép','Map'),'#1a5a5a');jnText(R,JB('Kattints a térképre, vagy nyomd meg az M-et a nagy térképhez.','Click the map or press M for the big map.'),{c:'#6a5a40',sz:7});jnGap(R);
+function jnMap(){const L=[{page:1,h:JPH,draw:jnDrawMap}],R=[];jnHead(R,JB('Térkép','Map'),'#1a5a5a');jnText(R,JB('Kattints a beragasztott térképre a nagy térképhez.','Click the taped-in map for the big map.'),{c:'#6a5a40',sz:7});jnGap(R);
  jnText(R,JB('Helyzeted: ','Position: ')+Math.floor(P.x/T)+', '+Math.floor(P.y/T),{});try{if(home)jnText(R,JB('Otthon: ','Home: ')+Math.floor(home.x/T)+', '+Math.floor(home.y/T),{})}catch(e){}
  jnGap(R);jnText(R,JB('Jelmagyarázat','Legend'),{b:1});jnText(R,JB('● sárga: te   ● kék: társak   ⌂ otthon   ✕ halál helye','● yellow: you   ● blue: friends   ⌂ home   ✕ where you died'),{in:4,sz:7});
  if(JNDO.length){jnGap(R);jnText(R,JB('Felfedezett helyek','Places found'),{b:1});for(const k of JNDO)jnText(R,'◆ '+(jh()?JND[k].th:JND[k].te),{in:4,sz:7})}
@@ -8042,13 +8042,13 @@ addEventListener('keydown',e=>{if(state!='play')return;const c=e.code;
  if(c=='Tab'||c==KB.journal||c=='Escape'){jnClose();return}const sp=Math.max(1,Math.ceil(jnPages().length/2));
  if(c=='ArrowRight'||c=='KeyD'){if(JN.pg<sp-1){JN.pg++;jnFlip()}else if(JN.ch<JNC.length-1){JN.ch++;JN.pg=0;JN.cache=null;jnFlip()}return}
  if(c=='ArrowLeft'||c=='KeyA'){if(JN.pg>0){JN.pg--;jnFlip()}else if(JN.ch>0){JN.ch--;JN.cache=null;JN.pg=99;jnFlip()}return}
- if(/^Digit[1-6]$/.test(c)){JN.ch=+c.slice(5)-1;JN.pg=0;JN.cache=null;jnFlip();return}if(c=='KeyK'){jnClose();skOpen=true;return}if(c=='KeyM'){jnClose();showMap=true;try{mkMap()}catch(e){}return}},true);
+ if(/^Digit[1-6]$/.test(c)){JN.ch=+c.slice(5)-1;JN.pg=0;JN.cache=null;jnFlip();return}if(c=='KeyK'){JNRET={ch:JN.ch,pg:JN.pg};jnClose();skOpen=true;return}if(c=='KeyM'){JNRET={ch:JN.ch,pg:JN.pg};jnClose();showMap=true;try{mkMap()}catch(e){}return}},true);
 function jnFlip(){try{sfx(()=>{sxN(.12,'highpass',2400,800,.7,.18)})}catch(e){try{snd('ui')}catch(_){}}}
 C.addEventListener('mousedown',e=>{if(!JN||state!='play')return;try{sc(e)}catch(_){}e.stopImmediatePropagation();e.preventDefault();
  for(let i=0;i<JNC.length;i++){const w=68,x=JBX+12+i*(w+2);if(ms.x>=x&&ms.x<x+w&&ms.y>=JBY-17&&ms.y<JBY+2){JN.ch=i;JN.pg=0;JN.cache=null;jnFlip();return}}
  const sp=Math.max(1,Math.ceil(jnPages().length/2));if(ms.x<JBX+40&&ms.y>JBY+JBH-40&&ms.y<JBY+JBH&&JN.pg>0){JN.pg--;jnFlip();return}if(ms.x>JBX+JBW-40&&ms.y>JBY+JBH-40&&ms.y<JBY+JBH&&JN.pg<sp-1){JN.pg++;jnFlip();return}
  if(ms.x<JBX-4||ms.x>JBX+JBW+4||ms.y<JBY-20||ms.y>JBY+JBH+4){jnClose();return}
- if(JN.ch==4){jnClose();skOpen=true;return}if(JN.ch==5&&JN.pg==0&&ms.x<JBX+JBW/2){jnClose();showMap=true;try{mkMap()}catch(_){}return}},true);
+ },true);
 C.addEventListener('wheel',e=>{if(!JN)return;e.preventDefault();e.stopImmediatePropagation();const sp=Math.max(1,Math.ceil(jnPages().length/2));if(e.deltaY>0&&JN.pg<sp-1){JN.pg++;jnFlip()}else if(e.deltaY<0&&JN.pg>0){JN.pg--;jnFlip()}},{capture:true,passive:false});
 {const up131=update;update=function(dt){if(JN){K.KeyW=K.KeyA=K.KeyS=K.KeyD=K.ArrowUp=K.ArrowDown=K.ArrowLeft=K.ArrowRight=false;mdown=false;edge=false}const r=up131(dt);try{if(state=='play')jnDiscTick(dt);else if(JN)JN=null}catch(e){}return r}}
 {const dw131=draw;draw=function(){const r=dw131.apply(this,arguments);try{if(state=='play'&&JN)jnDraw()}catch(e){noTr=false;console.error(e)}return r}}
@@ -8115,7 +8115,7 @@ const zpk132=a=>a[Math.floor(Math.random()*a.length)];
 {const js132=jnSkills;jnSkills=function(){const P_=js132();try{if(LK&&!creative){const L=[];jnHead(L,LB('Tudás','Know-how'),'#4a2a6a');const n=REC.filter(r=>LK[r[0]]).length;jnText(L,LB('Ismert receptek: ','Known recipes: ')+n+'/'+REC.length,{b:1,c:'#2a1a10'});
  jnText(L,LB('Új receptet így tanulsz: fogd kézbe az anyagait, és gyakorolj — barkácsolj sokat az adott fajtából. Gyorsabb, ha egy tervrajzot találsz (könyvespolc, íróasztal, láda), vagy ha a tábor lakói megtanítanak valamire.','You learn new recipes by handling the materials and practising — craft lots of the same kind. It’s faster if you find a blueprint (bookshelves, desks, crates), or if camp people teach you.'),{sz:7,c:'#5a4a30'});
  for(let i=0;i<4;i++)jnText(L,(LANG=='hu'?CATH:CATS)[i]+': '+(LKC.c[i]|0)+LB(' készítés',' crafted'),{in:4,sz:7});
- const rec=Object.keys(LK).filter(k=>!LKSTART.includes(k)).slice(-8).reverse();if(rec.length){jnGap(L);jnText(L,LB('Legutóbb tanultad:','Recently learned:'),{b:1,sz:8});for(const k of rec)jnText(L,'· '+tr(LBL[k]||k),{in:4,sz:7})}
+ const rec=Object.keys(LK).filter(k=>!LKSTART.includes(k)&&!/^wood_/.test(k)).slice(-8).reverse();if(rec.length){jnGap(L);jnText(L,LB('Legutóbb tanultad:','Recently learned:'),{b:1,sz:8});for(const k of rec)jnText(L,'· '+tr(LBL[k]||k),{in:4,sz:7})}
  return[...jnFlow(L),...P_]}}catch(e){}return P_}}
 JNB[4]=jnSkills;
 /* ---- Ctrl: the bottom buttons and slots tell you their keys ---- */
@@ -8493,6 +8493,47 @@ let WKT144=0;
 {const lk144=lkKnown;lkKnown=function(k){if(/^wood_/.test(k))return true;return lk144(k)}}
 try{TUT.hu.push(['Kasza és virágok','Kaszával egy suhintás 3×3 mezőről leviszi a magas füvet, a virágokat és a bokrokat, és learatja az érett termést.','Ha virágot szedsz vagy kaszálsz, 15% eséllyel virágmagot kapsz. Füvön vagy felkapált földön vetheted el.','Kasza: 3 fa + 2 vas. A fa eszközökhöz nem kell tanulni.']);
  TUT.en.push(['Scythe and flowers','One swing of a scythe clears tall grass, flowers and bushes in a 3×3 patch and reaps ripe crops.','Picking or mowing a flower gives flower seeds 15% of the time. Sow them on grass or tilled soil.','Scythe: 3 wood + 2 iron. Wooden tools need no learning.'])}catch(e){}
+
+/* ===== v145: the journal — only real places count as places found; the skill tree and the map are photos taped into the book, click one to open it, close it and you are back in the book ===== */
+GAMEV=145;
+const jnIsPlace=k=>!/^lk_/.test(k)&&k!='night';
+let JNPIC=null,JNRET=null;
+/* a photo taped into the book: cream border, slight tilt, two strips of tape; returns the screen rect */
+function jnPhoto(x,y,w,h,ang,inner,cap){const hov=JNPIC&&JNPIC.hov,cx=x+w/2,cy=y+h/2;
+ g.save();g.translate(cx,cy);g.rotate(ang);
+ g.fillStyle='rgba(60,40,20,'+(hov?.32:.22)+')';g.fillRect(-w/2+(hov?4:2),-h/2+(hov?5:3),w,h);
+ g.fillStyle='#f4efe2';g.fillRect(-w/2,-h/2,w,h);g.fillStyle='#e4dccb';g.fillRect(-w/2,h/2-2,w,2);
+ const B=6;g.save();g.beginPath();g.rect(-w/2+B,-h/2+B,w-2*B,h-2*B-14);g.clip();try{inner(-w/2+B,-h/2+B,w-2*B,h-2*B-14)}catch(e){}g.restore();
+ g.font=fnt(0,8);g.textAlign='center';g.fillStyle='#4a3a28';g.fillText(cap,0,h/2-5);g.textAlign='left';
+ /* tape */
+ for(const[sx,sy,a]of[[-w/2+4,-h/2-2,-.6],[w/2-4,-h/2-2,.6]]){g.save();g.translate(sx,sy);g.rotate(a);g.fillStyle='rgba(236,226,190,.72)';g.fillRect(-11,-4,22,8);g.fillStyle='rgba(255,255,255,.25)';g.fillRect(-11,-4,22,2);g.fillStyle='rgba(180,160,110,.35)';for(let i=-11;i<11;i+=3){g.fillRect(i,-4,1,1);g.fillRect(i+1,3,1,1)}g.restore()}
+ g.restore();return{x,y,w,h}}
+/* the skill tree, as a little photo */
+function jnSkPic(x,y,w,h){Q(x,y,w,h,'#1a1612');const nb=SKTN.length,cw=w/nb;let maxR=0;for(const n of SKT)maxR=Math.max(maxR,n[2]);const rh=(h-18)/(maxR+1);
+ for(let b=0;b<nb;b++){const col=SKTC[b]||'#8a8a8a',bx=x+b*cw;Q(bx+cw/2-8,y+3,16,2,col);
+  for(const n of SKT){if(n[1]!=b)continue;const nx=Math.round(bx+cw*(.2+.3*n[3])),ny=Math.round(y+12+n[2]*rh+rh/2);
+   if(n[4]){const p=SKT.find(q=>q[0]==n[4]);if(p){const px=Math.round(bx+cw*(.2+.3*p[3])),py=Math.round(y+12+p[2]*rh+rh/2);g.strokeStyle=SK[n[0]]?col:'rgba(200,190,170,.25)';g.lineWidth=1;g.beginPath();g.moveTo(px+.5,py+.5);g.lineTo(nx+.5,ny+.5);g.stroke()}}
+   const on=!!SK[n[0]],av=!on&&skAvail(n);Q(nx-3,ny-3,7,7,'#0c0a08');Q(nx-2,ny-2,5,5,on?col:av?'#6a5a3a':'#2e2a24');if(on)Q(nx-1,ny-2,2,1,'rgba(255,255,255,.6)')}}
+ g.font=fnt(0,7);g.fillStyle='#e8dcc0';g.fillText((LANG=='hu'?'Szint ':'Lv ')+XS.lv+(XS.sp>0?(LANG=='hu'?'  ·  pont: ':'  ·  pts: ')+XS.sp:''),x+3,y+h-3)}
+function jnDrawSkPhoto(x,y,w,h){const pw=w-16,ph=Math.min(h-30,pw*1.05),px=x+8,py=y+14;
+ const r=jnPhoto(px,py,pw,ph,-.035,jnSkPic,LANG=='hu'?'Képességfa — kattints rá':'Skill tree — click it');JNPIC={...r,hov:JNPIC&&JNPIC.hov,k:'sk'};
+ g.font=fnt(0,7);g.fillStyle='#6a5a40';g.fillText(LANG=='hu'?'Lapozz tovább a tudásért és a képességek listájáért →':'Turn the page for know-how and the full list →',x+4,y+h-16)}
+/* the map page: same photo treatment */
+{const jdm145=jnDrawMap;jnDrawMap=function(x,y,w,h){if(inD)return jdm145(x,y,w,h);const pw=w-12,ph=pw+20,px=x+6,py=y+10;
+ const r=jnPhoto(px,py,pw,ph,.03,(ix,iy,iw,ih)=>{const s=Math.min(iw,ih);jdm145(ix+(iw-s)/2,iy+(ih-s)/2,s,s)},LANG=='hu'?'Térkép — kattints rá':'Map — click it');JNPIC={...r,hov:JNPIC&&JNPIC.hov,k:'map'}}}
+{const js145=jnSkills;jnSkills=function(){const P_=js145();return[[{page:1,h:JPH,draw:jnDrawSkPhoto}],...P_]}}
+JNB[4]=jnSkills;
+/* only places in the places lists */
+{const jd145=jnDiscs;jnDiscs=function(){const o=JNDO.slice();try{JNDO.length=0;for(const k of o)if(jnIsPlace(k))JNDO.push(k);return jd145()}finally{JNDO.length=0;JNDO.push(...o)}}}
+JNB[2]=jnDiscs;
+{const jm145=jnMap;jnMap=function(){const o=JNDO.slice();try{JNDO.length=0;for(const k of o)if(jnIsPlace(k))JNDO.push(k);return jm145()}finally{JNDO.length=0;JNDO.push(...o)}}}
+JNB[5]=jnMap;
+/* hover + click on the taped photos (runs before the book's own click handler) */
+addEventListener('mousemove',e=>{if(!JN||!JNPIC)return;try{sc(e)}catch(_){}const r=JNPIC;JNPIC.hov=ms.x>=r.x&&ms.x<=r.x+r.w&&ms.y>=r.y&&ms.y<=r.y+r.h},true);
+addEventListener('mousedown',e=>{if(!JN||state!='play'||!JNPIC||e.button!==0)return;const want=JN.ch==4?'sk':JN.ch==5&&!inD?'map':null;if(!want||JNPIC.k!=want||JN.pg!==0)return;try{sc(e)}catch(_){}const r=JNPIC;if(!(ms.x>=r.x&&ms.x<=r.x+r.w&&ms.y>=r.y&&ms.y<=r.y+r.h))return;
+ e.stopImmediatePropagation();e.preventDefault();JNRET={ch:JN.ch,pg:JN.pg};jnClose();JNPIC=null;if(want=='sk')skOpen=true;else{showMap=true;try{mkMap()}catch(_){}}},true);
+/* closing the tree or map you opened from the book brings the book back */
+{const up145=update;update=function(){const r=up145.apply(this,arguments);try{if(JN&&JNRET)JNRET=null;if(JNRET&&state=='play'&&!skOpen&&!showMap&&!JN){const R=JNRET;JNRET=null;jnOpen(R.ch);JN.pg=R.pg}if(JN&&JN.ch!=4&&JN.ch!=5)JNPIC=null}catch(e){}return r}}
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
