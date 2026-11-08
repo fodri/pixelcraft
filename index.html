@@ -8282,6 +8282,67 @@ const AXEBRK={fcrate:1};
   if(o.chp<=0){if(o.lt==null){try{crate(o)}catch(e){}}ob[i]=null;const n=2+(Math.random()<.5?1:0);if(canAdd('wood'))inv.wood=(inv.wood|0)+n;else addLoot({x:cx,y:cy,k:'wood',n});try{snd('pick')}catch(e){}for(let k=0;k<10;k++)parts.push({x:cx,y:cy-4,vx:(Math.random()-.5)*110,vy:-Math.random()*80,l:.6,c:k%3?'#8a6a40':'#c8a878'});
    say((h?'Szétverted a ládát: +':'You broke the crate apart: +')+n+(h?' fa':' wood'))}else say(h?'Reccsen a deszka…':'The planks creak…');return}}}catch(e){console.error(e)}return ac138()}}
 
+/* ===== v139: mark places on the map — click the big map and a flag goes there, your co-op partners see it too; in creative a double click teleports you there ===== */
+GAMEV=139;
+let WPS={me:null,pe:{}},WPC=null;
+function wpGeo(){const MS=Math.min(VH-34,W*1.4),mf=MS/W,x0=(VW-MS)/2,y0=(VH-MS)/2+6;return{MS,mf,x0,y0}}
+function wpSend(x,y){try{if(net&&!net.dead)net.r.emit('emote',x==null?{k:9,c:1}:{k:9,x:Math.round(x),y:Math.round(y)})}catch(e){}}
+function wpSet(x,y){WPS.me=x==null?null:{x,y,t:day};wpSend(x,y)}
+function wpLand(x,y){const tx0=Math.floor(x/T),ty0=Math.floor(y/T);for(let r=0;r<20;r++)for(let a=0;a<Math.max(1,r*6);a++){const tx=Math.round(tx0+Math.cos(a/(r*6||1)*6.283)*r),ty=Math.round(ty0+Math.sin(a/(r*6||1)*6.283)*r);if(tx<1||ty<1||tx>=W-1||ty>=H-1)continue;const px=tx*T+8,py=ty*T+8;if(!blocked(px,py,4))return[px,py]}return null}
+C.addEventListener('mousedown',e=>{if(state!='play'||!showMap||inD)return;try{sc(e)}catch(_){}const G=wpGeo();if(ms.x<G.x0||ms.y<G.y0||ms.x>G.x0+G.MS||ms.y>G.y0+G.MS)return;e.stopImmediatePropagation();e.preventDefault();
+ const wx=(ms.x-G.x0)/G.mf*T,wy=(ms.y-G.y0)/G.mf*T,now=performance.now(),h=LANG=='hu';
+ if(e.button==2){wpSet(null);snd('ui');return}
+ if(creative&&WPC&&now-WPC.t<380&&Math.hypot(ms.x-WPC.x,ms.y-WPC.y)<6){const L=wpLand(wx,wy);WPC=null;if(L){if(drv)drv=null;P.boat=false;P.x=L[0];P.y=L[1];cam.x=NaN;showMap=false;snd('door');for(let k=0;k<16;k++)parts.push({x:P.x,y:P.y-8,vx:(Math.random()-.5)*80,vy:-Math.random()*70,l:.6,c:k%2?'#9ad0ff':'#ffffff'});say(h?'Teleportáltál':'Teleported')}return}
+ WPC={x:ms.x,y:ms.y,t:now};if(WPS.me&&Math.hypot(WPS.me.x-wx,WPS.me.y-wy)<5*T){wpSet(null);snd('ui');say(h?'Jelölés törölve':'Mark removed');return}
+ wpSet(wx,wy);snd('ui');say(h?(net&&net.peers.length?'Megjelölted a helyet — a társaid is látják':'Megjelölted a helyet'):(net&&net.peers.length?'Place marked — your partners see it too':'Place marked'))},true);
+C.addEventListener('contextmenu',e=>{if(showMap)e.preventDefault()},true);
+{const oe139=onEmote;onEmote=function(d,from){if(d&&d.k===9&&net){const p=net.peers.find(q=>q.id===from);if(!p)return;const nm=String((p.presence&&p.presence.n)||'?').slice(0,12);if(d.c||!isFinite(d.x)||!isFinite(d.y)){delete WPS.pe[from];return}WPS.pe[from]={x:+d.x,y:+d.y,n:nm};try{toast112(LANG=='hu'?nm+' megjelölt egy helyet':nm+' marked a place',LANG=='hu'?'Nézd meg a térképen (M)':'See it on the map (M)','#4ab8ff')}catch(e){}if(vol>0)snd('ui');return}return oe139(d,from)}}
+{const mm139=mapMarks;mapMarks=function(){const r=mm139();if(WPS.me)r.unshift({k:'w',x:WPS.me.x,y:WPS.me.y,n:LANG=='hu'?'Jelölés':'Mark',c:'#ffd84a'});if(net)for(const id in WPS.pe){if(!net.peers.some(p=>p.id===id)){delete WPS.pe[id];continue}const w=WPS.pe[id];r.unshift({k:'w',x:w.x,y:w.y,n:w.n,c:'#4ab8ff'})}return r}}
+{const mi139=markIcon;markIcon=function(m,X,Y,now,big){if(m.k!=='w')return mi139(m,X,Y,now,big);const b=Math.round(Math.sin(now/250)*1);Q(X,Y-8+b,1,9,'#000');Q(X-1,Y,3,1,'#000');Q(X+1,Y-8+b,6,4,'#000');Q(X+1,Y-7+b,5,2,m.c);if(big){noTr=true;txt(m.n,X+8,Y-3+b,m.c);noTr=false}}}
+{const dm139=drawMapFull;drawMapFull=function(){const r=dm139.apply(this,arguments);try{const G=wpGeo(),h=LANG=='hu';noTr=true;const hs=h?'Katt: jelölés'+(net&&net.peers.length?' (a társad is látja)':'')+'   Jobb katt: törlés'+(creative?'   Dupla katt: teleport':''):'Click: mark'+(net&&net.peers.length?' (partners see it)':'')+'   Right click: clear'+(creative?'   Double click: teleport':'');g.font=fnt(0,8);const hw=Math.ceil(g.measureText(hs).width)+10;Q(VW/2-hw/2,G.y0+G.MS-14,hw,12,'rgba(0,0,0,.7)');txt(hs,VW/2,G.y0+G.MS-5,'#e8e4d8','center');noTr=false}catch(e){noTr=false}return r}}
+/* a compass arrow to the marks while you walk, and your own mark clears when you arrive */
+function wpHud(){if(inD||showMap||JN||book||invOpen)return;const h=LANG=='hu';if(WPS.me){if(Math.hypot(WPS.me.x-P.x,WPS.me.y-P.y)<2*T){wpSet(null);say(h?'Megérkeztél a jelölt helyre':'You reached the mark');return}try{arrow112(WPS.me.x,WPS.me.y,'#ffd84a',h?'Jelölés':'Mark')}catch(e){}}
+ if(net)for(const id in WPS.pe){const w=WPS.pe[id];try{arrow112(w.x,w.y,'#4ab8ff',w.n)}catch(e){}}}
+{const hd139=hud;hud=function(){const r=hd139.apply(this,arguments);try{if(state=='play')wpHud()}catch(e){}return r}}
+{const sv139=save;save=function(){const r=sv139.apply(this,arguments);try{localStorage.setItem(SKEY()+'_wp',JSON.stringify(WPS.me))}catch(e){}return r}}
+{const ld139=load;load=function(){const r=ld139.apply(this,arguments);try{WPS={me:JSON.parse(localStorage.getItem(SKEY()+'_wp')||'null'),pe:{}}}catch(e){WPS={me:null,pe:{}}}return r}}
+{const in139=init;init=function(...a){WPS={me:null,pe:{}};return in139.apply(this,a)}}
+
+/* ===== v140: creative mode without limits — walk through anything, every skill learned, and a palette to place animals, enemies, trees, bushes and rocks (or erase them) ===== */
+GAMEV=140;
+const CRP={
+ cr_deer:['Deer','Szarvas',(x,y)=>deer.push({id:'c'+nid(),x,y,hp:3,k:'deer',vx:0,vy:0,t:0})],
+ cr_rabbit:['Rabbit','Nyúl',(x,y)=>deer.push({id:'c'+nid(),x,y,hp:1,k:'rabbit',vx:0,vy:0,t:0})],
+ cr_sheep:['Sheep','Birka',(x,y)=>deer.push({id:'c'+nid(),x,y,hp:3,k:'sheep',vx:0,vy:0,t:0})],
+ cr_bird:['Bird','Madár',(x,y)=>deer.push({id:'c'+nid(),x,y,hp:1,k:'bird',vx:0,vy:0,t:0})],
+ cr_zomb:['Infected','Fertőzött',(x,y)=>{const v=[0,1,2,3,4,7][Math.floor(Math.random()*6)];zs.push({id:nid(),x,y,hp:VHP[v],a:0,t:0,vx:0,vy:0,z:1,v})}],
+ cr_brute:['Brute','Óriás',(x,y)=>{try{zs.push(mkMut('b',x,y))}catch(e){}}],
+ cr_spit:['Spitter','Köpködő',(x,y)=>{try{zs.push(mkMut('s',x,y))}catch(e){}}],
+ cr_tree:['Tree','Fa',null,{t:'tree',hp:6}],cr_rock:['Rock','Szikla',null,{t:'rock',hp:5}],cr_bush:['Berry bush','Bogyóbokor',null,{t:'bush',b:1,r:0}],
+ cr_flax:['Flax','Len',null,{t:'flax',b:1,r:0}],cr_cactus:['Cactus','Kaktusz',null,{t:'cactus',hp:4}],
+ cr_erase:['Eraser','Radír',null,null]};
+for(const k in CRP){LBL[k]=LBLX[k]=CRP[k][0];HU.unshift([CRP[k][0],CRP[k][1]],[CRP[k][0].toLowerCase(),CRP[k][1].toLowerCase()]);if(inv[k]==null)inv[k]=0}
+{const ic140=icon2;icon2=function(k,x,y){if(!CRP[k])return ic140(k,x,y);const S=(a,b,w,h,c)=>Q(x+a,y+b,w,h,c);S(1,1,18,18,'rgba(120,180,255,.18)');
+ if(k=='cr_erase'){S(4,8,12,6,'#e87a8a');S(4,8,4,6,'#f0e0d0');S(4,14,12,1,'#8a3a4a')}
+ else if(CRP[k][3]){const t=CRP[k][3].t;if(t=='tree'){S(9,11,2,6,'#6a4a2a');S(5,4,10,8,'#3a8a3a');S(6,3,8,2,'#5aa84a')}else if(t=='rock'){S(4,9,12,7,'#7b8084');S(6,8,7,2,'#9aa0a4')}else if(t=='bush'){S(4,8,12,8,'#2d5a30');S(6,10,2,2,'#b32030');S(11,11,2,2,'#b32030')}else if(t=='flax'){for(let i=0;i<4;i++)S(5+i*3,6,1,10,'#6a8a3a');S(5,5,10,2,'#8ab0e0')}else{S(8,5,4,11,'#4a8a4a');S(5,8,3,2,'#4a8a4a');S(12,7,3,2,'#4a8a4a')}}
+ else{const z=k=='cr_zomb'||k=='cr_brute'||k=='cr_spit',c=z?(k=='cr_brute'?'#6a7a4a':k=='cr_spit'?'#8aa828':'#7a9a6a'):k=='cr_sheep'?'#e8e4da':k=='cr_bird'?'#5a6a8a':k=='cr_rabbit'?'#a08a70':'#9a6a3a';if(z){S(7,4,6,5,c);S(6,9,8,7,'#4a4a3a');S(6,16,2,2,c);S(12,16,2,2,c);S(8,6,1,1,'#ff3030');S(11,6,1,1,'#ff3030')}else{S(5,8,10,6,c);S(13,5,4,4,c);S(6,14,1,3,c);S(13,14,1,3,c)}}
+ S(14,1,5,5,'#2a6ac8');S(16,2,1,3,'#fff');S(15,3,3,1,'#fff');return true}}
+function crpIsKey(k){return !!CRP[k]}
+/* the palette is only in your bag while you are creative */
+let CRPW=null,SK0=null;
+function crpSync(){const on=!!creative&&state=='play';if(on===CRPW)return;CRPW=on;for(const k in CRP)inv[k]=on?99:0;if(!on)for(let i=0;i<HB.length;i++)if(CRP[HB[i]])HB[i]=null;
+ if(on){SK0=Object.assign({},SK);for(const n of SKT)SK[n[0]]=1}else if(SK0){for(const k in SK)delete SK[k];Object.assign(SK,SK0);SK0=null}try{skRecalc()}catch(e){}}
+{const fc140=fillCreative;fillCreative=function(){const r=fc140.apply(this,arguments);for(const k in CRP)inv[k]=99;return r}}
+{const up140=update;update=function(dt){try{crpSync()}catch(e){}return up140(dt)}}
+/* walking through anything in creative */
+{const mv140=mv;mv=function(e,dx,dy,r){if(e===P&&creative&&!drv&&state=='play'){const nx=e.x+dx,ny=e.y+dy;if(nx>8&&ny>8&&nx<W*T-8&&ny<H*T-8){e.x=nx;e.y=ny}return[false,false]}return mv140(e,dx,dy,r)}}
+/* placing and erasing */
+{const ac140=act;act=function(){const k=HB[hb];if(CRP[k]&&creative){if(!edge)return;const tx=mtx,ty=mty;if(tx<0||ty<0||tx>=W||ty>=H)return;const i=ty*W+tx,x=tx*T+8,y=ty*T+8,h=LANG=='hu';
+  if(k=='cr_erase'){let best=null,bd=14,arr=null;for(const L of[zs,deer])for(const e of L){const d=Math.hypot(e.x-x,e.y-y);if(d<bd){bd=d;best=e;arr=L}}if(best){arr.splice(arr.indexOf(best),1);snd('hit');hit(best.x,best.y-6,'#e87a8a');return}if(ob[i]){ob[i]=null;snd('hit');hit(x,y,'#e87a8a');return}return}
+  const C_=CRP[k];if(C_[3]){if(ob[i]){say(h?'Ott már van valami — radírozd ki előbb':'Something is already there — erase it first');return}ob[i]=Object.assign({},C_[3]);snd('craft');hit(x,y,'#9ad0ff');return}
+  if(C_[2]){C_[2](x,y);snd('ui');hit(x,y-6,'#9ad0ff')}return}return ac140()}}
+try{TUT.hu.push(['Kreatív mód','Bárhová bemehetsz: átmész falon, vízen, mindenen. Minden képesség a tiéd.','A táskádban kék „+” jeles paletta: állat, fertőzött, fa, bokor, szikla, kaktusz — kattints, és ott lesz.','A radír kitörli, ami a kurzor alatt van. A térképen dupla kattintás: teleport.']);TUT.en.push(['Creative mode','Go anywhere: walk through walls, water, anything. Every skill is yours.','Your bag has a palette marked with a blue “+”: animals, infected, trees, bushes, rocks, cactus — click to place.','The eraser removes what is under the cursor. On the map, double click teleports.'])}catch(e){}
+
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
  if(state=='title')menu();if(state=='opts')optsMenu();if(state=='sndo')sndMenu();if(state=='gfxo')gfxMenu();if(state=='slots')svMenu();if(state=='keys')keysMenu();if(state=='wthr')wthrMenu();if(state=='char')charMenu();if(state=='lobby')drawLobby();if(state=='hb'){Q(0,0,VW,VH,'rgba(6,10,6,.6)');drawHB()}if(0)title('ASHFALL',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Hold the fire. Survive the nights.','','WASD move \u2022 Space chop / fish / attack \u2022 Tab recipes','Press any key']);
