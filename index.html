@@ -8536,7 +8536,7 @@ addEventListener('mousedown',e=>{if(!JN||state!='play'||!JNPIC||e.button!==0)ret
 {const up145=update;update=function(){const r=up145.apply(this,arguments);try{if(JN&&JNRET)JNRET=null;if(JNRET&&state=='play'&&!skOpen&&!showMap&&!JN){const R=JNRET;JNRET=null;jnOpen(R.ch);JN.pg=R.pg}if(JN&&JN.ch!=4&&JN.ch!=5)JNPIC=null}catch(e){}return r}}
 
 /* ===== v146: E on a shooting target opens a first-person range — stop the sway to aim, then set the height and the power like in darts; 5 shots a round, three distances, wind ===== */
-GAMEV=147;
+GAMEV=148;
 let TPV=null,TPREC=[0,0,0];
 const TPD=[{m:10,R:72,sx:1.5,sy:1.1,sp:.85,K:1.0,W:.12,mul:1},{m:20,R:52,sx:2.0,sy:1.4,sp:1.05,K:1.4,W:.25,mul:1.5},{m:30,R:38,sx:2.6,sy:1.75,sp:1.3,K:1.8,W:.4,mul:2}];
 const tpH=()=>LANG=='hu',tpNow=()=>performance.now()/1000;
@@ -8609,23 +8609,18 @@ function tpDraw(){const s=TPV;if(!s)return;const h=tpH(),D=TPD[s.dist],lR=Math.r
   const lx=TPCX,ly=TPCY,fy=TPHZ+Math.round(lR*.5)+2;q(lx-lR+2,fy,lR*2-4,2,'rgba(0,0,0,.25)');
   for(const[ax,sh]of[[-Math.round(lR*.6),1],[Math.round(lR*.6),-1]]){for(let y=ly;y<fy;y++){const t=(y-ly)/(fy-ly),xx=lx+Math.round(ax*.55+ax*.45*t);q(xx-1,y,3,1,wd('#7a5228'));q(xx-1,y,1,1,wd('#a8784a'));q(xx+1,y,1,1,wd('#4e3418'))}}
   q(lx-1,ly,2,fy-ly+1,wd('#5a3a20'));q(lx-Math.round(lR*.75),ly+Math.round(lR*.75),Math.round(lR*1.5),2,wd('#6a4a2a'));
-  const B=tpBoardImg(lR);L.drawImage(B.c,lx-B.o,ly-B.o);if(dk>0){L.globalAlpha=dk*.45;q(lx-B.o,ly-B.o,B.c.width,B.c.height,'#0a1420');L.globalAlpha=1}
   /* arrows stuck in it */
-  for(const m of s.marks){const ax=Math.round(lx+m.x*lR),ay=Math.round(ly+m.y*lR);q(ax,ay,1,1,'#14100c');q(ax+1,ay+1,1,3,'#7a5228');q(ax+2,ay+3,1,1,'#e8e0d0');q(ax+1,ay+4,1,1,'#c83a2a')}
   /* the arrow in flight */
-  if(s.fly&&!s.fly.done){const e=Math.min(1,(tpNow()-s.fly.t0)/.42),sx0=TPLW*.62,sy0=TPLH+4,ex=lx+s.fly.hx*lR,ey=ly+s.fly.hy*lR,ax=Math.round(sx0+(ex-sx0)*e),ay=Math.round(sy0+(ey-sy0)*e-Math.sin(e*3.14)*lR*.6),n=Math.max(1,Math.round(6*(1-e)));for(let i=0;i<n;i++)q(ax+Math.round(i*.4),ay+i,1,1,i==0?'#c8ccd0':'#7a5228');q(ax+Math.round(n*.4),ay+n,1,1,'#e8e0d0')}
   /* foreground: tall grass and flowers like in the world */
   try{for(const[sx,sy,t,c]of[[4,TPLH-14,'tgrass',0],[20,TPLH-10,'flower',0],[TPLW-22,TPLH-15,'tgrass',1],[TPLW-40,TPLH-9,'flower',2],[38,TPLH-12,'tgrass',1]])DRAWX[t]({t,c},cam.x+sx,cam.y+sy)}catch(e){}
   /* first person: hands and a bow */
-  if(s.st=='aim'){const gx=Math.round(TPLW*.86),gy=TPLH-22,Hn=26,sk='#d8a880',skl='#ecc098',sl='#5a6a48',sld='#46543a';
-   for(let i=-Hn;i<=Hn;i++){const t=i/Hn,xx=gx+Math.round(8*(1-t*t)),yy=gy+i;q(xx,yy,2,1,'#4e3418');q(xx,yy,1,1,Math.abs(i)%6==3?'#a8784a':'#7a5228')}
-   q(gx-1,gy-Hn-1,2,2,'#3a2414');q(gx-1,gy+Hn,2,2,'#3a2414');
-   const dx=gx-7,dy=gy+1;for(const[x0,y0]of[[gx,gy-Hn],[gx,gy+Hn]]){const n=Math.max(Math.abs(dx-x0),Math.abs(dy-y0));for(let i=0;i<=n;i++)q(Math.round(x0+(dx-x0)*i/n),Math.round(y0+(dy-y0)*i/n),1,1,'#e8e4d8')}
-   for(let i=0;i<14;i++)q(dx+i,dy-Math.round(i*.35),1,1,i>11?'#c8ccd0':'#9a6a3a');q(dx-1,dy-1,2,1,'#e8e0d0');q(dx-1,dy+1,2,1,'#c83a2a');
-   q(gx+5,gy-3,6,7,sk);q(gx+5,gy-3,6,1,skl);q(gx+8,gy+4,12,TPLH-gy-4,sl);q(gx+8,gy+4,12,1,sld);
-   q(dx-3,dy-2,5,5,sk);q(dx-3,dy-2,5,1,skl);for(let y=dy+3;y<TPLH;y++){const xx=dx-3-Math.round((y-dy-3)*.6);q(xx,y,8,1,y==dy+3?sld:sl)}}
  }catch(e){}g=g0;
  g.imageSmoothingEnabled=false;g.drawImage(TPC,0,0,VW,VH);g.imageSmoothingEnabled=true;noTr=true;
+ {const RC=['#f4f0e4','#f4f0e4','#222','#222','#3a7ad8','#3a7ad8','#d83a2a','#d83a2a','#f0c830','#f0c830'];g.fillStyle='#d8c8a0';g.beginPath();g.arc(cx,cy,R*1.08,0,6.3);g.fill();g.strokeStyle='#8a6a3a';g.lineWidth=1.5;g.beginPath();g.arc(cx,cy,R*1.08,0,6.3);g.stroke();g.lineWidth=1;
+  for(let k=0;k<10;k++){g.fillStyle=RC[k];g.beginPath();g.arc(cx,cy,R*(1-k/10),0,6.3);g.fill();g.strokeStyle=k==2||k==3?'#666':'rgba(0,0,0,.35)';g.beginPath();g.arc(cx,cy,R*(1-k/10),0,6.3);g.stroke()}Q(cx,cy,1,1,'#000');
+  const dk=Math.min(1,(typeof dk0=='function'?dk0():0)/.85);if(dk>0){g.fillStyle='rgba(10,20,32,'+(dk*.45).toFixed(2)+')';g.beginPath();g.arc(cx,cy,R*1.1,0,6.3);g.fill()}
+  for(const m of s.marks){const x=cx+m.x*R,y=cy+m.y*R;Q(x-1,y-1,3,3,'#1a120a');Q(x+1,y+1,1,6,'#7a5228');Q(x+2,y+5,2,1,'#e8e0d0');Q(x,y+6,2,1,'#c83a2a')}
+  if(s.fly&&!s.fly.done){const e=Math.min(1,(tpNow()-s.fly.t0)/.42),sx0=VW*.62,sy0=VH+8,ex=cx+s.fly.hx*R,ey=cy+s.fly.hy*R,x=sx0+(ex-sx0)*e,y=sy0+(ey-sy0)*e-Math.sin(e*3.14)*R*.6,sz=Math.round(12*(1-e)+2);Q(x-1,y-sz/2,2,sz,'#7a5228');Q(x-1,y-sz/2-1,2,2,'#c8ccd0')}}
  /* aim markers (crisp, on top) */
  if(s.st=='aim'&&!s.fly){const v=tpLive(),ax=s.ph=='x'?v:s.ax,ay=s.ph=='y'?v:(s.ay==null?0:s.ay);
   if(s.ph=='x'){const x=Math.round(cx+ax*R);Q(x,cy-R*1.3,2,R*2.6,'rgba(255,255,255,.85)');Q(x-4,cy-R*1.3,10,2,'#fff');Q(x-4,cy+R*1.3,10,2,'#fff')}
