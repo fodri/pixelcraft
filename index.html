@@ -8659,6 +8659,121 @@ addEventListener('wheel',e=>{if(TPV){e.preventDefault();e.stopImmediatePropagati
 {const in146=init;init=function(...a){TPV=null;TPREC=[0,0,0];return in146.apply(this,a)}}
 try{for(const[L,a,b]of[[TUT.hu,'Lőcél',['Lőcél','Lőj rá egy lőcélra: a középért 10 pont, kifelé kevesebb; messzebbről többet ér.','E a lőcélon: lőtér nézet. Állítsd meg a lengést (irány), aztán a magasságot, végül az erőt — a zöld sávban egyenesen repül, gyengébben lejjebb, erősebben feljebb megy.','Három táv (10/20/30 m), a szél is visz. 5 lövés egy kör, új rekordért nyilat kapsz.']],[TUT.en,'Shooting target',['Shooting target','Shoot a target: 10 for the bullseye, less further out; more from a distance.','E on a target: first-person range. Stop the sway (direction), then the height, then the power — in the green band it flies true, weaker drops low, stronger flies high.','Three distances (10/20/30 m), wind pushes too. 5 shots a round; a new record pays arrows.']]]){const i=L.findIndex(p=>Array.isArray(p)&&p[0]==a);if(i>=0)L[i]=b;else L.push(b)}}catch(e){}
 
+/* ===== v149: your own camp — raise a camp flag, wanderers and camp friends join you, give them work (wood, stone, gathering, garden, hunting, cooking, guard), feed them, and the camp grows from camp to settlement to village ===== */
+GAMEV=149;
+let SETL={f:-1,st:{},lv:0,last:-1,wt:2,nw:0,rep:null},SETLUI=null;
+const RJOB={fa:['Favágó','Woodcutter'],ko:['Kőfejtő','Quarrier'],gyujt:['Gyűjtögető','Gatherer'],kert:['Kertész','Gardener'],vad:['Vadász','Hunter'],szak:['Szakács','Cook'],or:['Őr','Guard']};
+const RJO=['fa','ko','gyujt','kert','vad','szak','or'];
+const SLV=[['Zászló','Flag'],['Tábor','Camp'],['Település','Settlement'],['Falu','Village']];
+const sH=()=>LANG=='hu',sB=(a,b)=>sH()?a:b;
+const SEDIBLE=['bread','soup','gulyas','fsoup','stew','polenta','bpump','jam','canned','cooked','meat','fish','berry','carrot','potato','tomato','corn','pumpkin','strawb','wheat'];
+const SFOODV={bread:2,soup:2,gulyas:3,fsoup:2,stew:3,polenta:2,bpump:2,jam:1,canned:2,cooked:2};
+function setlOB(){return inD&&OW?OW.ob:ob}
+function setlFlag(){if(SETL.f<0)return null;const o=setlOB()[SETL.f];if(!o||o.t!='flag'){SETL.f=-1;return null}return{i:SETL.f,tx:SETL.f%W,ty:Math.floor(SETL.f/W),x:(SETL.f%W)*T+8,y:Math.floor(SETL.f/W)*T+8}}
+function setlRes(){return NPCS.filter(n=>n.res)}
+function setlCap(){const F=setlFlag();if(!F)return 0;const O=setlOB();let c=2;const seen=new Set();for(let y=F.ty-10;y<=F.ty+10;y++)for(let x=F.tx-10;x<=F.tx+10;x++){if(x<0||y<0||x>=W||y>=H)continue;const o=O[y*W+x];if(!o)continue;const r=o.pm!=null?o.pm:y*W+x;if(seen.has(r))continue;const q=O[r]||o;if(q.t=='bed'){seen.add(r);c+=1}else if(q.t=='tent'){seen.add(r);c+=2}else if(q.t=='cabin'){seen.add(r);c+=2}}return Math.min(14,c)}
+function setlLevel(){const n=setlRes().length;return n>=6?3:n>=3?2:n>=1?1:0}
+function setlMul(){return[1,1,1.2,1.4][setlLevel()]}
+/* ---------- claiming the flag ---------- */
+function setlNpcCampNear(tx,ty){return NPCS.some(n=>!n.res&&!n.wd&&!n.sci&&Math.hypot(n.hx-(tx*T+8),n.hy-(ty*T+8))<12*T)}
+{const uo149=useObj;useObj=function(n){const o=n&&n.o;if(o&&o.t=='flag'&&!inD){const i=n.ty*W+n.tx;if(SETL.f===i){setlOpen();return}if(setlNpcCampNear(n.tx,n.ty))return uo149(n);const r=uo149(n);const was=SETL.f;SETL.f=i;o.my=1;
+  const F=setlFlag();for(const q of setlRes()){q.hx=F.x;q.hy=F.y+T}
+  try{jnFind('mycamp','Saját tábor','Your camp','Itt lobog a zászlód. Vándorok és barátok költözhetnek ide — adj nekik munkát és élelmet, és a tábor faluvá nő.','Your flag flies here. Wanderers and friends can move in — give them work and food, and the camp grows into a village.')}catch(e){}
+  if(was<0){try{toast112(sB('Saját tábor','Your own camp'),sB('Vándorok és barátok csatlakozhatnak — E a zászlón: tábor','Wanderers and friends can join — E on the flag: camp'),'#d8b070')}catch(e){}}setlOpen();return r}return uo149(n)}}
+/* ---------- wanderers ---------- */
+function setlSpawnWanderer(){if(inD||SETL.nw>=10)return;const ptx=Math.floor(P.x/T),pty=Math.floor(P.y/T);for(let k=0;k<200;k++){const a=Math.random()*6.283,r=22+Math.random()*14,tx=Math.round(ptx+Math.cos(a)*r),ty=Math.round(pty+Math.sin(a)*r);if(tx<4||ty<4||tx>=W-4||ty>=H-4)continue;const i=ty*W+tx;
+  if(ob[i]||!WALKM(map[i])||map[i]==1||map[i]==7||(bm&&bm[i]==3&&Math.random()<.7))continue;if(typeof RIC!='undefined'&&RIC&&Math.hypot(tx-RIC[0],ty-RIC[1])<RIC[2]+4)continue;
+  const n={x:tx*T+8,y:ty*T+8,hx:tx*T+8,hy:ty*T+8,wr:3,c:lookRnd(),nm:NPCNM[Math.floor(Math.random()*NPCNM.length)],tr:Math.floor(Math.random()*TRD.length),g:Math.floor(Math.random()*NPCL.en.length),wd:1,kn:0,shopK:0};NPCS.push(n);SETL.nw++;
+  const ang=Math.atan2(ty-pty,tx-ptx),dirs=sH()?['keletre','délkeletre','délre','délnyugatra','nyugatra','északnyugatra','északra','északkeletre']:['east','south-east','south','south-west','west','north-west','north','north-east'],d=dirs[(Math.round(ang/(Math.PI/4))+8)%8];
+  try{toast112(sB('Vándor a közelben','A wanderer nearby'),sB('Füstöt látsz '+d+' — talán csatlakozna hozzád','You see smoke to the '+d+' — maybe they would join you'),'#c8b890')}catch(e){}return n}}
+/* ---------- talking: join, change work ---------- */
+function setlCanInvite(n){return n&&!n.res&&!n.sci&&!n.zr&&!n.gd&&!n.guard&&!n.bandit&&!n.robot&&!n.story&&n.job!='vezeto'&&n.job!='kereskedo'&&!(typeof shopOf=='function'&&shopOf(n))}
+{const to149=talkOpts;talkOpts=function(){const L=to149();try{const n=TALK&&TALK.n;if(!n)return L;const bi=Math.max(0,L.findIndex(o=>o.k=='bye'));
+  if(n.res){L.splice(1,0,{k:'setl_job',l:sB('Munka: ','Work: ')+RJOB[n.res.j][sH()?0:1]+sB(' → váltás',' → change')});}
+  else if(setlCanInvite(n)&&(n.wd||(n.fr||0)>=3))L.splice(Math.min(bi,1),0,{k:'setl_join',l:sB('Gyere a táborunkba!','Come and live in our camp!')});}catch(e){}return L}}
+{const tp149=talkPick;talkPick=function(i){if(!TALK)return tp149(i);const o=talkOpts()[i];if(!o||(o.k!='setl_join'&&o.k!='setl_job'))return tp149(i);const n=TALK.n;TALK.sel=i;snd('ui');
+ if(o.k=='setl_job'){const k=RJO.indexOf(n.res.j);n.res.j=RJO[(k+1)%RJO.length];talkSay(sB('Rendben, mostantól ','All right, from now on I\'m the ')+RJOB[n.res.j][sH()?0:1].toLowerCase()+sB(' leszek.','.'));return}
+ const F=setlFlag();if(!F){talkSay(sB('Szívesen jönnék… de hova? Tűzz le egy táborzászlót, és E-vel vedd birtokba.','I\'d gladly come… but where? Plant a camp flag and claim it with E.'));return}
+ if(setlRes().length>=setlCap()){talkSay(sB('Nincs nálatok szabad fekhely. Építs ágyat vagy sátrat a zászló köré.','You have no free bed. Build a bed or a tent around the flag.'));return}
+ if(!n.wd&&(n.fr||0)<6){talkSay(sB('Még nem ismerjük eléggé egymást. Talán később…','We don\'t know each other well enough yet. Maybe later…'));return}
+ if(n.wd){const fk=SEDIBLE.find(k=>(inv[k]|0)>0);if(!fk){talkSay(sB('Napok óta nem ettem. Hozz valami ennivalót, és veled megyek.','I haven\'t eaten in days. Bring me something to eat and I\'ll come with you.'));return}inv[fk]--;}
+ const pool=n.wd?['fa','ko','gyujt','kert']:['fa','ko','gyujt','kert','vad','szak','or'];n.res={j:pool[Math.floor(Math.random()*pool.length)],m:70};n.wd=0;n.shopK=0;n.job=null;n.stx=null;n.sty=null;n.hx=F.x;n.hy=F.y+T;n.wr=6;n.go149=performance.now();
+ try{gainXp(25)}catch(e){}talkClose(sB('Köszönöm! Indulok is. ','Thank you! I\'m on my way. ')+sB('Leszek a ','I\'ll be the ')+RJOB[n.res.j][sH()?0:1].toLowerCase()+sB(', ha jó így.',', if that suits you.'));
+ try{toast112((n.nm||'?')+sB(' csatlakozott a táborodhoz',' joined your camp'),RJOB[n.res.j][sH()?0:1]+' · '+setlRes().length+'/'+setlCap()+sB(' fő',' people'),'#d8b070')}catch(e){}setlLvCheck()}}
+function setlLvCheck(){const l=setlLevel();if(l>SETL.lv){SETL.lv=l;if(l>=2)try{toast112(sB('A táborod nő!','Your camp is growing!'),SLV[l][sH()?0:1]+sB(' lett belőle — több termés',' now — better yields'),'#ffd84a')}catch(e){}}else SETL.lv=l}
+/* ---------- the day's work, at dawn ---------- */
+function setlAdd(k,n){if(n>0)SETL.st[k]=(SETL.st[k]|0)+n}
+function setlDawn(){const R_=setlRes();if(!R_.length||!setlFlag())return;const mul=setlMul(),got={},add=(k,n)=>{n=Math.round(n);if(n>0){setlAdd(k,n);got[k]=(got[k]|0)+n}},F=setlFlag(),O=setlOB(),hasCook=R_.some(n=>n.res.j=='szak');
+ for(const n of R_){const m=n.res.m>=40?1:.5,j=n.res.j;
+  if(j=='fa')add('wood',5*mul*m);else if(j=='ko'){add('stone',4*mul*m);if(Math.random()<.25)add('coal',1)}
+  else if(j=='gyujt'){add('berry',3*mul*m);add('fiber',2*mul*m);if(Math.random()<.3)add('cloth',1)}
+  else if(j=='vad'){add('meat',2*mul*m);if(Math.random()<.35)add('leather',1)}
+  else if(j=='kert'){let h=0;for(let y=F.ty-10;y<=F.ty+10;y++)for(let x=F.tx-10;x<=F.tx+10;x++){const o=O[y*W+x];if(!o)continue;const c=o.t=='crop'?o:o.t=='gbed'?o.c:null;if(c&&!c.dead&&cropStage(c)==3){const C=CROPS[c.k]||CROPS.wheat;add(c.k,C.y);add('sd_'+c.k,1);if(o.t=='gbed')o.c={k:c.k,pt:gtime()};else{o.pt=gtime()}h++}}
+   if(!h){const ks=['carrot','potato','wheat','tomato','corn'];add(ks[Math.floor(Math.random()*ks.length)],2*mul*m);if(Math.random()<.3)add('sd_'+ks[Math.floor(Math.random()*ks.length)],1)}}
+  else if(j=='szak'){let c=0;while(c<2&&(SETL.st.carrot|0)>0&&(SETL.st.potato|0)>0){SETL.st.carrot--;SETL.st.potato--;add('soup',1);c++}if(!c&&(SETL.st.wheat|0)>=3){SETL.st.wheat-=3;add('bread',1)}}}
+ /* everybody eats */
+ let need=R_.length,ate=0;for(const k of SEDIBLE){while(need>0&&(SETL.st[k]|0)>0){SETL.st[k]--;need-=SFOODV[k]||1;ate++}if(need<=0)break}const fed=need<=0;
+ const left=[];for(const n of R_){n.res.m=Math.max(0,Math.min(100,n.res.m+(fed?6+(hasCook?5:0):-18)));if(n.res.m<15){left.push(n);n.res=null;n.wd=1;const a=Math.random()*6.283;n.hx=n.x+Math.cos(a)*30*T;n.hy=n.y+Math.sin(a)*30*T;n.hx=Math.max(4*T,Math.min((W-4)*T,n.hx));n.hy=Math.max(4*T,Math.min((H-4)*T,n.hy));n.wr=3}}
+ for(const k in SETL.st)if(SETL.st[k]<=0)delete SETL.st[k];
+ SETL.rep={d:day,got,fed,left:left.map(n=>n.nm)};const parts=Object.entries(got).slice(0,5).map(([k,v])=>'+'+v+' '+tr(LBL[k]||k).toLowerCase());
+ try{toast112(sB('Reggeli jelentés a táborból','Morning report from the camp'),(parts.join(', ')||sB('ma nem termeltek semmit','nothing made today'))+(fed?'':sB(' · ÉHEZNEK!',' · HUNGRY!'))+(left.length?sB(' · elment: ',' · left: ')+left.map(n=>n.nm).join(', '):''),fed?'#d8b070':'#e86a4a')}catch(e){}setlLvCheck()}
+/* ---------- daily life: going home, working, guarding ---------- */
+let SETLT=0;
+function setlTick(dt){if(state!='play')return;const now=performance.now();
+ if(day!==SETL.last){const first=SETL.last<0;SETL.last=day;if(!first&&!inD)setlDawn();if(day>=SETL.wt){SETL.wt=day+1+Math.floor(Math.random()*2);if(day>=2&&NPCS.filter(n=>n.wd).length<2)setlSpawnWanderer()}}
+ if(inD)return;const F=setlFlag();
+ for(const n of NPCS){if(!n.res)continue;if(n.go149&&(Math.hypot(n.x-P.x,n.y-P.y)>300||now-n.go149>25000)){n.x=n.hx+(Math.random()-.5)*3*T;n.y=n.hy+(Math.random()-.5)*2*T;n.go149=0}
+  if(F&&dk0()<.35&&Math.random()<dt*.8&&Math.hypot(n.x-P.x,n.y-P.y)<260){const j=n.res.j,c=j=='fa'?'#c8a070':j=='ko'?'#9a9a98':j=='kert'||j=='gyujt'?'#6aa83a':j=='vad'?'#8a5a3a':j=='szak'?'rgba(230,230,230,.7)':null;if(c)parts.push({x:n.x+(Math.random()-.5)*8,y:n.y-6,vx:(Math.random()-.5)*30,vy:-16,l:.5,c})}}
+ /* guards: at night they shoot the infected that come near the camp */
+ if(F){for(const n of NPCS){if(!n.res||n.res.j!='or')continue;n.gcd149=(n.gcd149||0)-dt;if(n.gcd149>0)continue;let best=null,bd=10*T;for(const z of zs){if(z.hp<=0||z.b)continue;const d=Math.hypot(z.x-F.x,z.y-F.y);if(d<bd){bd=d;best=z}}
+  if(best){n.gcd149=1.1+Math.random()*.5;best.hp-=6;best.al=4;hit(best.x,best.y-6,'#8a1c1c');try{GTR.push({x0:n.x,y0:n.y-12,x1:best.x,y1:best.y-6,t:.08})}catch(e){}n.fx=Math.sign(best.x-n.x);n.fy=0;const att=Math.max(.15,1-Math.hypot(P.x-n.x,P.y-n.y)/500);try{if(SXS.ok>0&&vol>0){SXS.mul=SVOL.e*att*.7;SFX.shot();SXS.mul=1}}catch(e){}}else n.gcd149=.5}}}
+{const up149=update;update=function(dt){const r=up149.apply(this,arguments);try{setlTick(dt||1/60);if(LK&&typeof LK=='object'&&!LK.flag)LK.flag=1}catch(e){}return r}}
+/* residents and wanderers don't get the generated camps' jobs */
+{const cp149=camps105;camps105=function(){const G=cp149();for(const[k,ids]of G){const f=ids.filter(i=>!NPCS[i].res&&!NPCS[i].wd);if(f.length)G.set(k,f);else G.delete(k)}return G}}
+/* name tags */
+{const no149=npcOverlay;npcOverlay=function(){const sv=[];try{for(const n of OVQ){if(n.res){sv.push([n,n.nm,n.kn]);n.nm=(n.nm||'?')+' · '+RJOB[n.res.j][sH()?0:1];n.kn=1}else if(n.wd){sv.push([n,n.nm,n.kn]);n.nm=n.kn?n.nm+sB(' · vándor',' · wanderer'):sB('Vándor','Wanderer');n.kn=1}}}catch(e){}try{return no149()}finally{for(const[n,nm,kn]of sv){n.nm=nm;n.kn=kn}}}}
+/* the map shows your flag and wanderers you have seen */
+{const mm149=mapMarks;mapMarks=function(){const r=mm149();try{const F=setlFlag();if(F)r.unshift({k:'w',x:F.x,y:F.y,n:sB('Táborod','Your camp'),c:'#ffb040'})}catch(e){}return r}}
+/* ---------- the camp panel ---------- */
+function setlOpen(){SETLUI={t0:performance.now(),rects:[]};try{snd('ui')}catch(e){}}
+function setlClose(){SETLUI=null}
+function setlForecast(){const R_=setlRes(),mul=setlMul(),f={};for(const n of R_){const j=n.res.j,m=n.res.m>=40?1:.5;if(j=='fa')f.wood=(f.wood|0)+Math.round(5*mul*m);else if(j=='ko')f.stone=(f.stone|0)+Math.round(4*mul*m);else if(j=='gyujt'){f.berry=(f.berry|0)+Math.round(3*mul*m);f.fiber=(f.fiber|0)+Math.round(2*mul*m)}else if(j=='vad')f.meat=(f.meat|0)+Math.round(2*mul*m);else if(j=='kert')f.carrot=(f.carrot|0)+Math.round(2*mul*m)}return f}
+function setlFoodUnits(){let u=0;for(const k of SEDIBLE)u+=(SETL.st[k]|0)*(SFOODV[k]||1);return u}
+function setlDraw(){if(!SETLUI)return;const h=sH(),F=setlFlag();if(!F){setlClose();return}const R_=setlRes(),cap=setlCap(),lv=setlLevel(),x0=40,y0=24,w=VW-80,hh=VH-48,rc=[];SETLUI.rects=rc;noTr=true;
+ Q(0,0,VW,VH,'rgba(0,0,0,.45)');Q(x0-2,y0-2,w+4,hh+4,'#6a4a2a');Q(x0,y0,w,hh,'#1c1610');Q(x0,y0,w,20,'#2a2016');
+ g.font=fnt(1,10);txt(sB('Táborod','Your camp')+' · '+SLV[lv][h?0:1],x0+8,y0+14,'#ffd88a');g.font=fnt(0,8);txt(sB('Lakók: ','People: ')+R_.length+'/'+cap+(lv>=2?'   '+sB('termés ×','yield ×')+setlMul():''),x0+w-8,y0+14,'#c8c0a8','right');
+ /* residents */
+ const lx=x0+8,ly=y0+30;g.font=fnt(1,8);txt(sB('Lakók és munkájuk','People and their work'),lx,ly,'#e8d8b0');
+ if(!R_.length){g.font=fnt(0,7);const L=[sB('Még senki nem lakik itt.','Nobody lives here yet.'),sB('Vándorok néha feltűnnek — beszélj velük,','Wanderers turn up now and then — talk to them,'),sB('és vigyél nekik ennivalót.','and bring them food.'),sB('A táborok lakói is jönnek, ha barátok','People from the camps come too once'),sB('vagytok (sokat beszélgettetek, cseréltetek).','you are friends (talk and trade a lot).'),sB('Ágy +1, sátor/ház +2 fekhely a zászló körül.','Bed +1, tent/house +2 places near the flag.')];L.forEach((s,i)=>txt(s,lx,ly+16+i*11,'#a89878'))}
+ R_.slice(0,10).forEach((n,i)=>{const y=ly+8+i*17;Q(lx,y,206,15,i%2?'rgba(255,255,255,.03)':'rgba(255,255,255,.06)');g.font=fnt(0,8);txt(String(n.nm||'?').slice(0,10),lx+4,y+11,'#e8e4d8');
+  const bx=lx+70,bw=84,hov=ms.x>=bx&&ms.x<bx+bw&&ms.y>=y&&ms.y<y+15;Q(bx,y+1,bw,13,hov?'#5a4a2a':'#3a3020');txt('◂ '+RJOB[n.res.j][h?0:1]+' ▸',bx+bw/2,y+11,'#ffd88a','center');rc.push({x:bx,y,w:bw,h:15,a:'job',n});
+  const m=n.res.m;Q(lx+160,y+5,42,5,'#2a2420');Q(lx+160,y+5,Math.round(42*m/100),5,m>60?'#6ac04a':m>30?'#e8c040':'#e8504a')});
+ if(R_.length){g.font=fnt(0,7);txt(sB('kattints a munkára a váltáshoz · sáv: hangulat','click a job to change it · bar: mood'),lx,ly+8+Math.min(10,R_.length)*17+10,'#8a7a5a')}
+ /* stock */
+ const sx=x0+232,sy=y0+30;g.font=fnt(1,8);txt(sB('Közös készlet','Camp stock'),sx,sy,'#e8d8b0');const ks=Object.keys(SETL.st).filter(k=>SETL.st[k]>0);
+ ks.slice(0,20).forEach((k,i)=>{const cx=sx+(i%5)*38,cy=sy+6+Math.floor(i/5)*30;Q(cx,cy,34,27,'#2a2218');try{icon2(k,cx+7,cy+1)}catch(e){}g.font=fnt(1,7);txt(String(SETL.st[k]),cx+32,cy+25,'#fff','right')});
+ if(!ks.length){g.font=fnt(0,7);txt(sB('Üres. Reggelente ide kerül, amit a lakók termelnek.','Empty. What people make arrives here each morning.'),sx,sy+16,'#a89878')}
+ const fy=sy+6+4*30+6,fu=setlFoodUnits();g.font=fnt(0,7);txt(sB('Élelem: ','Food: ')+fu+sB(' adag · napi igény: ',' portions · daily need: ')+R_.length,sx,fy,fu>=R_.length?'#a8d890':'#ff8a6a');
+ const fc=Object.entries(setlForecast()).map(([k,v])=>'+'+v+' '+tr(LBL[k]||k).toLowerCase()).join(', ');if(fc)txt(sB('Holnap reggel: ','Tomorrow morning: ')+fc,sx,fy+11,'#c8c0a8');
+ if(R_.some(n=>n.res.j=='or'))txt(sB('Az őrök éjjel lövik a tábor közelébe jövő fertőzötteket.','Guards shoot infected that come near the camp at night.'),sx,fy+22,'#c8c0a8');
+ /* buttons */
+ const btn=(bx,label,a)=>{const bw=Math.ceil((g.font=fnt(1,8),g.measureText(label).width))+16,by=y0+hh-24,hov=ms.x>=bx&&ms.x<bx+bw&&ms.y>=by&&ms.y<by+16;Q(bx,by,bw,16,hov?'#6a5430':'#3e3220');Q(bx,by,bw,1,'#a88a50');txt(label,bx+bw/2,by+11,'#ffe9b0','center');rc.push({x:bx,y:by,w:bw,h:16,a});return bx+bw+8};
+ let bx=x0+8;bx=btn(bx,sB('Mindent elviszek','Take everything'),'take');bx=btn(bx,sB('Élelmet adok','Give food'),'food');btn(bx,sB('Bezár (Esc)','Close (Esc)'),'close');
+ noTr=false}
+function setlTake(){let n=0;for(const k of Object.keys(SETL.st)){const v=SETL.st[k]|0;if(!v)continue;if(!(inv[k]>0)&&invUsed()+1>invCap())continue;inv[k]=(inv[k]||0)+v;n+=v;delete SETL.st[k]}snd(n?'pick':'ui');say(n?sB('Elvitted a készletet','You took the stock'):sB('Nincs mit elvinni (vagy tele a táskád)','Nothing to take (or your bag is full)'))}
+function setlGiveFood(){let n=0;const keep=new Set([...(typeof QS!='undefined'&&Array.isArray(QS)?QS:[]),...HB]);for(const k of SEDIBLE){const v=inv[k]|0;if(!v)continue;const give=keep.has(k)?Math.floor(v/2):v;if(give<=0)continue;inv[k]-=give;setlAdd(k,give);n+=give}snd(n?'pick':'ui');say(n?sB('Élelmet adtál a tábornak: ','You gave the camp food: ')+n:sB('Nincs nálad ennivaló','You have no food on you'))}
+addEventListener('keydown',e=>{if(!SETLUI||state!='play')return;e.preventDefault();e.stopImmediatePropagation();if(e.code=='Escape'||e.code=='KeyE'||e.code=='Tab')setlClose()},true);
+addEventListener('mousedown',e=>{if(!SETLUI||state!='play')return;e.preventDefault();e.stopImmediatePropagation();try{sc(e)}catch(_){}for(const r of SETLUI.rects){if(ms.x>=r.x&&ms.x<r.x+r.w&&ms.y>=r.y&&ms.y<r.y+r.h){if(r.a=='close')setlClose();else if(r.a=='take')setlTake();else if(r.a=='food')setlGiveFood();else if(r.a=='job'){const k=RJO.indexOf(r.n.res.j);r.n.res.j=RJO[(k+(e.button==2?RJO.length-1:1))%RJO.length];snd('ui')}return}}},true);
+addEventListener('mouseup',e=>{if(SETLUI)e.stopImmediatePropagation()},true);
+{const dw149=draw;draw=function(){const r=dw149.apply(this,arguments);try{if(state=='play'&&SETLUI)setlDraw()}catch(e){noTr=false}return r}}
+/* ---------- saving ---------- */
+{const sv149=save;save=function(){const r=sv149.apply(this,arguments);try{localStorage.setItem(SKEY()+'_setl',JSON.stringify({f:SETL.f,st:SETL.st,lv:SETL.lv,last:SETL.last,wt:SETL.wt,nw:SETL.nw,r:NPCS.map(n=>n.res?[n.res.j,n.res.m|0]:n.wd?1:0)}))}catch(e){}return r}}
+{const ld149=load;load=function(){const r=ld149.apply(this,arguments);SETL={f:-1,st:{},lv:0,last:-1,wt:2,nw:0,rep:null};SETLUI=null;try{const d=JSON.parse(localStorage.getItem(SKEY()+'_setl')||'null');if(d){SETL.f=d.f??-1;SETL.st=d.st||{};SETL.lv=d.lv|0;SETL.last=d.last??-1;SETL.wt=d.wt??2;SETL.nw=d.nw|0;
+  if(Array.isArray(d.r)&&d.r.length==NPCS.length)d.r.forEach((v,i)=>{const n=NPCS[i];if(Array.isArray(v)){n.res={j:RJOB[v[0]]?v[0]:'fa',m:v[1]|0};n.job=null;n.stx=null;n.shopK=0}else if(v===1){n.wd=1;n.shopK=0}})}}catch(e){}return r}}
+{const in149=init;init=function(...a){SETL={f:-1,st:{},lv:0,last:-1,wt:2,nw:0,rep:null};SETLUI=null;return in149.apply(this,a)}}
+try{TUT.hu.push(['Saját tábor','Tűzz le egy táborzászlót (4 vászon + 3 fa), és E-vel vedd birtokba — ez a táborod közepe.','Vándorok tűnnek fel: vigyél nekik ennivalót, és csatlakoznak. A táborok lakói is jönnek, ha barátok vagytok.','Adj mindenkinek munkát (favágó, kőfejtő, gyűjtögető, kertész, vadász, szakács, őr). Reggelente a közös készletbe kerül, amit termeltek.','Minden lakó napi egy adag élelmet eszik a készletből — éhesen rossz a hangulat, és elmennek.','Ágy +1, sátor vagy ház +2 fekhely. 3 lakótól Település, 6-tól Falu — egyre több termés.']);
+ TUT.en.push(['Your own camp','Plant a camp flag (4 cloth + 3 wood) and claim it with E — it is the heart of your camp.','Wanderers turn up: bring them food and they join. People from the camps come too once you are friends.','Give everyone work (woodcutter, quarrier, gatherer, gardener, hunter, cook, guard). Each morning their work lands in the camp stock.','Every resident eats one portion a day from the stock — hungry people get gloomy and leave.','Bed +1, tent or house +2 places. 3 people make a Settlement, 6 a Village — better yields.'])}catch(e){}
+
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
  if(state=='title')menu();if(state=='opts')optsMenu();if(state=='sndo')sndMenu();if(state=='gfxo')gfxMenu();if(state=='slots')svMenu();if(state=='keys')keysMenu();if(state=='wthr')wthrMenu();if(state=='char')charMenu();if(state=='lobby')drawLobby();if(state=='hb'){Q(0,0,VW,VH,'rgba(6,10,6,.6)');drawHB()}if(0)title('ASHFALL',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Hold the fire. Survive the nights.','','WASD move \u2022 Space chop / fish / attack \u2022 Tab recipes','Press any key']);
