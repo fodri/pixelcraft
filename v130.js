@@ -1,6 +1,6 @@
 /* ===== v130: ZÓNA 2100 — sand to glass, rooms you build get a roof, bandits and their hideouts, bounties dead or alive with handcuffs and a prison,
    robots and a laser rifle at the plant, and a new story mode: Bunker-7, its drones, the radio tower, the black box, memories and four endings ===== */
-GAMEV=139;
+GAMEV=141;
 var ZS=null,ZR=[],ZBK=false,ZDLG=null,ZOUT=null,ZSWAP=0;
 const ZB=(h,e)=>LANG=='hu'?h:e,zhu=()=>LANG=='hu';
 const zri=(a,b)=>a+Math.floor(Math.random()*(b-a+1)),zpk=a=>a[Math.floor(Math.random()*a.length)];
@@ -379,7 +379,7 @@ function zGenBunker(){loot=[];map=new Uint8Array(W*H).fill(5);ob=new Array(W*H).
 function zBunkerNpcs(){const L=[],add=(zr,nm,x,y,c,sx)=>L.push({x:x*T+8,y:y*T+8,hx:x*T+8,hy:y*T+8,wr:zr=='res'?4:1,c,nm,zr,sx,tr:0,g:0,kn:1,fr:0});
  add('varga',ZB('Varga, biztonsági főnök','Varga, head of security'),50,74,'240720','m');add('lili','Lili',45,50,'050530','f');add('res',ZB('Lakó','Resident'),41,49,'313140','f');add('res',ZB('Lakó','Resident'),53,53,'121220','m');add('res',ZB('Lakó','Resident'),57,46,'342210','m');
  add('halmos',ZB('Halmos igazgató','Director Halmos'),48,30,'045751','m');return L}
-function zEnterBunker(){if(zSt()<4||!(STORY&&STORY.z)){zTalkDrone();return}OW={map,ob,deer,zs,loot,x:P.x,y:P.y};inD=true;fishing=null;sit=null;curSub=false;curRx=0;LSx=null;try{curOf=null}catch(e){}
+function zEnterBunker(){if(!creative&&(zSt()<4||!(STORY&&STORY.z))){zTalkDrone();return}OW={map,ob,deer,zs,loot,x:P.x,y:P.y};inD=true;fishing=null;sit=null;curSub=false;curRx=0;LSx=null;try{curOf=null}catch(e){}
  let M=MINES.zb7;if(M&&M.map&&M.ob){map=M.map;ob=M.ob;zs=[];loot=M.loot||[];deer=[]}else{zGenBunker();M=MINES.zb7={mined:{},map,ob,zs:[],loot,left:0}}curMine=M;curM='zb7';
  P.x=48*T+8;P.y=76*T+8;P.fx=0;P.fy=-1;P.cd=.8;ZBK=true;ZNPC0=NPCS;NPCS=ZS.bn&&ZS.bn.length?ZS.bn:(ZS.bn=zBunkerNpcs());snd('door');
  if(!ZS.met.inside){ZS.met.inside=1;zDlg('Bunker-7',ZB('Meleg levegő, zümmögő lámpák, fertőtlenítőszag. Tíz év óta nem érezted magad ilyen biztonságban — és ilyen idegennek.','Warm air, humming lamps, the smell of disinfectant. You haven’t felt this safe in ten years — or this much a stranger.'),null,'term')}else say('Bunker-7')}
@@ -519,3 +519,6 @@ if(typeof JNQX!='undefined')JNQX.push(L=>{const a=ZS.bty.act;if(a){jnHead(L,ZB('
 
 /* the washed-out gloom is no longer switched on by the Zone; an earlier build turned it on by itself, so switch it back off once */
 try{if(!localStorage.getItem('z_mood_off')){localStorage.setItem('z_mood_off','1');if(MOOD){MOOD=0;mdSave()}}}catch(e){}
+
+/* creative palette: bandits and robots too */
+try{CRP.cr_band=['Bandit','Bandita',(x,y)=>zs.push(zMkBandit(x,y,{}))];CRP.cr_robot=['Robot','Robot',(x,y)=>zs.push(zMkRobot(x,y))];for(const k of['cr_band','cr_robot']){LBL[k]=LBLX[k]=CRP[k][0];HU.unshift([CRP[k][0],CRP[k][1]],[CRP[k][0].toLowerCase(),CRP[k][1].toLowerCase()]);if(inv[k]==null)inv[k]=0}}catch(e){}
