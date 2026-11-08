@@ -1629,7 +1629,7 @@ function hud(){weather();promptE();if(!inD&&state=='play'&&(!mapC||performance.n
  {const sm=book?1:invOpen?2:0;if(sm!=SQm){SQm=sm;SQ='';SFOC=false;bsc=0}}
  if(showMap&&inD&&!inC)drawUGFull();else if(showMap&&mapC)drawMapFull();else if(miniOn&&state=='play'&&!book&&!invOpen&&!stOpen&&!tut&&!view){if(inD&&!inC)drawUGMini();else if(mapC&&!inD)drawMini()}
  bar(6,6,70,P.hp,'#b02a2a');txt('HP',80,12);if(surv){bar(6,16,70,P.food,'#c88a2a');txt('FOOD',80,22);bar(6,26,70,P.th??90,'#3a8ac8');txt('THIRST',80,32)}if((P.inf||0)>1||(P.rate||0)>.3){bar(6,36,70,P.inf||0,'#c8d020');txt((P.rate||0)>.3?'RAD +'+P.rate.toFixed(1):'RAD',80,42)}if(armPts()){noTr=true;txt((LANG=='hu'?'VÉD ':'DEF ')+armPts(),122,12,'#9ab8d0');noTr=false}
- const hr=Math.floor(((time*24)+6)%24),mn=Math.floor(((time*24*60)%60)/10)*10;txt('Day '+day+'  '+String(hr).padStart(2,'0')+':'+String(mn).padStart(2,'0'),6,46);
+ const hr=Math.floor(((time*24)+6)%24),mn=Math.floor(((time*24*60)%60)/5)*5;txt('Day '+day+'  '+String(hr).padStart(2,'0')+':'+String(mn).padStart(2,'0'),6,46);
  if(net){noTr=true;txt(tr('Co-op room ')+net.code,VW-6,VH-46,'#9ab8d0','right');txt(net.dead?tr('Disconnected'):net.peers.length?tr('Co-op players: ')+(net.peers.length+1):tr('Waiting for friends...'),VW-6,VH-36,net.dead?'#e07070':net.peers.length?'#9be07d':'#f0e6b8','right');noTr=false}if(wea&&!inD)txt((wea==2?SV:WN)[WFORCE[cb|0]=='snow'&&cb!=2?1:(WFORCE[cb|0]=='rain'||WFORCE[cb|0]=='storm')&&cb==1?0:cb],6,56,'#9ab8d0');if(inD)txt(inC?'Cabin':curOf?(curOf.f>curOf.n?'Rooftop':curOf.k=='apt'?'Apartment block':curOf.k=='hosp'?'Hospital':curOf.k=='ruin'?'Attic':curOf.k=='vhut'?'Upper floor':'Office tower'):curRx?'Reactor':curSub?'Sewer':'Mine',6,56,'#d89a8a');if(creative)txt('Creative',6,66,'#ffd84a');let y=12;for(const k in inv)if(false&&inv[k]&&y<VH-100){txt(LBL[k]+' '+inv[k],VW-6,y,k==sel?'#ffd84a':'#d8e4c8','right');y+=10}
  if(panel){let yy=VH-6-REC.length*10-22;Q(0,yy-10,262,REC.length*10+14,'rgba(0,0,0,.65)');txt('Craft (Tab hides)',6,yy,'#9ab088');yy+=10;
   REC.forEach((r,i)=>{let ok=true;for(const m in r[2])if(inv[m]<r[2][m])ok=false;if(TOOL[r[0]]&&inv[r[0]])ok=false;txt(r[1]+': '+Object.keys(r[2]).map(m=>LBL[m].toLowerCase()+' '+Math.min(inv[m],r[2][m])+'/'+r[2][m]).join(', '),6,yy+i*10,ok?'#b8e090':'#6f7a68')});
@@ -7904,6 +7904,49 @@ function tcTick(){
  requestAnimationFrame(tcTick)}
 addEventListener('touchstart',()=>{if(MH.mode!='off')TCH.on=true},{passive:true});
 requestAnimationFrame(tcTick);
+
+/* ===== v130: the clock moves in five-minute steps; four quick slots beside the hotbar — food and drink on the left, healing on the right — that fill themselves when you pick things up; bag and crafting buttons; hold Ctrl to click them freely ===== */
+GAMEV=130;
+let QS=[null,null,null,null],QSP={},CTRLH=false;
+const QSMED={bandage:1,medkit:1,tonic:1};
+function qsSide(k){if(!k)return-1;if(QSMED[k])return 1;if(FOODK[k])return 0;return-1}
+function qsX(){const r=HX+HB.length*22;return[HX-52,HX-30,r+10,r+32]}
+function qsBX(){const r=HX+HB.length*22;return[r+60,r+82]}
+function qsHit(x,y){return ms.x>=x&&ms.x<x+20&&ms.y>=y&&ms.y<y+20}
+/* fill the slots by themselves when you pick something up */
+function qsTick(){for(let i=0;i<4;i++){const k=QS[i];if(k&&!(inv[k]>0))QS[i]=null}
+ for(const k in inv){const n=inv[k]|0,p=QSP[k]|0;QSP[k]=n;if(n<=p)continue;const s=qsSide(k);if(s<0||QS.includes(k))continue;const a=s*2;if(!QS[a])QS[a]=k;else if(!QS[a+1])QS[a+1]=k}}
+function qsUse(i){const k=QS[i];if(!k||!(inv[k]>0)){snd('click');return}
+ if(k=='bandage'||k=='medkit'){const h0=HB[hb],e0=edge,c0=P.cd;HB[hb]=k;edge=true;P.cd=0;try{act()}finally{HB[hb]=h0;edge=e0;P.cd=Math.max(P.cd,c0)}return}
+ eatK(k)}
+function qsIcon(kind,x,y,on){const c=on?'#ffd84a':'#c8c0a0',d=on?'#8a6a20':'#5a5440';
+ if(kind=='bag'){Q(x+5,y+7,10,10,d);Q(x+5,y+7,10,1,c);Q(x+4,y+8,1,8,d);Q(x+15,y+8,1,8,d);Q(x+7,y+4,6,1,c);Q(x+7,y+4,1,4,c);Q(x+12,y+4,1,4,c);Q(x+8,y+11,4,2,c)}
+ else{Q(x+4,y+4,6,3,c);Q(x+6,y+7,2,9,d);Q(x+11,y+13,6,3,d);for(let k=0;k<5;k++)Q(x+15-k*2,y+12-k*2,2,2,c);Q(x+14,y+4,2,2,c)}}
+function qsDraw(){const X=qsX(),y=VH-26,ctl=CTRLH||invOpen;noTr=true;
+ for(let i=0;i<4;i++){const x=X[i],k=QS[i],n=k?(inv[k]|0):0,side=i<2?0:1,hov=ctl&&qsHit(x,y),base=CTRLH?'#a88a3a':side?'#6a3434':'#3a5a34',c=hov?'#ffd84a':base;
+  Q(x,y,20,20,'rgba(10,14,10,.85)');Q(x,y,20,1,c);Q(x,y+19,20,1,c);Q(x,y,1,20,c);Q(x+19,y,1,20,c);
+  if(k&&n>0){icon(k,x,y);g.globalAlpha=1;txt(String(n),x+19,y+18,'#fff','right')}
+  else if(side){Q(x+9,y+6,2,8,'rgba(200,90,90,.3)');Q(x+6,y+9,8,2,'rgba(200,90,90,.3)')}else{Q(x+7,y+6,6,8,'rgba(120,190,110,.25)');Q(x+8,y+4,4,2,'rgba(120,190,110,.25)')}}
+ const B=qsBX(),on=[invOpen,book];for(let j=0;j<2;j++){const x=B[j],hov=ctl&&qsHit(x,y),c=hov||on[j]?'#ffd84a':CTRLH?'#a88a3a':'#46503e';Q(x,y,20,20,'rgba(10,14,10,.85)');Q(x,y,20,1,c);Q(x,y+19,20,1,c);Q(x,y,1,20,c);Q(x+19,y,1,20,c);qsIcon(j?'craft':'bag',x,y,hov||on[j])}
+ noTr=false}
+{const hb130=hotbar;hotbar=function(){hb130();try{qsDraw()}catch(e){noTr=false}}}
+{const up130=update;update=function(dt){const r=up130(dt);try{if(state=='play')qsTick();if(CTRLH){mdown=false;edge=false}}catch(e){}return r}}
+addEventListener('keydown',e=>{if(e.code=='ControlLeft'||e.code=='ControlRight')CTRLH=true},true);
+addEventListener('keyup',e=>{if(e.code=='ControlLeft'||e.code=='ControlRight')CTRLH=false},true);
+addEventListener('blur',()=>{CTRLH=false});
+C.addEventListener('mousedown',e=>{if(state!='play')return;try{sc(e)}catch(_){}const ctl=e.ctrlKey||CTRLH;if(!ctl&&!invOpen)return;const X=qsX(),y=VH-26;
+ for(let i=0;i<4;i++)if(qsHit(X[i],y)){e.stopImmediatePropagation();e.preventDefault();
+  if(invOpen&&held){const s=qsSide(held);if(s==(i<2?0:1)){QS[i]=held;held=null;snd('ui')}else{snd('click');say(LANG=='hu'?(i<2?'Ide étel és ital kerül':'Ide gyógyszer és kötszer kerül'):(i<2?'Food and drink go here':'Medicine and bandages go here'))}return}
+  if(e.button==2){QS[i]=null;snd('ui');return}qsUse(i);return}
+ const B=qsBX();if(qsHit(B[0],y)){e.stopImmediatePropagation();e.preventDefault();invOpen=!invOpen;held=null;book=false;snd('ui');return}
+ if(qsHit(B[1],y)){e.stopImmediatePropagation();e.preventDefault();book=!book;invOpen=false;held=null;snd('ui');return}},true);
+C.addEventListener('contextmenu',e=>{if(CTRLH||e.ctrlKey)e.preventDefault()},true);
+/* the quick slots are saved with the game */
+{const sv130=save;save=function(){const r=sv130.apply(this,arguments);try{localStorage.setItem(SKEY()+'_qs',JSON.stringify(QS))}catch(e){}return r}}
+{const ld130=load;load=function(){const r=ld130.apply(this,arguments);try{const q=JSON.parse(localStorage.getItem(SKEY()+'_qs')||'null');QS=Array.isArray(q)&&q.length==4?q:[null,null,null,null]}catch(e){QS=[null,null,null,null]}QSP={};for(const k in inv)QSP[k]=inv[k]|0;return r}}
+{const in130=init;init=function(...a){const r=in130.apply(this,a);QS=[null,null,null,null];QSP={};for(const k in inv)QSP[k]=inv[k]|0;return r}}
+try{TUT.hu.push(['Gyorshelyek','A hotbar mellett balra 2 hely az ételnek és italnak, jobbra 2 a gyógyszernek és kötszernek.','Amit felveszel, magától odakerül. Tartsd nyomva a CTRL-t, és kattints: elfogyasztod.','CTRL + jobb katt: kiürítés. A táska és a barkácsolás gomb is CTRL-lal kattintható.']);
+ TUT.en.push(['Quick slots','Beside the hotbar: 2 slots on the left for food and drink, 2 on the right for medicine and bandages.','What you pick up goes there by itself. Hold CTRL and click to use it.','CTRL + right click: empty a slot. The bag and crafting buttons work with CTRL too.'])}catch(e){}
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
