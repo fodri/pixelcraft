@@ -656,7 +656,7 @@ HU.unshift(['Pistol','Pisztoly'],['Revolver','Revolver'],['SMG','Géppisztoly'],
 
 /* ===== v29: XP, skills, reactor dungeon, mutants, boss ===== */
 let skZ=1,skPx=0,skPy=0,XS={xp:0,lv:1,sp:0},SK={},SKC={},skOpen=false,skTab=0,MG=0,curRx=0,ebs=[],mutT=5;
-const xpNeed=l=>Math.round(30*Math.pow(l,1.6));
+const xpNeed=l=>Math.round(30*Math.pow(l,1.9)+10*l);
 const sk=n=>SKC[n]||0;
 const SKT=[
  ['s1',0,0,1,null,'Thick Skin','Take 8% less damage',{dr:.08},'Vastag bőr','8%-kal kevesebb sebzés'],
@@ -695,7 +695,7 @@ function drawSkills(){const hu=LANG=='hu',now=performance.now();noTr=true;
  g.font=fnt(1,14);g.textAlign='left';g.fillStyle='#a8321f';g.fillText(hu?'Képességek':'Skills',37,33);g.fillStyle=fcol('#d8e4c8');g.fillText(hu?'Képességek':'Skills',36,32);
  txt((hu?'Szint ':'Level ')+XS.lv,150,28,'#c8f0a0');const nx=xpNeed(XS.lv);Q(205,21,110,7,'#000');Q(206,22,108,5,'#1a2a14');Q(206,22,Math.round(108*XS.xp/nx),5,'#7aff5a');txt(XS.xp+'/'+nx+' XP',320,28,'#9ab890');
  txt((hu?'Pontok: ':'Points: ')+XS.sp,VW-36,28,XS.sp>0?'#ffd84a':'#8a8f84','right');
- for(let i=0;i<4;i++){const x=34+i*104,on=skTab==i;Q(x,40,100,16,on?SKTC[i]:'#2a2a24');Q(x+1,41,98,14,on?'#1c1a12':'#16150f');txt((i+1)+' '+SKTN[i][hu?1:0],x+50,52,on?SKTC[i]:'#8a8f84','center')}
+ for(let i=0;i<SKTN.length;i++){const x=34+i*69,on=skTab==i;Q(x,40,66,16,on?SKTC[i]:'#2a2a24');Q(x+1,41,64,14,on?'#1c1a12':'#16150f');g.font=fnt(0,7);txt((i+1)+' '+SKTN[i][hu?1:0],x+33,52,on?SKTC[i]:'#8a8f84','center')}
  const tc=SKTC[skTab];let hov=null;g.save();g.beginPath();g.rect(26,58,428,144);g.clip();g.translate(240+skPx,130+skPy);g.scale(skZ,skZ);g.translate(-240,-130);const smx=(ms.x-240-skPx)/skZ+240,smy=(ms.y-130-skPy)/skZ+130,sin=ms.y>=58&&ms.y<202;
  for(const n of SKT)if(n[1]==skTab&&n[4]){const p=SKT.find(m=>m[0]==n[4]),[ax,ay]=skPos(p),[bx,by]=skPos(n),s=SKG.s,on=!!SK[p[0]];const c=SK[n[0]]?tc:on?'#8a8f84':'#3a3a34';Q(ax+s,ay+s/2-1,(bx-ax-s)/2,3,c);Q((ax+bx)/2+s/2-1,Math.min(ay,by)+s/2-1,3,Math.abs(by-ay)+3,c);Q((ax+bx)/2+s/2,by+s/2-1,(bx-ax-s)/2,3,c)}
  for(const n of SKT){if(n[1]!=skTab)continue;const[x,y]=skPos(n),s=SKG.s,own=!!SK[n[0]],av=skAvail(n),h=sin&&smx>=x&&smx<x+s&&smy>=y&&smy<y+s;if(h)hov=n;
@@ -704,6 +704,7 @@ function drawSkills(){const hu=LANG=='hu',now=performance.now();noTr=true;
   if(skTab==0){Q(x+7,y+7,5,4,ic);Q(x+14,y+7,5,4,ic);Q(x+6,y+10,14,4,ic);Q(x+8,y+14,10,3,ic);Q(x+11,y+17,4,3,ic)}
   else if(skTab==1){Q(x+12,y+4,3,14,ic);Q(x+8,y+16,11,2,ic);Q(x+12,y+18,3,4,ic);Q(x+12,y+3,3,2,'#fff')}
   else if(skTab==2){Q(x+6,y+6,14,5,ic);Q(x+12,y+10,3,12,ic);Q(x+10,y+21,7,2,ic)}
+  else if(skTab==4){Q(x+12,y+11,2,11,ic);Q(x+6,y+10,6,3,ic);Q(x+4,y+8,4,3,ic);Q(x+14,y+7,6,3,ic);Q(x+18,y+5,4,3,ic);Q(x+8,y+21,10,2,ic)}else if(skTab==5){Q(x+8,y+4,2,18,ic);Q(x+10,y+4,3,2,ic);Q(x+10,y+20,3,2,ic);Q(x+15,y+5,1,16,ic);Q(x+6,y+12,14,2,ic);Q(x+18,y+11,3,4,ic)}
   else{Q(x+6,y+14,12,6,ic);Q(x+14,y+8,6,7,ic);Q(x+6,y+19,16,2,ic);Q(x+16,y+6,3,2,ic)}
   if(own)txt('✓',x+s-6,y+s-2,'#fff','center')}
  g.restore();
@@ -711,8 +712,8 @@ function drawSkills(){const hu=LANG=='hu',now=performance.now();noTr=true;
  if(hov){const own=!!SK[hov[0]],av=skAvail(hov);txt(hu?hov[8]:hov[5],44,222,SKTC[hov[1]]);txt(hu?hov[9]:hov[6],44,238,'#d8e4c8');
   txt(own?(hu?'Megtanulva':'Learned'):av?(hu?'Kattints a tanuláshoz (1 pont)':'Click to learn (1 point)'):hov[4]&&!SK[hov[4]]?(hu?'Előbb a szülő képesség kell':'Learn the previous skill first'):(hu?'Nincs elég pont':'No points left'),44,256,own?'#7aff5a':av?'#ffd84a':'#c07060')}
  else txt(hu?'XP-t gyűjts: ölés, craft, zsákmány. Szintenként 1 pont.':'Earn XP from kills, crafting and loot. 1 point per level.',44,228,'#8a8f84');
- txt(hu?'Görgő: zoom   Jobb gomb húz: mozgat   1-4: fül   K: bezár':'Wheel: zoom   Right-drag: pan   1-4: tabs   K: close',VW/2,278,'#6f7c62','center');noTr=false}
-function skClick(){for(let i=0;i<4;i++){const x=34+i*104;if(ms.x>=x&&ms.x<x+100&&ms.y>=40&&ms.y<56){skTab=i;snd('ui');return}}
+ txt(hu?'Görgő: zoom   Jobb gomb húz: mozgat   1-6: fül   K: bezár':'Wheel: zoom   Right-drag: pan   1-6: tabs   K: close',VW/2,278,'#6f7c62','center');noTr=false}
+function skClick(){for(let i=0;i<SKTN.length;i++){const x=34+i*69;if(ms.x>=x&&ms.x<x+66&&ms.y>=40&&ms.y<56){skTab=i;snd('ui');return}}
  for(const n of SKT){if(n[1]!=skTab)continue;const[x,y]=skPos(n),s=SKG.s,smx=(ms.x-240-skPx)/skZ+240,smy=(ms.y-130-skPy)/skZ+130;if(ms.y>=58&&ms.y<202&&smx>=x&&smx<x+s&&smy>=y&&smy<y+s){if(skAvail(n)){SK[n[0]]=1;XS.sp--;skRecalc();snd('pick')}else snd('hurt');return}}}
 function xpBar(){if(creative)return;const w=180,x=(VW-w)/2,y=VH-4;Q(x-1,y-1,w+2,5,'#000');Q(x,y,w,3,'#1a2a14');Q(x,y,Math.round(w*XS.xp/xpNeed(XS.lv)),3,'#7aff5a');noTr=true;txt('LV '+XS.lv,x-4,y+3,'#c8f0a0','right');if(XS.sp>0)txt('K: +'+XS.sp,x+w+4,y+3,'#ffd84a');noTr=false}
 /* --- enemy bullets --- */
@@ -1121,7 +1122,7 @@ function once(c){if(c=='KeyL'){setLang(LANG=='hu'?'en':'hu');return}
  if(state=='play'&&mdOpen){if(c=='Escape'||c=='KeyE')mdOpen=false;return}
  if(state=='play'&&gtOpen){if(c=='Escape'||c=='KeyE')gtOpen=false;else if(c=='Space')gToggle();else if(c=='Backspace'||c=='Delete'){gSlot[gSel]=-1;saveSong()}else if(c=='ArrowLeft')gSel=(gSel+7)%8;else if(c=='ArrowRight')gSel=(gSel+1)%8;return}
  if(state=='play'&&emOpen){if(c=='Escape'||c=='KeyT')emOpen=false;else if(c.startsWith('Digit')){const i=+c[5]-1;if(i>=0&&i<8)emSend(i)}return}
- if(state=='play'&&skOpen){if(c=='Escape'||c=='KeyK')skOpen=false;else if(c=='Equal'||c=='NumpadAdd')skZ=cl(skZ*1.18,.5,3);else if(c=='Minus'||c=='NumpadSubtract')skZ=cl(skZ*.85,.5,3);else if(c=='Digit0'){skZ=1;skPx=0;skPy=0}else if(c.startsWith('Digit')){const i=+c[5]-1;if(i>=0&&i<4)skTab=i}else if(c=='ArrowLeft'||c=='KeyA')skTab=(skTab+3)%4;else if(c=='ArrowRight'||c=='KeyD')skTab=(skTab+1)%4;return}
+ if(state=='play'&&skOpen){if(c=='Escape'||c=='KeyK')skOpen=false;else if(c=='Equal'||c=='NumpadAdd')skZ=cl(skZ*1.18,.5,3);else if(c=='Minus'||c=='NumpadSubtract')skZ=cl(skZ*.85,.5,3);else if(c=='Digit0'){skZ=1;skPx=0;skPy=0}else if(c.startsWith('Digit')){const i=+c[5]-1;if(i>=0&&i<SKTN.length)skTab=i}else if(c=='ArrowLeft'||c=='KeyA')skTab=(skTab+SKTN.length-1)%SKTN.length;else if(c=='ArrowRight'||c=='KeyD')skTab=(skTab+1)%SKTN.length;return}
  if(state=='play'&&stOpen){if(c=='Escape'||c=='KeyE'||c=='KeyI')stOpen=null;return}
  if(c=='Escape'&&state=='play'){if(book||showMap||invOpen){book=showMap=invOpen=false;held=null}else state='title';return}
  
@@ -1376,7 +1377,7 @@ function update(dt){
  if(P.hp<=0){onDeath();return}
  for(let i=1;i<HB.length;i++){const k=HB[i];if(k&&inv[k]<=0)HB[i]=null}
  for(let i=loot.length-1;i>=0;i--){const l=loot[i];if(l.t>0){l.t-=dt;continue}{const dd=Math.hypot(l.x-P.x,l.y-P.y);if(dd<36&&dd>=14&&!(uq(l.k)&&owned(l.k))&&canAdd(l.k)){const kk=Math.min(1,dt*7);l.x+=(P.x-l.x)*kk;l.y+=(P.y-4-l.y)*kk}}if(Math.hypot(l.x-P.x,l.y-P.y)<14){if(uq(l.k)&&owned(l.k))continue;if(!canAdd(l.k)){fullMsg();continue}inv[l.k]=(inv[l.k]||0)+l.n;if(DMAX[l.k])du[l.k]=l.d||DMAX[l.k];if(TOOL[l.k]||PL[l.k])givehb(l.k);snd('pick');say('Found '+l.n+' '+LBL[l.k].toLowerCase());loot.splice(i,1)}}
- RGA94=(RGA94||0)+dt;if(RGA94>=.25){const d94=RGA94;RGA94=0;for(const o of ob)if(o&&(o.t=='bush'||o.t=='flax')&&!o.b){o.r-=d94;if(o.r<=0)o.b=1}}
+ RGA94=(RGA94||0)+dt;if(RGA94>=.25){const d94=RGA94*(1+sk('regrow'));RGA94=0;for(const o of ob)if(o&&(o.t=='bush'||o.t=='flax')&&!o.b){o.r-=d94;if(o.r<=0)o.b=1}}
  const pls=players(),simOK=!net||net.isHost||net.dead||inD||hostAway();if(simOK){TKA94=(TKA94||0)+dt;if(TKA94>=.2){tickObjs(TKA94);TKA94=0}}
  if(!simOK)smoothC(dt);else{
  for(const e of deer){e.t-=dt;const q=nearP(e.x,e.y,pls),dx=e.x-q.x,dy=e.y-q.y,d=Math.hypot(dx,dy);
@@ -7647,7 +7648,7 @@ function hud112(){const now=performance.now(),busy=invOpen||(typeof showMap!='un
  if(!inD){const px=Math.floor(P.x/T),py=Math.floor(P.y/T);for(let y=py-14;y<=py+14;y++)for(let x=px-20;x<=px+20;x++){if(x<0||y<0||x>=W||y>=H)continue;const o=ob[y*W+x];if(!o||o.t!='adrop'||o.op)continue;const sx=(x*T+8-cam.x)*ZM,sy=(y*T+4-cam.y)*ZM;
    for(let k=0;k<9;k++){const ph=(now/1000*.35+k/9)%1,yy=sy-ph*90,xx=sx+Math.sin(k*2.1+ph*4)*7*ph+ph*10,sz=(3+ph*12)*ZM;g.fillStyle=(o.bm?'rgba(255,60,40,':'rgba(230,60,50,')+(.55*(1-ph)).toFixed(3)+')';g.fillRect(xx-sz/2,yy-sz/2,sz,sz)}}}
  /* challenges */
- if(DQ112.L.length&&(typeof jnChalShow!='function'||jnChalShow())){/* small panel in the top-right corner */const w=112,x=VW-w-3,y0=3,lh=8,n=DQ112.L.length,hgt=11+n*lh+9;
+ if(DQ112.L.length&&!skOpen&&!book&&!invOpen&&!tut&&(typeof jnChalShow!='function'||jnChalShow())){/* small panel in the top-right corner */const w=112,x=VW-w-3,y0=3,lh=8,n=DQ112.L.length,hgt=11+n*lh+9;
   const ts=(s,tx,ty,c,al)=>{g.font=fnt(0,6.5);g.textAlign=al||'left';g.textBaseline='alphabetic';g.fillStyle='rgba(0,0,0,.85)';g.fillText(s,tx+.5,ty+.5);g.fillStyle=c;g.fillText(s,tx,ty)};
   Q(x,y0,w,hgt,'rgba(10,12,16,.5)');Q(x,y0,w,1,'rgba(255,216,74,.55)');
   ts(B111('KIHÍVÁSOK','CHALLENGES')+(DQ112.streak?'  ·  '+DQ112.streak+B111(' nap',' d'):''),x+3,y0+8,'#ffd84a');
@@ -7999,7 +8000,7 @@ function jnDiscs(){const L=[];jnHead(L,JB('Felfedezések','Discoveries'),'#3a5a2
 function jnGuide(){const L=[];jnHead(L,JB('Útmutató','Guide'),'#6a4a1a');try{for(const t of HB_TABS){if(t.d=='practice')continue;const lines=jh()?t.thu:t.ten;if(!lines)continue;jnGap(L,4);jnText(L,jh()?t.hu:t.en,{b:1,c:'#5a2a18',sz:9});for(const s of lines)jnText(L,'· '+s,{in:4})}}catch(e){}
  try{for(const p of (jh()?TUT.hu:TUT.en)){if(!Array.isArray(p))continue;jnGap(L,4);jnText(L,p[0],{b:1,c:'#5a2a18',sz:9});for(const s of p.slice(1))jnText(L,'· '+s,{in:4})}}catch(e){}return jnFlow(L)}
 function jnSkills(){const L=[];jnHead(L,JB('Képességek','Skills'),'#4a2a6a');try{jnText(L,JB('Szint ','Level ')+XS.lv+'  ·  '+XS.xp+'/'+xpNeed(XS.lv)+' XP  ·  '+JB('Pont: ','Points: ')+XS.sp,{b:1,c:XS.sp>0?'#8a5a10':'#2a1a10'});jnText(L,JB('Kattints ide, vagy nyomd meg a K-t a teljes képességfához.','Click here or press K for the full skill tree.'),{c:'#6a5a40',sz:7});
- for(let i=0;i<4;i++){jnGap(L,3);jnText(L,SKTN[i][jh()?1:0],{b:1,c:SKTC[i]=='#ffd84a'?'#8a6a10':'#3a2a18',sz:9});for(const n of SKT)if(n[1]==i)jnText(L,(SK[n[0]]?'✓ ':skAvail(n)?'○ ':'· ')+(jh()?n[8]:n[5]),{c:SK[n[0]]?'#4a7a3a':skAvail(n)?'#8a5a10':'#8a7a5a',in:4,sz:7})}}catch(e){jnText(L,'—')}return jnFlow(L)}
+ for(let i=0;i<SKTN.length;i++){jnGap(L,3);jnText(L,SKTN[i][jh()?1:0],{b:1,c:SKTC[i]=='#ffd84a'?'#8a6a10':'#3a2a18',sz:9});for(const n of SKT)if(n[1]==i)jnText(L,(SK[n[0]]?'✓ ':skAvail(n)?'○ ':'· ')+(jh()?n[8]:n[5]),{c:SK[n[0]]?'#4a7a3a':skAvail(n)?'#8a5a10':'#8a7a5a',in:4,sz:7})}}catch(e){jnText(L,'—')}return jnFlow(L)}
 function jnMap(){const L=[{page:1,h:JPH,draw:jnDrawMap}],R=[];jnHead(R,JB('Térkép','Map'),'#1a5a5a');jnText(R,JB('Kattints a térképre, vagy nyomd meg az M-et a nagy térképhez.','Click the map or press M for the big map.'),{c:'#6a5a40',sz:7});jnGap(R);
  jnText(R,JB('Helyzeted: ','Position: ')+Math.floor(P.x/T)+', '+Math.floor(P.y/T),{});try{if(home)jnText(R,JB('Otthon: ','Home: ')+Math.floor(home.x/T)+', '+Math.floor(home.y/T),{})}catch(e){}
  jnGap(R);jnText(R,JB('Jelmagyarázat','Legend'),{b:1});jnText(R,JB('● sárga: te   ● kék: társak   ⌂ otthon   ✕ halál helye','● yellow: you   ● blue: friends   ⌂ home   ✕ where you died'),{in:4,sz:7});
@@ -8195,6 +8196,83 @@ function wadeDraw(){const x=Math.round(P.x-cam.x),y=Math.round(P.y-cam.y),t=perf
  for(let r=0;r<W_.length;r++){const w=W_[r],yy=y-6+r,a=r==0?.5:.5+r*.06;g.fillStyle=r==0?'rgba(170,225,240,'+a+')':'rgba(46,132,164,'+Math.min(.85,a).toFixed(2)+')';
   if(r==0){for(let k=0;k<w;k+=2){const o=Math.round(Math.sin(t+k*.9));g.fillRect(x-Math.floor(w/2)+k,yy+o,2,1)}}else g.fillRect(x-Math.floor(w/2),yy,w,1)}
  g.fillStyle='rgba(255,255,255,.55)';const s=Math.floor(t)%4;g.fillRect(x-7+s,y-5,1,1);g.fillRect(x+5-s,y-4,1,1)}
+
+/* ===== v136: more trades to learn — gardening and hunting skill trees, and a master skill at the end of every tree that teaches you the whole trade;
+   levels come slower the higher you climb; the level bar is see-through until you hold Ctrl, then it tells you how much is left ===== */
+GAMEV=136;
+SKTC.push('#a8d040','#c8803a');SKTN.push(['Gardening','Kertészet'],['Hunting','Vadászat']);
+SKT.push(
+ ['s8',0,4,1,'s6','Survival Master','Learn every everyday item recipe',{mItems:1},'Túlélőmester','Minden használati tárgy receptjét megtanulod'],
+ ['c8',1,4,1,'c6','Weapon Master','Learn every weapon and armour recipe',{mArms:1},'Fegyvermester','Minden fegyver és páncél receptjét megtanulod'],
+ ['b6',2,3,1,'b4','Master Builder','Learn every building recipe',{mBuild:1},'Építőmester','Minden építési receptet megtanulsz'],
+ ['e6',3,3,1,'e4','Wanderer','Move 5% faster and learn boats, ladders and torches',{spd:.05,mWander:1},'Vándor','5%-kal gyorsabb, és megtanulod a csónakot, létrát, fáklyát'],
+ ['g1',4,0,1,null,'Green Thumb','+1 berry and fibre from every bush',{forage:1},'Zöld ujj','+1 bogyó és rost minden bokorról'],
+ ['g2',4,1,0,'g1','Quick Bushes','Bushes regrow 40% faster',{regrow:.4},'Gyors bokrok','A bokrok 40%-kal gyorsabban teremnek újra'],
+ ['g3',4,1,2,'g1','Gardener','Crops grow 30% faster',{grow:.3},'Kertész','A vetemény 30%-kal gyorsabban nő'],
+ ['g4',4,2,2,'g3','Rich Harvest','+1 from every harvest',{cropx:1},'Bő termés','+1 termés minden aratásnál'],
+ ['g5',4,2,0,'g2','Herbalist','Berries heal 4 health',{herb:4},'Füvesember','A bogyó 4 életet gyógyít'],
+ ['g6',4,3,1,'g4','Master Gardener','Learn every garden recipe; crops grow another 30% faster',{grow:.3,mGarden:1},'Mesterkertész','Minden kerti receptet megtanulsz; még 30%-kal gyorsabb növés'],
+ ['h1',5,0,1,null,'Butcher','+1 meat from every animal',{hmeat:1},'Mészáros','+1 hús minden állatból'],
+ ['h2',5,1,0,'h1','Skinner','+1 leather from every animal',{skin:1},'Nyúzó','+1 bőr minden állatból'],
+ ['h3',5,1,2,'h1','Archer','Arrows hit 30% harder',{bow:.3},'Íjász','A nyílvessző 30%-kal nagyobbat sebez'],
+ ['h4',5,2,0,'h2','Angler','Fish bite twice as fast',{fishq:.5},'Horgász','Kétszer gyorsabban kap a hal'],
+ ['h5',5,2,2,'h3','Sharpshooter','Arrows hit another 30% harder',{bow:.3},'Mesterlövész','A nyílvessző még 30%-kal nagyobbat sebez'],
+ ['h6',5,3,1,'h5','Master Hunter','Learn every hunting recipe; +1 meat more',{hmeat:1,mHunt:1},'Mestervadász','Minden vadász-receptet megtanulsz; +1 hús'])
+/* the master skills teach the whole trade */
+const MST={mItems:r=>rcat(r)==3||r[0]=='medkit'||r[0]=='tonic',mArms:r=>rcat(r)==0&&!TK[r[0]]?.k?.match?.(/pickaxe|shovel|hoe/)||rcat(r)==1,mBuild:r=>rcat(r)==2,mWander:r=>['boat','ladder','torch','wtorch','rod','flash'].includes(r[0]),
+ mGarden:r=>['gbed','hoe','hedge','pot','tonic','kpot','barrel'].includes(r[0]),mHunt:r=>['bow','arrow','rod','wood_spear','stone_spear','iron_spear','bpack','bpack2','wcoat','what','kennel','dbed','rack'].includes(r[0])};
+{const sr136=skRecalc;skRecalc=function(){const r=sr136.apply(this,arguments);try{if(typeof LK!='undefined'&&LK){let n=0;for(const m in MST)if(SKC[m])for(const q of REC)if(MST[m](q)&&!LK[q[0]]){LK[q[0]]=1;n++}if(n&&state=='play'){say((LANG=='hu'?'Mesterség: ':'Mastery: ')+n+(LANG=='hu'?' új receptet tanultál meg':' new recipes learned'));try{TQ112.push({title:LANG=='hu'?'Kitanultad a mesterséget!':'You mastered the trade!',sub:n+(LANG=='hu'?' recept':' recipes'),col:'#ffd84a',t0:0})}catch(e){}}}}catch(e){}return r}}
+/* gardening */
+{const cs136=cropStage;cropStage=function(c){if(!c||c.dead||!sk('grow'))return cs136(c);const pt=c.pt;try{c.pt=gtime()-(gtime()-pt)*(1+sk('grow'));return cs136(c)}finally{c.pt=pt}}}
+{const hv136=harvest;harvest=function(o,bed,i){const before={...inv};const r=hv136(o,bed,i);try{const x=sk('cropx');if(x)for(const k in inv)if((inv[k]|0)>(before[k]|0)&&!/seed/.test(k)){inv[k]+=x;break}}catch(e){}return r}}
+{const ek136=eatK;eatK=function(k){const n0=inv[k]|0;const r=ek136(k);try{if(k=='berry'&&(inv[k]|0)<n0&&sk('herb'))P.hp=cl(P.hp+sk('herb'),0,100)}catch(e){}return r}}
+let RGB136=0;
+/* hunting */
+{const ka136=killAnimal;killAnimal=function(e,arr){const r=ka136(e,arr);try{const m=sk('hmeat'),l=sk('skin');if(m){if(net)addLoot({x:e.x+3,y:e.y,k:'meat',n:m});else inv.meat=(inv.meat|0)+m}if(l&&(e.k=='deer'||e.k=='boar'||e.k=='wolf'||e.k=='bear'||e.k=='sheep')){if(net)addLoot({x:e.x-3,y:e.y,k:'leather',n:l});else inv.leather=(inv.leather|0)+l}}catch(_){}return r}}
+{const ac136=act;act=function(){const na=arrs.length,f0=fishing;const r=ac136();try{if(sk('bow'))for(let i=na;i<arrs.length;i++){const a=arrs[i];if(!a.bu&&!a.zb136){a.d=(a.d||4)*(1+sk('bow'));a.zb136=1}}if(fishing&&fishing!==f0&&sk('fishq'))fishing.t*=1-sk('fishq')}catch(e){}return r}}
+/* six tabs in the skill tree */
+{const up136=update;update=function(dt){const r=up136(dt);try{if(state=='play'&&sk('forage')){for(const k of['berry','fiber']){const n=inv[k]|0,p=RGB136[k]|0;if(RGB136.ok&&n===p+2&&RGB136.ht){inv[k]+=sk('forage')}RGB136[k]=inv[k]|0}RGB136.ok=1;RGB136.ht=0}}catch(e){}return r}}
+RGB136={};
+{const ac136b=act;act=function(){RGB136.ht=1;return ac136b()}}
+/* ---- the level bar: faint until you hold Ctrl ---- */
+xpTop=function(){if(creative||state!='play'||JN||skOpen||book||invOpen||tut||showMap)return;const w=150,x=Math.round((VW-w)/2),y=3,nx=xpNeed(XS.lv),full=CTRLH;g.save();g.globalAlpha=full?1:.38;
+ Q(x-26,y-1,w+56,full?20:10,'rgba(8,10,8,.7)');Q(x-1,y+2,w+2,5,'#000');Q(x,y+3,w,3,'#1a2a14');Q(x,y+3,Math.round(w*XS.xp/nx),3,'#7aff5a');Q(x,y+3,Math.round(w*XS.xp/nx),1,'#c8ffb0');
+ noTr=true;g.font=fnt(1,7);txt('LV '+XS.lv,x-4,y+7,'#c8f0a0','right');if(XS.sp>0)txt(keyName(KB.skills||'KeyK')+': +'+XS.sp,x+w+4,y+7,'#ffd84a');
+ if(full){g.font=fnt(0,7);txt((LANG=='hu'?'Még ':'')+(nx-XS.xp)+' XP'+(LANG=='hu'?' a '+(XS.lv+1)+'. szintig':' to level '+(XS.lv+1))+'  ·  '+XS.xp+'/'+nx,VW/2,y+16,'#e8e4d8','center')}noTr=false;g.restore()};
+try{TUT.hu.push(['Mesterségek','Hat képességfa: Túlélés, Harc, Építő, Felfedező, Kertészet, Vadászat (K).','Minden fa végén egy mester-képesség: kitanulod vele a mesterséget, minden receptjével.','Minél magasabb a szinted, annál több XP kell a következőhöz. CTRL: megmutatja, mennyi.']);TUT.en.push(['Trades','Six skill trees: Survival, Combat, Builder, Explorer, Gardening, Hunting (K).','At the end of each tree a master skill teaches you the whole trade, every recipe.','The higher your level, the more XP the next one takes. CTRL shows how much.'])}catch(e){}
+
+/* ===== v137: shooting targets score your hits (rings, distance, streaks) and E starts a 30-second contest with a golden target and a record to beat ===== */
+GAMEV=137;
+let TGM=null,TGREC=0,TGPOP=[];
+INT.tgt105=1;NMX.tgt105=NMX.tgt105||'shooting target';
+function tgRing(off){return off<1.6?10:off<3.2?7:off<4.8?4:off<6.6?2:0}
+function tgHit(i,a,px,py){const o=ob[i];if(!o)return;const tx=i%W,ty=(i/W)|0,cx=tx*T+8,cy=ty*T+4,sp=Math.hypot(a.vx,a.vy)||1,ux=a.vx/sp,uy=a.vy/sp,dx=cx-px,dy=cy-py,off=Math.abs(dx*uy-dy*ux),pts0=tgRing(off);
+ const dist=Math.hypot(cx-(a.sx??P.x),cy-(a.sy??P.y)),dm=dist>200?2:dist>120?1.5:1,now=performance.now();o.hit105=now+400;(o.mk=o.mk||[]).push({x:Math.max(-5,Math.min(5,-dx*Math.abs(uy)+(-dy)*0)),y:Math.max(-5,Math.min(5,-dy*Math.abs(ux))),t:now});if(o.mk.length>8)o.mk.shift();
+ let pts=Math.round(pts0*dm),lab=pts0==10?(LANG=='hu'?'KÖZÉP!':'BULLSEYE!'):pts0?'+'+pts:(LANG=='hu'?'szél':'edge');
+ if(TGM&&TGM.on&&TGM.i===i){if(pts0){TGM.st++;const comb=1+Math.min(1,Math.floor(TGM.st/3)*.25);const gold=TGM.gold>now;pts=Math.round(pts*comb*(gold?2:1));TGM.sc+=pts;lab='+'+pts+(gold?' ★':'')+(comb>1?' ×'+comb:'')}else TGM.st=0;TGM.n++}
+ TGPOP.push({x:cx,y:cy-12,s:lab,t:now,c:pts0==10?'#ffd84a':pts0?'#f0e6b8':'#a89878'});try{sfx(()=>{sxT('triangle',pts0==10?1200:700,pts0?500:200,.08,.12)})}catch(e){}}
+function tgScan(dt){if(!arrs.length)return;for(let k=arrs.length-1;k>=0;k--){const a=arrs[k];if(a.sx==null){a.sx=P.x;a.sy=P.y}const ex=a.x+a.vx*dt,ey=a.y+a.vy*dt,L=Math.hypot(ex-a.x,ey-a.y),n=Math.max(1,Math.ceil(L/3));
+  for(let q=1;q<=n;q++){const px=a.x+(ex-a.x)*q/n,py=a.y+(ey-a.y)*q/n,tx=Math.floor(px/T),ty=Math.floor(py/T);if(tx<0||ty<0||tx>=W||ty>=H)break;const i=ty*W+tx,o=ob[i];if(o&&o.t=='tgt105'){tgHit(i,a,px,py);arrs.splice(k,1);break}}}}
+/* the contest */
+function tgStart(i){if(TGM&&TGM.on)return;const h=LANG=='hu';TGM={i,on:1,t0:performance.now()+3000,t1:performance.now()+33000,sc:0,st:0,n:0,gold:0,gnext:performance.now()+3000+4000+Math.random()*3000};snd('ui');say(h?'Lőverseny! 3… 2… 1… — 30 másodperc. Messzebbről több pont, sorozatért szorzó, arany célpontért dupla.':'Shooting contest! 3… 2… 1… — 30 seconds. More points from further away, streaks multiply, the golden target doubles.')}
+function tgTick(){if(!TGM||!TGM.on)return;const now=performance.now();if(!ob[TGM.i]||ob[TGM.i].t!='tgt105'){TGM=null;return}if(now>TGM.gnext&&now>TGM.t0){TGM.gold=now+2000;TGM.gnext=now+5000+Math.random()*4000;try{snd('ui')}catch(e){}}
+ if(now>TGM.t1){const h=LANG=='hu',rec=TGM.sc>TGREC;TGM.on=0;try{gainXp(Math.round(TGM.sc/6))}catch(e){}if(rec&&TGM.sc>0){TGREC=TGM.sc;inv.a9=(inv.a9|0)+6;inv.arrow=(inv.arrow|0)+6;try{toast112(h?'Új rekord a lőversenyen!':'New shooting record!',TGM.sc+(h?' pont — jutalom: 6 lőszer, 6 nyíl':' points — reward: 6 rounds, 6 arrows'),'#ffd84a')}catch(e){}}else say((h?'Vége! ':'Time! ')+TGM.sc+(h?' pont · rekord: ':' points · record: ')+TGREC);TGM.end=now+4000}}
+{const uo137=useObj;useObj=function(n){const o=n&&n.o;if(o&&o.t=='tgt105'){if(TGM&&TGM.on)return;tgStart(n.ty*W+n.tx);return}return uo137(n)}}
+{const up137=update;update=function(dt){try{if(state=='play'&&!inD)tgScan(dt)}catch(e){}const r=up137(dt);try{tgTick()}catch(e){}return r}}
+/* drawing: marks on the target, score pops, the contest panel */
+{const do137=drawObj;drawObj=function(o,x,y){const r=do137(o,x,y);if(o&&o.t=='tgt105'){const now=performance.now(),i=TGM&&TGM.on?TGM.i:-1;if(TGM&&TGM.on&&TGM.gold>now&&ob[i]===o){const a=.5+.5*Math.sin(now/80);W_(x+1,y-3,14,14,'rgba(255,216,74,'+(.35+.3*a).toFixed(2)+')')}
+ if(o.mk)for(const m of o.mk){if(now-m.t>20000)continue;W_(x+8+Math.round(m.x),y+4+Math.round(m.y),1,1,'#14100c')}}return r}}
+function tgDraw(){const now=performance.now();for(let k=TGPOP.length-1;k>=0;k--){const p=TGPOP[k],e=(now-p.t)/1000;if(e>1.1){TGPOP.splice(k,1);continue}noTr=true;g.globalAlpha=Math.min(1,(1.1-e)*2);g.font=fnt(1,8);txt(p.s,p.x-cam.x,p.y-cam.y-e*16,p.c,'center');g.globalAlpha=1;noTr=false}}
+{const dr137=drawRoofs;drawRoofs=function(){const r=dr137.apply(this,arguments);try{tgDraw()}catch(e){noTr=false}return r}}
+function tgPanel(){if(!TGM||(!TGM.on&&!(TGM.end>performance.now())))return;const now=performance.now(),h=LANG=='hu',w=170,x=(VW-w)/2,y=24;noTr=true;Q(x,y,w,26,'rgba(10,8,6,.82)');Q(x,y,w,1,'#c8302a');
+ if(TGM.on&&now<TGM.t0){g.font=fnt(1,12);txt(String(Math.ceil((TGM.t0-now)/1000)),VW/2,y+18,'#ffd84a','center')}
+ else{const left=Math.max(0,(TGM.t1-now)/1000);txt((h?'LŐVERSENY  ':'CONTEST  ')+(TGM.on?left.toFixed(1)+'s':(h?'vége':'over')),x+6,y+10,'#ff9a7a','left');txt(TGM.sc+(h?' pont':' pts'),x+w-6,y+10,'#ffd84a','right');
+  txt((h?'találat: ':'shots: ')+TGM.n+'  ·  '+(h?'sorozat ':'streak ')+TGM.st+'  ·  '+(h?'rekord ':'record ')+TGREC,x+6,y+21,'#c8c0a8','left');if(TGM.on&&TGM.gold>now)txt('★',x+w-8,y+21,'#ffd84a','right')}noTr=false}
+{const dw137=draw;draw=function(){const r=dw137.apply(this,arguments);try{if(state=='play')tgPanel()}catch(e){noTr=false}return r}}
+{const sv137=save;save=function(){const r=sv137.apply(this,arguments);try{localStorage.setItem(SKEY()+'_tg',String(TGREC|0))}catch(e){}return r}}
+{const ld137=load;load=function(){const r=ld137.apply(this,arguments);try{TGREC=+localStorage.getItem(SKEY()+'_tg')||0}catch(e){TGREC=0}TGM=null;return r}}
+{const in137=init;init=function(...a){TGM=null;TGREC=0;TGPOP=[];return in137.apply(this,a)}}
+try{TUT.hu.push(['Lőcél','Lőj rá egy lőcélra: a középért 10 pont, kifelé kevesebb; messzebbről többet ér.','E a lőcélon: 30 másodperces lőverseny — sorozatért szorzó, az arany célpont dupla.','Új rekordért lőszert és nyilat kapsz.']);TUT.en.push(['Shooting target','Shoot a target: 10 for the bullseye, less further out; more from a distance.','E on a target: a 30-second contest — streaks multiply, the golden target doubles.','A new record pays ammo and arrows.'])}catch(e){}
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
