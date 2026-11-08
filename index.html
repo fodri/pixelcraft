@@ -8220,7 +8220,7 @@ SKT.push(
  ['h6',5,3,1,'h5','Master Hunter','Learn every hunting recipe; +1 meat more',{hmeat:1,mHunt:1},'Mestervadász','Minden vadász-receptet megtanulsz; +1 hús'])
 /* the master skills teach the whole trade */
 const MST={mItems:r=>rcat(r)==3||r[0]=='medkit'||r[0]=='tonic',mArms:r=>rcat(r)==0&&!TK[r[0]]?.k?.match?.(/pickaxe|shovel|hoe/)||rcat(r)==1,mBuild:r=>rcat(r)==2,mWander:r=>['boat','ladder','torch','wtorch','rod','flash'].includes(r[0]),
- mGarden:r=>['gbed','hoe','hedge','pot','tonic','kpot','barrel'].includes(r[0]),mHunt:r=>['bow','arrow','rod','wood_spear','stone_spear','iron_spear','bpack','bpack2','wcoat','what','kennel','dbed','rack'].includes(r[0])};
+ mGarden:r=>['gbed','hoe','scythe','hedge','pot','tonic','kpot','barrel'].includes(r[0]),mHunt:r=>['bow','arrow','rod','wood_spear','stone_spear','iron_spear','bpack','bpack2','wcoat','what','kennel','dbed','rack'].includes(r[0])};
 {const sr136=skRecalc;skRecalc=function(){const r=sr136.apply(this,arguments);try{if(typeof LK!='undefined'&&LK){let n=0;for(const m in MST)if(SKC[m])for(const q of REC)if(MST[m](q)&&!LK[q[0]]){LK[q[0]]=1;n++}if(n&&state=='play'){say((LANG=='hu'?'Mesterség: ':'Mastery: ')+n+(LANG=='hu'?' új receptet tanultál meg':' new recipes learned'));try{TQ112.push({title:LANG=='hu'?'Kitanultad a mesterséget!':'You mastered the trade!',sub:n+(LANG=='hu'?' recept':' recipes'),col:'#ffd84a',t0:0})}catch(e){}}}}catch(e){}return r}}
 /* gardening */
 {const cs136=cropStage;cropStage=function(c){if(!c||c.dead||!sk('grow'))return cs136(c);const pt=c.pt;try{c.pt=gtime()-(gtime()-pt)*(1+sk('grow'));return cs136(c)}finally{c.pt=pt}}}
@@ -8450,6 +8450,49 @@ addEventListener('keydown',e=>{if(state!='play'||!showMap||inD)return;if(e.code=
 /* journal guide page */
 try{TUT.hu.push(['Térkép és felfedezés','A térképen csak az látszik, ahol már jártál — vagy a társad járt.','Görgővel vagy Ctrl+görgővel nagyítasz, nagyítva húzással mozgatod. A + és − gomb is nagyít.','Kreatívban minden látszik.']);
  TUT.en.push(['Map and exploring','The map only shows where you have been — or your partner has.','Wheel or Ctrl+wheel zooms; when zoomed in, drag to pan. + and − zoom too.','In creative everything is visible.'])}catch(e){}
+
+/* ===== v144: the scythe — one swing clears tall grass, flowers and bushes in a 3×3 patch and reaps ripe crops; picked or cut flowers give flower seeds 15% of the time; wooden tools never need learning ===== */
+GAMEV=144;
+Object.assign(LBL,{scythe:'Scythe',fseed:'Flower seeds'});Object.assign(LBLX,{scythe:'Scythe',fseed:'Flower seeds'});
+HU.unshift(['Scythe','Kasza'],['scythe','kasza'],['Flower seeds','Virágmag'],['flower seeds','virágmag']);
+for(const k of['scythe','fseed']){if(!NEWK.includes(k))NEWK.push(k);if(inv[k]==null)inv[k]=0}
+DMAX.scythe=200;TOOL.scythe=1;try{TOOLS_71.scythe=1}catch(e){}
+REC.push(['scythe','Scythe',{wood:3,iron:2}]);
+{const ic144=icon2;icon2=function(k,x,y){const S=(a,b,w,h,c)=>Q(x+a,y+b,w,h,c);
+ if(k=='scythe'){for(let i=0;i<13;i++){S(4+i*.8|0,18-i,1,1,i%4==1?'#a8784a':'#7a5228');S((5+i*.8)|0,18-i,1,1,'#4e3418')}S(7,13,3,1,'#5a3a20');
+  S(6,2,9,1,'#eef0f2');S(3,3,12,1,'#c8ccd0');S(2,4,6,1,'#9aa0a6');S(8,4,7,1,'#7a8086');S(1,5,3,1,'#9aa0a6');S(1,6,2,1,'#6a7076');S(1,7,1,2,'#5a6066');S(14,2,2,4,'#4e3418');S(14,2,1,4,'#7a5228');return true}
+ if(k=='fseed'){S(4,5,12,11,'#c8b88a');S(4,5,12,2,'#e8d8a8');S(6,9,8,5,'#a89868');const C=['#e84a6a','#f0d040','#8a6ae8','#f08a3a'];for(let i=0;i<4;i++){S(6+(i%2)*5,9+(i>>1)*3,3,2,C[i]);S(7+(i%2)*5,9+(i>>1)*3,1,1,'#ffe080')}S(8,3,4,3,'#8a7a5a');return true}
+ return ic144(k,x,y)}}
+/* a freshly sown flower is a little sprout for a while */
+{const df144=DRAWX.flower;DRAWX.flower=function(o,x,y){if(o.sp&&gtime()-o.pt<.3){const sx=Math.round(x-cam.x),sy=Math.round(y-cam.y);for(const[a,b]of[[5,10],[10,9]]){Q(sx+a,sy+b,1,4,'#4a8a32');Q(sx+a-1,sy+b,1,1,'#6ab84a');Q(sx+a+1,sy+b+1,1,1,'#6ab84a')}return}if(o.sp)delete o.sp;return df144.apply(this,arguments)}}
+function fseedMaybe(h){if(Math.random()<.15){inv.fseed=(inv.fseed|0)+1;try{givehb('fseed')}catch(e){}return true}return false}
+function scytheSwing(cx,cy){const h=LANG=='hu',got={fiber:0,seeds:0,fs:0,crop:0,n:0};
+ for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const tx=cx+dx,ty=cy+dy;if(tx<0||ty<0||tx>=W||ty>=H)continue;const i=ty*W+tx,o=ob[i];if(!o)continue;let cut=false;
+  if(o.t=='tgrass'){ob[i]=null;cut=true;if(Math.random()<.35)got.fiber++;if(Math.random()<.1){const ks=['wheat','wheat','carrot','potato','corn','tomato','strawb','pumpkin'],k=ks[Math.floor(Math.random()*ks.length)];inv['sd_'+k]=(inv['sd_'+k]|0)+1;got.seeds++}}
+  else if(o.t=='flower'){ob[i]=null;cut=true;if(fseedMaybe(h))got.fs++}
+  else if(o.t=='shrub'){ob[i]=null;cut=true;got.fiber+=1+(Math.random()<.5?1:0)}
+  else if(o.t=='crop'&&!o.dead&&cropStage(o)==3){harvest(o,false,i);cut=true;got.crop++}
+  else if(o.t=='gbed'&&o.c&&!o.c.dead&&cropStage(o.c)==3){harvest(o,true);cut=true;got.crop++}
+  if(cut){got.n++;for(let k=0;k<4;k++)parts.push({x:tx*T+8+(Math.random()-.5)*10,y:ty*T+8+(Math.random()-.5)*8,vx:(Math.random()-.5)*60,vy:-20-Math.random()*40,l:.45,c:o.t=='flower'?['#e84a6a','#f0d040','#8a6ae8','#f08a3a','#f4f4f4'][o.c|0]:k%2?'#6aa83a':'#4a8a32'})}}
+ if(!got.n)return false;
+ inv.fiber=(inv.fiber|0)+got.fiber;try{wear('scythe')}catch(e){}snd('pick');
+ const bits=[];if(got.fiber)bits.push('+'+got.fiber+(h?' rost':' fiber'));if(got.seeds)bits.push('+'+got.seeds+(h?' mag':' seeds'));if(got.fs)bits.push('+'+got.fs+(h?' virágmag':' flower seeds'));
+ if(bits.length&&!got.crop)say((h?'Lekaszáltad: ':'Mowed: ')+bits.join(', '));
+ return true}
+{const a144=act;act=function(){if(fishing||P.cd>0||drv||mtx<0||mty<0||mtx>=W||mty>=H)return a144();const it=HB[hb],h=LANG=='hu',i=mty*W+mtx,o=ob[i],d=Math.hypot(mtx*T+8-P.x,mty*T+8-P.y);
+ /* scythe: sweep the 3×3 patch around the aimed tile */
+ if(it=='scythe'&&inv.scythe>0&&d<=52&&!inD){if(scytheSwing(mtx,mty)){P.cd=.4;return}}
+ /* flower seeds: sow on grass or tilled soil */
+ if(it=='fseed'&&inv.fseed>0&&d<=46&&!o&&!inD&&(map[i]==0||map[i]==4)){if(!edge)return;ob[i]={t:'flower',c:Math.floor(Math.random()*5),pt:gtime(),sp:1};inv.fseed--;snd('pick');say(h?'Elvetetted a virágmagot':'You sowed flower seeds');P.cd=.25;return}
+ /* pick a flower by hand (or any tool but a pickaxe) */
+ if(o&&o.t=='flower'&&d<=46&&(it=='hand'||!it||(tool()&&tool().k!='pickaxe'))&&it!='scythe'){if(!edge)return;ob[i]=null;snd('pick');for(let k=0;k<4;k++)parts.push({x:mtx*T+8,y:mty*T+6,vx:(Math.random()-.5)*50,vy:-20-Math.random()*30,l:.4,c:['#e84a6a','#f0d040','#8a6ae8','#f08a3a','#f4f4f4'][o.c|0]});say(fseedMaybe(h)?(h?'Leszedted a virágot — virágmagot is találtál!':'Picked the flower — and found flower seeds!'):(h?'Leszedted a virágot':'Picked the flower'));P.cd=.25;return}
+ return a144()}}
+/* wooden tools are common knowledge — no learning needed */
+let WKT144=0;
+{const up144=update;update=function(){const r=up144.apply(this,arguments);try{const now=performance.now();if(now-WKT144>1000){WKT144=now;if(LK&&typeof LK=='object'&&!Array.isArray(LK))for(const q of REC)if(/^wood_/.test(q[0])&&!LK[q[0]])LK[q[0]]=1}}catch(e){}return r}}
+{const lk144=lkKnown;lkKnown=function(k){if(/^wood_/.test(k))return true;return lk144(k)}}
+try{TUT.hu.push(['Kasza és virágok','Kaszával egy suhintás 3×3 mezőről leviszi a magas füvet, a virágokat és a bokrokat, és learatja az érett termést.','Ha virágot szedsz vagy kaszálsz, 15% eséllyel virágmagot kapsz. Füvön vagy felkapált földön vetheted el.','Kasza: 3 fa + 2 vas. A fa eszközökhöz nem kell tanulni.']);
+ TUT.en.push(['Scythe and flowers','One swing of a scythe clears tall grass, flowers and bushes in a 3×3 patch and reaps ripe crops.','Picking or mowing a flower gives flower seeds 15% of the time. Sow them on grass or tilled soil.','Scythe: 3 wood + 2 iron. Wooden tools need no learning.'])}catch(e){}
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
