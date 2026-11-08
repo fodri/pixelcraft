@@ -1,6 +1,6 @@
 /* ===== v130: ZÓNA 2100 — sand to glass, rooms you build get a roof, bandits and their hideouts, bounties dead or alive with handcuffs and a prison,
    robots and a laser rifle at the plant, and a new story mode: Bunker-7, its drones, the radio tower, the black box, memories and four endings ===== */
-GAMEV=135;
+GAMEV=136;
 var ZS=null,ZR=[],ZBK=false,ZDLG=null,ZOUT=null,ZSWAP=0;
 const ZB=(h,e)=>LANG=='hu'?h:e,zhu=()=>LANG=='hu';
 const zri=(a,b)=>a+Math.floor(Math.random()*(b-a+1)),zpk=a=>a[Math.floor(Math.random()*a.length)];
@@ -332,7 +332,7 @@ function zStoryWorld(){let rc=null;try{rc=locReactor()}catch(e){}const homes=NPC
  /* six memories */
  const spots=[[SX,SY,6,14],ZS.camp?[ZS.camp.x,ZS.camp.y,5,10]:null,ZS.hq[0]?[ZS.hq[0].x,ZS.hq[0].y,2,5]:null,ZS.tower?[ZS.tower.x,ZS.tower.y,3,7]:null,rc?[rc.x,rc.y,RR*.4,RR*.8]:null,ZS.bunker?[ZS.bunker.x,ZS.bunker.y+4,4,9]:null];
  let n=0;for(const s of spots){const order=[0,1,3,2,4,5][n];n++;let p=null;if(s)p=zSpot((x,y)=>{const d=Math.hypot(x-s[0],y-s[1]);return d>=s[2]&&d<=s[3]&&!ob[y*W+x]&&(map[y*W+x]==0||map[y*W+x]==2||map[y*W+x]==4)&&!blocked(x*T+8,y*T+8,4)},4000);if(!p)p=zSpot((x,y)=>!ob[y*W+x]&&map[y*W+x]==0&&far(x,y,20));if(p)ob[p[1]*W+p[0]]={t:'znote',hp:999,n:order}}}
-function zStart(){try{if(localStorage.getItem('pxc_mood')==null){MOOD=1;mdSave()}}catch(e){}if(ZS.camp&&Math.hypot(ZS.camp.x-SX,ZS.camp.y-SY)>80){const c=ZS.camp;for(const[k1,k2]of[['bx','by'],['kx','ky']])if(c[k1]!=null){const o=ob[c[k2]*W+c[k1]];if(o&&(o.t=='zboard'||o.t=='zcage'))ob[c[k2]*W+c[k1]]=null}for(let i=NPCS.length-1;i>=0;i--)if(NPCS[i].zr=='sheriff')NPCS.splice(i,1);ZS.camp=null}
+function zStart(){if(ZS.camp&&Math.hypot(ZS.camp.x-SX,ZS.camp.y-SY)>80){const c=ZS.camp;for(const[k1,k2]of[['bx','by'],['kx','ky']])if(c[k1]!=null){const o=ob[c[k2]*W+c[k1]];if(o&&(o.t=='zboard'||o.t=='zcage'))ob[c[k2]*W+c[k1]]=null}for(let i=NPCS.length-1;i>=0;i--)if(NPCS[i].zr=='sheriff')NPCS.splice(i,1);ZS.camp=null}
  zSetupCamp();zStoryWorld();ZS.zm=1}
 function zNearCamp(x,y){let best=1e9;for(const n of NPCS){if(n.zr)continue;const d=Math.hypot(n.hx/T-x,n.hy/T-y);if(d<best)best=d}return best>=22&&best<=60}
 
@@ -516,3 +516,6 @@ if(typeof JNQX!='undefined')JNQX.push(L=>{const a=ZS.bty.act;if(a){jnHead(L,ZB('
  if(ZS.done||ZS.pris.length){jnText(L,ZB('Teljesített vérdíjak: ','Bounties done: ')+ZS.done+(ZS.pris.length?ZB(' · foglyok: ',' · prisoners: ')+ZS.pris.map(p=>p.nm).join(', '):''),{sz:7,c:'#6a5a40'})}
  if(ZS.raid&&ZS.raid.on)jnText(L,ZB('‼ Rajtaütés a táboron — segíts!','‼ The camp is being raided — help!'),{b:1,c:'#a82a18'});
  if(STORY&&STORY.z&&ZS.notes.length)jnText(L,ZB('Emlékek: ','Memories: ')+ZS.notes.length+'/6',{sz:7,c:'#6a4a8a'})});
+
+/* the washed-out gloom is no longer switched on by the Zone; an earlier build turned it on by itself, so switch it back off once */
+try{if(!localStorage.getItem('z_mood_off')){localStorage.setItem('z_mood_off','1');if(MOOD){MOOD=0;mdSave()}}}catch(e){}
