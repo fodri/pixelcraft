@@ -8343,6 +8343,16 @@ function crpSync(){const on=!!creative&&state=='play';if(on===CRPW)return;CRPW=o
   if(C_[2]){C_[2](x,y);snd('ui');hit(x,y-6,'#9ad0ff')}return}return ac140()}}
 try{TUT.hu.push(['Kreatív mód','Bárhová bemehetsz: átmész falon, vízen, mindenen. Minden képesség a tiéd.','A táskádban kék „+” jeles paletta: állat, fertőzött, fa, bokor, szikla, kaktusz — kattints, és ott lesz.','A radír kitörli, ami a kurzor alatt van. A térképen dupla kattintás: teleport.']);TUT.en.push(['Creative mode','Go anywhere: walk through walls, water, anything. Every skill is yours.','Your bag has a palette marked with a blue “+”: animals, infected, trees, bushes, rocks, cactus — click to place.','The eraser removes what is under the cursor. On the map, double click teleports.'])}catch(e){}
 
+/* ===== v141: rewards that arrive together come together — one fanfare and one merged notice; creative mode doesn't hand out milestones or challenges ===== */
+GAMEV=141;
+{const at141=achTick112;achTick112=function(){if(creative)return;return at141.apply(this,arguments)}}
+{const dq141=dqTick112;dqTick112=function(){if(creative){if(DQ112.d!==day)return dq141.apply(this,arguments);return}return dq141.apply(this,arguments)}}
+let FF141=0;
+{const ff141=fanfare112;fanfare112=function(){const n=performance.now();if(n-FF141<1500)return;FF141=n;return ff141.apply(this,arguments)}}
+{const tq141=toast112;toast112=function(title,sub,col){const now=performance.now(),key=String(title).split(/[:!]/)[0];const last=TQ112.length?TQ112[TQ112.length-1]:null;
+ if(last&&last.k141===key&&now-(last.at141||0)<2500&&!last.t0){last.n141=(last.n141||1)+1;last.subs141.push(String(title).replace(/^[^:!]*[:!]\s*/,'')||String(sub||'').split(' — ')[0]);last.title=key+(LANG=='hu'?' ×':' ×')+last.n141;last.sub=last.subs141.slice(0,3).join(' · ')+(last.subs141.length>3?' …':'');last.at141=now;return}
+ const r=tq141(title,sub,col);const q=TQ112[TQ112.length-1];if(q){q.k141=key;q.at141=now;q.subs141=[String(title).replace(/^[^:]*:\s*/,'')||String(sub||'')]}return r}}
+
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
  if(state=='title')menu();if(state=='opts')optsMenu();if(state=='sndo')sndMenu();if(state=='gfxo')gfxMenu();if(state=='slots')svMenu();if(state=='keys')keysMenu();if(state=='wthr')wthrMenu();if(state=='char')charMenu();if(state=='lobby')drawLobby();if(state=='hb'){Q(0,0,VW,VH,'rgba(6,10,6,.6)');drawHB()}if(0)title('ASHFALL',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Hold the fire. Survive the nights.','','WASD move \u2022 Space chop / fish / attack \u2022 Tab recipes','Press any key']);
