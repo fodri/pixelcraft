@@ -7655,7 +7655,7 @@ function hud112(){const now=performance.now(),busy=invOpen||(typeof showMap!='un
    ts((q.done?'✓ ':'· ')+s,x+3,y,q.done?'#7adf6a':'#e8e4d8');ts(q.done?'':p+'/'+q.g,x+w-3,y,'#9ab8d0','right')});
   ts(gs111()+B111(' FP',' GP')+'   ★ '+Object.keys(ACHG112).length+'/'+ACH112.length,x+3,y0+8+(n+1)*lh+1,'#9ab8d0');g.textAlign='left'}
  /* toasts */
- if(TQ112.length){const q=TQ112[0];if(!q.t0)q.t0=now;const e=(now-q.t0)/1000;if(e>4.2){TQ112.shift()}else{const sl=e<.3?e/.3:e>3.8?(4.2-e)/.4:1,w=Math.max(200,Math.min(VW-20,(q.sub.length*4.6|0)+60)),x=VW/2-w/2,y=-30+sl*66;
+ if(TQ112.length){const q=TQ112[0];if(!q.t0)q.t0=now;const e=(now-q.t0)/1000;if(e>4.2){TQ112.shift()}else{const sl=e<.3?e/.3:e>3.8?(4.2-e)/.4:1,w=Math.max(200,Math.min(VW-20,(q.sub.length*4.6|0)+60)),x=VW/2-w/2,y=-30+sl*70;
   Q(x,y,w,30,'rgba(12,10,8,.88)');Q(x,y,w,1,q.col);Q(x,y+29,w,1,q.col);Q(x+8,y+7,12,9,q.col);Q(x+11,y+16,6,3,q.col);Q(x+9,y+19,10,2,q.col);Q(x+6,y+8,2,5,q.col);Q(x+20,y+8,2,5,q.col);Q(x+10,y+9,3,3,'rgba(255,255,255,.6)');
   noTr=true;txt(q.title,x+28,y+12,q.col);txt(q.sub,x+28,y+23,'#e8e4d8');noTr=false}}}
 /* ---------- save / load ---------- */
@@ -8149,11 +8149,45 @@ function foamDraw(front){if(!FOAM.length&&!front)return;const now=performance.no
  if(!front){for(const f of FOAM){const a=1-f.l/f.ml,X=f.x-cam.x,Y=f.y-cam.y;if(f.k){const r=f.r0+f.l*16;g.strokeStyle='rgba(235,248,255,'+(.45*a).toFixed(3)+')';g.lineWidth=1;g.beginPath();g.ellipse(X,Y,r,r*.42,0,0,6.283);g.stroke()}
   else{g.fillStyle='rgba(245,252,255,'+(.8*a).toFixed(3)+')';g.fillRect(Math.round(X),Math.round(Y),f.s,f.s);if(a>.5){g.fillStyle='rgba(200,230,245,'+(.5*a).toFixed(3)+')';g.fillRect(Math.round(X)+1,Math.round(Y)+f.s,f.s,1)}}}return}
  /* the waterline around your body: a ring of foam in front */
- if(inD||drv||rid||P.boat)return;const tx=Math.floor(P.x/T),ty=Math.floor(P.y/T),m=map[ty*W+tx];if(!(m==1||m==7))return;const X=Math.round(P.x-cam.x),Y=Math.round(P.y-cam.y)-2,ph=now/160;
- g.fillStyle='rgba(60,120,160,.35)';g.fillRect(X-6,Y-1,12,4);for(let k=0;k<7;k++){const xx=X-6+k*2,yy=Y+Math.round(Math.sin(ph+k*1.3)*1);g.fillStyle=k%2?'rgba(255,255,255,.85)':'rgba(220,240,250,.7)';g.fillRect(xx,yy,2,1)}g.fillStyle='rgba(255,255,255,.5)';g.fillRect(X-7,Y+1,1,1);g.fillRect(X+6,Y+1,1,1)}
+ if(inD||drv||rid||P.boat)return;const tx=Math.floor(P.x/T),ty=Math.floor(P.y/T),m=map[ty*W+tx];if(!(m==1||m==7))return;const X=Math.round(P.x-cam.x),Y=Math.round(P.y-cam.y)-7,ph=now/160;
+for(let k=0;k<7;k++){const xx=X-6+k*2,yy=Y+Math.round(Math.sin(ph+k*1.3)*1);g.fillStyle=k%2?'rgba(255,255,255,.85)':'rgba(220,240,250,.7)';g.fillRect(xx,yy,2,1)}g.fillStyle='rgba(255,255,255,.5)';g.fillRect(X-7,Y+1,1,1);g.fillRect(X+6,Y+1,1,1)}
 {const dp133=drawP;drawP=function(){try{foamDraw(false)}catch(e){}const r=dp133.apply(this,arguments);try{foamDraw(true)}catch(e){}return r}}
 {const up133=update;update=function(dt){const r=up133(dt);try{foamTick(dt)}catch(e){}return r}}
 {const in133=init;init=function(...a){FOAM=[];return in133.apply(this,a)}}
+
+/* ===== v134: smart slots — Ctrl+wheel over a hotbar slot swaps in another tool of the same kind, over a quick slot another food or medicine; a better tool replaces the weaker one on the hotbar;
+   the level bar sits at the top of the screen, above everything; a cup over your head (and your co-op partner's) when you earn a milestone ===== */
+GAMEV=134;
+/* ---- families: what can stand in for what ---- */
+function famOf(k){if(!k||k=='hand')return null;if(TK[k])return 't:'+TK[k].k;if(GUN[k])return 'gun';if(typeof QSMED!='undefined'&&QSMED[k])return 'med';if(FOODK[k])return 'food';if(ARM[k])return null;if(PL[k])return 'pl';return null}
+function rankOf(k){const t=TK[k];if(t)return (t.h||0)*10+(t.s||0)+(t.d||0)*.1;const G=GUN[k];if(G)return (G.d||1)*(G.n||1)/(G.rt||1);if(typeof DISH!='undefined'&&DISH[k])return DISH[k].f;return 0}
+function famList(f,skip){return Object.keys(inv).filter(k=>inv[k]>0&&famOf(k)===f&&!(skip&&skip.includes(k))).sort((a,b)=>rankOf(a)-rankOf(b)||a.localeCompare(b))}
+function slotCycle(arr,i,dir,f){const cur=arr[i],fam=f||famOf(cur);if(!fam)return false;const others=arr.filter((k,j)=>j!==i&&k);const L=famList(fam,others);if(!L.length)return false;let j=L.indexOf(cur);j=j<0?(dir>0?0:L.length-1):(j+dir+L.length)%L.length;if(L[j]===cur)return false;arr[i]=L[j];return true}
+C.addEventListener('wheel',e=>{if(state!='play'||!(e.ctrlKey||CTRLH)||book||JN||invOpen||skOpen||tut)return;e.preventDefault();e.stopImmediatePropagation();try{sc(e)}catch(_){}const dir=e.deltaY>0?1:-1,y=VH-26,h=LANG=='hu';
+ const X=qsX();for(let i=0;i<4;i++)if(qsHit(X[i],y)){const f=i<2?'food':'med';const others=QS.filter((k,j)=>j!==i&&k),L=Object.keys(inv).filter(k=>inv[k]>0&&qsSide(k)==(i<2?0:1)&&!others.includes(k)).sort();if(!L.length){snd('click');return}let j=L.indexOf(QS[i]);j=j<0?0:(j+dir+L.length)%L.length;QS[i]=L[j];snd('ui');return}
+ for(let i=0;i<HB.length;i++){const x=HX+i*22;if(ms.x>=x&&ms.x<x+20&&ms.y>=y&&ms.y<y+20){if(slotCycle(HB,i,dir)){snd('ui');say(tr(LBL[HB[i]]||HB[i]))}else{snd('click');if(HB[i]&&famOf(HB[i]))say(h?'Nincs másik ilyen fajta nálad':'You have nothing else of this kind')}return}}},{capture:true,passive:false});
+addEventListener('wheel',e=>{if(e.ctrlKey&&state=='play')e.preventDefault()},{passive:false});
+/* ---- a better tool takes the weaker one's place on the hotbar ---- */
+let SMP={};
+function smartTick(){for(const k in inv){const n=inv[k]|0,p=SMP[k]|0;SMP[k]=n;if(!(n>0&&p==0))continue;const f=famOf(k);if(!f||f=='pl'||f=='food'||f=='med')continue;const r=rankOf(k);
+  let wi=-1;for(let i=1;i<HB.length;i++){const o=HB[i];if(o&&o!==k&&famOf(o)===f&&rankOf(o)<r&&(wi<0||rankOf(o)<rankOf(HB[wi])))wi=i}if(wi<0)continue;const ki=HB.indexOf(k);const old=HB[wi];HB[wi]=k;if(ki>=0&&ki!==wi)HB[ki]=null;if(hb===ki)hb=wi;
+  say((LANG=='hu'?'Okos csere: ':'Smart swap: ')+tr(LBL[k]||k).toLowerCase()+(LANG=='hu'?' a(z) ':' replaces ')+tr(LBL[old]||old).toLowerCase()+(LANG=='hu'?' helyére (a régi a táskában)':' (the old one is in your bag)'))}}
+{const up134=update;update=function(dt){const r=up134(dt);try{if(state=='play')smartTick()}catch(e){}return r}}
+{const in134=init;init=function(...a){const r=in134.apply(this,a);SMP={};for(const k in inv)SMP[k]=inv[k]|0;return r}}
+{const ld134=load;load=function(){const r=ld134.apply(this,arguments);SMP={};for(const k in inv)SMP[k]=inv[k]|0;return r}}
+/* tooltips mention the wheel */
+{const qt134=qsTip;qsTip=function(){if(!CTRLH||invOpen||book||JN)return;const y=VH-26,X=qsX(),h=LANG=='hu';for(let i=0;i<HB.length;i++){const x=HX+i*22;if(ms.x>=x&&ms.x<x+20&&ms.y>=y&&ms.y<y+20&&HB[i]&&famOf(HB[i])&&famOf(HB[i])!='pl'){const s=tr(LBL[HB[i]]||HB[i])+' — '+(h?'gomb: ':'key: ')+((i+1)%10)+(h?' · CTRL+görgő: másik ugyanilyen':' · CTRL+wheel: another of this kind');jnTipBox(s,x+10);return}}
+ for(let i=0;i<4;i++)if(qsHit(X[i],y)){jnTipBox((i<2?(h?'Étel és ital':'Food & drink'):(h?'Gyógyítás':'Healing'))+(h?' · CTRL+katt: használ · CTRL+görgő: csere · CTRL+jobb katt: ürít':' · CTRL+click: use · CTRL+wheel: swap · CTRL+right click: empty'),X[i]+10);return}return qt134()}}
+function jnTipBox(s,ax){noTr=true;g.font=fnt(0,8);const w=Math.ceil(g.measureText(s).width)+10,x=Math.max(2,Math.min(VW-w-2,ax-w/2)),yy=VH-42;Q(x,yy,w,13,'rgba(12,10,8,.92)');Q(x,yy,w,1,'#ffd84a');txt(s,x+5,yy+9,'#f0e6b8','left');noTr=false}
+/* ---- the level bar at the top, drawn last so nothing covers it ---- */
+xpBar=function(){};
+function xpTop(){if(creative||state!='play'||JN)return;const w=150,x=Math.round((VW-w)/2),y=3,nx=xpNeed(XS.lv);Q(x-26,y-1,w+56,10,'rgba(8,10,8,.6)');Q(x-1,y+2,w+2,5,'#000');Q(x,y+3,w,3,'#1a2a14');Q(x,y+3,Math.round(w*XS.xp/nx),3,'#7aff5a');Q(x,y+3,Math.round(w*XS.xp/nx),1,'#c8ffb0');
+ noTr=true;g.font=fnt(1,7);txt('LV '+XS.lv,x-4,y+7,'#c8f0a0','right');if(XS.sp>0)txt(keyName(KB.skills||'KeyK')+': +'+XS.sp,x+w+4,y+7,'#ffd84a');noTr=false}
+{const dw134=draw;draw=function(){const r=dw134.apply(this,arguments);try{xpTop()}catch(e){noTr=false}return r}}
+/* ---- a cup over your head when you earn a milestone; your co-op partners see it too ---- */
+{const ei134=emIcon;emIcon=function(x,y,k,s){if(k!==8)return ei134(x,y,k,s);s=s||1;const S=(a,b,w,h,c)=>Q(x+a*s,y+b*s,w*s,h*s,c);S(2,0,8,1,'#ffe070');S(2,1,8,4,'#e8b830');S(3,1,2,3,'#fff0a0');S(0,1,2,3,'#e8b830');S(10,1,2,3,'#e8b830');S(4,5,4,2,'#c8901a');S(5,7,2,2,'#c8901a');S(3,9,6,2,'#8a5a10')}}
+{const oe134=onEmote;onEmote=function(d,from){if(d&&d.k===8&&net){const p=net.peers.find(q=>q.id===from);if(p){p.em={k:8,t:performance.now()+4500};try{TQ112.push({title:LANG=='hu'?'Társad mérföldkövet ért el!':'Your partner hit a milestone!',sub:String((p.presence&&p.presence.n)||'?')+(d.s?' — '+d.s:''),col:'#ffd84a',t0:0})}catch(e){}}return}return oe134(d,from)}}
+{const ts134=toast112;toast112=function(title,sub,col){const r=ts134(title,sub,col);try{if(/^(Mérföldkő|Milestone)/.test(String(title))){myEm={k:8,t:performance.now()+4500};if(net&&!net.dead)net.r.emit('emote',{k:8,s:String(title).replace(/^(Mérföldkő|Milestone): /,'').slice(0,40)})}}catch(e){}return r}}
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
