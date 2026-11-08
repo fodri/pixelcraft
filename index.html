@@ -1601,7 +1601,7 @@ function draw(){if(v3Draw())return;g.setTransform(RS,0,0,RS,0,0);BASE=RS;g.image
   for(const e of deer)if(Math.floor(e.y/T)==ty)drawDeer(e);if(!inD)for(const n of NPCS)if(Math.floor(n.y/T)==ty)drawNPC(n);
   for(const z of zs)if(Math.floor(z.y/T)==ty)drawZ(z);for(const c of corpses)if(Math.floor(c.z.y/T)==ty)drawCorpse(c);if(!inD)for(const c of CARS)if(c!==drv&&Math.floor(c.y/T)==ty){drawCar(c,c.x-cam.x,c.y-cam.y,0)}
   if(net)for(const p of net.peers){const q=p.presence;if(q&&peerSame(q)&&!q.rd){const qy=isFinite(p.sy)?p.sy:q.y;if(Math.floor(qy/T)==ty)drawRP({...q,x:isFinite(p.sx)?p.sx:q.x,y:qy,em:p.em,mv:p.mvT>0})}}
-  if(Math.floor(P.y/T)==ty){drawP();drawNotes();drawLaser();if(net)lbl(uname,P.x-cam.x,P.y-cam.y-24);if(myEm&&performance.now()<myEm.t)drawEmB(P.x-cam.x,P.y-cam.y,myEm.k,myEm.t);if(wt(map[Math.floor(P.y/T)*W+Math.floor(P.x/T)])&&!P.boat)Q(P.x-cam.x-6,P.y-cam.y-6,12,6,'rgba(46,152,174,.8)')}
+  if(Math.floor(P.y/T)==ty){drawP();drawNotes();drawLaser();if(net)lbl(uname,P.x-cam.x,P.y-cam.y-24);if(myEm&&performance.now()<myEm.t)drawEmB(P.x-cam.x,P.y-cam.y,myEm.k,myEm.t);if(wt(map[Math.floor(P.y/T)*W+Math.floor(P.x/T)])&&!P.boat)wadeDraw()}
   if(fishing){const bx=fishing.tx*T+8-cam.x,by=fishing.ty*T+8-cam.y;if(Math.floor(P.y/T)==ty){Q(bx-1,by-1+(fishing.bite?2:0),3,3,'#d03030');if(fishing.bite)txt('!',P.x-cam.x,P.y-cam.y-24,'#ffd84a','center')}}}
  drawRoofs();hpBars();drawDmgN();for(const l of loot){const by=Math.round(Math.sin(now/200+l.x)*1.5),sx=Math.round(l.x-cam.x),sy=Math.round(l.y-cam.y);Q(sx-5,sy+3,10,2,'rgba(0,0,0,.3)');g.save();g.translate(sx,sy+by);g.scale(.6,.6);icon(l.k,-10,-18);g.restore();txt(LBL[l.k]+(l.n>1?' x'+l.n:''),sx,sy-13+by,'#f0e6b8','center')}
  for(const a of arrs){if(a.sn){W_(a.x-2,a.y-2,4,4,'#f4f8fa');W_(a.x-1,a.y-2,2,1,'#fff')}else if(a.bu){g.save();g.translate(Math.round(a.x-cam.x),Math.round(a.y-cam.y));g.rotate(Math.atan2(a.vy,a.vx));g.fillStyle='rgba(255,230,150,.35)';g.fillRect(-12,-.5,12,1);g.fillStyle='#fff6c8';g.fillRect(-4,-.5,5,1);g.restore()}else{g.save();g.translate(Math.round(a.x-cam.x),Math.round(a.y-cam.y));g.rotate(Math.atan2(a.vy,a.vx));g.fillStyle='#c8b48a';g.fillRect(-5,-.5,9,1);g.fillStyle='#e8ecee';g.fillRect(4,-1.5,3,3);g.fillStyle='#c83a3a';g.fillRect(-6,-1.5,2,3);g.restore()}}
@@ -8188,6 +8188,13 @@ function xpTop(){if(creative||state!='play'||JN)return;const w=150,x=Math.round(
 {const ei134=emIcon;emIcon=function(x,y,k,s){if(k!==8)return ei134(x,y,k,s);s=s||1;const S=(a,b,w,h,c)=>Q(x+a*s,y+b*s,w*s,h*s,c);S(2,0,8,1,'#ffe070');S(2,1,8,4,'#e8b830');S(3,1,2,3,'#fff0a0');S(0,1,2,3,'#e8b830');S(10,1,2,3,'#e8b830');S(4,5,4,2,'#c8901a');S(5,7,2,2,'#c8901a');S(3,9,6,2,'#8a5a10')}}
 {const oe134=onEmote;onEmote=function(d,from){if(d&&d.k===8&&net){const p=net.peers.find(q=>q.id===from);if(p){p.em={k:8,t:performance.now()+4500};try{TQ112.push({title:LANG=='hu'?'Társad mérföldkövet ért el!':'Your partner hit a milestone!',sub:String((p.presence&&p.presence.n)||'?')+(d.s?' — '+d.s:''),col:'#ffd84a',t0:0})}catch(e){}}return}return oe134(d,from)}}
 {const ts134=toast112;toast112=function(title,sub,col){const r=ts134(title,sub,col);try{if(/^(Mérföldkő|Milestone)/.test(String(title))){myEm={k:8,t:performance.now()+4500};if(net&&!net.dead)net.r.emit('emote',{k:8,s:String(title).replace(/^(Mérföldkő|Milestone): /,'').slice(0,40)})}}catch(e){}return r}}
+
+/* ===== v135: wading looks like water, not a blue box — a soft, rippling waterline around your legs ===== */
+GAMEV=135;
+function wadeDraw(){const x=Math.round(P.x-cam.x),y=Math.round(P.y-cam.y),t=performance.now()/220,W_=[9,12,12,12,11,9,7];
+ for(let r=0;r<W_.length;r++){const w=W_[r],yy=y-6+r,a=r==0?.5:.5+r*.06;g.fillStyle=r==0?'rgba(170,225,240,'+a+')':'rgba(46,132,164,'+Math.min(.85,a).toFixed(2)+')';
+  if(r==0){for(let k=0;k<w;k+=2){const o=Math.round(Math.sin(t+k*.9));g.fillRect(x-Math.floor(w/2)+k,yy+o,2,1)}}else g.fillRect(x-Math.floor(w/2),yy,w,1)}
+ g.fillStyle='rgba(255,255,255,.55)';const s=Math.floor(t)%4;g.fillRect(x-7+s,y-5,1,1);g.fillRect(x+5-s,y-4,1,1)}
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
