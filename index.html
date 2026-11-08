@@ -6388,7 +6388,7 @@ drawBook=function(){const st=benchNear(),h=hu99(),L=gridList(),hv=gridAt(),now=p
  txt(st?(h?'Barkácsasztal':'Crafting table'):(h?'Kézi készítés':'Hand crafting'),BX+8,BY+13,'#ffd84a','left');drawSearch(BX+70,BY+3,160);
  noTr=true;txt(st?(h?'Minden recept elérhető':'All recipes available'):(h?'Asztal nélkül csak az alapok':'Only basics without a table'),BX+BW-8,BY+13,st?'#9be07d':'#c8a070','right');
  const tw=(BW-12)/CATS.length;CATS.forEach((c,i)=>{const x=BX+6+i*tw,on=i==bcat&&!SQ,hov=bookTab()==i;Q(x,BY+19,tw-3,12,on?'#5a4528':hov?'#3a2c1c':'#2c2118');Q(x,BY+19,tw-3,1,on?'#ffd84a':'#46503e');
-  const n=RV0(i).filter(j=>can(j)&&(st||HAND[REC[j][0]])).length;txt((LANG=='hu'?CATH[i]:c)+(n?' ('+n+')':''),x+(tw-3)/2,BY+28,on?'#ffd84a':n?'#c8d8a0':'#9a8a6a','center')});
+  const n=RV0(i).filter(j=>can(j)&&(st||HAND[REC[j][0]])&&(typeof lkKnown!='function'||lkKnown(REC[j][0]))).length;txt((LANG=='hu'?CATH[i]:c)+(n?' ('+n+')':''),x+(tw-3)/2,BY+28,on?'#ffd84a':n?'#c8d8a0':'#9a8a6a','center')});
  for(let k=bsc*GC;k<Math.min(L.length,(bsc+GR)*GC);k++){const t=L[k],r=REC[t.i],c=k%GC,rw=Math.floor(k/GC)-bsc,x=GX()+c*(GS+GG),y=GY()+rw*(GS+GG),on=hv&&hv.i===t.i,have=uq(r[0])&&owned(r[0]);
   if(t.ok){const p=.5+.5*Math.sin(now/260+k);Q(x-2,y-2,GS+4,GS+4,'rgba(255,216,74,'+(.25+.35*p)+')');Q(x,y,GS,GS,on?'#5a6a2a':'#3a4a22');Q(x,y,GS,2,'#9be07d')}
   else Q(x,y,GS,GS,on?'#3a2c1c':'#1c1610');
@@ -8036,9 +8036,9 @@ function jnDrawPage(p,x,y){if(!p)return;let yy=y;for(const it of p){if(it.draw){
  g.font=it.f;g.textAlign='left';g.fillStyle=it.c;g.fillText(it.t,x+(it.in||0),yy+it.h-3);if(it.line){Q(x,yy+it.h-1,JPW,1,'rgba(120,60,30,.35)')}yy+=it.h}}
 /* ---- input ---- */
 addEventListener('keydown',e=>{if(state!='play')return;const c=e.code;
- if(!JN){if(c=='Tab'&&!e.repeat&&!(typeof chatOpen!='undefined'&&chatOpen)&&!tut&&!(typeof ZDLG!='undefined'&&ZDLG)){e.preventDefault();e.stopImmediatePropagation();if(TALK)return;jnOpen();}return}
+ if(!JN){if(c==(KB.journal||'Tab')&&!e.repeat&&!(typeof chatOpen!='undefined'&&chatOpen)&&!tut&&!(typeof ZDLG!='undefined'&&ZDLG)){e.preventDefault();e.stopImmediatePropagation();if(TALK)return;jnOpen();}return}
  e.preventDefault();e.stopImmediatePropagation();if(e.repeat&&c!='ArrowLeft'&&c!='ArrowRight')return;
- if(c=='Tab'||c=='Escape'){jnClose();return}const sp=Math.max(1,Math.ceil(jnPages().length/2));
+ if(c=='Tab'||c==KB.journal||c=='Escape'){jnClose();return}const sp=Math.max(1,Math.ceil(jnPages().length/2));
  if(c=='ArrowRight'||c=='KeyD'){if(JN.pg<sp-1){JN.pg++;jnFlip()}else if(JN.ch<JNC.length-1){JN.ch++;JN.pg=0;JN.cache=null;jnFlip()}return}
  if(c=='ArrowLeft'||c=='KeyA'){if(JN.pg>0){JN.pg--;jnFlip()}else if(JN.ch>0){JN.ch--;JN.cache=null;JN.pg=99;jnFlip()}return}
  if(/^Digit[1-6]$/.test(c)){JN.ch=+c.slice(5)-1;JN.pg=0;JN.cache=null;jnFlip();return}if(c=='KeyK'){jnClose();skOpen=true;return}if(c=='KeyM'){jnClose();showMap=true;try{mkMap()}catch(e){}return}},true);
@@ -8064,6 +8064,76 @@ function jnChalShow(){try{const s=DQ112.L.map(q=>dqProg112(q)+(q.done?'d':'')).j
 {const sv131=save;save=function(){const r=sv131.apply(this,arguments);try{localStorage.setItem(SKEY()+'_jn',JSON.stringify({t:JNT,d:JND,o:JNDO}))}catch(e){}return r}}
 {const ld131=load;load=function(){const r=ld131.apply(this,arguments);try{const j=JSON.parse(localStorage.getItem(SKEY()+'_jn')||'null');JNT=j&&j.t||[];JND=j&&j.d||{};JNDO=j&&j.o||[]}catch(e){JNT=[];JND={};JNDO=[]}JN=null;return r}}
 {const in131=init;init=function(...a){const r=in131.apply(this,a);JNT=[];JND={};JNDO=[];JN=null;JNCS='';JNCU=performance.now()+12000;return r}}
+
+/* ===== v132: learning — you don't know every recipe from the start: ideas come from handling the materials and from practice, from blueprints and from people;
+   hold Ctrl over the buttons and slots at the bottom to see their keys ===== */
+GAMEV=132;
+let LK=null,LKSEEN={},LKC={c:[0,0,0,0],t:0},LKT=0,LKNEW=[];
+const LKSTART=['fire','torch','ctable','cloth','bandage','wall'],LKTH=[0,2,5,9,14];
+const LKRAW={wood:1,stone:1,fiber:1,berry:1,meat:1,fish:1,wool:1,coal:1,iron:1,copper:1,sand:1,leather:1,bone:1,flax:1};
+const LB=(h,e)=>LANG=='hu'?h:e;
+function lkTier(r){const c=r[2],ks=Object.keys(c);let s=ks.length-1;for(const k of ks)s+=LKRAW[k]?1:2;let t=s<=1?0:s<=3?1:s<=5?2:s<=7?3:4;if(TK[r[0]]||GUN[r[0]]||ARM[r[0]]||r[0]=='bow'||r[0]=='rod')t++;if(/pickaxe/.test(r[0]))t++;return Math.min(4,t)}
+function lkKnown(k){if(creative||!LK)return true;return !!LK[k]}
+function lkRecs(k){return REC.filter(r=>r[0]==k)}
+function lkLearn(k,why){if(!LK||LK[k])return false;LK[k]=1;LKNEW.push(k);try{if(typeof jnFind=='function')jnFind('lk_'+k,'Új tudás: '+tr(LBL[k]||k),'New know-how: '+(LBL[k]||k),(why&&why[0])||'Rájöttél, hogyan kell elkészíteni.',(why&&why[1])||'You figured out how to make it.')}catch(e){}return true}
+/* what you still need to learn a recipe */
+function lkNeed(r){const t=lkTier(r),cat=rcat(r),miss=Object.keys(r[2]).filter(k=>!LKSEEN[k]);return{t,cat,miss,cc:LKC.c[cat]|0,ct:LKTH[t],tc:LKC.t|0,tt:LKTH[t]*2}}
+function lkReady(r){const n=lkNeed(r);return !n.miss.length&&(n.cc>=n.ct||n.tc>=n.tt)}
+function lkTick(dt){if(!LK||creative)return;for(const k in inv)if(inv[k]>0)LKSEEN[k]=1;LKT-=dt;if(LKT>0)return;LKT=.8;const got=[];
+ for(const r of REC){if(LK[r[0]])continue;if(lkReady(r)){if(lkLearn(r[0],['Kézbe vetted az anyagokat, és összeállt a fejedben: így kell.','You handled the materials and it came together in your head: that’s how it’s done.']))got.push(r[0])}}
+ if(got.length){const nm=got.map(k=>tr(LBL[k]||k).toLowerCase()).join(', ');try{TQ112.push({title:LB('Ötleted támadt!','You had an idea!'),sub:nm,col:'#ffd84a'})}catch(e){}say(LB('Most már tudod, hogyan kell: ','Now you know how to make: ')+nm);try{snd('craft')}catch(e){}}}
+/* crafting: only what you know; every success is practice */
+{const cr132=craft;craft=function(i){const r=REC[i];if(r&&!lkKnown(r[0])){const n=lkNeed(r);say(LB('Még nem tudod, hogyan kell ezt elkészíteni.','You don’t know how to make this yet.')+(n.miss.length?LB(' Előbb tarts a kezedben: ',' First get your hands on: ')+n.miss.map(k=>tr(LBL[k]||k).toLowerCase()).join(', '):''));try{snd('ui')}catch(e){}return}
+ const k=r&&r[0],n0=k?inv[k]|0:0,o0=k?owned(k):false;const res=cr132(i);try{if(k&&((inv[k]|0)>n0||(!o0&&owned(k)))){LKC.c[rcat(r)]=(LKC.c[rcat(r)]|0)+1;LKC.t=(LKC.t|0)+1}}catch(e){}return res}}
+{const gl132=gridList;gridList=function(){const L=gl132();for(const t of L){t.nk=!lkKnown(REC[t.i][0]);if(t.nk)t.ok=false}return L.sort((p,q)=>(p.nk-q.nk)||(q.ok-p.ok)||(p.lock-q.lock)||(p.i-q.i))}}
+{const db132=drawBook;drawBook=function(){const r0=db132.apply(this,arguments);try{if(!LK||creative)return r0;const L=gridList(),hv=gridAt(),h=LANG=='hu';noTr=true;
+ for(let k=bsc*GC;k<Math.min(L.length,(bsc+GR)*GC);k++){const t=L[k];if(!t.nk)continue;const c=k%GC,rw=Math.floor(k/GC)-bsc,x=GX()+c*(GS+GG),y=GY()+rw*(GS+GG),rd=lkReady(REC[t.i]);
+  Q(x,y,GS,GS,'rgba(14,11,8,.92)');g.save();g.globalAlpha=.18;g.translate(x+GS/2-15,y+3);g.scale(1.5,1.5);icon(REC[t.i][0],0,0);g.restore();g.globalAlpha=1;g.font=fnt(1,16);g.textAlign='center';g.fillStyle='#6a5a40';g.fillText('?',x+GS/2,y+GS/2+6);g.textAlign='left'}
+ if(hv&&hv.nk){const r=REC[hv.i],n=lkNeed(r),dy=BY+BH-34;Q(BX+6,dy-4,BW-12,30,'#1c1610');txt(h?'??? — ezt még nem tudod elkészíteni':'??? — you can’t make this yet',BX+12,dy+7,'#c8a070','left');
+  const cn=(h?CATH:CATS)[n.cat];let s=n.miss.length?(h?'Még sosem volt a kezedben: ':'Never held yet: ')+n.miss.map(k=>tr(LBL[k]||k).toLowerCase()).join(', ')+' · ':'';
+  s+=(h?'Gyakorlás: ':'Practice: ')+cn.toLowerCase()+' '+Math.min(n.cc,n.ct)+'/'+n.ct+(h?' (vagy bármi ':' (or anything ')+Math.min(n.tc,n.tt)+'/'+n.tt+')';g.font=fnt(0,7);txt(s,BX+12,dy+19,'#a89878','left')}
+ noTr=false}catch(e){noTr=false}return r0}}
+/* blueprints: found in shelves, desks and crates */
+LBL.bprint=LBLX.bprint='Blueprint';HU.unshift(['Blueprint','Tervrajz'],['blueprint','tervrajz']);if(!NEWK.includes('bprint'))NEWK.push('bprint');if(inv.bprint==null)inv.bprint=0;
+for(const[t,w]of[['bshelf',14],['desk',8],['rcrate',6],['bag',3],['cabinet',4],['wreck',3],['junk',3]])if(TBS[t])TBS[t].push(['bprint',w]);
+{const ic132=icon2;icon2=function(k,x,y){if(k=='bprint'){const S=(a,b,w,h,c)=>Q(x+a,y+b,w,h,c);S(3,4,14,13,'#2a5a8a');S(3,4,14,1,'#5a8ac0');S(5,7,6,1,'#c8e0f8');S(5,7,1,6,'#c8e0f8');S(5,12,9,1,'#c8e0f8');S(13,7,1,6,'#c8e0f8');S(8,9,3,2,'#c8e0f8');S(15,15,3,3,'#e8dcc0');return true}return ic132(k,x,y)}}
+function lkPick(maxT){const L=REC.filter(r=>!LK[r[0]]).map(r=>({r,t:lkTier(r),s:Object.keys(r[2]).filter(k=>LKSEEN[k]).length/Object.keys(r[2]).length}));if(!L.length)return null;L.sort((a,b)=>(a.t-b.t)||(b.s-a.s));const top=L.filter(q=>q.t<=Math.max(L[0].t,maxT||0)).slice(0,6);return top[Math.floor(Math.random()*top.length)].r}
+function lkReadBlueprint(){if(!LK){say(LB('Ezt már mind tudod.','You know all of this already.'));return}const r=lkPick(2);if(!r){say(LB('Nincs már mit tanulnod belőle.','There’s nothing left to learn from it.'));return}inv.bprint--;lkLearn(r[0],['Egy tervrajzból tanultad meg.','You learned it from a blueprint.']);try{TQ112.push({title:LB('Tervrajz','Blueprint'),sub:LB('Megtanultad: ','Learned: ')+tr(LBL[r[0]]||r[0]),col:'#8ac0f0'})}catch(e){}say(LB('Kiterítetted a tervrajzot: ','You unrolled the blueprint: ')+tr(LBL[r[0]]||r[0]).toLowerCase());try{snd('craft')}catch(e){}}
+{const ac132=act;act=function(){if(HB[hb]=='bprint'&&inv.bprint>0&&edge&&P.cd<=0){P.cd=.5;lkReadBlueprint();return}return ac132()}}
+/* people teach: once a day each camp dweller shows you something */
+{const to132=talkOpts;talkOpts=function(){const L=to132();try{const n=TALK&&TALK.n;if(n&&!n.zr&&LK&&!creative&&REC.some(r=>!LK[r[0]])){const done=n.lt132===day;const i=L.findIndex(o=>o.k=='bye');L.splice(i<0?L.length:i,0,{k:'lk_teach',l:done?LB('(Ma már tanított valamit)','(Already taught you something today)'):LB('Megtanítanál valamire?','Could you teach me something?')})}}catch(e){}return L}}
+{const tp132=talkPick;talkPick=function(i){try{const n=TALK&&TALK.n,o=talkOpts()[i];if(o&&o.k=='lk_teach'){TALK.sel=i;if(n.lt132===day){talkSay(LB('Holnap gyere vissza. Egyszerre egy dolgot.','Come back tomorrow. One thing at a time.'));return}const r=lkPick(3);if(!r){talkSay(LB('Már mindent tudsz, amit én.','You already know everything I do.'));return}n.lt132=day;lkLearn(r[0],[n.nm+' mutatta meg, hogyan kell.',n.nm+' showed you how.']);
+ talkSay(zpk132([LB('Figyelj, megmutatom: ','Watch, I\'ll show you: '),LB('Ezt apámtól tanultam: ','My father taught me this: '),LB('Nem nagy ügy, nézd: ','Nothing to it, look: ')])+tr(LBL[r[0]]||r[0]).toLowerCase()+'. '+LB('Most már te is tudod.','Now you know it too.'));try{snd('craft')}catch(e){}return}}catch(e){}return tp132(i)}}
+const zpk132=a=>a[Math.floor(Math.random()*a.length)];
+/* ---- save, load, new game ---- */
+{const sv132=save;save=function(){const r=sv132.apply(this,arguments);try{localStorage.setItem(SKEY()+'_lk',JSON.stringify(LK?{k:LK,s:LKSEEN,c:LKC}:{all:1}))}catch(e){}return r}}
+{const ld132=load;load=function(){const r=ld132.apply(this,arguments);try{const d=JSON.parse(localStorage.getItem(SKEY()+'_lk')||'null');if(d&&d.k){LK=d.k;LKSEEN=d.s||{};LKC=d.c||{c:[0,0,0,0],t:0}}else{LK=null;LKSEEN={};LKC={c:[0,0,0,0],t:0}}}catch(e){LK=null}return r}}
+{const in132=init;init=function(...a){const r=in132.apply(this,a);LK={};for(const k of LKSTART)LK[k]=1;LKSEEN={};LKC={c:[0,0,0,0],t:0};LKT=1.5;return r}}
+{const up132=update;update=function(dt){const r=up132(dt);try{if(state=='play')lkTick(dt)}catch(e){}return r}}
+/* the journal's skills chapter shows what you know */
+{const js132=jnSkills;jnSkills=function(){const P_=js132();try{if(LK&&!creative){const L=[];jnHead(L,LB('Tudás','Know-how'),'#4a2a6a');const n=REC.filter(r=>LK[r[0]]).length;jnText(L,LB('Ismert receptek: ','Known recipes: ')+n+'/'+REC.length,{b:1,c:'#2a1a10'});
+ jnText(L,LB('Új receptet így tanulsz: fogd kézbe az anyagait, és gyakorolj — barkácsolj sokat az adott fajtából. Gyorsabb, ha egy tervrajzot találsz (könyvespolc, íróasztal, láda), vagy ha a tábor lakói megtanítanak valamire.','You learn new recipes by handling the materials and practising — craft lots of the same kind. It’s faster if you find a blueprint (bookshelves, desks, crates), or if camp people teach you.'),{sz:7,c:'#5a4a30'});
+ for(let i=0;i<4;i++)jnText(L,(LANG=='hu'?CATH:CATS)[i]+': '+(LKC.c[i]|0)+LB(' készítés',' crafted'),{in:4,sz:7});
+ const rec=Object.keys(LK).filter(k=>!LKSTART.includes(k)).slice(-8).reverse();if(rec.length){jnGap(L);jnText(L,LB('Legutóbb tanultad:','Recently learned:'),{b:1,sz:8});for(const k of rec)jnText(L,'· '+tr(LBL[k]||k),{in:4,sz:7})}
+ return[...jnFlow(L),...P_]}}catch(e){}return P_}}
+JNB[4]=jnSkills;
+/* ---- Ctrl: the bottom buttons and slots tell you their keys ---- */
+function qsTip(){if(!CTRLH||invOpen||book||JN)return;const y=VH-26,X=qsX(),B=qsBX(),h=LANG=='hu',kn=k=>keyName(KB[k]);let s=null,ax=0;
+ for(let i=0;i<4;i++)if(qsHit(X[i],y)){s=i<2?(h?'Étel és ital · CTRL+katt: elfogyaszt · CTRL+jobb katt: ürít · '+kn('eat')+': evés':'Food & drink · CTRL+click: use · CTRL+right click: empty · '+kn('eat')+': eat'):(h?'Gyógyítás · CTRL+katt: használ · CTRL+jobb katt: ürít':'Healing · CTRL+click: use · CTRL+right click: empty');ax=X[i]+10}
+ const BN=[[h?'Táska':'Bag',kn('inv')],[h?'Barkácsolás':'Crafting',kn('craft')],[h?'Napló':'Journal',keyName(KB.journal||'Tab')]];for(let j=0;j<3;j++)if(qsHit(B[j],y)){s=BN[j][0]+' — '+BN[j][1];ax=B[j]+10}
+ for(let i=0;i<HB.length;i++){const x=HX+i*22;if(ms.x>=x&&ms.x<x+20&&ms.y>=y&&ms.y<y+20){const k=HB[i];s=(k?tr(LBL[k]||k)+' — ':'')+(h?'gomb: ':'key: ')+((i+1)%10)+(h?' · görgő: váltás':' · wheel: switch');ax=x+10}}
+ if(!s)return;noTr=true;g.font=fnt(0,8);const w=Math.ceil(g.measureText(s).width)+10,x=Math.max(2,Math.min(VW-w-2,ax-w/2)),yy=y-16;Q(x,yy,w,13,'rgba(12,10,8,.92)');Q(x,yy,w,1,'#ffd84a');txt(s,x+5,yy+9,'#f0e6b8','left');noTr=false}
+{const hb132=hotbar;hotbar=function(){hb132();try{qsTip()}catch(e){noTr=false}}}
+/* the journal key can be rebound like the others */
+try{if(!ACTS.some(a=>a[0]=='journal')){ACTS.push(['journal','Tab','Napló','Journal']);let sv=null;try{sv=JSON.parse(localStorage.getItem('pxc_keys')||'null')}catch(e){}KB.journal=sv&&typeof sv.journal=='string'?sv.journal:'Tab';kbBuild()}}catch(e){}
+/* ---- a tool you make goes straight to the hotbar ---- */
+{const cr132b=craft;craft=function(i){const r=REC[i],k=r&&r[0],n0=k?inv[k]|0:0,o0=k?owned(k):false;const res=cr132b(i);try{if(k&&(TOOL[k]||TK[k]||GUN[k]||ARM[k]==null&&(k=='bow'||k=='rod'))&&((inv[k]|0)>n0||(!o0&&owned(k)))&&!HB.includes(k)){let j=HB.indexOf(null);if(j<0)j=HB.findIndex((x,q)=>q>0&&x&&x!='hand'&&!(inv[x]>0));if(j>=0){HB[j]=k;say(LB('A hotbar '+((j+1)%10)+'. helyére tettem: ','Put on hotbar slot '+((j+1)%10)+': ')+tr(LBL[k]||k).toLowerCase())}else say(LB('Tele a hotbar — a táskában van (I)','Hotbar full — it’s in your bag (I)'))}}catch(e){}return res}}
+/* ---- wooden tools burn: click the campfire with one in hand, or put it in the furnace as fuel ---- */
+const WOODT={wood_sword:1,wood_spear:1,wood_axe:1,wood_pickaxe:1,wood_shovel:1,bow:1,rod:1,axe:1,spear:1,shovel:1,pickaxe:1};
+for(const k in WOODT){FUEL[k]=10;CF[k]=30;FIN[k]=1}
+{const fu132=fuelUp;fuelUp=function(o){const k=HB[hb];if(WOODT[k]&&inv[k]>0){if(o.fl==null)o.fl=0;if(o.fl>=FMAX-5)return say(LB('A tűz tele van','The fire is full'));inv[k]--;if(!(inv[k]>0)){delete du[k];const j=HB.indexOf(k);if(j>0)HB[j]=null;hb=0}o.fl=Math.min(FMAX,o.fl+CF[k]);o.on=true;try{snd('pick')}catch(e){}hit(Math.floor(P.x),Math.floor(P.y)-10,'#f2b134');say(LB('A tűzbe dobtad: ','Into the fire: ')+tr(LBL[k]||k).toLowerCase()+' ('+Math.round(o.fl)+'s)');return}return fu132(o)}}
+/* ---- what sits on the hotbar or in a quick slot doesn't take room in the bag ---- */
+invUsed=function(){let n=0;for(const k in inv)if(inv[k]>0&&!HB.includes(k)&&!(typeof QS!='undefined'&&QS.includes(k)))n++;return n};
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
