@@ -2837,7 +2837,7 @@ function reloadTick(dt){if(!RLD)return;const k=RLD.k;if(HB[hb]!==k||drv||state!=
  const real=inv[G.am];inv[G.am]=999;const cd0=P.cd;fg0(it);const used=999-inv[G.am];inv[G.am]=real;if(P.cd!==cd0){MAGS[it]=Math.max(0,MAGS[it]-Math.max(used,0));}
  if(MAGS[it]<=0&&(inv[G.am]>0||creative))setTimeout(()=>{if(HB[hb]===it&&!RLD&&magOf(it)<=0)startReload(it)},250)}}
 {const up8=update;update=function(dt){up8(dt);try{reloadTick(dt)}catch(e){RLD=null}}}
-function drawAmmo(){const k=HB[hb],G=GUN[k];if(!G||!(inv[k]>0)||state!='play'||invOpen||book)return;const hu=LANG=='hu',cap=MAGC[k]||10,m=magOf(k),res=inv[G.am]|0,x=VW-96,y=VH-30;
+function drawAmmo(){const k=HB[hb],G=GUN[k];if(!G||!(inv[k]>0)||state!='play'||invOpen||book)return;const hu=LANG=='hu',cap=MAGC[k]||10,m=magOf(k),res=inv[G.am]|0,x=VW-96,y=VH-56;
  Q(x-2,y-2,92,22,'rgba(10,8,6,.75)');Q(x-2,y-2,92,1,'#8a6a3a');noTr=true;
  const n=Math.min(cap,30),bw=Math.max(2,Math.floor(84/n)-1);for(let i=0;i<n;i++){const filled=i<Math.round(m*n/cap);Q(x+2+i*(bw+1),y+1,bw,6,filled?'#e8c050':'#3a3226');if(filled)Q(x+2+i*(bw+1),y+1,bw,1,'#fff0a0')}
  txt(m+' / '+cap,x+2,y+16,m==0?'#ff7a5a':'#f0e6b8');txt((hu?'tartalék ':'reserve ')+res,x+88,y+16,res==0?'#ff7a5a':'#b8c8a8','right');
@@ -8134,6 +8134,26 @@ for(const k in WOODT){FUEL[k]=10;CF[k]=30;FIN[k]=1}
 {const fu132=fuelUp;fuelUp=function(o){const k=HB[hb];if(WOODT[k]&&inv[k]>0){if(o.fl==null)o.fl=0;if(o.fl>=FMAX-5)return say(LB('A tűz tele van','The fire is full'));inv[k]--;if(!(inv[k]>0)){delete du[k];const j=HB.indexOf(k);if(j>0)HB[j]=null;hb=0}o.fl=Math.min(FMAX,o.fl+CF[k]);o.on=true;try{snd('pick')}catch(e){}hit(Math.floor(P.x),Math.floor(P.y)-10,'#f2b134');say(LB('A tűzbe dobtad: ','Into the fire: ')+tr(LBL[k]||k).toLowerCase()+' ('+Math.round(o.fl)+'s)');return}return fu132(o)}}
 /* ---- what sits on the hotbar or in a quick slot doesn't take room in the bag ---- */
 invUsed=function(){let n=0;for(const k in inv)if(inv[k]>0&&!HB.includes(k)&&!(typeof QS!='undefined'&&QS.includes(k)))n++;return n};
+
+/* ===== v133: foam when you wade or swim (and behind a boat); the ammo box sits above the hotbar buttons ===== */
+GAMEV=133;
+let FOAM=[],FOAMT=0,FOAMR=0,FOAMPX=0,FOAMPY=0;
+function foamTick(dt){for(let i=FOAM.length-1;i>=0;i--){const f=FOAM[i];f.l+=dt;f.x+=f.vx*dt;f.y+=f.vy*dt;f.vx*=.92;f.vy*=.92;if(f.l>=f.ml)FOAM.splice(i,1)}
+ if(state!='play'||inD||drv||rid)return;const tx=Math.floor(P.x/T),ty=Math.floor(P.y/T);if(tx<0||ty<0||tx>=W||ty>=H)return;const m=map[ty*W+tx];if(!(m==1||m==7))return;
+ const sp=Math.hypot(P.x-FOAMPX,P.y-FOAMPY)/Math.max(dt,.001);FOAMPX=P.x;FOAMPY=P.y;const moving=sp>8,boat=!!P.boat;
+ FOAMT-=dt;if(moving&&FOAMT<=0){FOAMT=boat?.03:.035;const n=boat?4:3,dx=(P.x-(FOAM.lx??P.x)),dy=(P.y-(FOAM.ly??P.y));
+  for(let k=0;k<n;k++){const a=Math.random()*6.28,r=boat?6+Math.random()*6:3+Math.random()*4;FOAM.push({x:P.x+Math.cos(a)*r,y:P.y-1+Math.sin(a)*r*.45,vx:(Math.random()-.5)*14-(boat?P.fx*20:0),vy:(Math.random()-.5)*6-(boat?P.fy*14:0),l:0,ml:.7+Math.random()*.8,s:boat?2+Math.round(Math.random()):1+Math.round(Math.random()*1.4),k:0})}}
+ FOAM.lx=P.x;FOAM.ly=P.y;FOAMR-=dt;if(FOAMR<=0){FOAMR=moving?.28:.9;FOAM.push({x:P.x,y:P.y-1,vx:0,vy:0,l:0,ml:moving?.9:1.4,k:1,r0:boat?9:5})}
+ if(FOAM.length>160)FOAM.splice(0,FOAM.length-160)}
+function foamDraw(front){if(!FOAM.length&&!front)return;const now=performance.now();
+ if(!front){for(const f of FOAM){const a=1-f.l/f.ml,X=f.x-cam.x,Y=f.y-cam.y;if(f.k){const r=f.r0+f.l*16;g.strokeStyle='rgba(235,248,255,'+(.45*a).toFixed(3)+')';g.lineWidth=1;g.beginPath();g.ellipse(X,Y,r,r*.42,0,0,6.283);g.stroke()}
+  else{g.fillStyle='rgba(245,252,255,'+(.8*a).toFixed(3)+')';g.fillRect(Math.round(X),Math.round(Y),f.s,f.s);if(a>.5){g.fillStyle='rgba(200,230,245,'+(.5*a).toFixed(3)+')';g.fillRect(Math.round(X)+1,Math.round(Y)+f.s,f.s,1)}}}return}
+ /* the waterline around your body: a ring of foam in front */
+ if(inD||drv||rid||P.boat)return;const tx=Math.floor(P.x/T),ty=Math.floor(P.y/T),m=map[ty*W+tx];if(!(m==1||m==7))return;const X=Math.round(P.x-cam.x),Y=Math.round(P.y-cam.y)-2,ph=now/160;
+ g.fillStyle='rgba(60,120,160,.35)';g.fillRect(X-6,Y-1,12,4);for(let k=0;k<7;k++){const xx=X-6+k*2,yy=Y+Math.round(Math.sin(ph+k*1.3)*1);g.fillStyle=k%2?'rgba(255,255,255,.85)':'rgba(220,240,250,.7)';g.fillRect(xx,yy,2,1)}g.fillStyle='rgba(255,255,255,.5)';g.fillRect(X-7,Y+1,1,1);g.fillRect(X+6,Y+1,1,1)}
+{const dp133=drawP;drawP=function(){try{foamDraw(false)}catch(e){}const r=dp133.apply(this,arguments);try{foamDraw(true)}catch(e){}return r}}
+{const up133=update;update=function(dt){const r=up133(dt);try{foamTick(dt)}catch(e){}return r}}
+{const in133=init;init=function(...a){FOAM=[];return in133.apply(this,a)}}
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
