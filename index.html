@@ -8535,6 +8535,104 @@ addEventListener('mousedown',e=>{if(!JN||state!='play'||!JNPIC||e.button!==0)ret
 /* closing the tree or map you opened from the book brings the book back */
 {const up145=update;update=function(){const r=up145.apply(this,arguments);try{if(JN&&JNRET)JNRET=null;if(JNRET&&state=='play'&&!skOpen&&!showMap&&!JN){const R=JNRET;JNRET=null;jnOpen(R.ch);JN.pg=R.pg}if(JN&&JN.ch!=4&&JN.ch!=5)JNPIC=null}catch(e){}return r}}
 
+/* ===== v146: E on a shooting target opens a first-person range — stop the sway to aim, then set the height and the power like in darts; 5 shots a round, three distances, wind ===== */
+GAMEV=146;
+let TPV=null,TPREC=[0,0,0];
+const TPD=[{m:10,R:72,sx:1.5,sy:1.1,sp:.85,K:1.0,W:.12,mul:1},{m:20,R:52,sx:2.0,sy:1.4,sp:1.05,K:1.4,W:.25,mul:1.5},{m:30,R:38,sx:2.6,sy:1.75,sp:1.3,K:1.8,W:.4,mul:2}];
+const tpH=()=>LANG=='hu',tpNow=()=>performance.now()/1000;
+const tpTri=t=>{const f=t-Math.floor(t);return f<.5?f*4-1:3-f*4};
+function tpOpen(i){TPV={i,st:'pick',dist:0,shot:0,n:5,sc:0,marks:[],hp:P.hp,px:P.x,py:P.y,t0:tpNow(),log:[]};try{snd('ui')}catch(e){}}
+function tpRound(d){const s=TPV;s.dist=d;s.st='aim';s.shot=0;s.sc=0;s.marks=[];s.log=[];s.wind=(Math.random()*2-1);tpShot()}
+function tpShot(){const s=TPV;s.ph='x';s.t0=tpNow()+Math.random()*3;s.ax=null;s.ay=null;s.pw=null;s.fly=null}
+function tpLive(){const s=TPV,D=TPD[s.dist],t=tpNow()-s.t0;
+ if(s.ph=='x')return Math.sin(t*D.sx)*1.15+Math.sin(t*D.sx*2.7)*.12;
+ if(s.ph=='y')return tpTri(t*D.sy*.5)*1.2;
+ if(s.ph=='p')return (tpTri(t*D.sp*.5)+1)/2;return 0}
+function tpClick(){const s=TPV;if(!s)return;const h=tpH();
+ if(s.st=='pick')return;
+ if(s.st=='end'){tpRound(s.dist);return}
+ if(s.st!='aim'||s.fly)return;const v=tpLive();
+ if(s.ph=='x'){s.ax=v;s.ph='y';s.t0=tpNow()+Math.random()*2;tpTick(900);return}
+ if(s.ph=='y'){s.ay=v;s.ph='p';s.t0=tpNow()-.15;tpTick(1100);return}
+ if(s.ph=='p'){s.pw=v;const D=TPD[s.dist],drop=(.72-v)*D.K,drift=s.wind*D.W*(1.35-v)+(Math.random()-.5)*.06;
+  const hx=s.ax+drift,hy=s.ay+drop+(Math.random()-.5)*.06,d=Math.hypot(hx,hy),ring=d<=1?Math.max(1,10-Math.floor(d*10)):0,pts=Math.round(ring*D.mul);
+  s.fly={t0:tpNow(),hx,hy,ring,pts};s.ph='f';try{sfx(()=>{sxN(.18,'bandpass',1800,600,.5,.12)})}catch(e){try{snd('ui')}catch(_){}}}}
+function tpTick(f){try{sfx(()=>{sxT('square',f,f*.9,.03,.05)})}catch(e){}}
+function tpUpdate(){const s=TPV;if(!s)return;const h=tpH();
+ if(P.hp<s.hp-0.5){tpClose(h?'Megzavartak — abbahagytad a célzást!':'Interrupted — you stopped aiming!');return}s.hp=P.hp;P.x=s.px;P.y=s.py;
+ if(!ob[s.i]||ob[s.i].t!='tgt105'){tpClose();return}
+ if(s.fly&&!s.fly.done&&tpNow()-s.fly.t0>.42){const f=s.fly;f.done=1;f.tl=tpNow();s.marks.push({x:f.hx,y:f.hy,r:f.ring});s.sc+=f.pts;s.log.push(f.pts);
+  try{sfx(()=>{sxT('triangle',f.ring>=10?1300:f.ring?620:180,f.ring?420:120,.07,.14)})}catch(e){}
+  try{const o=ob[s.i];o.hit105=performance.now()+400}catch(e){}}
+ if(s.fly&&s.fly.done&&tpNow()-s.fly.tl>1.0){s.shot++;if(s.shot>=s.n)tpEnd();else tpShot()}}
+function tpEnd(){const s=TPV,h=tpH(),rec=s.sc>(TPREC[s.dist]|0);s.st='end';s.rec=rec;s.fly=null;try{gainXp(Math.round(s.sc/3))}catch(e){}
+ if(rec&&s.sc>0){TPREC[s.dist]=s.sc;inv.arrow=(inv.arrow|0)+4+s.dist*2;try{toast112(h?'Új rekord a lőtéren!':'New range record!',TPD[s.dist].m+' m · '+s.sc+(h?' pont — jutalom: ':' points — reward: ')+(4+s.dist*2)+(h?' nyíl':' arrows'),'#ffd84a')}catch(e){}}}
+function tpClose(msg){TPV=null;if(msg)say(msg);try{snd('ui')}catch(e){}}
+/* ---------- drawing the first-person view ---------- */
+function tpDraw(){const s=TPV;if(!s)return;const h=tpH(),D=TPD[s.dist],cx=Math.round(VW/2),HZ=Math.round(VH*.58),cy=Math.round(VH*.42);noTr=true;
+ /* sky and land */
+ const sk=g.createLinearGradient(0,0,0,HZ);sk.addColorStop(0,'#6e9cc4');sk.addColorStop(1,'#d6e2d8');g.fillStyle=sk;g.fillRect(0,0,VW,HZ);
+ for(const[c,st,rb]of[['#6a8a62',11,9],['#4f6a48',7,12]]){g.fillStyle=c;for(let i=-10;i<VW+20;i+=st){const r=rb+((i*37)%7),y=HZ-r*.6-((i*13)%9);g.beginPath();g.arc(i,y,r,0,6.3);g.fill()}g.fillRect(0,HZ-8,VW,8)}
+ const gr=g.createLinearGradient(0,HZ,0,VH);gr.addColorStop(0,'#7aa050');gr.addColorStop(1,'#4a7030');g.fillStyle=gr;g.fillRect(0,HZ,VW,VH-HZ);
+ g.strokeStyle='rgba(40,60,20,.25)';g.lineWidth=1;for(let k=-8;k<=8;k++){g.beginPath();g.moveTo(cx+k*6,HZ);g.lineTo(cx+k*80,VH);g.stroke()}
+ /* the stand and the board */
+ const R=D.R,lg=Math.round(R*.12);Q(cx-R*.55-lg/2,cy+R*.6,lg,HZ-cy-R*.6+R*.2,'#6a4a2a');Q(cx+R*.55-lg/2,cy+R*.6,lg,HZ-cy-R*.6+R*.2,'#6a4a2a');Q(cx-lg/2,cy+R*.7,lg,HZ-cy-R*.7+R*.3,'#5a3a20');
+ g.fillStyle='rgba(0,0,0,.25)';g.beginPath();g.ellipse(cx,HZ+R*.25,R*.8,R*.08,0,0,6.3);g.fill();
+ g.fillStyle='#d8c8a0';g.beginPath();g.arc(cx,cy,R*1.08,0,6.3);g.fill();
+ const RC=['#f4f0e4','#f4f0e4','#222','#222','#3a7ad8','#3a7ad8','#d83a2a','#d83a2a','#f0c830','#f0c830'];
+ for(let k=0;k<10;k++){g.fillStyle=RC[k];g.beginPath();g.arc(cx,cy,R*(1-k/10),0,6.3);g.fill();g.strokeStyle=k==2||k==3?'#666':'rgba(0,0,0,.35)';g.beginPath();g.arc(cx,cy,R*(1-k/10),0,6.3);g.stroke()}
+ Q(cx,cy,1,1,'#000');
+ /* arrows stuck in the board */
+ for(const m of s.marks){const x=cx+m.x*R,y=cy+m.y*R;Q(x-1,y-1,3,3,'#1a120a');Q(x+1,y+1,1,6,'#7a5228');Q(x+2,y+5,2,1,'#e8e0d0');Q(x,y+6,2,1,'#c83a2a')}
+ /* flying arrow */
+ if(s.fly&&!s.fly.done){const e=Math.min(1,(tpNow()-s.fly.t0)/.42),sx0=cx+30,sy0=VH+10,x=sx0+(cx+s.fly.hx*R-sx0)*e,y=sy0+(cy+s.fly.hy*R-sy0)*e-Math.sin(e*3.14)*R*.5,sz=Math.round(10*(1-e)+2);Q(x-1,y-sz/2,2,sz,'#7a5228');Q(x-1,y-sz/2-1,2,2,'#c8ccd0')}
+ /* aim markers */
+ if(s.st=='aim'&&!s.fly){const v=tpLive(),ax=s.ph=='x'?v:s.ax,ay=s.ph=='y'?v:(s.ay==null?0:s.ay);
+  if(s.ph=='x'){const x=cx+ax*R;Q(x,cy-R*1.3,1,R*2.6,'rgba(255,255,255,.85)');Q(x-3,cy-R*1.3,7,2,'#fff');Q(x-3,cy+R*1.3,7,2,'#fff')}
+  else{const x=cx+ax*R,y=cy+ay*R;Q(x,cy-R*1.3,1,R*2.6,'rgba(255,255,255,.35)');Q(cx-R*1.3,y,R*2.6,1,s.ph=='y'?'rgba(255,255,255,.85)':'rgba(255,255,255,.35)');
+   g.strokeStyle='#fff';g.beginPath();g.arc(x+.5,y+.5,4,0,6.3);g.stroke();Q(x,y,1,1,'#ff3030')}
+  /* height scale */
+  const hx=cx+R*1.5;Q(hx,cy-R*1.2,4,R*2.4,'rgba(0,0,0,.45)');if(s.ph!='x'){const y=cy+(s.ph=='y'?v:s.ay)*R;Q(hx-3,y-1,10,3,s.ph=='y'?'#ffd84a':'#c8c0a8')}
+  /* power bar */
+  const bw=Math.min(180,VW*.4),bx=cx-bw/2,by=VH-40;Q(bx-2,by-2,bw+4,14,'rgba(0,0,0,.6)');const sw=.72;Q(bx+bw*(sw-.07),by,bw*.14,10,'rgba(90,200,90,.55)');Q(bx+bw*(sw-.025),by,bw*.05,10,'rgba(140,255,140,.8)');
+  if(s.ph=='p'||s.pw!=null){const pv=s.ph=='p'?v:s.pw;const gd=g.createLinearGradient(bx,0,bx+bw,0);gd.addColorStop(0,'#3a8ad8');gd.addColorStop(.72,'#5ad05a');gd.addColorStop(1,'#d83a2a');g.fillStyle=gd;g.fillRect(bx,by+3,bw*pv,4);Q(bx+bw*pv-1,by-3,2,16,'#fff')}
+  txt(h?'ERŐ':'POWER',bx-6,by+9,'#e8e4d8','right');
+  const step=s.ph=='x'?(h?'1. Állítsd meg a lengést — irány':'1. Stop the sway — direction'):s.ph=='y'?(h?'2. Állítsd be a magasságot':'2. Set the height'):(h?'3. Erő — a zöld sávban repül egyenesen':'3. Power — the green band flies true');
+  Q(cx-120,VH-62,240,13,'rgba(0,0,0,.55)');txt(step,cx,VH-52,'#ffe9a0','center')}
+ /* result of the last shot */
+ if(s.fly&&s.fly.done){const f=s.fly,a=Math.min(1,(1.0-(tpNow()-f.tl))*2);g.globalAlpha=Math.max(0,a);g.font=fnt(1,f.ring>=10?16:12);txt(f.ring>=10?(h?'KÖZÉP! +':'BULLSEYE! +')+f.pts:f.ring?'+'+f.pts:(h?'mellé':'miss'),cx,cy-R-14,f.ring>=10?'#ffd84a':f.ring?'#fff':'#c8a898','center');g.globalAlpha=1;
+  if(f.ring&&f.ring<10){const pw=s.pw;const tip=pw<.65?(h?'gyenge volt — lejjebb ment':'too weak — it dropped'):pw>.79?(h?'túl erős — feljebb ment':'too strong — it flew high'):'';if(tip)txt(tip,cx,cy-R-2,'#e8e0d0','center')}}
+ /* top panel */
+ Q(0,0,VW,18,'rgba(10,8,6,.75)');g.font=fnt(0,8);txt((h?'LŐTÉR · ':'RANGE · ')+D.m+' m',8,12,'#ff9a7a');
+ if(s.st!='pick'){txt((h?'Lövés ':'Shot ')+Math.min(s.n,s.shot+1)+'/'+s.n+'   '+(h?'Pont: ':'Score: ')+s.sc+'   '+(h?'Rekord: ':'Record: ')+(TPREC[s.dist]|0),cx,12,'#ffd84a','center');
+  const w=s.wind,ws=Math.abs(w)<.15?(h?'szélcsend':'calm'):(w<0?'← ':'')+(h?'szél ':'wind ')+Math.round(Math.abs(w)*D.W*40)+(w>0?' →':'');txt(ws,VW-8,12,'#cfe0f0','right')}
+ /* first-person hands with a bow */
+ if(s.st=='aim'){const bx=Math.round(cx+VW*.3),by=VH-6;g.strokeStyle='#5a3a1a';g.lineWidth=3;g.beginPath();g.arc(bx+30,by,46,Math.PI*.95,Math.PI*1.45);g.stroke();g.lineWidth=1;g.strokeStyle='#e8e4d8';g.beginPath();g.moveTo(bx-15,by-8);g.lineTo(bx+16,by-44);g.stroke();Q(bx-22,by-14,12,16,'#c89a78');Q(bx-24,by-4,16,10,'#5a6a48')}
+ /* distance picker */
+ if(s.st=='pick'){Q(cx-130,cy-56,260,112,'rgba(10,8,6,.86)');Q(cx-130,cy-56,260,1,'#c8302a');g.font=fnt(1,10);txt(h?'Válassz távot':'Pick a distance',cx,cy-38,'#ffe9a0','center');
+  for(let k=0;k<3;k++){const y=cy-22+k*22,hov=ms.x>cx-110&&ms.x<cx+110&&ms.y>y-12&&ms.y<y+6;Q(cx-110,y-12,220,18,hov?'rgba(255,216,74,.22)':'rgba(255,255,255,.06)');g.font=fnt(0,8);txt((k+1)+'.  '+TPD[k].m+' m  ·  ×'+TPD[k].mul+(h?' pont':' pts')+'  ·  '+(h?'rekord ':'record ')+(TPREC[k]|0),cx,y+1,'#e8e4d8','center')}
+  g.font=fnt(0,7);txt(h?'Katt vagy 1-3 · Esc: kilépés':'Click or 1-3 · Esc: leave',cx,cy+50,'#a89878','center')}
+ /* end of round */
+ if(s.st=='end'){Q(cx-120,cy-40,240,80,'rgba(10,8,6,.86)');Q(cx-120,cy-40,240,1,'#ffd84a');g.font=fnt(1,12);txt((h?'Kör vége: ':'Round over: ')+s.sc+(h?' pont':' pts'),cx,cy-18,s.rec?'#ffd84a':'#e8e4d8','center');g.font=fnt(0,8);txt(s.log.join(' · '),cx,cy-2,'#c8c0a8','center');
+  txt(s.rec?(h?'ÚJ REKORD!':'NEW RECORD!'):(h?'Rekord: ':'Record: ')+(TPREC[s.dist]|0),cx,cy+12,s.rec?'#ffd84a':'#a89878','center');txt(h?'Katt / Szóköz: új kör   ·   Esc: kilépés':'Click / Space: again   ·   Esc: leave',cx,cy+30,'#e8e4d8','center')}
+ if(s.st=='aim'){g.font=fnt(0,7);txt(h?'Katt / Szóköz: megállít   ·   Esc: kilépés':'Click / Space: stop   ·   Esc: leave',8,VH-6,'#e8e4d8')}
+ noTr=false}
+/* ---------- input ---------- */
+addEventListener('keydown',e=>{if(!TPV||state!='play')return;e.preventDefault();e.stopImmediatePropagation();if(e.repeat)return;const c=e.code;
+ if(c=='Escape'||c=='Tab'){tpClose();return}if(TPV.st=='pick'&&/^Digit[1-3]$/.test(c)){tpRound(+c.slice(5)-1);return}if(c=='Space'||c=='Enter'||c=='KeyE')tpClick()},true);
+addEventListener('mousedown',e=>{if(!TPV||state!='play')return;e.preventDefault();e.stopImmediatePropagation();try{sc(e)}catch(_){}if(e.button!==0)return;
+ if(TPV.st=='pick'){const cx=VW/2,cy=VH*.42;for(let k=0;k<3;k++){const y=cy-22+k*22;if(ms.x>cx-110&&ms.x<cx+110&&ms.y>y-12&&ms.y<y+6){tpRound(k);return}}return}tpClick()},true);
+addEventListener('mouseup',e=>{if(TPV){e.stopImmediatePropagation()}},true);
+addEventListener('wheel',e=>{if(TPV){e.preventDefault();e.stopImmediatePropagation()}},{capture:true,passive:false});
+/* E on a target opens the range (the old real-time contest is gone; free shooting at targets still scores) */
+{const uo146=useObj;useObj=function(n){const o=n&&n.o;if(o&&o.t=='tgt105'&&!(TGM&&TGM.on)){tpOpen(n.ty*W+n.tx);return}return uo146(n)}}
+{const up146=update;update=function(){const r=up146.apply(this,arguments);try{if(TPV&&state=='play')tpUpdate()}catch(e){}return r}}
+{const dw146=draw;draw=function(){const r=dw146.apply(this,arguments);try{if(state=='play'&&TPV)tpDraw()}catch(e){noTr=false}return r}}
+{const sv146=save;save=function(){const r=sv146.apply(this,arguments);try{localStorage.setItem(SKEY()+'_tpv',JSON.stringify(TPREC))}catch(e){}return r}}
+{const ld146=load;load=function(){const r=ld146.apply(this,arguments);try{const a=JSON.parse(localStorage.getItem(SKEY()+'_tpv')||'null');TPREC=Array.isArray(a)?a.map(v=>v|0):[0,0,0]}catch(e){TPREC=[0,0,0]}TPV=null;return r}}
+{const in146=init;init=function(...a){TPV=null;TPREC=[0,0,0];return in146.apply(this,a)}}
+try{for(const[L,a,b]of[[TUT.hu,'Lőcél',['Lőcél','Lőj rá egy lőcélra: a középért 10 pont, kifelé kevesebb; messzebbről többet ér.','E a lőcélon: lőtér nézet. Állítsd meg a lengést (irány), aztán a magasságot, végül az erőt — a zöld sávban egyenesen repül, gyengébben lejjebb, erősebben feljebb megy.','Három táv (10/20/30 m), a szél is visz. 5 lövés egy kör, új rekordért nyilat kapsz.']],[TUT.en,'Shooting target',['Shooting target','Shoot a target: 10 for the bullseye, less further out; more from a distance.','E on a target: first-person range. Stop the sway (direction), then the height, then the power — in the green band it flies true, weaker drops low, stronger flies high.','Three distances (10/20/30 m), wind pushes too. 5 shots a round; a new record pays arrows.']]]){const i=L.findIndex(p=>Array.isArray(p)&&p[0]==a);if(i>=0)L[i]=b;else L.push(b)}}catch(e){}
+
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
  if(state=='title')menu();if(state=='opts')optsMenu();if(state=='sndo')sndMenu();if(state=='gfxo')gfxMenu();if(state=='slots')svMenu();if(state=='keys')keysMenu();if(state=='wthr')wthrMenu();if(state=='char')charMenu();if(state=='lobby')drawLobby();if(state=='hb'){Q(0,0,VW,VH,'rgba(6,10,6,.6)');drawHB()}if(0)title('ASHFALL',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Hold the fire. Survive the nights.','','WASD move \u2022 Space chop / fish / attack \u2022 Tab recipes','Press any key']);
