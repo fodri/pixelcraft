@@ -1,6 +1,6 @@
 /* ===== v130: ZÓNA 2100 — sand to glass, rooms you build get a roof, bandits and their hideouts, bounties dead or alive with handcuffs and a prison,
    robots and a laser rifle at the plant, and a new story mode: Bunker-7, its drones, the radio tower, the black box, memories and four endings ===== */
-GAMEV=145;
+GAMEV=146;
 var ZS=null,ZR=[],ZBK=false,ZDLG=null,ZOUT=null,ZSWAP=0;
 const ZB=(h,e)=>LANG=='hu'?h:e,zhu=()=>LANG=='hu';
 const zri=(a,b)=>a+Math.floor(Math.random()*(b-a+1)),zpk=a=>a[Math.floor(Math.random()*a.length)];
