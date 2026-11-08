@@ -1130,7 +1130,7 @@ function once(c){if(c=='KeyL'){setLang(LANG=='hu'?'en':'hu');return}
  if(book&&state=='play'&&(c=='ArrowRight'||c=='KeyD')){bcat=(bcat+1)%CATS.length;bsc=0;snd('ui');return}
  if(c.startsWith('Digit')){const i=c[5]=='0'?9:+c[5]-1;if(i>=0&&i<HB.length)hb=i}
  else if(c=='KeyQ')place();else if(c=='KeyR'){if(typeof startReload=='function'&&GUN[HB[hb]]&&inv[HB[hb]]>0){startReload(HB[hb]);return}if(rotPlaced())return;rot=(rot+(sel=='cabin'?2:1))%4;say('Rotated (R)')}
- else if(c=='KeyX')cook();else if(c=='KeyF')eat();else if(c=='KeyG')dropItem(HB[hb],K.ShiftLeft?9999:1);else if(c=='KeyE'){if(carE())return;const n=nearInt();if(n)useObj(n)}else if(c=='KeyC'&&carCol()){}else if(c=='Tab'||c=='KeyC'){book=!book}else if(c=='KeyH')tut=1;else if(c=='KeyT'){emOpen=true;invOpen=false;book=false;snd('ui')}else if(c=='KeyK'){skOpen=true;invOpen=false;book=false;snd('ui')}else if(c=='KeyI'){invOpen=!invOpen;held=null;book=false}else if(c=='KeyM'){showMap=!showMap;if(showMap)mkMap()}else if(c=='KeyN'){miniOn=!miniOn;say(miniOn?'Minimap on':'Minimap off')}}
+ else if(c=='KeyX')cook();else if(c=='KeyF')eat();else if(c=='KeyG')dropItem(HB[hb],K.ShiftLeft?9999:1);else if(c=='KeyE'){if(carE())return;const n=nearInt();if(n)useObj(n)}else if(c=='KeyC'&&carCol()){}else if(c=='KeyC'){book=!book}else if(c=='KeyH')tut=1;else if(c=='KeyT'){emOpen=true;invOpen=false;book=false;snd('ui')}else if(c=='KeyK'){skOpen=true;invOpen=false;book=false;snd('ui')}else if(c=='KeyI'){invOpen=!invOpen;held=null;book=false}else if(c=='KeyM'){showMap=!showMap;if(showMap)mkMap()}else if(c=='KeyN'){miniOn=!miniOn;say(miniOn?'Minimap on':'Minimap off')}}
 function hit(x,y,c){snd('hit');for(let i=0;i<5;i++)parts.push({x,y,vx:(R()-.5)*60,vy:-R()*40,l:.5,c})}
 function enter(idx){idx|=0;const sub=!!(ob[idx]&&ob[idx].sub);OW={map,ob,deer,zs,loot,x:P.x,y:P.y};inD=true;fishing=null;const R0=R;R=mb(((wseed|0)^Math.imul(idx+1,2654435761))>>>0);curSub=sub;LSx=null;try{genM(sub)}finally{R=R0}
  curM='m'+idx;let M=MINES[idx];
@@ -7647,7 +7647,7 @@ function hud112(){const now=performance.now(),busy=invOpen||(typeof showMap!='un
  if(!inD){const px=Math.floor(P.x/T),py=Math.floor(P.y/T);for(let y=py-14;y<=py+14;y++)for(let x=px-20;x<=px+20;x++){if(x<0||y<0||x>=W||y>=H)continue;const o=ob[y*W+x];if(!o||o.t!='adrop'||o.op)continue;const sx=(x*T+8-cam.x)*ZM,sy=(y*T+4-cam.y)*ZM;
    for(let k=0;k<9;k++){const ph=(now/1000*.35+k/9)%1,yy=sy-ph*90,xx=sx+Math.sin(k*2.1+ph*4)*7*ph+ph*10,sz=(3+ph*12)*ZM;g.fillStyle=(o.bm?'rgba(255,60,40,':'rgba(230,60,50,')+(.55*(1-ph)).toFixed(3)+')';g.fillRect(xx-sz/2,yy-sz/2,sz,sz)}}}
  /* challenges */
- if(DQ112.L.length){/* small panel in the top-right corner */const w=112,x=VW-w-3,y0=3,lh=8,n=DQ112.L.length,hgt=11+n*lh+9;
+ if(DQ112.L.length&&(typeof jnChalShow!='function'||jnChalShow())){/* small panel in the top-right corner */const w=112,x=VW-w-3,y0=3,lh=8,n=DQ112.L.length,hgt=11+n*lh+9;
   const ts=(s,tx,ty,c,al)=>{g.font=fnt(0,6.5);g.textAlign=al||'left';g.textBaseline='alphabetic';g.fillStyle='rgba(0,0,0,.85)';g.fillText(s,tx+.5,ty+.5);g.fillStyle=c;g.fillText(s,tx,ty)};
   Q(x,y0,w,hgt,'rgba(10,12,16,.5)');Q(x,y0,w,1,'rgba(255,216,74,.55)');
   ts(B111('KIHÍVÁSOK','CHALLENGES')+(DQ112.streak?'  ·  '+DQ112.streak+B111(' nap',' d'):''),x+3,y0+8,'#ffd84a');
@@ -7911,7 +7911,7 @@ let QS=[null,null,null,null],QSP={},CTRLH=false;
 const QSMED={bandage:1,medkit:1,tonic:1};
 function qsSide(k){if(!k)return-1;if(QSMED[k])return 1;if(FOODK[k])return 0;return-1}
 function qsX(){const r=HX+HB.length*22;return[HX-52,HX-30,r+10,r+32]}
-function qsBX(){const r=HX+HB.length*22;return[r+60,r+82]}
+function qsBX(){const r=HX+HB.length*22;return[r+60,r+82,r+104]}
 function qsHit(x,y){return ms.x>=x&&ms.x<x+20&&ms.y>=y&&ms.y<y+20}
 /* fill the slots by themselves when you pick something up */
 function qsTick(){for(let i=0;i<4;i++){const k=QS[i];if(k&&!(inv[k]>0))QS[i]=null}
@@ -7921,13 +7921,14 @@ function qsUse(i){const k=QS[i];if(!k||!(inv[k]>0)){snd('click');return}
  eatK(k)}
 function qsIcon(kind,x,y,on){const c=on?'#ffd84a':'#c8c0a0',d=on?'#8a6a20':'#5a5440';
  if(kind=='bag'){Q(x+5,y+7,10,10,d);Q(x+5,y+7,10,1,c);Q(x+4,y+8,1,8,d);Q(x+15,y+8,1,8,d);Q(x+7,y+4,6,1,c);Q(x+7,y+4,1,4,c);Q(x+12,y+4,1,4,c);Q(x+8,y+11,4,2,c)}
+ else if(kind=='journal'){const p=on?'#fff6d8':'#f0e2c0',l=on?'#d8a860':'#c8b088';Q(x+2,y+6,16,10,'#3a1a0c');Q(x+2,y+7,16,9,on?'#c8703a':'#8a4a24');Q(x+3,y+4,6,10,p);Q(x+11,y+4,6,10,p);Q(x+9,y+5,2,10,'#3a1a0c');for(let k=0;k<4;k++){Q(x+4,y+6+k*2,4,1,l);Q(x+12,y+6+k*2,4,1,l)}Q(x+9,y+15,2,2,'#8a4a24')}
  else{Q(x+4,y+4,6,3,c);Q(x+6,y+7,2,9,d);Q(x+11,y+13,6,3,d);for(let k=0;k<5;k++)Q(x+15-k*2,y+12-k*2,2,2,c);Q(x+14,y+4,2,2,c)}}
 function qsDraw(){const X=qsX(),y=VH-26,ctl=CTRLH||invOpen;noTr=true;
  for(let i=0;i<4;i++){const x=X[i],k=QS[i],n=k?(inv[k]|0):0,side=i<2?0:1,hov=ctl&&qsHit(x,y),base=CTRLH?'#a88a3a':side?'#6a3434':'#3a5a34',c=hov?'#ffd84a':base;
   Q(x,y,20,20,'rgba(10,14,10,.85)');Q(x,y,20,1,c);Q(x,y+19,20,1,c);Q(x,y,1,20,c);Q(x+19,y,1,20,c);
   if(k&&n>0){icon(k,x,y);g.globalAlpha=1;txt(String(n),x+19,y+18,'#fff','right')}
   else if(side){Q(x+9,y+6,2,8,'rgba(200,90,90,.3)');Q(x+6,y+9,8,2,'rgba(200,90,90,.3)')}else{Q(x+7,y+6,6,8,'rgba(120,190,110,.25)');Q(x+8,y+4,4,2,'rgba(120,190,110,.25)')}}
- const B=qsBX(),on=[invOpen,book];for(let j=0;j<2;j++){const x=B[j],hov=ctl&&qsHit(x,y),c=hov||on[j]?'#ffd84a':CTRLH?'#a88a3a':'#46503e';Q(x,y,20,20,'rgba(10,14,10,.85)');Q(x,y,20,1,c);Q(x,y+19,20,1,c);Q(x,y,1,20,c);Q(x+19,y,1,20,c);qsIcon(j?'craft':'bag',x,y,hov||on[j])}
+ const B=qsBX(),on=[invOpen,book,!!(typeof JN!='undefined'&&JN)];for(let j=0;j<3;j++){const x=B[j],hov=ctl&&qsHit(x,y),c=hov||on[j]?'#ffd84a':CTRLH?'#a88a3a':'#46503e';Q(x,y,20,20,'rgba(10,14,10,.85)');Q(x,y,20,1,c);Q(x,y+19,20,1,c);Q(x,y,1,20,c);Q(x+19,y,1,20,c);qsIcon(['bag','craft','journal'][j],x,y,hov||on[j])}
  noTr=false}
 {const hb130=hotbar;hotbar=function(){hb130();try{qsDraw()}catch(e){noTr=false}}}
 {const up130=update;update=function(dt){const r=up130(dt);try{if(state=='play')qsTick();if(CTRLH){mdown=false;edge=false}}catch(e){}return r}}
@@ -7939,7 +7940,8 @@ C.addEventListener('mousedown',e=>{if(state!='play')return;try{sc(e)}catch(_){}c
   if(invOpen&&held){const s=qsSide(held);if(s==(i<2?0:1)){QS[i]=held;held=null;snd('ui')}else{snd('click');say(LANG=='hu'?(i<2?'Ide étel és ital kerül':'Ide gyógyszer és kötszer kerül'):(i<2?'Food and drink go here':'Medicine and bandages go here'))}return}
   if(e.button==2){QS[i]=null;snd('ui');return}qsUse(i);return}
  const B=qsBX();if(qsHit(B[0],y)){e.stopImmediatePropagation();e.preventDefault();invOpen=!invOpen;held=null;book=false;snd('ui');return}
- if(qsHit(B[1],y)){e.stopImmediatePropagation();e.preventDefault();book=!book;invOpen=false;held=null;snd('ui');return}},true);
+ if(qsHit(B[1],y)){e.stopImmediatePropagation();e.preventDefault();book=!book;invOpen=false;held=null;snd('ui');return}
+ if(qsHit(B[2],y)&&typeof jnOpen=='function'){e.stopImmediatePropagation();e.preventDefault();if(JN)jnClose();else jnOpen();return}},true);
 C.addEventListener('contextmenu',e=>{if(CTRLH||e.ctrlKey)e.preventDefault()},true);
 /* the quick slots are saved with the game */
 {const sv130=save;save=function(){const r=sv130.apply(this,arguments);try{localStorage.setItem(SKEY()+'_qs',JSON.stringify(QS))}catch(e){}return r}}
@@ -7947,6 +7949,121 @@ C.addEventListener('contextmenu',e=>{if(CTRLH||e.ctrlKey)e.preventDefault()},tru
 {const in130=init;init=function(...a){const r=in130.apply(this,a);QS=[null,null,null,null];QSP={};for(const k in inv)QSP[k]=inv[k]|0;return r}}
 try{TUT.hu.push(['Gyorshelyek','A hotbar mellett balra 2 hely az ételnek és italnak, jobbra 2 a gyógyszernek és kötszernek.','Amit felveszel, magától odakerül. Tartsd nyomva a CTRL-t, és kattints: elfogyasztod.','CTRL + jobb katt: kiürítés. A táska és a barkácsolás gomb is CTRL-lal kattintható.']);
  TUT.en.push(['Quick slots','Beside the hotbar: 2 slots on the left for food and drink, 2 on the right for medicine and bandages.','What you pick up goes there by itself. Hold CTRL and click to use it.','CTRL + right click: empty a slot. The bag and crafting buttons work with CTRL too.'])}catch(e){}
+
+/* ===== v131: the journal (Tab or the book button) — a book you leaf through: quests and side quests, conversations, discoveries, the guide, skills and the map;
+   clicking outside the inventory closes it; drink and pick berries whatever you hold; the challenges panel fades after a while ===== */
+GAMEV=131;
+let JN=null,JNT=[],JND={},JNDO=[],JNCH=0;const JNQX=[],JNDX=[];
+const jh=()=>LANG=='hu',JB=(h,e)=>LANG=='hu'?h:e;
+const JNC=[['Küldetések','Quests','#a83a2a'],['Beszélgetések','Talks','#3a6a8a'],['Felfedezések','Discoveries','#4a7a3a'],['Útmutató','Guide','#8a6a2a'],['Képességek','Skills','#6a4a8a'],['Térkép','Map','#2a6a6a']];
+/* ---- what gets written into the journal ---- */
+function jnTalk(n,t,k){if(!t)return;t=String(t);const L=JNT[0];if(L&&L.n===n&&L.t===t)return;JNT.unshift({d:day,n:n||'?',t,k:k||'npc'});if(JNT.length>120)JNT.length=120}
+{const ds131=dlSay;dlSay=function(kind,name,text,src,hint){try{if(kind=='npc'||kind=='radio')jnTalk(name||(kind=='radio'?JB('Rádió','Radio'):'?'),text,kind)}catch(e){}return ds131.apply(this,arguments)}}
+function jnFind(k,th,te,dh,de){if(JND[k])return;JND[k]={th,te,dh,de,d:day};JNDO.push(k);try{TQ112.push({title:JB('Napló — új felfedezés','Journal — new discovery'),sub:JB(th,te),col:'#d8b070'})}catch(e){}try{snd('ui')}catch(e){}}
+const JNBIO=[['Erdő','Forest','Fák, bokrok, vadak és folyók. Nappal a legbiztonságosabb vidék — éjjel ez is megváltozik.','Trees, bushes, game and rivers. The safest land by day — by night that changes too.'],
+ ['Hómező','Snowfield','Fagy és csend. Tűz és meleg ruha nélkül kihűlsz. A befagyott vízen át lehet kelni.','Frost and silence. Without fire and warm clothes you freeze. You can walk across frozen water.'],
+ ['Sivatag','Desert','Homok, kaktusz, kevés árnyék. Gyorsan szomjazol — a kaktusz vizet ad.','Sand, cactus, little shade. You get thirsty fast — cactus gives water.'],
+ ['Város','City','Romok, boltok, ládák. Itt a legtöbb a zsákmány — és a fertőzött.','Ruins, shops, crates. The most loot is here — and the most infected.']];
+let JNDT=0;
+function jnDiscTick(dt){JNDT-=dt;if(JNDT>0)return;JNDT=1;
+ if(!inD){const tx=Math.floor(P.x/T),ty=Math.floor(P.y/T),b=bm?bm[ty*W+tx]|0:0;if(JNBIO[b])jnFind('bio'+b,...JNBIO[b]);
+  if(NPCS.some(n=>!n.zr&&Math.hypot(n.hx-P.x,n.hy-P.y)<9*T))jnFind('camp','Túlélőtábor','Survivors’ camp','Emberek, akik együtt maradtak. Kereskedhetsz velük, munkát vállalhatsz, és meghallgathatod, mi történt a világgal.','People who stayed together. You can trade, take on jobs, and hear what happened to the world.');
+  try{const rc=locReactor();if(rc&&Math.hypot(rc.x*T-P.x,rc.y*T-P.y)<RR*T)jnFind('reactor','Az erőmű','The power plant','Sugárzás és csend. Gázálarc és tabletta nélkül ne maradj sokáig. A reaktor mélyén valami még dolgozik.','Radiation and silence. Without a gas mask and pills, don’t stay long. Deep in the reactor something still works.')}catch(e){}
+  for(let y=ty-10;y<=ty+10;y++)for(let x=tx-14;x<=tx+14;x++){const o=ob[y*W+x];if(o&&o.t=='adrop'){jnFind('drop','Ellátmányláda','Supply drop','Repülő dobja le, füstjel mutatja az utat. Érj oda előbb, mint más.','Dropped by a plane, marked by smoke. Get there before anyone else.');y=1e9;break}}
+  if(dk0()>.62)jnFind('night','Az első éjszaka','The first night','Sötétedés után előjönnek a fertőzöttek. A tűz és a fal megvéd — a sötét erdő nem.','After dark the infected come out. Fire and walls protect you — the dark forest does not.')}
+ else{if(typeof curM=='string'&&/^m/.test(curM))jnFind('mine','Bánya','Mine','Érc, kristály, sötétség — és ami a sötétben él. Vigyél fáklyát.','Ore, crystals, darkness — and whatever lives in it. Bring a torch.')}
+ for(const f of JNDX){try{const r=f();if(r)jnFind(...r)}catch(e){}}}
+/* ---- layout helpers ---- */
+const JPW=190,JPH=234;
+function jnWrap(s,w,f){g.font=f;const out=[];for(const para of String(s).split('\n')){let line='';for(const word of para.split(' ')){const t=line?line+' '+word:word;if(g.measureText(t).width>w&&line){out.push(line);line=word}else line=t}out.push(line)}return out}
+function jnText(L,s,o){o=o||{};const f=o.b?fnt(1,o.sz||8):fnt(0,o.sz||8),lh=o.lh||(o.sz?o.sz+3:10);for(const l of jnWrap(s,JPW-(o.in||0),f))L.push({t:l,f,c:o.c||'#3a2a18',h:lh,in:o.in||0,al:o.al})}
+function jnHead(L,s,c){L.push({gap:1,h:4});L.push({t:s,f:fnt(1,10),c:c||'#7a2a18',h:14,line:1})}
+function jnGap(L,h){L.push({gap:1,h:h||5})}
+function jnFlow(items){const pages=[];let cur=[],y=0;for(const it of items){if(it.page){if(cur.length)pages.push(cur);pages.push([it]);cur=[];y=0;continue}if(y+it.h>JPH&&cur.length){pages.push(cur);cur=[];y=0;if(it.gap)continue}cur.push(it);y+=it.h}if(cur.length)pages.push(cur);if(!pages.length)pages.push([]);return pages}
+/* ---- chapters ---- */
+function jnQuests(){const L=[];jnHead(L,JB('Fő küldetés','Main quest'));
+ if(typeof STORY!='undefined'&&STORY&&STORY.on){const a=SACT[STORY.act];if(STORY.done)jnText(L,JB('A történet véget ért. A világ tovább él — te is.','The story is over. The world goes on — and so do you.'),{c:'#4a6a2a'});
+  else if(a){jnText(L,['I','II','III','IV','V'][STORY.act]+'. '+a.n[jh()?0:1],{b:1,c:'#2a1a10'});a.steps.forEach((s,i)=>{const d=i<STORY.step,cur=i==STORY.step;if(i>STORY.step)return;let pr='';if(cur&&s.p){try{const q=s.p();pr='  ('+q[0]+'/'+q[1]+')'}catch(e){}}jnText(L,(d?'✓ ':'▸ ')+s.t[jh()?0:1]+pr,{c:d?'#7a6a50':'#2a1a10',b:cur,in:4});if(cur&&s.h)jnText(L,s.h[jh()?0:1],{c:'#6a5a40',in:12,sz:7})});
+   if(STORY.act>0){jnGap(L);jnText(L,JB('Korábbi fejezetek:','Earlier chapters:'),{c:'#6a5a40',sz:7});for(let i=0;i<STORY.act;i++)jnText(L,'✓ '+['I','II','III','IV','V'][i]+'. '+SACT[i].n[jh()?0:1],{c:'#7a6a50',in:4,sz:7})}}}
+ else jnText(L,JB('Túlélő mód: nincs megírt történet. Élj túl, építs, fedezd fel a világot — a napló mindent megjegyez.','Survival mode: no written story. Survive, build, explore — the journal remembers everything.'),{c:'#4a3a28'});
+ for(const f of JNQX){try{f(L)}catch(e){}}
+ jnHead(L,JB('Mellékküldetések','Side quests'),'#2a4a6a');
+ try{if(DQ112.L.length){jnText(L,JB('Mai kihívások','Today’s challenges')+(DQ112.streak?' · '+DQ112.streak+JB(' napos sorozat',' day streak'):''),{b:1,c:'#2a1a10'});for(const q of DQ112.L){const p=dqProg112(q);jnText(L,(q.done?'✓ ':'· ')+dqTxt112(q)+(q.done?'':'  ('+p+'/'+q.g+')'),{c:q.done?'#4a7a3a':'#3a2a18',in:4})}
+  jnGap(L);jnText(L,gs111()+JB(' fejlődési pont · ',' growth points · ')+'★ '+Object.keys(ACHG112).length+'/'+ACH112.length+JB(' mérföldkő',' milestones'),{c:'#6a5a40',sz:7})}}catch(e){}
+ try{const J=NPCS.filter(n=>n.job&&n.task);for(const n of J)jnText(L,'· '+n.nm+': '+n.task,{in:4})}catch(e){}
+ return jnFlow(L)}
+function jnTalks(){const L=[];jnHead(L,JB('Beszélgetések','Conversations'),'#2a4a6a');if(!JNT.length)jnText(L,JB('Még senkivel sem beszéltél. Menj oda valakihez, és nyomd meg az E-t.','You haven’t talked to anyone yet. Walk up to someone and press E.'),{c:'#6a5a40'});
+ for(const e of JNT){L.push({gap:1,h:3});jnText(L,JB(e.d+'. nap · ','Day '+e.d+' · ')+e.n,{b:1,c:e.k=='radio'?'#2a5a6a':'#5a2a18',sz:7});jnText(L,'„'+e.t+'”',{c:'#3a2a18',in:4})}return jnFlow(L)}
+function jnDiscs(){const L=[];jnHead(L,JB('Felfedezések','Discoveries'),'#3a5a2a');if(!JNDO.length)jnText(L,JB('Indulj el. Amit megtalálsz — tájat, tábort, romot —, ide kerül, leírással.','Set out. Whatever you find — lands, camps, ruins — ends up here, described.'),{c:'#6a5a40'});
+ for(const k of JNDO){const e=JND[k];L.push({gap:1,h:4});jnText(L,'◆ '+(jh()?e.th:e.te),{b:1,c:'#2a1a10',sz:9});jnText(L,JB(e.d+'. nap','Day '+e.d),{c:'#8a7a5a',sz:7,in:8});jnText(L,jh()?e.dh:e.de,{in:8})}return jnFlow(L)}
+function jnGuide(){const L=[];jnHead(L,JB('Útmutató','Guide'),'#6a4a1a');try{for(const t of HB_TABS){if(t.d=='practice')continue;const lines=jh()?t.thu:t.ten;if(!lines)continue;jnGap(L,4);jnText(L,jh()?t.hu:t.en,{b:1,c:'#5a2a18',sz:9});for(const s of lines)jnText(L,'· '+s,{in:4})}}catch(e){}
+ try{for(const p of (jh()?TUT.hu:TUT.en)){if(!Array.isArray(p))continue;jnGap(L,4);jnText(L,p[0],{b:1,c:'#5a2a18',sz:9});for(const s of p.slice(1))jnText(L,'· '+s,{in:4})}}catch(e){}return jnFlow(L)}
+function jnSkills(){const L=[];jnHead(L,JB('Képességek','Skills'),'#4a2a6a');try{jnText(L,JB('Szint ','Level ')+XS.lv+'  ·  '+XS.xp+'/'+xpNeed(XS.lv)+' XP  ·  '+JB('Pont: ','Points: ')+XS.sp,{b:1,c:XS.sp>0?'#8a5a10':'#2a1a10'});jnText(L,JB('Kattints ide, vagy nyomd meg a K-t a teljes képességfához.','Click here or press K for the full skill tree.'),{c:'#6a5a40',sz:7});
+ for(let i=0;i<4;i++){jnGap(L,3);jnText(L,SKTN[i][jh()?1:0],{b:1,c:SKTC[i]=='#ffd84a'?'#8a6a10':'#3a2a18',sz:9});for(const n of SKT)if(n[1]==i)jnText(L,(SK[n[0]]?'✓ ':skAvail(n)?'○ ':'· ')+(jh()?n[8]:n[5]),{c:SK[n[0]]?'#4a7a3a':skAvail(n)?'#8a5a10':'#8a7a5a',in:4,sz:7})}}catch(e){jnText(L,'—')}return jnFlow(L)}
+function jnMap(){const L=[{page:1,h:JPH,draw:jnDrawMap}],R=[];jnHead(R,JB('Térkép','Map'),'#1a5a5a');jnText(R,JB('Kattints a térképre, vagy nyomd meg az M-et a nagy térképhez.','Click the map or press M for the big map.'),{c:'#6a5a40',sz:7});jnGap(R);
+ jnText(R,JB('Helyzeted: ','Position: ')+Math.floor(P.x/T)+', '+Math.floor(P.y/T),{});try{if(home)jnText(R,JB('Otthon: ','Home: ')+Math.floor(home.x/T)+', '+Math.floor(home.y/T),{})}catch(e){}
+ jnGap(R);jnText(R,JB('Jelmagyarázat','Legend'),{b:1});jnText(R,JB('● sárga: te   ● kék: társak   ⌂ otthon   ✕ halál helye','● yellow: you   ● blue: friends   ⌂ home   ✕ where you died'),{in:4,sz:7});
+ if(JNDO.length){jnGap(R);jnText(R,JB('Felfedezett helyek','Places found'),{b:1});for(const k of JNDO)jnText(R,'◆ '+(jh()?JND[k].th:JND[k].te),{in:4,sz:7})}
+ return[...jnFlow(L),...jnFlow(R)]}
+function jnDrawMap(x,y,w,h){if(inD){jnTextAt(JB('Itt lent nincs térkép.','No map down here.'),x+w/2,y+h/2,'#6a5a40','center');return}
+ try{if(!mapC||performance.now()-(mapAt||0)>5000)mkMap()}catch(e){}if(!mapC)return;const s=Math.min(w,h);Q(x-2,y-2,s+4,s+4,'#6a4a2a');g.imageSmoothingEnabled=false;g.globalAlpha=.92;g.drawImage(mapC,x,y,s,s);g.globalAlpha=1;g.imageSmoothingEnabled=true;
+ g.fillStyle='rgba(120,90,40,.18)';g.fillRect(x,y,s,s);try{for(const m of mapMarks()){const X=x+m.x/T*s/W,Y=y+m.y/T*s/H;markIcon(m,Math.round(X),Math.round(Y),performance.now(),1)}}catch(e){}
+ const px=x+P.x/T*s/W,py=y+P.y/T*s/H;Q(px-2,py-2,5,5,'#2a1a10');Q(px-1,py-1,3,3,'#ffd84a');for(const k of JNDO){}}
+function jnTextAt(s,x,y,c,al){g.font=fnt(0,8);g.textAlign=al||'left';g.fillStyle=c;g.fillText(s,x,y);g.textAlign='left'}
+const JNB=[jnQuests,jnTalks,jnDiscs,jnGuide,jnSkills,jnMap];
+/* ---- drawing the book ---- */
+const JBX=22,JBY=24,JBW=436,JBH=264,JLX=36,JRX=250,JTY=40;
+function jnOpen(ch){JN={ch:ch!=null?ch:JNCH,pg:0,t0:performance.now(),cache:null};invOpen=false;book=false;held=null;try{snd('ui')}catch(e){}}
+function jnClose(){if(JN)JNCH=JN.ch;JN=null;try{snd('ui')}catch(e){}}
+function jnPages(){if(!JN.cache||performance.now()-JN.ct>500){JN.cache=JNB[JN.ch]();JN.ct=performance.now()}return JN.cache}
+function jnDraw(){if(!JN)return;const now=performance.now(),pages=jnPages(),spreads=Math.max(1,Math.ceil(pages.length/2));if(JN.pg>=spreads)JN.pg=spreads-1;noTr=true;
+ Q(0,0,VW,VH,'rgba(0,0,0,.62)');
+ /* bookmarks */
+ JNC.forEach((c,i)=>{const w=68,x=JBX+12+i*(w+2),on=JN.ch==i,y=on?JBY-17:JBY-14,hov=ms.x>=x&&ms.x<x+w&&ms.y>=JBY-17&&ms.y<JBY;Q(x,y,w,JBY-y+4,on?c[2]:hov?shade(c[2],.9):shade(c[2],.7));Q(x,y,w,1,'rgba(255,255,255,.25)');g.font=fnt(on?1:0,7);g.textAlign='center';g.fillStyle=on?'#fff6e0':'#e8d8c0';g.fillText((i+1)+' '+c[jh()?0:1],x+w/2,y+10);g.textAlign='left'});
+ /* cover and pages, like an old leather notebook */
+ Q(JBX-2,JBY+2,JBW+4,JBH+2,'#2a140a');Q(JBX,JBY,JBW,JBH,'#8a4a24');Q(JBX,JBY,JBW,2,'#a85e30');Q(JBX+4,JBY+JBH-8,JBW-8,5,'#5a2e14');
+ for(const[x0,dir]of[[JBX+8,1],[JBX+JBW/2+2,-1]]){const w=JBW/2-10;Q(x0,JBY+5,w,JBH-14,'#c8a878');Q(x0,JBY+4,w,JBH-16,'#f6ead0');for(let k=0;k<3;k++)Q(x0,JBY+JBH-12+k,w,1,k%2?'#d8c498':'#e8d8b0');
+  const ex=dir>0?x0+w-14:x0;for(let k=0;k<14;k++){g.fillStyle='rgba(120,80,30,'+(.012*(dir>0?k:14-k)).toFixed(3)+')';g.fillRect(ex+k,JBY+4,1,JBH-16)}}
+ Q(JBX+JBW/2-2,JBY+2,4,JBH-6,'#3a1a0c');Q(JBX+JBW/2-1,JBY+2,2,JBH-6,'#5a2e14');
+ /* the two pages of this spread */
+ const pL=pages[JN.pg*2],pR=pages[JN.pg*2+1];jnDrawPage(pL,JLX,JTY);jnDrawPage(pR,JRX,JTY);
+ g.font=fnt(0,7);g.fillStyle='#8a7a5a';g.textAlign='center';g.fillText(String(JN.pg*2+1),JLX+JPW/2,JBY+JBH-15);if(pR)g.fillText(String(JN.pg*2+2),JRX+JPW/2,JBY+JBH-15);
+ /* page corners to turn */
+ const hasP=JN.pg>0,hasN=JN.pg<spreads-1,cl=ms.x<JBX+40&&ms.y>JBY+JBH-40&&ms.y<JBY+JBH,cr=ms.x>JBX+JBW-40&&ms.y>JBY+JBH-40&&ms.y<JBY+JBH;
+ if(hasP){Q(JBX+8,JBY+JBH-24,12,12,cl?'#d8b070':'#e8d4a8');g.fillStyle='#5a3a18';g.fillText('◀',JBX+14,JBY+JBH-15)}if(hasN){Q(JBX+JBW-20,JBY+JBH-24,12,12,cr?'#d8b070':'#e8d4a8');g.fillStyle='#5a3a18';g.fillText('▶',JBX+JBW-14,JBY+JBH-15)}
+ g.fillStyle='#d8c8a8';g.fillText(JB('Tab / Esc: bezár   ←/→ vagy A/D: lapozás   1-6: fejezet','Tab / Esc: close   ←/→ or A/D: turn pages   1-6: chapter'),VW/2,VH-3);g.textAlign='left';noTr=false}
+function jnDrawPage(p,x,y){if(!p)return;let yy=y;for(const it of p){if(it.draw){it.draw(x,y,JPW,JPH);yy+=it.h;continue}if(it.gap){yy+=it.h;continue}
+ g.font=it.f;g.textAlign='left';g.fillStyle=it.c;g.fillText(it.t,x+(it.in||0),yy+it.h-3);if(it.line){Q(x,yy+it.h-1,JPW,1,'rgba(120,60,30,.35)')}yy+=it.h}}
+/* ---- input ---- */
+addEventListener('keydown',e=>{if(state!='play')return;const c=e.code;
+ if(!JN){if(c=='Tab'&&!e.repeat&&!(typeof chatOpen!='undefined'&&chatOpen)&&!tut&&!(typeof ZDLG!='undefined'&&ZDLG)){e.preventDefault();e.stopImmediatePropagation();if(TALK)return;jnOpen();}return}
+ e.preventDefault();e.stopImmediatePropagation();if(e.repeat&&c!='ArrowLeft'&&c!='ArrowRight')return;
+ if(c=='Tab'||c=='Escape'){jnClose();return}const sp=Math.max(1,Math.ceil(jnPages().length/2));
+ if(c=='ArrowRight'||c=='KeyD'){if(JN.pg<sp-1){JN.pg++;jnFlip()}else if(JN.ch<JNC.length-1){JN.ch++;JN.pg=0;JN.cache=null;jnFlip()}return}
+ if(c=='ArrowLeft'||c=='KeyA'){if(JN.pg>0){JN.pg--;jnFlip()}else if(JN.ch>0){JN.ch--;JN.cache=null;JN.pg=99;jnFlip()}return}
+ if(/^Digit[1-6]$/.test(c)){JN.ch=+c.slice(5)-1;JN.pg=0;JN.cache=null;jnFlip();return}if(c=='KeyK'){jnClose();skOpen=true;return}if(c=='KeyM'){jnClose();showMap=true;try{mkMap()}catch(e){}return}},true);
+function jnFlip(){try{sfx(()=>{sxN(.12,'highpass',2400,800,.7,.18)})}catch(e){try{snd('ui')}catch(_){}}}
+C.addEventListener('mousedown',e=>{if(!JN||state!='play')return;try{sc(e)}catch(_){}e.stopImmediatePropagation();e.preventDefault();
+ for(let i=0;i<JNC.length;i++){const w=68,x=JBX+12+i*(w+2);if(ms.x>=x&&ms.x<x+w&&ms.y>=JBY-17&&ms.y<JBY+2){JN.ch=i;JN.pg=0;JN.cache=null;jnFlip();return}}
+ const sp=Math.max(1,Math.ceil(jnPages().length/2));if(ms.x<JBX+40&&ms.y>JBY+JBH-40&&ms.y<JBY+JBH&&JN.pg>0){JN.pg--;jnFlip();return}if(ms.x>JBX+JBW-40&&ms.y>JBY+JBH-40&&ms.y<JBY+JBH&&JN.pg<sp-1){JN.pg++;jnFlip();return}
+ if(ms.x<JBX-4||ms.x>JBX+JBW+4||ms.y<JBY-20||ms.y>JBY+JBH+4){jnClose();return}
+ if(JN.ch==4){jnClose();skOpen=true;return}if(JN.ch==5&&JN.pg==0&&ms.x<JBX+JBW/2){jnClose();showMap=true;try{mkMap()}catch(_){}return}},true);
+C.addEventListener('wheel',e=>{if(!JN)return;e.preventDefault();e.stopImmediatePropagation();const sp=Math.max(1,Math.ceil(jnPages().length/2));if(e.deltaY>0&&JN.pg<sp-1){JN.pg++;jnFlip()}else if(e.deltaY<0&&JN.pg>0){JN.pg--;jnFlip()}},{capture:true,passive:false});
+{const up131=update;update=function(dt){if(JN){K.KeyW=K.KeyA=K.KeyS=K.KeyD=K.ArrowUp=K.ArrowDown=K.ArrowLeft=K.ArrowRight=false;mdown=false;edge=false}const r=up131(dt);try{if(state=='play')jnDiscTick(dt);else if(JN)JN=null}catch(e){}return r}}
+{const dw131=draw;draw=function(){const r=dw131.apply(this,arguments);try{if(state=='play'&&JN)jnDraw()}catch(e){noTr=false;console.error(e)}return r}}
+/* ---- the challenges panel fades after a while; the journal keeps them ---- */
+let JNCS='',JNCU=0;
+function jnChalShow(){try{const s=DQ112.L.map(q=>dqProg112(q)+(q.done?'d':'')).join(',');const now=performance.now();if(s!==JNCS){JNCS=s;JNCU=now+9000}return now<JNCU}catch(e){return true}}
+/* ---- clicking outside the inventory closes it ---- */
+{const ic131=invClick;invClick=function(btn){if(ms.x<58||ms.x>422||ms.y<6||ms.y>288){invOpen=false;held=null;try{snd('ui')}catch(e){}return}return ic131(btn)}}
+/* ---- drink and pick berries whatever you hold ---- */
+{const ac131=act;act=function(){try{if(edge&&P.cd<=0&&!inD&&mtx>=0&&mty>=0&&mtx<W&&mty<H){const it=HB[hb],i=mty*W+mtx,d=Math.hypot(mtx*T+8-P.x,mty*T+8-P.y),o=ob[i];
+  if(o&&(o.t=='bush'||o.t=='flax')&&o.b&&d<=46&&it!='hand'){o.b=0;o.r=60;if(o.t=='bush'){inv.berry=(inv.berry|0)+2;say(JB('+2 bogyó','+2 berries'))}else{inv.fiber=(inv.fiber|0)+2;say(JB('+2 rost','+2 fiber'))}P.cd=.3;try{snd('pick')}catch(e){}hit(mtx*T+8,mty*T+8,o.t=='bush'?'#b32030':'#c8b878');return}
+  if(!o&&(map[i]==1||map[i]==7)&&d<=46&&it!='hand'&&it!='rod'&&!PL[it]){P.th=Math.min(100,(P.th||0)+22);P.cd=.35;try{snd('drink')}catch(e){snd('ui')}hit(mtx*T+8,mty*T+8,'#8ac8f0');say(JB('Ittál a vízből','You drink the water'));return}}}catch(e){console.error(e)}return ac131()}}
+/* ---- saved with the game ---- */
+{const sv131=save;save=function(){const r=sv131.apply(this,arguments);try{localStorage.setItem(SKEY()+'_jn',JSON.stringify({t:JNT,d:JND,o:JNDO}))}catch(e){}return r}}
+{const ld131=load;load=function(){const r=ld131.apply(this,arguments);try{const j=JSON.parse(localStorage.getItem(SKEY()+'_jn')||'null');JNT=j&&j.t||[];JND=j&&j.d||{};JNDO=j&&j.o||[]}catch(e){JNT=[];JND={};JNDO=[]}JN=null;return r}}
+{const in131=init;init=function(...a){const r=in131.apply(this,a);JNT=[];JND={};JNDO=[];JN=null;JNCS='';JNCU=performance.now()+12000;return r}}
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
