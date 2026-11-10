@@ -1588,7 +1588,7 @@ function gqChunk(cx,cy){let st=GQC.get(map);if(!st){st=new Map();GQC.set(map,st)
  const cg=c.cv.getContext('2d'),sg=g,sc=cam;cg.setTransform(1,0,0,1,0,0);cg.clearRect(0,0,GQS*T,GQS*T);g=cg;cam={x:x0*T,y:y0*T};
  try{for(let y=0,k=0;y<GQS;y++)for(let x=0;x<GQS;x++,k++){const tx=x0+x,ty=y0+y;c.sn[k]=map[ty*W+tx];if(!GQA.has(map[ty*W+tx]))gTile(tx,ty,0)}}finally{g=sg;cam=sc}
  c.ctx=gqKey();return c}
-const gqKey=()=>(inC?1:0)+(inD?2:0)+(curRx?4*curRx:0)+(curSub?64:0)+(CLASSIC?128:0);
+const gqKey=()=>(inC?1:0)+(inD?2:0)+(curRx?4*curRx:0)+(curSub?64:0)+(CLASSIC?128:0)+(typeof seaWinter=='function'&&seaWinter()?256:0);
 function groundDraw(x0,y0,now){
  if(x0<0||y0<0||x0+32>W||y0+20>H)Q(0,0,VW/ZM+2,VH/ZM+2,'#0d1a22');
  for(let cy=Math.max(0,Math.floor(y0/GQS));cy<=Math.min(H/GQS-1,Math.floor((y0+19)/GQS));cy++)for(let cx=Math.max(0,Math.floor(x0/GQS));cx<=Math.min(W/GQS-1,Math.floor((x0+31)/GQS));cx++){const c=gqChunk(cx,cy);g.drawImage(c.cv,Math.round(cx*GQS*T-cam.x),Math.round(cy*GQS*T-cam.y))}
@@ -8709,7 +8709,7 @@ function setlDawn(){const R_=setlRes();if(!R_.length||!setlFlag())return;const m
   else if(j=='gyujt'){add('berry',3*mul*m);add('fiber',2*mul*m);if(Math.random()<.3)add('cloth',1)}
   else if(j=='vad'){add('meat',2*mul*m);if(Math.random()<.35)add('leather',1)}
   else if(j=='kert'){let h=0;for(let y=F.ty-10;y<=F.ty+10;y++)for(let x=F.tx-10;x<=F.tx+10;x++){const o=O[y*W+x];if(!o)continue;const c=o.t=='crop'?o:o.t=='gbed'?o.c:null;if(c&&!c.dead&&cropStage(c)==3){const C=CROPS[c.k]||CROPS.wheat;add(c.k,C.y);add('sd_'+c.k,1);if(o.t=='gbed')o.c={k:c.k,pt:gtime()};else{o.pt=gtime()}h++}}
-   if(!h){const ks=['carrot','potato','wheat','tomato','corn'];add(ks[Math.floor(Math.random()*ks.length)],2*mul*m);if(Math.random()<.3)add('sd_'+ks[Math.floor(Math.random()*ks.length)],1)}}
+   if(!h){const ks=['carrot','potato','wheat','tomato','corn'];add(ks[Math.floor(Math.random()*ks.length)],2*mul*m*(typeof seasonIdx=='function'&&seasonIdx()==3?.5:1));if(Math.random()<.3)add('sd_'+ks[Math.floor(Math.random()*ks.length)],1)}}
   else if(j=='szak'){let c=0;while(c<2&&(SETL.st.carrot|0)>0&&(SETL.st.potato|0)>0){SETL.st.carrot--;SETL.st.potato--;add('soup',1);c++}if(!c&&(SETL.st.wheat|0)>=3){SETL.st.wheat-=3;add('bread',1)}}}
  /* everybody eats */
  let need=R_.length,ate=0;for(const k of SEDIBLE){while(need>0&&(SETL.st[k]|0)>0){SETL.st[k]--;need-=SFOODV[k]||1;ate++}if(need<=0)break}const fed=need<=0;
@@ -8773,6 +8773,163 @@ addEventListener('mouseup',e=>{if(SETLUI)e.stopImmediatePropagation()},true);
 {const in149=init;init=function(...a){SETL={f:-1,st:{},lv:0,last:-1,wt:2,nw:0,rep:null};SETLUI=null;return in149.apply(this,a)}}
 try{TUT.hu.push(['Saját tábor','Tűzz le egy táborzászlót (4 vászon + 3 fa), és E-vel vedd birtokba — ez a táborod közepe.','Vándorok tűnnek fel: vigyél nekik ennivalót, és csatlakoznak. A táborok lakói is jönnek, ha barátok vagytok.','Adj mindenkinek munkát (favágó, kőfejtő, gyűjtögető, kertész, vadász, szakács, őr). Reggelente a közös készletbe kerül, amit termeltek.','Minden lakó napi egy adag élelmet eszik a készletből — éhesen rossz a hangulat, és elmennek.','Ágy +1, sátor vagy ház +2 fekhely. 3 lakótól Település, 6-tól Falu — egyre több termés.']);
  TUT.en.push(['Your own camp','Plant a camp flag (4 cloth + 3 wood) and claim it with E — it is the heart of your camp.','Wanderers turn up: bring them food and they join. People from the camps come too once you are friends.','Give everyone work (woodcutter, quarrier, gatherer, gardener, hunter, cook, guard). Each morning their work lands in the camp stock.','Every resident eats one portion a day from the stock — hungry people get gloomy and leave.','Bed +1, tent or house +2 places. 3 people make a Settlement, 6 a Village — better yields.'])}catch(e){}
+
+/* ===== v150: seasons and a world that gets harder — spring, summer, autumn and winter turn every 7 days (winter: crops barely grow, the cold bites at night everywhere); the threat level rises week by week and hordes come for you and your camp ===== */
+GAMEV=150;
+const SEAN=[['Tavasz','Spring','#8ad070'],['Nyár','Summer','#f0d050'],['Ősz','Autumn','#e8904a'],['Tél','Winter','#bcdcf0']];
+let SEA={last:-1,lg:null,ct:0,msg:0,snow:[]},HRD={d:-1,warn:0,sp:0,died:0,won:-1};
+function seaOn(){return!(typeof STORY!='undefined'&&STORY)&&!(typeof ZS!='undefined'&&ZS)&&!creative}
+function seasonIdx(){return seaOn()?Math.floor(((Math.max(1,day)-1)%28)/7):0}
+function seasonDay(){return((Math.max(1,day)-1)%7)+1}
+function threatLv(){return seaOn()?Math.min(6,1+Math.floor((Math.max(1,day)-1)/7)):1}
+const sbH=(a,b)=>LANG=='hu'?a:b;
+/* ---------- the season changes ---------- */
+function seaDayTick(){if(day===SEA.last)return;const first=SEA.last<0;SEA.last=day;if(first||!seaOn())return;if(seasonDay()!==1)return;const s=seasonIdx();
+ const tips=[[sbH('Olvad a hó, minden újra nő.','The snow melts, everything grows again.')],[sbH('Hosszú, meleg napok — a termés gyorsabban érik.','Long warm days — crops ripen faster.')],[sbH('Takarítsd be a termést: ősszel bővebb, télen alig nő valami.','Bring in the harvest: autumn yields more, in winter almost nothing grows.')],[sbH('Fagy éjjel mindenhol — öltözz melegen, maradj tűz közelében. A szabadban a vetés alig nő; házban, magaságyásban igen.','Frost at night everywhere — dress warm, stay near a fire. Outdoor crops barely grow; in a house, in garden beds they do.')]][s][0];
+ try{toast112(sbH('Beköszöntött: ','Here comes ')+SEAN[s][LANG=='hu'?0:1].toLowerCase(),tips,SEAN[s][2])}catch(e){}
+ if(seasonIdx()==0&&day>7)try{toast112(sbH('Erősebb a világ','The world grows harsher'),sbH('Fenyegetés: ','Threat: ')+threatLv()+sbH(' — erősebb fertőzöttek, nagyobb hordák',' — tougher infected, bigger hordes'),'#e86a4a')}catch(e){}}
+/* crops: winter slows them (except indoors), summer speeds them */
+function seaCropTick(){const g_=gtime();if(SEA.lg==null){SEA.lg=g_;return}const dg=g_-SEA.lg;SEA.lg=g_;if(dg<=0||dg>1||!seaOn())return;const s=seasonIdx();if(s!=1&&s!=3)return;const O=inD&&OW?OW.ob:ob;
+ for(let i=0;i<O.length;i++){const o=O[i];if(!o)continue;const c=o.t=='crop'?o:o.t=='gbed'?o.c:null;if(!c||c.dead||c.pt==null)continue;
+  if(s==3){if(o.t=='gbed')continue;const tx=i%W,ty=(i/W)|0;let inside=false;try{inside=inOwnHouse(tx,ty)}catch(e){}if(!inside&&!(bm&&bm[i]==2))c.pt+=dg*.75}else c.pt-=dg*.25}}
+{const hv150=harvest;harvest=function(o,bed,i){const c=bed?o&&o.c:o,k=c&&c.k,ok=c&&!c.dead;const r=hv150.apply(this,arguments);try{if(ok&&k&&seasonIdx()==2){inv[k]=(inv[k]||0)+1}}catch(e){}return r}}
+/* winter cold everywhere at night (the snowy north is cold anyway) */
+function seaColdTick(dt){if(!seaOn()||seasonIdx()!=3||inD||P.hp<=0||P.boat)return;const b=bm?bm[Math.floor(P.y/T)*W+Math.floor(P.x/T)]|0:0;if(b==1||b==2)return;if(dk0()<.5)return;if(typeof COLD!='undefined'&&COLD.warm)return;
+ const m=typeof coldMul=='function'?coldMul():1;if(m<=.25)return;P.hp-=dt*.9*m;SEA.msg-=dt;if(SEA.msg<=0){SEA.msg=10;say(sbH('Fagyos téli éjszaka! Öltözz melegen vagy menj tűz mellé','A freezing winter night! Dress warm or get to a fire'))}}
+/* ---------- the threat grows: tougher infected ---------- */
+function thrTick(){const L=threatLv();if(L<=1)return;for(const z of zs){if(z.th150)continue;z.th150=1;if(z.mu||z.boss||z.w)continue;z.hp=Math.round(z.hp*(1+.15*(L-1)))}}
+/* ---------- hordes ---------- */
+function hordeDay(d){return seaOn()&&d>=4&&d%3==1&&d%5!=0}
+function hordeTarget(){try{const F=typeof setlFlag=='function'?setlFlag():null;if(F&&Math.hypot(F.x-P.x,F.y-P.y)<30*T)return{x:F.x,y:F.y,camp:1}}catch(e){}return{x:P.x,y:P.y,camp:0}}
+function hordeTick(){if(!seaOn()||inD||PEACE()||(net&&!net.isHost&&!net.dead))return;const dk=dk0();
+ if(HRD.d!==day&&hordeDay(day)){HRD={d:day,warn:0,sp:0,died:0,won:HRD.won,dir:Math.random()*6.283}}
+ if(HRD.d!==day)return;if(P.hp<=0)HRD.died=1;
+ if(!HRD.warn&&dk>.2){HRD.warn=1;const dirs=LANG=='hu'?['keletről','délkeletről','délről','délnyugatról','nyugatról','északnyugatról','északról','északkeletről']:['the east','the south-east','the south','the south-west','the west','the north-west','the north','the north-east'],d=dirs[(Math.round(HRD.dir/(Math.PI/4))+8)%8],tg=hordeTarget();
+  try{toast112(sbH('Horda közeledik!','A horde is coming!'),sbH('Ma éjjel jönnek, ','They come tonight from ')+d+(tg.camp?sbH(' — a táborod felé',' — towards your camp'):'')+sbH('. Erősíts, készíts fegyvert!','. Fortify, arm yourself!'),'#e8504a')}catch(e){}try{sfx(()=>{sxT('sine',110,104,1.2,.25);sxT('sine',82,80,2,.12,.8)})}catch(e){}}
+ if(!HRD.sp&&dk>.62){HRD.sp=1;const tg=hordeTarget(),L=threatLv(),n=4+2*L+(seasonIdx()==3?2:0);let made=0;
+  for(let k=0;k<n*4&&made<n;k++){const a=HRD.dir+(Math.random()-.5)*.7,r=17+Math.random()*5,x=tg.x+Math.cos(a)*r*T,y=tg.y+Math.sin(a)*r*T;if(x<3*T||y<3*T||x>(W-3)*T||y>(H-3)*T||blocked(x,y,5))continue;const v=pickV(x,y);zs.push({id:nid(),x,y,hp:Math.round(VHP[v]*(1+.15*(L-1))),a:0,t:0,vx:0,vy:0,z:1,v,al:40,hd150:1,th150:1});made++}
+  if(L>=3&&made){const a=HRD.dir,x=tg.x+Math.cos(a)*20*T,y=tg.y+Math.sin(a)*20*T;try{if(!blocked(x,y,6))zs.push(Object.assign(mkMut('c',x,y),{al:40,hd150:1,th150:1}))}catch(e){}}
+  say(sbH('Itt vannak! A horda megérkezett!','They\'re here! The horde has arrived!'))}}
+function hordeMorning(){if(HRD.d===day-1&&HRD.sp&&HRD.won!==HRD.d){HRD.won=HRD.d;if(!HRD.died){try{gainXp(60+day*3)}catch(e){}try{toast112(sbH('Visszavertétek a hordát!','You held off the horde!'),sbH('Túlélted az éjszakát — ','You survived the night — ')+'+'+(60+day*3)+' XP','#ffd84a');fanfare112()}catch(e){}}}}
+/* ---------- tick ---------- */
+{const up150=update;update=function(dt){const r=up150.apply(this,arguments);try{if(state=='play'){const d0=SEA.last;seaDayTick();if(d0!==day&&d0>=0)hordeMorning();SEA.ct-=dt||0;if(SEA.ct<=0){SEA.ct=1;seaCropTick()}seaColdTick(dt||1/60);thrTick();hordeTick()}}catch(e){}return r}}
+/* ---------- looks: a white winter, a golden autumn, falling snow ---------- */
+function seaWinter(){return seaOn()&&seasonIdx()==3&&!inD}
+{const gt150=gTile;gTile=function(tx,ty,now){const r=gt150(tx,ty,now);try{if(seaWinter()){const i=ty*W+tx,m=map[i],b=bm?bm[i]|0:0;if((m==0||m==2||m==4)&&b!=1&&b!=2){const px=tx*T,py=ty*T,cov=m==0?.84:m==4?.6:.5;for(let cy=0;cy<4;cy++)for(let cx=0;cx<4;cx++){const h=(hs(tx*4+cx+.37,ty*4+cy+.71)*.6+hs(Math.floor((tx*4+cx)/3)+.2,Math.floor((ty*4+cy)/3)+.9)*.4);if(h<cov){const v=hs(tx*4+cx+5.1,ty*4+cy+2.3);W_(px+cx*4,py+cy*4,4,4,v<.6?'#eef3f7':'#e2eaf1');if(v>.8)W_(px+cx*4+1,py+cy*4+3,2,1,'#cfdbe6')}}}}}catch(e){}return r}}
+{const tk150=treeKind;treeKind=function(bb,h,tx,ty){const k=tk150(bb,h,tx,ty);try{if(seaWinter()&&bb!=1&&bb!=2&&k!='palm')return k=='pine'?'spine':'sround'}catch(e){}return k}}
+function seaDraw(){if(!seaOn()||inD)return;const s=seasonIdx(),now=performance.now();
+ if(s==3){const b=bm?bm[Math.floor(P.y/T)*W+Math.floor(P.x/T)]|0:0;if(b==2)return;g.fillStyle='rgba(200,220,240,.07)';g.fillRect(0,0,VW,VH);
+  if(SEA.snow.length<70)SEA.snow.push({x:Math.random()*VW,y:-4,v:12+Math.random()*16,p:Math.random()*6});const dt=Math.min(.05,(now-(SEA.st||now))/1000);SEA.st=now;
+  for(let i=SEA.snow.length-1;i>=0;i--){const f=SEA.snow[i];f.y+=f.v*dt;f.x+=Math.sin(now/900+f.p)*.3;if(f.y>VH+4){f.y=-4;f.x=Math.random()*VW}Q(f.x,f.y,f.v>22?2:1,f.v>22?2:1,'rgba(255,255,255,.85)')}}
+ else if(s==2){g.fillStyle='rgba(214,126,48,.07)';g.fillRect(0,0,VW,VH)}
+ else if(s==1){g.fillStyle='rgba(255,226,140,.04)';g.fillRect(0,0,VW,VH)}}
+{const dr150=drawRoofs;drawRoofs=function(){const r=dr150.apply(this,arguments);try{seaDraw()}catch(e){}return r}}
+/* the season and threat under the clock */
+function seaHud(){if(!seaOn()||inD||invOpen||book||skOpen||showMap||(typeof JN!='undefined'&&JN)||(typeof TPV!='undefined'&&TPV)||(typeof SETLUI!='undefined'&&SETLUI)||tut)return;const s=seasonIdx(),L=threatLv(),h=LANG=='hu';noTr=true;g.font=fnt(0,7);
+ const t1=SEAN[s][h?0:1]+' '+seasonDay()+'/7';txt(t1,6,56,SEAN[s][2]);const w=Math.ceil(g.measureText(t1).width);txt((h?'  · veszély ':'  · threat ')+L,6+w,56,L>=4?'#ff7a5a':L>=2?'#e8b070':'#a8a090');
+ if(HRD.d===day&&HRD.warn&&!HRD.sp){const a=.5+.5*Math.sin(performance.now()/250);g.globalAlpha=.6+.4*a;txt(h?'⚠ horda ma éjjel':'⚠ horde tonight',6,65,'#ff6a5a');g.globalAlpha=1}noTr=false}
+{const dw150=draw;draw=function(){const r=dw150.apply(this,arguments);try{if(state=='play')seaHud()}catch(e){noTr=false}return r}}
+{const sv150=save;save=function(){const r=sv150.apply(this,arguments);try{localStorage.setItem(SKEY()+'_sea',JSON.stringify({h:HRD}))}catch(e){}return r}}
+{const ld150=load;load=function(){const r=ld150.apply(this,arguments);SEA={last:-1,lg:null,ct:0,msg:0,snow:[]};try{const d=JSON.parse(localStorage.getItem(SKEY()+'_sea')||'null');HRD=d&&d.h?d.h:{d:-1,warn:0,sp:0,died:0,won:-1}}catch(e){HRD={d:-1,warn:0,sp:0,died:0,won:-1}}return r}}
+{const in150=init;init=function(...a){SEA={last:-1,lg:null,ct:0,msg:0,snow:[]};HRD={d:-1,warn:0,sp:0,died:0,won:-1};return in150.apply(this,a)}}
+try{TUT.hu.push(['Évszakok és veszély','Hétnaponta vált az évszak: tavasz, nyár (gyorsabb termés), ősz (bővebb aratás), tél.','Télen a szabadban alig nő a vetés (házban, magaságyásban igen), és éjjel mindenhol fagy — téli kabát, usanka, tűz.','Hétről hétre nő a veszély: erősebb fertőzöttek, nagyobb hordák. Horda előtt figyelmeztetést kapsz — a táborod őrei segítenek.']);
+ TUT.en.push(['Seasons and danger','The season turns every 7 days: spring, summer (faster crops), autumn (bigger harvests), winter.','In winter outdoor crops barely grow (indoors and in garden beds they do), and it freezes everywhere at night — winter coat, fur hat, fire.','The danger rises week by week: tougher infected, bigger hordes. You get a warning before a horde — your camp guards help.'])}catch(e){}
+
+/* ===== v151: release polish — a guided first ten minutes, gamepad support, photo mode (F2), a gentler Easy, winter wind, and the game keeps running (and keeps a backup save) if something goes wrong ===== */
+GAMEV=151;
+const gH=(a,b)=>LANG=='hu'?a:b;
+/* ---------- guided start ---------- */
+let GSX=null;
+const GSS=[
+ {t:['Gyűjts fát','Gather wood'],d:['Kattints egy fára, amíg 5 fád nem lesz.','Click a tree until you have 5 wood.'],ok:()=>(inv.wood|0)>=5,aim:'tree'},
+ {t:['Rakj tüzet','Make a fire'],d:['C: barkácsolás → tábortűz. Tedd le Q-val, gyújtsd meg E-vel.','C: crafting → campfire. Place it with Q, light it with E.'],ok:()=>gsNear(o=>o.t=='fire',8)},
+ {t:['Igyál','Drink'],d:['Menj a vízhez, és kattints rá.','Walk to the water and click it.'],ok:()=>GSX.th>=6,aim:'water'},
+ {t:['Egyél','Eat'],d:['Szedj bogyót egy bokorról, aztán F: evés.','Pick berries from a bush, then F: eat.'],ok:()=>GSX.fd>=4,aim:'bush'},
+ {t:['Készíts szerszámot','Make a tool'],d:['C: barkácsolás → fa csákány vagy fa balta.','C: crafting → wooden pickaxe or wooden axe.'],ok:()=>Object.keys(inv).some(k=>/^(wood|stone|iron|steel)_(axe|pickaxe)$/.test(k)&&inv[k]>0)||HB.some(k=>/^(wood|stone|iron|steel)_(axe|pickaxe)$/.test(k||''))},
+ {t:['Éld túl az első éjszakát','Survive the first night'],d:['Éjjel előjönnek a fertőzöttek. Maradj a tűz közelében, építs falat (Tab: napló → útmutató).','The infected come out at night. Stay by the fire, build walls (Tab: journal → guide).'],ok:()=>day>=2}];
+function gsOn(){return GSX&&!GSX.done&&!creative&&!(typeof STORY!='undefined'&&STORY)&&!(typeof ZS!='undefined'&&ZS)}
+function gsNear(f,r){const tx=Math.floor(P.x/T),ty=Math.floor(P.y/T);for(let y=Math.max(0,ty-r);y<=Math.min(H-1,ty+r);y++)for(let x=Math.max(0,tx-r);x<=Math.min(W-1,tx+r);x++){const o=ob[y*W+x];if(o&&f(o))return true}return false}
+function gsFind(kind){const tx=Math.floor(P.x/T),ty=Math.floor(P.y/T);let best=null,bd=1e9;for(let r=1;r<34&&!best;r++)for(let y=ty-r;y<=ty+r;y++)for(let x=tx-r;x<=tx+r;x++){if(Math.max(Math.abs(x-tx),Math.abs(y-ty))!==r||x<0||y<0||x>=W||y>=H)continue;const i=y*W+x,o=ob[i];
+  const hit=kind=='tree'?o&&o.t=='tree':kind=='water'?map[i]==1:kind=='bush'?o&&o.t=='bush'&&o.b:false;if(hit){const d=Math.hypot(x-tx,y-ty);if(d<bd){bd=d;best=[x*T+8,y*T+8,d]}}}return best}
+function gsTick(dt){if(!gsOn()||inD||state!='play')return;if(GSX.lf==null){GSX.lf=P.food;GSX.lt=P.th}
+ if(P.th>GSX.lt)GSX.th+=P.th-GSX.lt;if(P.food>GSX.lf)GSX.fd+=P.food-GSX.lf;GSX.lt=P.th;GSX.lf=P.food;
+ GSX.at-=dt;if(GSX.at<=0){GSX.at=.6;const st=GSS[GSX.s];GSX.tg=st&&st.aim?gsFind(st.aim):null}
+ const st=GSS[GSX.s];if(st&&st.ok()){GSX.s++;GSX.th=0;GSX.fd=0;try{gainXp(15)}catch(e){}try{sfx(()=>{sxT('triangle',660,880,.08,.12);sxT('triangle',880,1100,.1,.1,.09)})}catch(e){}
+  if(GSX.s>=GSS.length){GSX.done=1;try{toast112(gH('Megvannak az alapok!','You know the basics!'),gH('Innen a világ a tiéd. Tab: napló — küldetések, útmutató, térkép.','The world is yours now. Tab: journal — quests, guide, map.'),'#ffd84a');fanfare112()}catch(e){}}}}
+function gsHud(){if(!gsOn()||inD||invOpen||book||skOpen||showMap||(typeof JN!='undefined'&&JN)||(typeof TPV!='undefined'&&TPV)||(typeof SETLUI!='undefined'&&SETLUI)||tut||(typeof PHOTO!='undefined'&&PHOTO))return;const st=GSS[GSX.s];if(!st)return;const h=LANG=='hu';noTr=true;
+ const x=6,y=74,w=168;g.font=fnt(0,7);const lines=[];{let cur='';for(const wd of st.d[h?0:1].split(' ')){const t=cur?cur+' '+wd:wd;if(g.measureText(t).width>w-22){lines.push(cur);cur=wd}else cur=t}if(cur)lines.push(cur)}
+ const hh=26+lines.length*9;Q(x,y,w,hh,'rgba(12,10,8,.62)');Q(x,y,2,hh,'#ffd84a');g.font=fnt(0,6.5);txt((h?'ELSŐ LÉPÉSEK  ':'FIRST STEPS  ')+(GSX.s+1)+'/'+GSS.length,x+6,y+9,'#ffd84a');
+ g.font=fnt(1,8);txt(st.t[h?0:1],x+6,y+20,'#fff2c8');g.font=fnt(0,7);lines.forEach((l,i)=>txt(l,x+6,y+30+i*9,'#d8d0bc'));
+ for(let i=0;i<GSS.length;i++)Q(x+w-8-(GSS.length-1-i)*6,y+4,4,4,i<GSX.s?'#ffd84a':i==GSX.s?'#c8a050':'rgba(255,255,255,.2)');
+ /* a little arrow from the player towards what you need */
+ if(GSX.tg&&GSX.tg[2]>3){const px=(P.x-cam.x)*ZM,py=(P.y-cam.y-8)*ZM,a=Math.atan2(GSX.tg[1]-P.y,GSX.tg[0]-P.x),r=30,ax=px+Math.cos(a)*r,ay=py+Math.sin(a)*r,p=.6+.4*Math.sin(performance.now()/220);
+  g.save();g.translate(ax,ay);g.rotate(a);g.globalAlpha=p;g.fillStyle='#ffd84a';g.beginPath();g.moveTo(7,0);g.lineTo(-4,-5);g.lineTo(-1,0);g.lineTo(-4,5);g.closePath();g.fill();g.restore();g.globalAlpha=1}
+ noTr=false}
+{const jc151=jnChalShow;jnChalShow=function(){if(gsOn())return false;return jc151()}}
+/* ---------- a gentler Easy (and Peaceful): slower hunger and thirst, softer cold, hordes later ---------- */
+function easyOn(){return typeof DIFF=='number'&&DIFF<=1}
+function easyTick(dt){if(!easyOn()||creative||inD||state!='play'||P.hp<=0)return;if(P.food<100)P.food=Math.min(100,P.food+dt*.35*.35*(1-sk('hung')));if(P.th!=null&&P.th<100)P.th=Math.min(100,P.th+dt*.5*.35*(1-sk('thir')))}
+{const hd151=hordeDay;hordeDay=function(d){if(easyOn()&&d<10)return false;return hd151(d)}}
+/* ---------- winter wind ---------- */
+function windTick(){try{if(!SXS||!SXS.ok||vol<=0||state!='play'){if(SXS&&SXS.amb&&SXS.amb.wind151)bedSet('wind151',0);return}bed('wind151','bandpass',420,.7);const b=bm?bm[Math.floor(P.y/T)*W+Math.floor(P.x/T)]|0:0,w=inD?0:(wea==2?.09:0)+((typeof seaWinter=='function'&&seaWinter())||b==1?.05:0);bedSet('wind151',w*(SXS.inF||1),300+Math.sin(performance.now()/3000)*120+(wea==2?200:0))}catch(e){}}
+/* ---------- photo mode (F2): no HUD, free camera, Enter saves a picture ---------- */
+var PHOTO=null;
+function photoToggle(){if(PHOTO){PHOTO=null;return}if(state!='play')return;PHOTO={ox:0,oy:0,t0:performance.now(),z:ZM};say('')}
+function photoSave(){try{const a=document.createElement('a');a.download='pixelcraft-'+day+'-'+Date.now()%100000+'.png';a.href=C.toDataURL('image/png');document.body.appendChild(a);a.click();a.remove();PHOTO.flash=performance.now()}catch(e){}}
+addEventListener('keydown',e=>{if(e.code=='F2'&&state=='play'){e.preventDefault();photoToggle();return}if(!PHOTO)return;if(e.code=='Escape'){PHOTO=null;e.preventDefault();e.stopImmediatePropagation();return}if(e.code=='Enter'){photoSave();e.preventDefault();e.stopImmediatePropagation();return}
+ if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)){PHOTO.k=PHOTO.k||{};PHOTO.k[e.code]=1;e.stopImmediatePropagation();e.preventDefault()}},true);
+addEventListener('keyup',e=>{if(PHOTO&&PHOTO.k)PHOTO.k[e.code]=0},true);
+{const up151=update;update=function(dt){if(PHOTO&&state=='play'){const s=180*(dt||1/60),k=PHOTO.k||{};if(k.ArrowLeft||k.KeyA)PHOTO.ox-=s;if(k.ArrowRight||k.KeyD)PHOTO.ox+=s;if(k.ArrowUp||k.KeyW)PHOTO.oy-=s;if(k.ArrowDown||k.KeyS)PHOTO.oy+=s;PHOTO.ox=Math.max(-400,Math.min(400,PHOTO.ox));PHOTO.oy=Math.max(-300,Math.min(300,PHOTO.oy));cam.x=cl(P.x-VW/(2*ZM)+PHOTO.ox,0,W*T-VW/ZM);cam.y=cl(P.y-VH/(2*ZM)+PHOTO.oy,0,H*T-VH/ZM);return}
+ const r=up151.apply(this,arguments);try{gsTick(dt||1/60);easyTick(dt||1/60);windTick()}catch(e){}return r}}
+/* everything drawn after the world (HUD, panels, toasts) is covered with a copy of the world itself */
+let PHC=null;
+{const dw151=draw;draw=function(){const r=dw151.apply(this,arguments);try{if(state=='play'){if(PHOTO)photoDraw();else gsHud()}}catch(e){noTr=false}return r}}
+{const hpb151=hpBars;hpBars=function(){if(PHOTO)return;return hpb151.apply(this,arguments)}}
+{const hp151=hud;hud=function(){if(PHOTO&&state=='play'){try{if(!PHC||PHC.width!=C.width||PHC.height!=C.height){PHC=document.createElement('canvas');PHC.width=C.width;PHC.height=C.height}const c=PHC.getContext('2d');c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,PHC.width,PHC.height);c.drawImage(C,0,0)}catch(e){}return}return hp151.apply(this,arguments)}}
+function photoDraw(){const h=LANG=='hu';g.save();g.setTransform(1,0,0,1,0,0);if(PHC)g.drawImage(PHC,0,0);g.restore();g.setTransform(RS,0,0,RS,0,0);
+ const age=performance.now()-PHOTO.t0;if(age<3500){g.globalAlpha=Math.min(1,(3500-age)/600);noTr=true;g.font=fnt(0,8);const s=h?'FOTÓ MÓD · WASD/nyilak: kamera · Enter: kép mentése · F2/Esc: vissza':'PHOTO MODE · WASD/arrows: camera · Enter: save picture · F2/Esc: back';const w=g.measureText(s).width+12;Q(VW/2-w/2,8,w,14,'rgba(0,0,0,.6)');txt(s,VW/2,18,'#fff','center');noTr=false;g.globalAlpha=1}
+ if(PHOTO.flash){const f=(performance.now()-PHOTO.flash)/400;if(f<1){g.fillStyle='rgba(255,255,255,'+(1-f)*.7+')';g.fillRect(0,0,VW,VH)}else PHOTO.flash=0}}
+/* ---------- gamepad ---------- */
+const GPAD={on:false,prev:{},cx:VW/2,cy:VH/2,last:0,keys:{},seen:0};
+function gpKey(code,down){if(!code)return;if(!!GPAD.keys[code]===down)return;GPAD.keys[code]=down;try{dispatchEvent(new KeyboardEvent(down?'keydown':'keyup',{code,key:code.replace(/^Key/,'').toLowerCase(),bubbles:true,cancelable:true}))}catch(e){}}
+function gpMouse(type,btn){try{const r=C.getBoundingClientRect(),cx=r.left+GPAD.cx/VW*r.width,cy=r.top+GPAD.cy/VH*r.height;const ev=new MouseEvent(type,{clientX:cx,clientY:cy,button:btn||0,buttons:type=='mouseup'?0:1<<(btn==2?1:0),bubbles:true,cancelable:true});C.dispatchEvent(ev)}catch(e){}}
+function gpTick(dt){let pads=[];try{pads=navigator.getGamepads?navigator.getGamepads():[]}catch(e){}const p=[...pads].find(q=>q&&q.connected);if(!p){if(GPAD.on){GPAD.on=false;for(const k in GPAD.keys)gpKey(k,false)}return}
+ const B=i=>!!(p.buttons[i]&&(p.buttons[i].pressed||p.buttons[i].value>.5)),ax=i=>{const v=p.axes[i]||0;return Math.abs(v)<.22?0:v},pr=GPAD.prev,edge=i=>B(i)&&!pr[i];
+ const any=p.buttons.some(b=>b&&b.pressed)||p.axes.some(v=>Math.abs(v)>.3);if(any){if(!GPAD.on){GPAD.on=true;try{toast112(gH('Kontroller csatlakoztatva','Controller connected'),gH('Bal kar: mozgás · Jobb kar: célzás · RT: használat · A: interakció · Start: menü','Left stick: move · Right stick: aim · RT: use · A: interact · Start: menu'),'#9ad0ff')}catch(e){}}GPAD.seen=performance.now()}
+ if(!GPAD.on)return;
+ /* left stick / d-pad: move (in menus and the book the d-pad pages) */
+ const lx=ax(0),ly=ax(1);gpKey(KB.left,lx<-.3||B(14));gpKey(KB.right,lx>.3||B(15));gpKey(KB.up,ly<-.3||(B(12)&&state=='play'&&!JN));gpKey(KB.down,ly>.3||(B(13)&&state=='play'&&!JN));gpKey(KB.run,B(10));
+ /* right stick: a cursor around the player */
+ const rx=ax(2),ry=ax(3);if(rx||ry){GPAD.cx=Math.max(4,Math.min(VW-4,GPAD.cx+rx*320*dt));GPAD.cy=Math.max(4,Math.min(VH-4,GPAD.cy+ry*320*dt));gpMouse('mousemove')}
+ else if(state=='play'&&!invOpen&&!JN&&!showMap&&!SETLUI&&!TPV&&!book&&!skOpen){const px=(P.x-cam.x)*ZM,py=(P.y-cam.y)*ZM,d=Math.hypot(GPAD.cx-px,GPAD.cy-py);if(d>90){GPAD.cx+=(px-GPAD.cx)*.08;GPAD.cy+=(py-GPAD.cy)*.08;gpMouse('mousemove')}}
+ /* triggers: RT = left click (use / attack), LT = right click */
+ if(B(7)&&!pr[7])gpMouse('mousedown',0);if(!B(7)&&pr[7]){gpMouse('mouseup',0);gpMouse('click',0)}
+ if(B(6)&&!pr[6]){gpMouse('mousedown',2);gpMouse('contextmenu',2)}if(!B(6)&&pr[6])gpMouse('mouseup',2);
+ /* buttons */
+ const tap=(i,code)=>{if(edge(i)){gpKey(code,true)}else if(!B(i)&&pr[i])gpKey(code,false)};
+ tap(0,KB.use);tap(1,'Escape');tap(2,KB.reload);tap(3,KB.inv);tap(8,KB.map);tap(9,'Escape');tap(11,KB.jump);
+ if(edge(12)&&(JN||state!='play'))gpKey('ArrowLeft',true);else if(!B(12)&&pr[12])gpKey('ArrowLeft',false);
+ if(edge(13))gpKey(KB.eat,true);else if(!B(13)&&pr[13])gpKey(KB.eat,false);
+ /* bumpers: hotbar; with the d-pad up the journal */
+ if(edge(4)||edge(5)){try{const n=HB.length||9;hb=(hb+(edge(5)?1:n-1))%n;snd('ui')}catch(e){}}
+ if(B(12)&&B(4)&&!(pr[12]&&pr[4]))gpKey(KB.journal||'Tab',true);
+ GPAD.prev={};p.buttons.forEach((b,i)=>GPAD.prev[i]=B(i))}
+function gpDraw(){if(!GPAD.on||performance.now()-GPAD.seen>8000)return;const x=Math.round(GPAD.cx),y=Math.round(GPAD.cy);Q(x-5,y,4,1,'#fff');Q(x+2,y,4,1,'#fff');Q(x,y-5,1,4,'#fff');Q(x,y+2,1,4,'#fff');Q(x,y,1,1,'#ffd84a')}
+{const dw151b=draw;draw=function(){const r=dw151b.apply(this,arguments);try{if(!PHOTO)gpDraw()}catch(e){}return r}}
+setInterval(()=>{try{gpTick(1/30)}catch(e){}},1000/30);
+/* ---------- safety: a crash in one part never freezes the whole game; keep a backup save ---------- */
+let ERR151={n:0,shown:0};
+function err151(where,e){ERR151.n++;try{console.error('[pixelcraft '+where+']',e);localStorage.setItem('pxc_lasterr',JSON.stringify({v:GAMEV,w:where,m:String(e&&e.stack||e).slice(0,600),t:Date.now()}))}catch(_){}if(!ERR151.shown){ERR151.shown=1;try{say(gH('Valami hiba történt, de a játék fut tovább. Ha furcsa, mentsd el és töltsd újra.','Something went wrong, but the game keeps running. If it acts up, save and reload.'))}catch(_){}}}
+{const u=update;update=function(){try{return u.apply(this,arguments)}catch(e){err151('update',e)}}}
+{const d=draw;draw=function(){try{return d.apply(this,arguments)}catch(e){err151('draw',e);try{g.setTransform(1,0,0,1,0,0);g.globalAlpha=1;noTr=false}catch(_){}}}}
+{const sv=save;save=function(){try{const k=SKEY(),old=localStorage.getItem(k),now=Date.now(),bt=+(localStorage.getItem(k+'_bakt')||0);if(old&&now-bt>4*60*1000){localStorage.setItem(k+'_bak',old);localStorage.setItem(k+'_bakt',String(now))}}catch(e){}return sv.apply(this,arguments)}}
+{const ld=load;load=function(){try{return ld.apply(this,arguments)}catch(e){err151('load',e);try{const k=SKEY(),b=localStorage.getItem(k+'_bak');if(b){localStorage.setItem(k,b);say(gH('A mentés sérült volt — betöltöttem a biztonsági másolatot.','The save was damaged — loaded the backup copy.'));return ld.apply(this,arguments)}}catch(e2){err151('load-bak',e2)}}}}
+/* guided start for new worlds only; old saves skip it */
+{const in151=init;init=function(...a){const r=in151.apply(this,a);GSX={s:0,th:0,fd:0,at:0,done:0};PHOTO=null;return r}}
+{const sv151=save;save=function(){const r=sv151.apply(this,arguments);try{localStorage.setItem(SKEY()+'_gs',JSON.stringify(GSX?{s:GSX.s,done:GSX.done}:{done:1}))}catch(e){}return r}}
+{const ld151=load;load=function(){const r=ld151.apply(this,arguments);try{const d=JSON.parse(localStorage.getItem(SKEY()+'_gs')||'null');GSX=d&&!d.done?{s:d.s|0,th:0,fd:0,at:0,done:0}:{done:1}}catch(e){GSX={done:1}}PHOTO=null;return r}}
+try{TUT.hu.push(['Kontroller és fotó','Kontroller: bal kar mozgás, jobb kar célzás, RT használat/ütés, LT jobb klikk, A interakció, B vissza, X újratöltés, Y tárgyak, LB/RB eszközváltás, D-pad le: evés, Select: térkép, Start: menü.','F2: fotó mód — eltűnik a kijelző, WASD-dal mozgatod a kamerát, Enterrel elmented a képet.','Könnyű és Békés fokozaton lassabban éhezel és szomjazol, a hordák csak a 10. naptól jönnek.']);
+ TUT.en.push(['Controller and photos','Controller: left stick move, right stick aim, RT use/hit, LT right click, A interact, B back, X reload, Y inventory, LB/RB switch tool, D-pad down: eat, Select: map, Start: menu.','F2: photo mode — the HUD disappears, WASD moves the camera, Enter saves the picture.','On Easy and Peaceful you get hungry and thirsty slower, and hordes only come from day 10.'])}catch(e){}
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
