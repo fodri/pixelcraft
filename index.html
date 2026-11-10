@@ -9535,7 +9535,7 @@ function fvSideCol(m,b){if(m==8)return fuC(0x85807a);if(m==2)return fuC(0xd8c690
    let a,b;if(dx==1){a=[tx+1,ty];b=[tx+1,ty+1]}else if(dx==-1){a=[tx,ty+1];b=[tx,ty]}else if(dz==1){a=[tx+1,ty+1];b=[tx,ty+1]}else{a=[tx,ty];b=[tx+1,ty]}
    fvFace(S,[a[0],h,a[1]],[b[0],h,b[1]],[b[0],hn,b[1]],[a[0],hn,a[1]],[dx,0,dz],sc,k,[[0,0],[1,0],[1,vb],[0,vb]]);
    /* a grass lip on top of the earth, like a sod edge */
-   if(m==0&&(bm?bm[i]|0:0)!=2)fvFace(S,[a[0],h+.001,a[1]],[b[0],h+.001,b[1]],[b[0],h-.12*FVU,b[1]],[a[0],h-.12*FVU,a[1]],[dx,0,dz],(bm&&bm[i]==1)?fuC(0xe8ecf2):fuC(0x5a8a3a),k,[[0,0],[1,0],[1,.12],[0,.12]])}}
+   if(m==0&&(bm?bm[i]|0:0)!=2){const ox=dx*.004,oz=dz*.004;fvFace(S,[a[0]+ox,h+.001,a[1]+oz],[b[0]+ox,h+.001,b[1]+oz],[b[0]+ox,h-.12*FVU,b[1]+oz],[a[0]+ox,h-.12*FVU,a[1]+oz],[dx,0,dz],(bm&&bm[i]==1)?fuC(0xe8ecf2):fuC(0x5a8a3a),k,[[0,0],[1,0],[1,.12],[0,.12]])}}}
  ch.gm=new THREE.Mesh(v3Geo(G_.P,G_.N,G_.U,G_.C),ch.mat);ch.gm.receiveShadow=true;ch.gm.castShadow=true;V3.S.add(ch.gm);
  if(S.P.length){const sm=new THREE.Mesh(v3Geo(S.P,S.N,S.U,S.C),FVDIRT);sm.receiveShadow=sm.castShadow=true;ch.gm.add(sm)}
  if(anim){if(!ch.acv){ch.acv=document.createElement('canvas');ch.acv.width=ch.acv.height=GQS*T;ch.atex=v3Tex(ch.acv,false);ch.amat=new THREE.MeshLambertMaterial({map:ch.atex,vertexColors:true})}ch.am=new THREE.Mesh(v3Geo(A.P,A.N,A.U,A.C),ch.amat);ch.am.receiveShadow=true;V3.S.add(ch.am);ch.at=0}
@@ -9692,6 +9692,82 @@ function fvPPInit(){if(FVPP.ok||!V3||!V3.ok)return;const R=V3.R;FVPP.rt=new THRE
 {const fl160c=fvLights;fvLights=function(){const r=fl160c();try{if(!FVPP.ok)fvPPInit()}catch(e){}return r}}
 try{TUT.hu.push(['Ásás és építés (FPS)','Belső nézetben a tájat is alakíthatod, mint a Minecraftban: kattintással kiásod a földet (lapáttal gyorsabb), a föld a táskádba kerül.','Jobb kattintással lerakod a földet vagy a követ oda, ahová nézel, egymásra is. Egy blokkra fel tudsz lépni, kettőre már nem. A követ csákánnyal bontod vissza.']);
  TUT.en.push(['Digging and building (FPS)','In first person you can shape the land like in Minecraft: click to dig out earth (faster with a shovel), the dirt goes into your bag.','Right-click places dirt or stone where you look, stacked too. You can step up one block, not two. Stone comes back out with a pickaxe.'])}catch(e){}
+
+/* ===== v161: fully 3D first person — people, the infected, animals and dropped items become block models (Minecraft-style, animated, real shadows); calmer textures in the distance (mipmaps, no shimmer), cleaner shadows ===== */
+GAMEV=161;
+/* ---------- textures: crisp up close, no shimmering far away ---------- */
+function fvMip(t){if(!t||t.userData159)return;try{const R=V3.R;if(!R.capabilities.isWebGL2&&(t.image&&((t.image.width&(t.image.width-1))||(t.image.height&(t.image.height-1)))))return;t.generateMipmaps=true;t.minFilter=THREE.NearestMipmapLinearFilter;t.anisotropy=Math.min(8,R.capabilities.getMaxAnisotropy());t.needsUpdate=true;t.userData159=1}catch(e){}}
+{const bg161=v3BuildGround;v3BuildGround=function(ch){const r=bg161.apply(this,arguments);if(FVB){fvMip(ch.tex)}return r}}
+{const bo161=v3BuildObjs;v3BuildObjs=function(ch){const r=bo161.apply(this,arguments);if(FVB&&ch.atlT)fvMip(ch.atlT);return r}}
+{const sh161=fvShadows;fvShadows=function(on){sh161(on);try{const s=V3.sun.shadow;s.bias=on?-.0009:-.0006;s.normalBias=on?.06:.03;for(const m of[FVLEAF,FVBARK,FVDIRT])fvMip(m.map)}catch(e){}}}
+/* ---------- block models ---------- */
+const FVM3=new Map();
+function fvBx(par,col,w,h,d,x,y,z,mat){const m=new THREE.Mesh(UB93,mat||lam93(col));m.scale.set(w,h,d);m.position.set(x,y,z);m.castShadow=m.receiveShadow=true;m.userData.shared=1;m.userData.ent=1;par.add(m);return m}
+function fvLimb(par,col,w,h,d,x,y,z,mat){const p=new THREE.Group();p.position.set(x,y,z);par.add(p);fvBx(p,col,w,h,d,0,-h/2,0,mat);return p}
+/* a person: about 1.8 m — legs, body, arms, head, hair, eyes */
+function fvHuman(o){const G=new THREE.Group(),b=o.bulk||1,M=o.mat;
+ const legL=fvLimb(G,o.pants,.24,.75,.24,-.13,.75,0,M),legR=fvLimb(G,o.pants,.24,.75,.24,.13,.75,0,M);fvBx(legL,o.shoes,.26,.12,.3,0,-.7,.03,M);fvBx(legR,o.shoes,.26,.12,.3,0,-.7,.03,M);
+ fvBx(G,o.shirt,.5*b,.7,.27*b,0,1.1,0,M);if(o.belt)fvBx(G,o.belt,.51*b,.06,.28*b,0,.78,0,M);
+ const ax=.25*b+.1*b,armL=fvLimb(G,o.shirt,.2*b,.66,.2*b,-ax,1.43,0,M),armR=fvLimb(G,o.shirt,.2*b,.66,.2*b,ax,1.43,0,M);fvBx(armL,o.skin,.19*b,.13,.19*b,0,-.6,0,M);fvBx(armR,o.skin,.19*b,.13,.19*b,0,-.6,0,M);
+ const head=new THREE.Group();head.position.set(0,1.45,0);G.add(head);fvBx(head,o.skin,.36,.36,.36,0,.18,0,M);
+ if(o.hair){fvBx(head,o.hair,.38,.09,.38,0,.375,0,M);fvBx(head,o.hair,.38,.27,.07,0,.25,-.16,M);if(o.long)fvBx(head,o.hair,.38,.34,.07,0,.08,-.17,M)}
+ if(o.hat)fvBx(head,o.hat,.42,.1,.42,0,.4,0,M);
+ const ec=o.eye||'#1a1a1a';fvBx(head,ec,.07,.05,.02,-.08,.2,.181,M&&M.isMeshBasicMaterial?M:o.eyeMat);fvBx(head,ec,.07,.05,.02,.08,.2,.181,M&&M.isMeshBasicMaterial?M:o.eyeMat);
+ if(o.mouth)fvBx(head,o.mouth,.14,.03,.02,0,.08,.181,M);
+ return{G,legL,legR,armL,armR,head,hum:1}}
+function fvSkin(i){return(typeof SKIN!='undefined'&&SKIN[i|0])||'#d9a77c'}
+function fvPeople(c,e){c=c||{};e=e||{};return{skin:fvSkin(c.sk),hair:(typeof HAIRC!='undefined'&&HAIRC[c.hc|0])||'#3a2418',shirt:(typeof SHIRTC!='undefined'&&SHIRTC[c.sh|0])||'#5f6b3a',pants:(typeof PANTC!='undefined'&&PANTC[c.pn|0])||'#2a3140',shoes:'#2e2018',belt:'#2a1c12',long:(c.hs|0)%3==2,hat:e.h?'#5a4a3a':null}}
+function fvNpcLook(n){let c=chOf(n.c),e={};try{if(typeof npcOutfit=='function'){const o=npcOutfit(n,c);if(o&&o.c)c=o.c;if(o&&o.e)e=o.e}}catch(x){}return fvPeople(c,e)}
+const FVZSH=['#4a5a3a','#5a4a3a','#3a4a5a','#6a3a3a','#4a4a4a','#5a5a3a'];
+function fvZLook(z){const h=aHash((z.id||'').length*7+(z.x|0)%97,(z.y|0)%89,3),i=Math.floor(h*6);
+ if(z.boss)return{skin:'#5a6a4a',shirt:'#3a2a2a',pants:'#2a2420',shoes:'#1a1410',eye:'#ff3020',eyeMat:lam93(0xff3020,0xc01808),bulk:1.7,mouth:'#3a0a08'};
+ if(z.mu)return{skin:'#7a6a8a',shirt:'#4a3a4a',pants:'#2a2430',shoes:'#1a1418',eye:'#ffe040',eyeMat:lam93(0xffe040,0xa08010),bulk:1.6,mouth:'#2a0a10'};
+ return{skin:['#6f9a5c','#7aa068','#5f8a52'][i%3],hair:i%2?'#2a2a20':null,shirt:FVZSH[i],pants:['#2a3140','#3a2a1a','#2a2a2e'][i%3],shoes:'#1e1610',eye:'#e02a20',eyeMat:lam93(0xe02a20,0x801008),mouth:'#3a1a10'}}
+/* animals */
+function fvAnimal(k,col){const G=new THREE.Group(),r={G,legs:[],k};const leg=(x,z,h,w,c)=>{const p=fvLimb(G,c,w,h,w,x,h,z);r.legs.push(p);return p};
+ if(k=='sheep'){fvBx(G,'#ece8de',.6,.5,.85,0,.65,0);for(const[x,z]of[[-.2,-.28],[.2,-.28],[-.2,.28],[.2,.28]])leg(x,z,.42,.12,'#3a3a3a');r.head=new THREE.Group();r.head.position.set(0,.8,.48);G.add(r.head);fvBx(r.head,'#3a3a3a',.28,.28,.3,0,0,.08);fvBx(r.head,'#ece8de',.32,.1,.2,0,.16,0)}
+ else if(k=='rabbit'){fvBx(G,'#b8a898',.22,.2,.32,0,.16,0);r.head=new THREE.Group();r.head.position.set(0,.28,.16);G.add(r.head);fvBx(r.head,'#c9baa8',.16,.16,.16,0,0,.04);fvBx(r.head,'#c9baa8',.04,.16,.04,-.04,.14,0);fvBx(r.head,'#c9baa8',.04,.16,.04,.04,.14,0);fvBx(G,'#f0ece4',.08,.08,.06,0,.2,-.18);for(const[x,z]of[[-.07,-.1],[.07,-.1],[-.07,.12],[.07,.12]])leg(x,z,.08,.06,'#a89888')}
+ else if(k=='bird'){fvBx(G,'#5a6a8a',.14,.12,.24,0,.12,0);fvBx(G,'#e8a040',.04,.03,.06,0,.14,.14);r.wl=fvLimb(G,'#47556f',.18,.02,.14,-.07,.16,0);r.wr=fvLimb(G,'#47556f',.18,.02,.14,.07,.16,0);r.wl.children[0].position.set(-.09,0,0);r.wr.children[0].position.set(.09,0,0)}
+ else if(k=='dog'){const c=col||'#8a6a4a';fvBx(G,c,.3,.3,.66,0,.5,0);for(const[x,z]of[[-.1,-.24],[.1,-.24],[-.1,.24],[.1,.24]])leg(x,z,.36,.1,c);r.head=new THREE.Group();r.head.position.set(0,.66,.36);G.add(r.head);fvBx(r.head,c,.26,.24,.26,0,.04,.06);fvBx(r.head,'#2a2018',.12,.1,.12,0,-.02,.24);fvBx(r.head,c,.06,.1,.04,-.09,.2,.02);fvBx(r.head,c,.06,.1,.04,.09,.2,.02);const t=fvLimb(G,c,.06,.3,.06,0,.6,-.32);t.rotation.x=-.8;r.tail=t}
+ else{/* deer */const c='#9a6a3a';fvBx(G,c,.38,.42,1.0,0,.98,0);fvBx(G,'#d8c0a0',.3,.1,.8,0,.76,0);for(const[x,z]of[[-.13,-.38],[.13,-.38],[-.13,.38],[.13,.38]])leg(x,z,.8,.1,'#7a5230');
+  r.head=new THREE.Group();r.head.position.set(0,1.2,.5);G.add(r.head);fvBx(r.head,c,.14,.4,.14,0,.1,0);fvBx(r.head,c,.22,.22,.36,0,.36,.12);fvBx(r.head,'#2a2018',.1,.08,.06,0,.32,.31);fvBx(r.head,'#d8c8a8',.04,.3,.04,-.1,.6,.02);fvBx(r.head,'#d8c8a8',.04,.3,.04,.1,.6,.02);fvBx(r.head,'#d8c8a8',.16,.04,.04,-.14,.7,.02);fvBx(r.head,'#d8c8a8',.16,.04,.04,.14,.7,.02)}
+ return r}
+function fvSpider(z){const c=SPC[(z.cv|0)%SPC.length],G=new THREE.Group(),r={G,legs:[],sp:1};fvBx(G,c[0],.7,.45,.8,0,.45,-.35);fvBx(G,c[1],.45,.36,.42,0,.42,.25);fvBx(G,c[3],.08,.06,.02,-.1,.48,.47,lam93(c[3],0x801010));fvBx(G,c[3],.08,.06,.02,.1,.48,.47,lam93(c[3],0x801010));
+ for(let i=0;i<4;i++)for(const s of[-1,1]){const p=new THREE.Group();p.position.set(s*.2,.45,.25-i*.22);G.add(p);fvBx(p,c[2],.9,.07,.07,s*.45,0,0);p.rotation.z=s*-.5;p.userData.s=s;p.userData.i=i;r.legs.push(p)}return r}
+/* dropped items: their pixel icon, pushed out into a thin block like in Minecraft */
+const FVLOOT=new Map();
+function fvLootGeo(k){let g_=FVLOOT.get(k);if(g_)return g_;const cv=document.createElement('canvas');cv.width=cv.height=20;const sg=g,sb=BASE;g=cv.getContext('2d');BASE=1;try{icon(k,0,0)}catch(e){}finally{g=sg;BASE=sb}
+ const d=cv.getContext('2d').getImageData(0,0,20,20).data,A={P:[],N:[],U:[],C:[]},s=1;for(let y=0;y<20;y++)for(let x=0;x<20;x++){const i=(y*20+x)*4;if(d[i+3]<128)continue;boxC93(A,x-10,19-y,-.5,x-9,20-y,.5,new THREE.Color(d[i]/255,d[i+1]/255,d[i+2]/255),0)}
+ g_=A.P.length?v3Geo(A.P,A.N,A.U,A.C):new THREE.BoxGeometry(6,6,6);FVLOOT.set(k,g_);return g_}
+function fvLoot(l){const G=new THREE.Group(),m=new THREE.Mesh(fvLootGeo(l.k),lam93v());m.castShadow=true;m.scale.setScalar(.026);G.add(m);return{G,m,loot:1}}
+/* ---------- driving the models every frame ---------- */
+function fvHeading(o,r){if(r.hum&&o.fx!=null&&isFinite(o.fx)&&(Math.abs(o.fx)+Math.abs(o.fy||0))>.01)return Math.atan2(o.fx,o.fy);const vx=o.vx||0,vy=o.vy||0;if(Math.abs(vx)+Math.abs(vy)>1)return Math.atan2(vx,vy);return null}
+function fvTurn(r,a){if(a==null)return;let d=a-r.G.rotation.y;d=Math.atan2(Math.sin(d),Math.cos(d));r.G.rotation.y+=d*Math.min(1,(FV.dt||.016)*10)}
+function fvAnim(o,r,size){const dt=FV.dt||.016,dist=Math.hypot(o.x-r.px,o.y-r.py);r.px=o.x;r.py=o.y;const mov=dist>.15&&dist<40;r.amp+=((mov?1:0)-r.amp)*Math.min(1,dt*8);r.ph+=dist*.14;
+ r.G.position.set(o.x/T,v3HW(o.x,o.y),o.y/T);r.G.scale.setScalar(FVU*size);const s=Math.sin(r.ph)*r.amp;
+ if(r.hum){r.legL.rotation.x=s*.7;r.legR.rotation.x=-s*.7;if(r.zom){const t=performance.now()/300;r.armL.rotation.x=-1.4+Math.sin(t)*.08;r.armR.rotation.x=-1.4-Math.sin(t)*.08}else{r.armL.rotation.x=-s*.6;r.armR.rotation.x=s*.6}
+  if(r.talk){r.head.rotation.x=Math.sin(performance.now()/160)*.06}else r.head.rotation.x*=.8}
+ else if(r.sp){for(const p of r.legs)p.rotation.x=Math.sin(r.ph*2+p.userData.i*1.3)*.35*r.amp}
+ else if(r.wl){const f=Math.sin(performance.now()/60)*.9;r.wl.rotation.z=f;r.wr.rotation.z=-f;r.G.position.y+=.3*FVU*(.5+.5*Math.sin(performance.now()/400))}
+ else if(r.legs){r.legs.forEach((p,i)=>p.rotation.x=(i%2?s:-s)*.6*(i<2?1:-1));if(r.tail)r.tail.rotation.z=Math.sin(performance.now()/90)*.5}
+ const a=fvHeading(o,r);if(r.zom&&Math.hypot(P.x-o.x,P.y-o.y)<220)fvTurn(r,Math.atan2(P.x-o.x,P.y-o.y));else fvTurn(r,a)}
+function fvMobs(){const fr=V3.fr,near=(x,y,R_)=>Math.abs(x-P.x)<R_*T&&Math.abs(y-P.y)<R_*T;
+ const use=(o,kind,mk,size)=>{let r=FVM3.get(o);if(!r||r.kind!==kind){if(r)V3.S.remove(r.G);r=mk();r.kind=kind;r.px=o.x;r.py=o.y;r.ph=0;r.amp=0;V3.S.add(r.G);FVM3.set(o,r)}r.u=fr;return r};
+ const tk=fvTalker();
+ for(const n of NPCS)if(near(n.x,n.y,30)){const r=use(n,'npc',()=>fvHuman(fvNpcLook(n)));r.talk=n===tk;fvAnim(n,r,1)}
+ for(const z of zs)if(near(z.x,z.y,30)){const big=z.boss?2:z.mu?1.45:1,r=use(z,z.sp?'sp':'z',()=>{const q=z.sp?fvSpider(z):fvHuman(fvZLook(z));q.zom=!z.sp;return q});fvAnim(z,r,big)}
+ for(const d of deer)if(near(d.x,d.y,30)){const r=use(d,'a'+d.k,()=>fvAnimal(d.k));fvAnim(d,r,1)}
+ if(typeof PETS!='undefined')for(const p of PETS)if(p&&isFinite(p.x)&&!p.inB&&near(p.x,p.y,30)){const r=use(p,'dog',()=>fvAnimal('dog',p.col||null));fvAnim(p,r,1)}
+ if(!drv){const r=use(P,'p',()=>{const q=fvHuman(Object.assign(fvPeople(CH,{}),{mat:fvInv()}));return q});fvAnim(P,r,1);r.G.rotation.y=Math.atan2(P.fx||0,P.fy||1)}
+ for(const l of loot)if(near(l.x,l.y,22)){const r=use(l,'l',()=>fvLoot(l));r.G.position.set(l.x/T,v3HW(l.x,l.y)+.12+Math.sin(performance.now()/400+l.x)*.04,l.y/T);r.G.rotation.y=performance.now()/700+l.x;r.G.scale.setScalar(1)}
+ for(const[o,r]of FVM3)if(r.u!==fr){V3.S.remove(r.G);FVM3.delete(o)}}
+{const ve161=v3Ents;v3Ents=function(){if(!FVB)return ve161();const sN=NPCS,sZ=zs,sD=deer,sP=PETS,sL=loot;NPCS=[];zs=[];deer=[];PETS=[];loot=[];try{ve161()}finally{NPCS=sN;zs=sZ;deer=sD;PETS=sP;loot=sL}try{fvMobs()}catch(e){console.warn('fvMobs',e)}}}
+{const rs161=fvRestore;fvRestore=function(){for(const r of FVM3.values())V3.S.remove(r.G);FVM3.clear();return rs161()}}
+{const cl161=fvClear;fvClear=function(){for(const r of FVM3.values())try{V3.S.remove(r.G)}catch(e){}FVM3.clear();return cl161()}}
+/* the old flat player shadow goes; the 3D body casts it now */
+{const fl161=fvLights;fvLights=function(){const r=fl161();try{const e=V3.ents.get('P');if(e){e.m.visible=false;if(e.c)e.c.visible=false}}catch(x){}return r}}
+/* aiming at a model: models count as people/animals */
+{const li161=fvList;fvList=function(r_){const L=li161(r_);for(const r of FVM3.values())if(r.kind!='p'&&r.kind!='l')L.push(r.G);return L}}
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
