@@ -1384,7 +1384,7 @@ function update(dt){
   if(d<90){e.vx=dx/d*62;e.vy=dy/d*62}else if(e.t<=0){e.t=1+R()*2;const a=R()*6.28,s=R()<.5?0:14;e.vx=Math.cos(a)*s;e.vy=Math.sin(a)*s}
   if(e.kx){e.x+=e.kx*dt;e.kx*=.8;e.ky*=.8;if(Math.abs(e.kx)<2)e.kx=0}
   mv(e,e.vx*dt,e.vy*dt,4)}
- spawnT-=dt;if(!inD&&!PEACE()&&spawnT<=0&&zs.length<(dk0()>.5?3+day*1.5:1+day*.4)*pls.length*DF().sp){spawnT=4;const a=R()*6.28,cp=pls[Math.floor(R()*pls.length)],x=cp.x+Math.cos(a)*SPR109(),y=cp.y+Math.sin(a)*SPR109();if(!blocked(x,y,5)){const v=pickV(x,y);zs.push({id:nid(),x,y,hp:VHP[v],a:0,t:0,vx:0,vy:0,z:1,v})}}
+ spawnT-=dt;if(!inD&&!PEACE()&&spawnT<=0&&zs.length<Math.min(dk0()>.5?34:12,(dk0()>.5?3+day*1.5:1+day*.4))*pls.length*DF().sp){spawnT=4;const a=R()*6.28,cp=pls[Math.floor(R()*pls.length)],x=cp.x+Math.cos(a)*SPR109(),y=cp.y+Math.sin(a)*SPR109();if(!blocked(x,y,5)){const v=pickV(x,y);zs.push({id:nid(),x,y,hp:VHP[v],a:0,t:0,vx:0,vy:0,z:1,v})}}
  if(!inD&&!PEACE()&&R()<dt*(cb==1?.04:.012)*DF().sp&&zs.filter(q=>q.w).length<2){const a=R()*6.28,cp=pls[Math.floor(R()*pls.length)],x=cp.x+Math.cos(a)*SPR109(),y=cp.y+Math.sin(a)*SPR109();if(!blocked(x,y,5))zs.push({id:nid(),x,y,hp:5,a:0,t:0,vx:0,vy:0,z:1,w:1})}
  const fires=zs.length?fireList():[];
  for(let i=zs.length-1;i>=0;i--){const z=zs[i];if(z.hp<=0){if(!(z.mu||z.boss))xpKill(z);if(z.mu||z.boss)mutDeath(z);else if(z.w)addLoot({x:z.x,y:z.y,k:'meat',n:2});else if(z.sp){if(R()<.8)drop(z.x,z.y,z)}else if(z.b){if(R()<.3)drop(z.x,z.y,z)}else if(R()<.6)drop(z.x,z.y,z);addCorpse(z);zs.splice(i,1);continue}
@@ -1635,7 +1635,7 @@ function hud(){weather();promptE();if(!inD&&state=='play'&&(!mapC||performance.n
  if(panel){let yy=VH-6-REC.length*10-22;Q(0,yy-10,262,REC.length*10+14,'rgba(0,0,0,.65)');txt('Craft (Tab hides)',6,yy,'#9ab088');yy+=10;
   REC.forEach((r,i)=>{let ok=true;for(const m in r[2])if(inv[m]<r[2][m])ok=false;if(TOOL[r[0]]&&inv[r[0]])ok=false;txt(r[1]+': '+Object.keys(r[2]).map(m=>LBL[m].toLowerCase()+' '+Math.min(inv[m],r[2][m])+'/'+r[2][m]).join(', '),6,yy+i*10,ok?'#b8e090':'#6f7a68')});
   0}
- if(msgT>0)txt(msg,VW/2,VH-32,'#f0e6b8','center');drawSpores(performance.now());drawBossBar();rotHint();xpBar();peerHud();hotbar();if(invOpen)drawInv();if(skOpen)drawSkills();if(emOpen)drawEmWheel();if(gtOpen)drawGt();if(gaOpen)drawGa();if(mdOpen)drawMd();if(stOpen)drawStash();if(book)drawBook();if(tut)drawTut()}
+ if(msgT>0)txt(typeof fitMsg=='function'?fitMsg(msg):msg,VW/2,VH-32,'#f0e6b8','center');drawSpores(performance.now());drawBossBar();rotHint();xpBar();peerHud();hotbar();if(invOpen)drawInv();if(skOpen)drawSkills();if(emOpen)drawEmWheel();if(gtOpen)drawGt();if(gaOpen)drawGa();if(mdOpen)drawMd();if(stOpen)drawStash();if(book)drawBook();if(tut)drawTut()}
 function title(s,sub){s=tr(s);Q(0,0,VW,VH,'rgba(0,0,0,.78)');g.font=fnt(1,30);g.textAlign='center';g.fillStyle='#a8321f';g.fillText(s,VW/2+2,92);g.fillStyle=fcol('#d8e4c8');g.fillText(s,VW/2,90);
  sub.forEach((l,i)=>txt(l,VW/2,125+i*13,i==sub.length-1?'#ffd84a':'#b8c8a8','center'))}
 function menuOld(){title('PixelCRAFT',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Raid the ruins. Survive the nights.']);
@@ -1878,7 +1878,7 @@ function ashFx(){if(inD||!bm)return;const rc=locReactor&&locReactor();const tx=M
 
 /* ===================== HANDBOOK (tabs + animated demos) & PRACTICE MODE ===================== */
 const HB_TABS=[
- {en:'Basics',hu:'Alapok',d:'basics',ten:['Move with W A S D. Hold Shift to run.','The mouse aims: your character faces the cursor.','Space: jump over gaps (aim where to land).','V switches view: top-down / 3rd / 1st person.','New here? Open the Practice tab for a guided run.'],thu:['Mozgás: W A S D. Futás: tartsd nyomva a Shiftet.','Az egérrel célzol: a karakter a kurzor felé néz.','Space: ugrás szakadék fölött (célozz a landolásra).','V: nézetváltás (felül / 3. / 1. személy).','Új vagy? Nyisd meg a Gyakorlás fület.']},
+ {en:'Basics',hu:'Alapok',d:'basics',ten:['Move with W A S D. Hold Shift to run.','The mouse aims: your character faces the cursor.','Space: jump over gaps (aim where to land).','V: retro / modern graphics (in 3D view: camera angle).','New here? Open the Practice tab for a guided run.'],thu:['Mozgás: W A S D. Futás: tartsd nyomva a Shiftet.','Az egérrel célzol: a karakter a kurzor felé néz.','Space: ugrás szakadék fölött (célozz a landolásra).','V: retró / modern grafika (3D nézetben: kameraállás).','Új vagy? Nyisd meg a Gyakorlás fület.']},
  {en:'Gathering',hu:'Gyűjtés',d:'gather',ten:['Aim at a tree and click (hold) to chop it.','An axe chops faster, a pickaxe mines rock and ore.','Berry bushes regrow. Click water with an empty hand to drink.','New items drop into the hotbar (1-9, mouse wheel).','I opens the inventory: click an item, then a hotbar slot.'],thu:['Célozz egy fára és kattints (tartsd) a vágáshoz.','Baltával gyorsabb, csákánnyal követ és ércet bányászol.','A bogyóbokor újranő. Üres kézzel kattints a vízre: iszol.','Az új tárgyak a gyorssávba kerülnek (1-9, görgő).','I: tárhely. Katt egy tárgyra, majd egy gyorssáv-helyre.']},
  {en:'Crafting',hu:'Készítés',d:'craft',ten:['Press C to open the crafting book.','Bright items can be crafted: click them.','Grey items need more materials (missing ones in red).','Type to search, A/D switch categories.','Furnace (E): ore + coal/wood = metal bars for tools & armor.'],thu:['A C gombbal nyílik a készítő könyv.','A világos tárgyak elkészíthetők: kattints rájuk.','A szürkékhez több anyag kell (ami hiányzik, piros).','Gépelj a kereséshez, A/D: kategóriák.','Kemence (E): érc + szén/fa = fémrúd eszközhöz, páncélhoz.']},
  {en:'Building',hu:'Építés',d:'build',ten:['Select a buildable item, then click the ground.','Green preview = OK, red = blocked.','R rotates before placing - and rotates placed furniture.','Click a placed item to knock it back into your bag.','Cabins next to each other merge into one long house.'],thu:['Válassz építhető tárgyat, majd kattints a földre.','Zöld előnézet = mehet, piros = foglalt.','R: forgatás lerakás előtt - és a lerakott bútoroké is.','Kattints egy lerakott tárgyra: visszakerül a táskába.','Az egymás mellé rakott faházak egy hosszú házzá olvadnak.']},
@@ -3679,7 +3679,7 @@ function mainLabels(){const L=mainLabels0();if(canSave())L.push(LANG=="hu"?"Ját
 menuKey=function(c){const n=mainLabels().length;if(msel>=n)msel=0;if(c=='ArrowUp'||c=='KeyW'){msel=(msel+n-1)%n;snd('ui')}else if(c=='ArrowDown'||c=='KeyS'){msel=(msel+1)%n;snd('ui')}else if(c=='Enter'||c=='Space'||c=='ArrowRight'||c=='KeyD')menuAct(msel)};
 menuClick=function(){const n=mainLabels().length;for(let i=0;i<n;i++)if(ms.x>=MB.x&&ms.x<MB.x+MB.w&&ms.y>=mbY(i)&&ms.y<mbY(i)+MB.h){msel=i;menuAct(i);return}};
 MB.y=106;MB.h=16;MB.g=2;
-{const mn0=menu;menu=function(){if(msel>=mainLabels().length)msel=0;mn0();const hu=LANG=='hu';noTr=true;
+{const mn0=menu;menu=function(){if(msel>=mainLabels().length)msel=0;const ig=canSave();MB.y=ig?99:106;MB.h=ig?14:16;mn0();const hu=LANG=='hu';noTr=true;
  txt('v1.0 · build '+GAMEV,6,VH-6,'#6f7c62');
  if(SVF&&performance.now()-SVF<2500){const a=1-(performance.now()-SVF)/2500;g.globalAlpha=Math.min(1,a*2);txt(hu?'✔ Játék mentve':'✔ Game saved',MB.x+MB.w/2,mbY(mainLabels().length)+6,'#9be07d','center');g.globalAlpha=1}
  else if(canSave())txt(hu?'Gyors mentés játék közben: Ctrl+S':'Quick save in game: Ctrl+S',MB.x+MB.w/2,mbY(mainLabels().length)+6,'#6f7c62','center');noTr=false}}
@@ -8082,7 +8082,7 @@ function lkNeed(r){const t=lkTier(r),cat=rcat(r),miss=Object.keys(r[2]).filter(k
 function lkReady(r){const n=lkNeed(r);return !n.miss.length&&(n.cc>=n.ct||n.tc>=n.tt)}
 function lkTick(dt){if(!LK||creative)return;for(const k in inv)if(inv[k]>0)LKSEEN[k]=1;LKT-=dt;if(LKT>0)return;LKT=.8;const got=[];
  for(const r of REC){if(LK[r[0]])continue;if(lkReady(r)){if(lkLearn(r[0],['Kézbe vetted az anyagokat, és összeállt a fejedben: így kell.','You handled the materials and it came together in your head: that’s how it’s done.']))got.push(r[0])}}
- if(got.length){const nm=got.map(k=>tr(LBL[k]||k).toLowerCase()).join(', ');try{TQ112.push({title:LB('Ötleted támadt!','You had an idea!'),sub:nm,col:'#ffd84a'})}catch(e){}say(LB('Most már tudod, hogyan kell: ','Now you know how to make: ')+nm);try{snd('craft')}catch(e){}}}
+ if(got.length){const nm=got.slice(0,4).map(k=>tr(LBL[k]||k).toLowerCase()).join(', ')+(got.length>4?LB(' és még '+(got.length-4),' and '+(got.length-4)+' more'):'');try{TQ112.push({title:LB('Ötleted támadt!','You had an idea!'),sub:nm,col:'#ffd84a'})}catch(e){}say(LB('Most már tudod, hogyan kell: ','Now you know how to make: ')+nm);try{snd('craft')}catch(e){}}}
 /* crafting: only what you know; every success is practice */
 {const cr132=craft;craft=function(i){const r=REC[i];if(r&&!lkKnown(r[0])){const n=lkNeed(r);say(LB('Még nem tudod, hogyan kell ezt elkészíteni.','You don’t know how to make this yet.')+(n.miss.length?LB(' Előbb tarts a kezedben: ',' First get your hands on: ')+n.miss.map(k=>tr(LBL[k]||k).toLowerCase()).join(', '):''));try{snd('ui')}catch(e){}return}
  const k=r&&r[0],n0=k?inv[k]|0:0,o0=k?owned(k):false;const res=cr132(i);try{if(k&&((inv[k]|0)>n0||(!o0&&owned(k)))){LKC.c[rcat(r)]=(LKC.c[rcat(r)]|0)+1;LKC.t=(LKC.t|0)+1}}catch(e){}return res}}
@@ -8426,7 +8426,7 @@ function fogTick(){if(state!='play')return;const now=performance.now();if(now-MF
  if(now-MFOG.sv>20000){MFOG.sv=now;fogSave()}}
 {const sv143=save;save=function(){const r=sv143.apply(this,arguments);fogSave();return r}}
 /* geometry of the big map: the frame stays put, the picture inside zooms and pans */
-function mapGeo(){const MS=Math.min(VH-34,W*1.4),fx=(VW-MS)/2,fy=(VH-MS)/2+6,z=MAPZ.z,mf=MS/W*z;
+function mapGeo(){const MS=Math.min(VH-80,W*1.4),fx=(VW-MS)/2,fy=22,z=MAPZ.z,mf=MS/W*z;
  if(MAPZ.cx==null||z<=1){MAPZ.cx=W/2;MAPZ.cy=H/2}
  const half=W/2/z;MAPZ.cx=Math.max(half,Math.min(W-half,MAPZ.cx));MAPZ.cy=Math.max(H/2/z,Math.min(H-H/2/z,MAPZ.cy));
  return{MS,mf,fx,fy,x0:fx+MS/2-MAPZ.cx*mf,y0:fy+MS/2-MAPZ.cy*mf,z}}
@@ -9060,6 +9060,15 @@ function evBusy(d){try{return hordeDay(d)||EV112.bmd===d||(d>=5&&d%5==0)}catch(e
 {const in154=init;init=function(...a){SURVP={c:0,hw:0,init:1};return in154.apply(this,a)}}
 try{TUT.hu.push(['Túlélő út','A túlélő módnak is van fő szála: hét fejezet az első éjszakától a legendáig. Tábor, közösség, kalandok, az első tél, falu.','Az aktuális célt a bal felső sarokban látod, a teljes utat a napló Küldetések fejezetében. Minden fejezet XP-t és zsákmányt ad.']);
  TUT.en.push(['The survival path','Survival has a main thread too: seven chapters from the first night to legend. Camp, community, adventures, the first winter, a village.','The current goal is in the top-left corner, the whole path in the journal\'s Quests chapter. Every chapter pays XP and loot.'])}catch(e){}
+
+/* ===== v155: polish from a full screen-by-screen pass — the map sits above the hotbar, long messages never run off screen, the pause menu leaves room for the key hints, missing Hungarian words, a quiet story ending ===== */
+GAMEV=155;
+function fitMsg(s){try{s=String(s);g.font=fnt(0,8);const max=VW-24;if(g.measureText(s).width<=max)return s;while(s.length>4&&g.measureText(s+'…').width>max)s=s.slice(0,-1);return s+'…'}catch(e){return s}}
+HU.unshift(['Simple','Egyszerű'],['Default','Alap'],['Log bench','Rönkpad'],['log bench','rönkpad'],['Wire','Vezeték'],['wire','vezeték'],['Boat','Csónak'],['boat','csónak']);
+{const up155=update;update=function(dt){const r=up155.apply(this,arguments);try{if(typeof GSX!='undefined'&&GSX&&!GSX.done&&day>=3)GSX.done=1;
+ /* by day, stragglers far from everyone wander off (bosses, hordes, adventure monsters and wolves stay) */
+ if(!inD&&dk0()<.3&&Math.random()<.02){const far=40*T;for(let i=zs.length-1;i>=0;i--){const z=zs[i];if(z.boss||z.w||z.adv153||z.hd150||z.bmz||z.mu)continue;let near=Math.hypot(z.x-P.x,z.y-P.y)<far;try{if(!near&&net)for(const q of net.peers){const pp=peerPos(q);if(pp&&Math.hypot(z.x-pp[0],z.y-pp[1])<far){near=true;break}}}catch(e){}if(!near){zs.splice(i,1);break}}}
+if(typeof SEND!='undefined'&&SEND&&performance.now()-SEND.t0<40000)TQ112.length=0}catch(e){}return r}}
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
