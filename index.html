@@ -9773,6 +9773,53 @@ function fvMobs(){const fr=V3.fr,near=(x,y,R_)=>Math.abs(x-P.x)<R_*T&&Math.abs(y
 GAMEV=162;
 try{if(!LBL.bag){LBL.bag='Bag';HU.push(['Bag','Zsák'])}}catch(e){}
 
+/* ===== v163: what first person was still missing — names and speech bubbles over people, damage numbers, health bars on hurt foes, hit marker, a red arc toward whoever hurts you, a compass, a building ghost that snaps to where you look, mouse sensitivity on [ and ]; and the 2D hover tooltip goes ===== */
+GAMEV=163;
+try{const s=+localStorage.getItem('pxc_fvs');if(s>0)FV.sens=s}catch(e){}
+/* project a world point (px, height in tiles) to the screen */
+function fvScr(x,y,hu){const v=new THREE.Vector3(x/T,v3HW(x,y)+hu,y/T).project(V3.cam);if(v.z>=1||Math.abs(v.x)>1.1||Math.abs(v.y)>1.1)return null;return[Math.round((v.x*.5+.5)*VW),Math.round((-v.y*.5+.5)*VH),v.z]}
+function fvTag(t,x,y,col,bg){g.font=fnt(0,8);const w=Math.ceil(g.measureText(t).width)+8;Q(x-w/2,y-9,w,11,bg||'rgba(12,10,8,.72)');txt(t,x-w/2+4,y,col||'#fff2c8')}
+/* names, speech, damage numbers, health bars */
+function fvWorldHud(){if(invOpen||book||showMap||skOpen||stOpen||(typeof JN!='undefined'&&JN))return;const tk=fvTalker();noTr=true;try{
+ for(const n of NPCS){const d=Math.hypot(n.x-P.x,n.y-P.y);if(d>11*T)continue;const say=n.sayT>0&&n.line;if(say)n.sayT-=1/60;
+  if(!(say||n===tk||d<6*T))continue;const s=fvScr(n.x,n.y,2.15*FVU);if(!s)continue;
+  if(n.nm)fvTag(String(n.nm),s[0],s[1],'#ffd84a');
+  if(say){g.font=fnt(0,8);const w=Math.min(VW-8,Math.ceil(g.measureText(n.line).width)+8),bx=Math.round(Math.max(4,Math.min(VW-w-4,s[0]-w/2))),by=s[1]-26;Q(bx-1,by-1,w+2,14,'#ffd84a');Q(bx,by,w,12,'rgba(20,16,10,.94)');Q(s[0]-1,by+13,3,3,'#ffd84a');txt(n.line,bx+4,by+9,'#f0e6b8')}}
+ for(const z of zs){z._mx=Math.max(z._mx||0,z.hp);if(z.hp>=z._mx||z.hp<=0)continue;if(Math.hypot(z.x-P.x,z.y-P.y)>14*T)continue;const big=z.boss?2:z.mu?1.45:1,s=fvScr(z.x,z.y,(z.sp?1:2.05)*FVU*big);if(!s)continue;
+  const w=z.boss?60:24,f=Math.max(0,z.hp/z._mx);Q(s[0]-w/2-1,s[1]-1,w+2,5,'rgba(0,0,0,.7)');Q(s[0]-w/2,s[1],Math.round(w*f),3,f>.5?'#6ad04a':f>.25?'#e8c040':'#e04a3a')}
+ if(typeof dmgN!='undefined'){const t=performance.now();dmgN=dmgN.filter(d=>t-d.t0<750);for(const d of dmgN){const a=(t-d.t0)/750;if(a>=1)continue;const s=fvScr(d.x,d.y,(1.9+a*.6)*FVU);if(!s)continue;g.globalAlpha=Math.max(0,1-a*a);txt('-'+d.v,s[0],s[1],d.c||'#ffd84a','center')}g.globalAlpha=1}
+}finally{noTr=false;g.globalAlpha=1}}
+/* hit marker and the red arc toward an attacker */
+function fvCombat(){const dt=FV.dt||.016;let hp=0;for(const z of zs)hp+=Math.max(0,z.hp);for(const d of deer)hp+=Math.max(0,d.hp);if(FV.hp0!=null&&hp<FV.hp0-.01&&(P.cd>0||mfT>0))FV.hm=.22;FV.hp0=hp;
+ if(FV.php!=null&&P.hp<FV.php-.01){let b=null,bd=90;for(const z of zs){const d=Math.hypot(z.x-P.x,z.y-P.y);if(d<bd){bd=d;b=z}}if(b){FV.dmgA=Math.atan2(b.x-P.x,b.y-P.y);FV.dmgT=1}}FV.php=P.hp;
+ if(FV.hm>0)FV.hm-=dt;if(FV.dmgT>0)FV.dmgT-=dt*1.1}
+function fvCombatDraw(){const cx=Math.round(VW/2),cy=Math.round(VH/2);
+ if(FV.hm>0){const c=FV.hm>.12?'#ffffff':'#ffb0a0';for(let k=3;k<7;k++){Q(cx-k,cy-k,1,1,c);Q(cx+k,cy-k,1,1,c);Q(cx-k,cy+k,1,1,c);Q(cx+k,cy+k,1,1,c)}}
+ if(FV.dmgT>0){const fw=Math.atan2(-Math.sin(FV.yaw),-Math.cos(FV.yaw)),rel=FV.dmgA-fw,R_=Math.min(VW,VH)*.32;g.save();g.translate(cx,cy);g.rotate(-rel);g.strokeStyle='rgba(220,30,20,'+(FV.dmgT*.85).toFixed(3)+')';g.lineWidth=5;g.beginPath();g.arc(0,0,R_,-Math.PI/2-.35,-Math.PI/2+.35);g.stroke();g.restore()}}
+/* compass */
+function fvCompass(){const fx=-Math.sin(FV.yaw),fy=-Math.cos(FV.yaw),hd=Math.atan2(fx,-fy)*180/Math.PI,cx=Math.round(VW/2),y=20,W2=150;
+ Q(cx-W2/2,y-1,W2,12,'rgba(10,8,6,.45)');Q(cx,y-3,1,3,'#ffd84a');
+ const h=LANG=='hu',L=[[0,h?'É':'N'],[45,''],[90,h?'K':'E'],[135,''],[180,h?'D':'S'],[225,''],[270,h?'Ny':'W'],[315,'']];
+ g.font=fnt(1,8);for(const[a,t]of L){let r=a-hd;r=((r+540)%360)-180;if(Math.abs(r)>70)continue;const x=Math.round(cx+r*1.05);if(t)txt(t,x,y+8,a==0?'#ff8a6a':'#fff2c8','center');else Q(x,y+3,1,4,'rgba(255,240,200,.6)')}
+ const mark=(wx,wy,col)=>{const a=Math.atan2(wx-P.x,-(wy-P.y))*180/Math.PI;let r=a-hd;r=((r+540)%360)-180;if(Math.abs(r)>72)return;const x=Math.round(cx+r*1.05);Q(x-2,y+10,5,2,col)};
+ try{if(typeof home!='undefined'&&home)mark(home.x,home.y,'#6ad04a')}catch(e){}try{if(typeof WPS!='undefined'&&WPS&&WPS.me)mark(WPS.me.x,WPS.me.y,'#ffd84a')}catch(e){}}
+{const fo162=fvOver;fvOver=function(){fo162();try{noTr=true;if(!fvUI()){fvCompass();fvCombatDraw()}fvWorldHud()}catch(e){}finally{noTr=false}}}
+{const up162=update;update=function(dt){const r=up162.apply(this,arguments);try{if(fvOn())fvCombat()}catch(e){}return r}}
+/* the 2D hover tooltip is not needed in first person (the E prompt says it) */
+{const rh162=rotHint;rotHint=function(){if(fvOn()&&hovObj())return;return rh162.apply(this,arguments)}}
+/* building: what you hold snaps to the tile your crosshair points at (against a wall it goes in front of it), with a ghost outline */
+{const fa162=fvAim;fvAim=function(){fa162();try{const it=HB[hb];if(PL[it]&&inv[it]>0&&FV.tPlace!=null&&FV.hit&&FV.hit.d<5&&!FV.hit.foe){mtx=FV.tPlace%W;mty=Math.floor(FV.tPlace/W);mwx=mtx*T+8;mwy=mty*T+8;FV.pl=1}else FV.pl=0}catch(e){FV.pl=0}}}
+{const ol162=fvOutline;fvOutline=function(){ol162();try{if(!FV.pl||!FVOL||!fvLive())return;const it=HB[hb];let w=1,h=1;try{[w,h]=fpDims(it,rot)}catch(e){}const ax=mtx-Math.floor((w-1)/2),ay=mty-Math.floor((h-1)/2);
+ let ok=true,top=-1e9;for(let y=0;y<h;y++)for(let x=0;x<w;x++){const X=ax+x,Y=ay+y;if(X<1||Y<1||X>=W-1||Y>=H-1){ok=false;continue}const i=Y*W+X,m=map[i];if(m%4==1||m==8||m==9||m==10||m==11||ob[i])ok=false;top=Math.max(top,fvHgt()[i])}
+ const tall=BOX3[it]||it=='door'||it=='win'||it=='wall'?FV_WALL:it=='cabin'?3*FVU:it=='tent'?2.2*FVU:FVU;FVOL.visible=true;FVOL.material.color.setHex(ok?0x7dff7d:0xff6a5a);FVOL.scale.set(w+.004,tall,h+.004);FVOL.position.set(ax+w/2,top+tall/2,ay+h/2)}catch(e){}}}
+/* mouse sensitivity: [ and ] */
+addEventListener('keydown',e=>{if(!fvOn()||(e.code!='BracketLeft'&&e.code!='BracketRight'))return;FV.sens=Math.max(.0006,Math.min(.008,FV.sens*(e.code=='BracketRight'?1.18:1/1.18)));try{localStorage.setItem('pxc_fvs',String(FV.sens))}catch(x){}say((LANG=='hu'?'Egér érzékenység: ':'Mouse sensitivity: ')+Math.round(FV.sens/.0026*100)+'%')},true);
+try{TUT.hu.push(['FPS: tájékozódás','Fent iránytű mutatja, merre nézel (zöld: otthon, sárga: jelölés). Ha megsebeznek, piros ív mutatja, honnan jött a támadás; a célkereszt X-szel jelzi a találatot.','Az emberek neve és szövege a fejük fölött látszik. Építéskor zöld körvonal mutatja, hová kerül a tárgy (piros: oda nem lehet). Egér érzékenység: [ és ].']);
+ TUT.en.push(['FPS: finding your way','The compass on top shows where you look (green: home, yellow: your mark). A red arc shows where a hit came from; the crosshair flashes an X when you land one.','Names and lines float above people. When building, a green outline shows where the thing goes (red: not there). Mouse sensitivity: [ and ].'])}catch(e){}
+
+/* translations: longer phrases first, so a short word never breaks a whole sentence (e.g. the Geiger counter line) */
+try{const ix=new Map(HU.map((e,i)=>[e,i]));HU.sort((a,b)=>(b[0].length-a[0].length)||(ix.get(a)-ix.get(b)))}catch(e){}
+
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
  if(state=='title')menu();if(state=='opts')optsMenu();if(state=='sndo')sndMenu();if(state=='gfxo')gfxMenu();if(state=='slots')svMenu();if(state=='keys')keysMenu();if(state=='wthr')wthrMenu();if(state=='char')charMenu();if(state=='lobby')drawLobby();if(state=='hb'){Q(0,0,VW,VH,'rgba(6,10,6,.6)');drawHB()}if(0)title('ASHFALL',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Hold the fire. Survive the nights.','','WASD move \u2022 Space chop / fish / attack \u2022 Tab recipes','Press any key']);
