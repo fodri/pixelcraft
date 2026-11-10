@@ -9698,7 +9698,8 @@ GAMEV=161;
 /* ---------- textures: crisp up close, no shimmering far away ---------- */
 function fvMip(t){if(!t||t.userData159)return;try{const R=V3.R;if(!R.capabilities.isWebGL2&&(t.image&&((t.image.width&(t.image.width-1))||(t.image.height&(t.image.height-1)))))return;t.generateMipmaps=true;t.minFilter=THREE.NearestMipmapLinearFilter;t.anisotropy=Math.min(8,R.capabilities.getMaxAnisotropy());t.needsUpdate=true;t.userData159=1}catch(e){}}
 {const bg161=v3BuildGround;v3BuildGround=function(ch){const r=bg161.apply(this,arguments);if(FVB){fvMip(ch.tex)}return r}}
-{const bo161=v3BuildObjs;v3BuildObjs=function(ch){const r=bo161.apply(this,arguments);if(FVB&&ch.atlT)fvMip(ch.atlT);return r}}
+/* walls keep sharp texels (their atlas cells must not bleed into each other); the haze starts farther out so the village keeps its colours */
+{const fl161a=fvLight;fvLight=function(){fl161a.apply(this,arguments);try{if(!inD){const bd=BD||0,f=V3.S.fog;f.near=22*(1-bd*.4);f.far=48*(1-bd*.3)}}catch(e){}}}
 {const sh161=fvShadows;fvShadows=function(on){sh161(on);try{const s=V3.sun.shadow;s.bias=on?-.0009:-.0006;s.normalBias=on?.06:.03;for(const m of[FVLEAF,FVBARK,FVDIRT])fvMip(m.map)}catch(e){}}}
 /* ---------- block models ---------- */
 const FVM3=new Map();
@@ -9768,6 +9769,9 @@ function fvMobs(){const fr=V3.fr,near=(x,y,R_)=>Math.abs(x-P.x)<R_*T&&Math.abs(y
 {const fl161=fvLights;fvLights=function(){const r=fl161();try{const e=V3.ents.get('P');if(e){e.m.visible=false;if(e.c)e.c.visible=false}}catch(x){}return r}}
 /* aiming at a model: models count as people/animals */
 {const li161=fvList;fvList=function(r_){const L=li161(r_);for(const r of FVM3.values())if(r.kind!='p'&&r.kind!='l')L.push(r.G);return L}}
+/* build 162: names for a few props that had none */
+GAMEV=162;
+try{if(!LBL.bag){LBL.bag='Bag';HU.push(['Bag','Zsák'])}}catch(e){}
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
