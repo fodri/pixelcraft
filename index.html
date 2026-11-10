@@ -1360,7 +1360,7 @@ function update(dt){
  BD+=((inBuild()?bDim():0)-BD)*Math.min(1,dt*4);const dr=dark();let mx=0,my=0;sporeTick(dt);
  if(K.KeyA||K.ArrowLeft)mx--;if(K.KeyD||K.ArrowRight)mx++;if(K.KeyW||K.ArrowUp)my--;if(K.KeyS||K.ArrowDown)my++;
  if(view){ang+=((K.ArrowRight?1:0)-(K.ArrowLeft?1:0))*2.4*dt;const f=(K.KeyW||K.ArrowUp?1:0)-(K.KeyS||K.ArrowDown?1:0),s=(K.KeyD?1:0)-(K.KeyA?1:0),v=(K.ShiftLeft?100:70)*dt;if(f||s){mv(P,(Math.cos(ang)*f-Math.sin(ang)*s)*v,(Math.sin(ang)*f+Math.cos(ang)*s)*v,4);P.an+=dt*10;if(fishing){fishing=null;say('Fishing cancelled')}}P.fx=Math.cos(ang);P.fy=Math.sin(ang);mx=my=0}
- if(rid){if(!rid.occ||!CARS.includes(rid))rid=null;else{P.x=rid.x;P.y=rid.y;sit=null;P.boat=false}mx=my=0}if(drv){driveTick(dt,mx,my);mx=my=0}if(J){mx=my=0}if(mx||my){sit=null;const l=Math.hypot(mx,my);mx/=l;my/=l;P.fx=Math.abs(mx)>=Math.abs(my)?Math.sign(mx):0;P.fy=P.fx?0:Math.sign(my);if(mx&&my){P.fx=mx>0?1:-1;P.fy=0}
+ if(typeof fvMv=='function'){const q_=fvMv(mx,my);mx=q_[0];my=q_[1]}if(rid){if(!rid.occ||!CARS.includes(rid))rid=null;else{P.x=rid.x;P.y=rid.y;sit=null;P.boat=false}mx=my=0}if(drv){driveTick(dt,mx,my);mx=my=0}if(J){mx=my=0}if(mx||my){sit=null;const l=Math.hypot(mx,my);mx/=l;my/=l;P.fx=Math.abs(mx)>=Math.abs(my)?Math.sign(mx):0;P.fy=P.fx?0:Math.sign(my);if(mx&&my){P.fx=mx>0?1:-1;P.fy=0}
   const iw=wt(map[Math.floor(P.y/T)*W+Math.floor(P.x/T)])||map[Math.floor(P.y/T)*W+Math.floor(P.x/T)]==10,sp=(K.ShiftLeft?100*(1+sk('run')):70)*(1+sk('spd'))*dt*(iw&&!P.boat?.5:1)*(P.boat?1.12:1)*(creative?1.6:1)*(typeof carryMul=='function'?carryMul():1);swim=true;mv(P,mx*sp,my*sp,4);swim=false;P.an+=dt*(K.ShiftLeft?14:10);if(K.ShiftLeft&&!P.boat&&!iw){dsT-=dt;if(dsT<=0){dsT=.08;const dc=cb==1&&!inD?'rgba(240,246,250,.7)':cb==2&&!inD?'rgba(226,200,140,.6)':'rgba(190,176,140,.5)';parts.push({x:P.x-1+(Math.random()-.5)*6,y:P.y-1,vx:-mx*16+(Math.random()-.5)*10,vy:-5-Math.random()*6,l:.38,c:dc,ds:1,sz:3})}}if(fishing){fishing=null;say('Fishing cancelled')}}
  {const a0=ms.x/ZM+cam.x-P.x,b0=ms.y/ZM+cam.y-P.y,l0=Math.hypot(a0,b0)||1;P.fx=a0/l0;P.fy=b0/l0}P.cd-=dt;P.hurt-=dt;
  mtx=Math.floor((ms.x/ZM+cam.x)/T);mty=Math.floor((ms.y/ZM+cam.y)/T);mwx=ms.x/ZM+cam.x;mwy=ms.y/ZM+cam.y;if(V3&&V3.on)v3Mouse();if(mdown)act();edge=false;
@@ -9157,6 +9157,175 @@ function story156(dt){if(!STORY||STORY.done||state!='play'||STORY.intro)return;i
 try{const ens=stEnsure;stEnsure=function(){const s=stCur();if(s&&s.id=='dog')return ens()}}catch(e){}
 
 {const jc156=jnChalShow;jnChalShow=function(){if(typeof STORY!='undefined'&&STORY&&!STORY.done)return false;return jc156()}}
+
+/* ===== v157: FPS view — walk the real world in first person: DOOM-style pixel sprites, the real 3D houses, sun shadows, lens flare and modern movement (sprint, jump, crouch, slide). F4 switches; underground stays 2D. ===== */
+GAMEV=157;
+var FPV=false;
+try{const s=localStorage.getItem('pxc_fps');FPV=s==null?!(navigator.webdriver||(window.matchMedia&&matchMedia('(pointer:coarse)').matches)):s=='1'}catch(e){}
+const FV={yaw:0,pitch:-.06,cr:0,vy:0,hz:0,land:0,bob:0,slide:0,sdx:0,sdy:0,rec:0,sw:0,lock:false,noLock:false,was:false,fov:72,fl:0,flW:0,px:0,py:0,mvx:0,mvy:0,spd:0,cd0:0,mf0:0,zm:null,pr0:null,gy:null,sens:.0026,told:false,ent:new Map(),tg:null,hit:null,dt:.016,ck0:false,dome:null,rc:null};
+const FVEYE=1.02,FVCR=.62,FVES=.8,FVART={};
+function fvCan(){return typeof THREE!='undefined'&&state=='play'&&!inD&&!view&&!(typeof TCH!='undefined'&&TCH&&TCH.on)}
+function fvA(){return !!(FPV&&fvCan())}
+function fvOn(){return !!(fvA()&&V3&&V3.on)}
+const FVUI=['invOpen','book','skOpen','showMap','stOpen','tut','chatOpen','emOpen','gaOpen','mdOpen','gtOpen','panel','JN','TALK','DLG','SHOP','SETLUI','TPV','CKO','CHP','FLPK','PE','GAL','DTAG','MODEQ','SEND','STORY&&STORY.intro'].map(n=>{try{return new Function('try{return !!('+n+')}catch(e){return false}')}catch(e){return()=>false}});
+function fvUI(){if(state!='play')return true;for(const f of FVUI)if(f())return true;return false}
+function fvLive(){return fvOn()&&!fvUI()}
+/* ---------- the 3D view runs whenever the FPS view is on ---------- */
+{const va157=v3Active;v3Active=function(){if(fvA())return true;return va157()}}
+{const sw157=s3Want;s3Want=function(){if(fvA())return false;return sw157()}}
+{const dw157=draw;draw=function(){const a=fvA(),s=V3D;if(a)V3D=true;try{return dw157.apply(this,arguments)}finally{if(a)V3D=s}}}
+{const fx157=fx;fx=function(){const a=fvA(),s=V3D;if(a)V3D=true;try{return fx157.apply(this,arguments)}finally{if(a)V3D=s}}}
+/* ---------- invisible shadow casters that face the sun ---------- */
+function fvInv(){return FV.inv||(FV.inv=new THREE.MeshBasicMaterial({colorWrite:false,depthWrite:false}))}
+function fvMarkChunk(ch){ch.bb=[];if(!ch.og)return;const tilt=-ELEV3*TILT3,add=[];
+ for(const m of ch.og.children){if(!m.isMesh||!m.geometry||m.geometry.type!=='PlaneGeometry'||!m.geometry.parameters)continue;if(Math.abs(m.rotation.x-tilt)>1e-4)continue;
+  const pw=m.geometry.parameters.width,ph=m.geometry.parameters.height,fw=Math.max(1,Math.round(pw-2)),fh=Math.max(1,Math.round(ph-2.5));m.userData.bb=1;
+  const c=new THREE.Mesh(m.geometry,fvInv());c.customDepthMaterial=m.customDepthMaterial;c.castShadow=true;c.receiveShadow=false;c.visible=false;c.userData.cst=1;c.userData.shared=1;add.push(c);
+  ch.bb.push({m,c,p0:m.position.clone(),cx:m.position.x+fw/2,cz:m.position.z+.15-fh/2,hw:fw/2,y:m.position.y})}
+ for(const c of add)ch.og.add(c)}
+{const bo157=v3BuildObjs;v3BuildObjs=function(ch){const r=bo157.apply(this,arguments);try{fvMarkChunk(ch)}catch(e){}return r}}
+{const ve157=v3Ent;v3Ent=function(key){const e=ve157.apply(this,arguments);try{if(e&&!e.c){const c=new THREE.Mesh(e.m.geometry,fvInv());c.customDepthMaterial=e.m.customDepthMaterial;c.castShadow=true;c.visible=false;c.userData.cst=1;V3.S.add(c);e.c=c;e.m.userData.ent=key;FV.ent.set(key,e)}}catch(x){}return e}}
+/* every frame: sprites turn to the camera, their casters to the sun */
+function fvFrame(){const yaw=FV.yaw,cy=Math.cos(yaw),sy=Math.sin(yaw),sd=V3.sun.position.clone().sub(V3.sun.target.position),sl=Math.hypot(sd.x,sd.z)||1,sx=sd.x/sl,sz=sd.z/sl,sa=Math.atan2(sd.x,sd.z),ca=Math.cos(sa),sn=Math.sin(sa);
+ for(const ch of V3.chunks.values()){if(!ch.vis||!ch.bb)continue;for(const b of ch.bb){const m=b.m;m.rotation.set(0,yaw,0);m.position.set(b.cx-b.hw*cy,b.y,b.cz+b.hw*sy);m.castShadow=false;const c=b.c;c.visible=m.visible;
+   if(c.visible){const qx=b.cx-sx*.3,qz=b.cz-sz*.3;c.rotation.set(0,sa,0);c.position.set(qx-b.hw*ca,b.y,qz+b.hw*sn)}}}
+ for(const[k,e]of FV.ent){if(V3.ents.get(k)!==e){V3.S.remove(e.c);FV.ent.delete(k);continue}const m=e.m,vis=m.visible;m.rotation.set(0,yaw,0);m.scale.setScalar(FVES);m.castShadow=false;if(k=='P')m.visible=false;
+  e.c.visible=vis;if(vis){e.c.rotation.set(0,sa,0);e.c.scale.setScalar(FVES);e.c.position.set(m.position.x-sx*.12,m.position.y,m.position.z-sz*.12)}}}
+function fvRestore(){const t=-ELEV3*TILT3;for(const ch of V3.chunks.values())if(ch.bb)for(const b of ch.bb){b.m.rotation.set(t,0,0);b.m.position.copy(b.p0);b.m.castShadow=true;b.c.visible=false}
+ for(const[k,e]of FV.ent){e.m.rotation.set(t,0,0);e.m.scale.setScalar(1);e.m.castShadow=true;e.c.visible=false;if(k=='P')e.m.visible=true}if(FV.dome)FV.dome.visible=false;V3.hl.material.visible=true}
+/* ---------- camera at the eyes ---------- */
+{const vc157=v3Cam;v3Cam=function(){if(!fvA())return vc157();return fvCam()}}
+function fvCam(){const c=V3.cam,gx=P.x/T,gz=P.y/T,gh=v3HW(P.x,P.y),dt=FV.dt||.016;if(FV.gy==null||Math.abs(FV.gy-gh)>2)FV.gy=gh;FV.gy+=(gh-FV.gy)*Math.min(1,dt*14);
+ let jz=FV.hz;if(J){const u=Math.min(1,J.t/J.d);jz=Math.max(jz,Math.sin(u*Math.PI)*J.h/16*.7)}
+ const run=FV.spd>78&&K.ShiftLeft,eye=FV.gy+(drv?1.05:FVEYE)-FV.cr*(FVEYE-FVCR)+jz-FV.land*.14+(FV.hz>0||J?0:Math.abs(Math.sin(FV.bob))*.035)-(P.boat?.2:0);
+ c.position.set(gx,eye,gz);c.rotation.order='YXZ';c.rotation.set(FV.pitch-FV.rec*.03,FV.yaw,FV.slide>0?.05:0);
+ const fov=72+(run?6:0)+(FV.slide>0?10:0);FV.fov+=(fov-FV.fov)*Math.min(1,dt*8);if(Math.abs(c.fov-FV.fov)>.01||c.near!==.04){c.fov=FV.fov;c.near=.04;c.far=120;c.updateProjectionMatrix()}
+ const tg=FV.tg||(FV.tg=new THREE.Vector3());tg.set(gx,FV.gy,gz);V3.tgt=tg.clone();return tg}
+/* a sky dome: darker overhead, the fog colour at the horizon */
+function fvDome(){if(FV.dome)return FV.dome;const ge=new THREE.SphereGeometry(100,24,12),pos=ge.attributes.position,col=new Float32Array(pos.count*3);
+ for(let i=0;i<pos.count;i++){const t=Math.max(0,pos.getY(i)/100),k=1-Math.pow(t,.7)*.42;col[i*3]=k*.94;col[i*3+1]=k*.97;col[i*3+2]=Math.min(1.1,k+t*.1)}ge.setAttribute('color',new THREE.BufferAttribute(col,3));
+ const m=new THREE.Mesh(ge,new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.BackSide,fog:false,depthWrite:false}));m.renderOrder=-10;m.frustumCulled=false;V3.S.add(m);FV.dome=m;return m}
+/* light follows the view: the shadow box sits in front of you, fog is closer, the flashlight points where you look */
+function fvLight(){const fx_=-Math.sin(FV.yaw),fz=-Math.cos(FV.yaw),c=V3.cam;V3.sun.position.x+=fx_*12;V3.sun.position.z+=fz*12;V3.sun.target.position.x+=fx_*12;V3.sun.target.position.z+=fz*12;
+ const bd=BD||0,f=V3.S.fog;f.near=11*(1-bd*.4);f.far=34*(1-bd*.3);
+ const d=fvDome();d.visible=true;d.position.copy(c.position);d.material.color.copy(V3.S.background);
+ if(typeof flashOn=='function'&&flashOn()){V3.spot.position.copy(c.position);const v=new THREE.Vector3(0,0,-1).applyQuaternion(c.quaternion);V3.spot.target.position.copy(c.position).addScaledVector(v,8)}
+ V3.hl.material.visible=!!(FV.hit&&!FV.hit.foe&&!FV.hit.ent&&FV.hit.d<3.6);
+ if(FV.rec>.45){V3.pLight.position.copy(c.position);V3.pLight.intensity=Math.max(V3.pLight.intensity,2.8*FV.rec);V3.pLight.distance=9;V3.pLight.color.setHex(0xffc070)}else V3.pLight.color.setHex(0xffe8c0)}
+{const vl157=v3Light;v3Light=function(tg){vl157(tg);if(!fvOn())return;try{fvLight()}catch(e){}try{fvFrame()}catch(e){}}}
+/* roofs stay solid — from inside they are the ceiling; the furniture under them stays visible */
+{const vr157=v3Roofs;v3Roofs=function(){vr157();if(!fvOn())return;const px=P.x/T,pz=P.y/T;
+ for(let k=0;k<BLD.length;k++){const b=BLD[k],r=V3.roofs.get(b);if(!r)continue;if(Math.hypot(b.x+b.w/2-px,b.y+b.h/2-pz)>44)continue;r.a=1;V3.ra[k]=0;r.G.visible=true;
+  for(const m of r.G.userData.mats){m.opacity=1;m.depthWrite=true}if(!r.cs){r.cs=true;r.G.traverse(m=>{if(m.isMesh)m.castShadow=true})}}}}
+/* ---------- aiming: what the crosshair looks at ---------- */
+function fvVis(o){for(let q=o;q;q=q.parent){if(!q.visible)return false;if(q===V3.S)return true}return true}
+function fvAlpha(h){const o=h.object;if(!(o.userData.bb||o.userData.ent))return true;const im=o.material&&o.material.map&&o.material.map.image;if(!im||!h.uv||!im.getContext)return true;
+ const x=Math.min(im.width-1,Math.max(0,Math.floor(h.uv.x*im.width))),y=Math.min(im.height-1,Math.max(0,Math.floor((1-h.uv.y)*im.height)));try{return im.getContext('2d').getImageData(x,y,1,1).data[3]>90}catch(e){return true}}
+function fvList(r){const L=[],pcx=Math.floor(P.x/T/GQS),pcy=Math.floor(P.y/T/GQS);for(const ch of V3.chunks.values()){if(!ch.vis||Math.abs(ch.cx-pcx)>r||Math.abs(ch.cy-pcy)>r)continue;if(ch.gm)L.push(ch.gm);if(ch.og)L.push(ch.og)}
+ for(const q of V3.roofs.values())if(q.G.visible)L.push(q.G);for(const e of V3.ents.values())if(e.m.visible&&e.m.userData.ent!=='P')L.push(e.m);if(V3.cars)for(const G of V3.cars.values())if(G.visible)L.push(G);return L}
+function fvCast(o,d,far,L){const rc=FV.rc||(FV.rc=new THREE.Raycaster());rc.set(o,d);rc.near=0;rc.far=far;let H_;try{H_=rc.intersectObjects(L,true)}catch(e){return null}
+ for(const h of H_){const ob_=h.object;if(ob_.userData.cst||!ob_.isMesh||!fvVis(ob_))continue;if(!fvAlpha(h))continue;return h}return null}
+function fvAim(){const c=V3.cam;c.updateMatrixWorld();const o=c.position.clone(),d=new THREE.Vector3(0,0,-1).applyQuaternion(c.quaternion),fx_=-Math.sin(FV.yaw),fy_=-Math.cos(FV.yaw);P.fx=fx_;P.fy=fy_;
+ const h=fvCast(o,d,7,fvList(1));FV.hit=null;let tx,ty;
+ if(h){const ud=h.object.userData,p=h.point.clone().addScaledVector(d,ud.bb||ud.ent?0:.04);mwx=p.x*T;mwy=p.z*T;tx=Math.floor(p.x);ty=Math.floor(p.z);FV.hit={d:h.distance,ent:ud.ent||null};
+  if(ud.ent){let b=null,bd=22;for(const e of zs.concat(deer)){const q=Math.hypot(e.x-mwx,e.y-mwy);if(q<bd){bd=q;b=e}}if(b){mwx=b.x;mwy=b.y-6;FV.hit.foe=1;tx=Math.floor(b.x/T);ty=Math.floor(b.y/T)}}}
+ else{mwx=P.x+fx_*72;mwy=P.y+fy_*72;tx=Math.floor((P.x+fx_*24)/T);ty=Math.floor((P.y+fy_*24)/T)}
+ /* melee assist: a foe right in front of you */
+ if(!GUN[HB[hb]]&&!(FV.hit&&FV.hit.foe)){let b=null,bd=30;for(const e of zs.concat(deer)){const ex=e.x-P.x,ey=e.y-P.y,q=Math.hypot(ex,ey);if(q<bd&&q>1&&(ex*fx_+ey*fy_)/q>.8){bd=q;b=e}}if(b){mwx=b.x;mwy=b.y-6;FV.hit={d:bd/T,foe:1}}}
+ if(!(tx>=0&&ty>=0&&tx<W&&ty<H)){tx=Math.floor(P.x/T);ty=Math.floor(P.y/T)}mtx=tx;mty=ty}
+{const vm157=v3Mouse;v3Mouse=function(){if(!fvOn())return vm157();try{fvAim()}catch(e){vm157()}}}
+/* E uses what you look at first */
+{const ni157=nearInt;nearInt=function(){if(fvOn()&&FV.hit&&mtx>=0&&mty>=0){let q=ob[mty*W+mtx],tx=mtx,ty=mty;if(q&&q.pm!=null){tx=q.pm%W;ty=Math.floor(q.pm/W);q=ob[q.pm]}
+  if(q&&INT[q.t]&&!((q.t=='cabin'||q.t=='tent')&&q.fw)&&Math.hypot(tx*T+8-P.x,ty*T+8-P.y)<44)return{o:q,tx,ty}}return ni157.apply(this,arguments)}}
+{const pe157=promptE;promptE=function(){if(!fvOn())return pe157();if(state!='play'||book||tut||stOpen||invOpen||fvUI())return;const n=nearInt();if(!n)return;
+ const nm=(typeof LBL!='undefined'&&LBL[n.o.t])||n.o.t,y=Math.round(VH/2+20+Math.sin(performance.now()/180)*1.2);g.font=fnt(1,11);const w=Math.round(g.measureText('E  '+nm).width)+16;uiPanel(VW/2-w/2,y-10,w,15,{soft:1});txt('E',VW/2-w/2+8,y+1,'#ffe27a');txt(nm,VW/2-w/2+20,y+1,'#fff2c8')}}
+/* ---------- moving: WASD follows the view ---------- */
+function fvMv(mx,my){if(!fvLive())return[mx,my];if(FV.slide>0)return[FV.sdx,FV.sdy];const f=(K.KeyW?1:0)-(K.KeyS?1:0),s=(K.KeyD?1:0)-(K.KeyA?1:0);
+ if(!f&&!s){FV.mvx=FV.mvy=0;return[0,0]}const sy=Math.sin(FV.yaw),cy=Math.cos(FV.yaw);let x=-sy*f+cy*s,y=-cy*f-sy*s;const l=Math.hypot(x,y)||1;x/=l;y/=l;FV.mvx=x;FV.mvy=y;return[x,y]}
+{const cm157=carryMul;carryMul=function(){let m=cm157.apply(this,arguments);if(fvLive()){if(FV.slide>0)m*=1+FV.slide*1.7;else if(FV.cr>.5)m*=.5}return m}}
+function fvJump(){if(FV.hz>0||FV.vy>0||J||drv||P.boat||sit||!fvLive())return;const mx=FV.mvx,my=FV.mvy;
+ if(mx||my){const ax=P.x+mx*13,ay=P.y+my*13,ti=Math.floor(ay/T)*W+Math.floor(ax/T);if(blocked(ax,ay,4)||wt(map[ti])){const ja=jumpCheck(P.x+mx*JR,P.y+my*JR);if(ja&&ja.ok){fishing=null;J={x0:P.x,y0:P.y,x1:ja.X,y1:ja.Y,t:0,d:.32+ja.dd/300,h:6+ja.dd*.22};try{snd('bow')}catch(e){}return}}}
+ FV.vy=4.4;FV.hz=.001;try{snd('bounce')}catch(e){}}
+function fvPre(dt){FV.dt=dt;if(FV.lock&&(!fvA()||fvUI()))fvUnlock();if(!fvOn())return;if(FV.lock){ms.x=VW/2;ms.y=VH/2}const live=!fvUI();
+ if(live){const tl=(K.ArrowLeft?1:0)-(K.ArrowRight?1:0),tu=(K.ArrowUp?1:0)-(K.ArrowDown?1:0);FV.yaw+=tl*2.3*dt;FV.pitch=cl(FV.pitch+tu*1.6*dt,-1.3,1.3);
+  try{const gp=navigator.getGamepads&&navigator.getGamepads(),p=gp&&[...gp].find(x=>x&&x.connected);if(p&&p.axes.length>=4){const ax=Math.abs(p.axes[2])>.15?p.axes[2]:0,ay=Math.abs(p.axes[3])>.15?p.axes[3]:0;FV.yaw-=ax*2.6*dt;FV.pitch=cl(FV.pitch-ay*1.9*dt,-1.3,1.3)}}catch(e){}}
+ const ck=!!(live&&(K.ControlLeft||K.KeyZ));if(ck&&!FV.ck0&&K.ShiftLeft&&FV.spd>40&&FV.hz<=0&&!J&&FV.slide<=0&&!drv){FV.slide=.55;FV.sdx=FV.mvx;FV.sdy=FV.mvy;if(!FV.sdx&&!FV.sdy){FV.sdx=-Math.sin(FV.yaw);FV.sdy=-Math.cos(FV.yaw)}try{snd('swish')}catch(e){}}FV.ck0=ck;
+ if(FV.slide>0)FV.slide=Math.max(0,FV.slide-dt);FV.cr+=(((ck||FV.slide>0)?1:0)-FV.cr)*Math.min(1,dt*12);
+ if(FV.hz>0||FV.vy>0){FV.vy-=15*dt;FV.hz+=FV.vy*dt;if(FV.hz<=0){if(FV.vy<-2.5)FV.land=Math.min(1,-FV.vy/7);FV.hz=0;FV.vy=0}}
+ FV.land*=Math.pow(.02,dt);FV.rec*=Math.pow(.004,dt);FV.sw=Math.max(0,FV.sw-dt*3.2);FV.px=P.x;FV.py=P.y;FV.cd0=P.cd;FV.mf0=mfT}
+function fvPost(dt){if(!fvOn())return;const d=Math.hypot(P.x-FV.px,P.y-FV.py)/Math.max(dt,1e-3);FV.spd+=(Math.min(300,d)-FV.spd)*Math.min(1,dt*10);
+ if(FV.spd>12&&FV.hz<=0&&!J)FV.bob+=dt*FV.spd*.085;else FV.bob*=Math.pow(.05,dt);const it=HB[hb];if(GUN[it]){if(mfT>FV.mf0+.001)FV.rec=1}else if(P.cd>FV.cd0+.05)FV.sw=1}
+{const up157=update;update=function(dt){try{fvPre(dt)}catch(e){}const r=up157.apply(this,arguments);try{fvPost(dt)}catch(e){}return r}}
+/* ---------- the frame: pixel resolution, switching in and out ---------- */
+function fvSwitch(on){FV.was=on;const R=V3.R;
+ if(on){if(FV.pr0==null)FV.pr0=R.getPixelRatio();V3.cv.style.imageRendering='pixelated';FV.yaw=Math.atan2(-(P.fx||0),-(P.fy||1));FV.pitch=-.06;FV.gy=null;FV.hz=FV.vy=0;
+  if(!FV.told){FV.told=true;const h=LANG=='hu';try{toast112(h?'FPS nézet':'FPS view',h?'Egér: nézelődés · Szóköz: ugrás · Ctrl: guggolás · Shift+Ctrl: csúszás · F4: 2D':'Mouse: look · Space: jump · Ctrl: crouch · Shift+Ctrl: slide · F4: 2D','#9ad0ff')}catch(e){}}}
+ else{if(FV.pr0!=null)R.setPixelRatio(FV.pr0);V3.cv.style.imageRendering='';V3.cam.near=.5;V3.cam.fov=34;V3.cam.far=140;V3.cam.updateProjectionMatrix();fvRestore();fvUnlock();V3.tgt=null}V3.w=0}
+{const vd157=v3Draw;v3Draw=function(){const a=fvA();if(a!==FV.was&&V3&&V3.ok)fvSwitch(a);
+ if(a&&V3&&V3.ok){const R=V3.R,want=Math.min(1,Math.max(.2,VH/(C.clientHeight||VH)));if(Math.abs(R.getPixelRatio()-want)>.001){R.setPixelRatio(want);V3.w=0}}
+ if(a){FV.zm=ZM;ZM=.95}let r;try{r=vd157()}finally{if(FV.zm!=null){ZM=FV.zm;FV.zm=null}}if(a!==FV.was&&V3&&V3.ok)fvSwitch(a);return r}}
+/* ---------- on screen: sun and lens flare, the weapon, the crosshair ---------- */
+const fvPx=(x,a,b,w,h,c)=>{x.fillStyle=c;x.fillRect(a,b,w,h)};
+function fvArt(k,w,h,fn){if(FVART[k])return FVART[k];const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');fn((a,b,ww,hh,col)=>fvPx(x,a,b,ww,hh,col));return FVART[k]=c}
+function fvPistol(){return fvArt('pistol',64,48,p=>{for(let y=2;y<28;y++){const t=(y-2)/26,w=Math.round(5+t*9),x0=32-w;p(x0,y,w*2,1,'#2c2c32');p(x0,y,1,1,'#6a6a76');p(x0+1,y,1,1,'#4a4a54');p(32+w-1,y,1,1,'#18181c');if(y>17&&y%2==0)p(x0+2,y,w*2-4,1,'#222228')}
+ p(30,0,4,3,'#1e1e22');p(31,0,2,1,'#e8e0c8');p(24,13,16,2,'#3a3a44');p(26,8,4,3,'#101014');p(22,28,20,5,'#24242a');p(22,28,20,1,'#4a4a54');p(26,33,12,15,'#3a2a20');for(let y=34;y<48;y+=2)p(27,y,10,1,'#2a1c14');p(26,33,1,15,'#5a4232');
+ p(18,32,9,16,'#c8946a');p(18,32,9,2,'#e0ac80');p(37,30,11,18,'#b8845e');p(37,30,11,2,'#d8a478');for(let i=0;i<4;i++){p(38,33+i*4,10,3,'#c8946a');p(38,33+i*4,10,1,'#e4b088');p(38,36+i*4,10,1,'#9a6a48')}
+ p(20,26,10,7,'#d8a478');p(20,26,10,2,'#ecc098');p(29,27,2,5,'#b07a54');p(16,40,4,8,'#5a6a48');p(48,38,4,10,'#5a6a48')})}
+function fvLong(k){return fvArt('L'+k,64,60,p=>{const met=k=='shotgun'?'#3a3a40':'#2a2a30',wood=k=='ak47'?'#8a4a24':k=='rifle'?'#7a5030':k=='shotgun'?'#6a4228':null,bw=k=='shotgun'?5:3;
+ for(let y=0;y<30;y++){const t=y/29,w=Math.round(1+t*bw);p(32-w,y,w*2,1,met);p(32-w,y,1,1,'#6a6a76');p(32+w-1,y,1,1,'#141418')}p(30,0,4,2,'#18181c');p(31,0,2,1,'#c8c0a8');
+ if(k=='ak47')for(let y=14;y<30;y++){const t=y/29,w=Math.round(3+t*5);p(32-w,y,w*2,1,wood);p(32-w,y,1,1,'#b06a3a')}
+ if(k=='shotgun')for(let y=16;y<28;y++){const t=y/29,w=Math.round(5+t*5);p(32-w,y+2,w*2,1,wood);p(32-w,y+2,1,1,'#9a6a40')}
+ if(k=='rifle'){p(27,10,10,9,'#1a1a1e');p(28,10,8,1,'#4a5a6a');p(29,12,6,5,'#2a3a4a');p(30,13,2,2,'#7aa0c8')}
+ p(18,30,28,12,met);p(18,30,28,1,'#5a5a66');p(18,41,28,1,'#101014');p(30,27,4,3,'#101014');
+ if(k=='ak47'||k=='smg'){p(34,42,8,13,'#222226');p(34,42,8,1,'#4a4a54')}
+ if(wood){p(14,42,18,18,wood);p(14,42,18,1,'#c08050')}else p(24,42,10,18,'#2a2a2e');
+ p(10,46,12,14,'#c8946a');p(10,46,12,2,'#e0ac80');p(40,38,12,22,'#b8845e');for(let i=0;i<4;i++){p(41,41+i*4,11,3,'#c8946a');p(41,41+i*4,11,1,'#e4b088')}p(8,52,4,8,'#5a6a48');p(50,48,4,12,'#5a6a48')})}
+function fvFlash(){return fvArt('flash',24,20,p=>{p(8,4,8,12,'#ffb03a');p(4,8,16,4,'#ffb03a');p(10,0,4,20,'#ffd85a');p(10,6,4,8,'#fff6c8')})}
+function fvWeapon(){if(drv)return;const it=HB[hb];if(!it||!(inv[it]>0))return;g.imageSmoothingEnabled=false;
+ const s=2.5,bx=Math.sin(FV.bob)*3,by=Math.abs(Math.cos(FV.bob))*3+FV.rec*7+FV.cr*3+FV.land*6+(FV.slide>0?5:0);
+ if(GUN[it]){const lg=it=='smg'||it=='ak47'||it=='rifle'||it=='shotgun',im=lg?fvLong(it):fvPistol(),w=im.width*s,h=im.height*s,x=Math.round(VW/2-w/2+bx),y=Math.round(VH-26-h*(lg?.74:.8)+by);
+  if(FV.rec>.5){const f=fvFlash();g.drawImage(f,Math.round(VW/2-f.width*s/2+bx),y-f.height*s+6*s,f.width*s,f.height*s)}g.drawImage(im,x,y,w,h);return}
+ const sw=FV.sw>0?Math.sin((1-FV.sw)*Math.PI):0;g.save();g.translate(Math.round(VW/2+30+bx-sw*50),Math.round(VH-40+by+sw*10));g.rotate(-.32-sw*1.15);g.scale(5,5);try{icon(it,-10,-15)}catch(e){}g.restore()}
+function fvSky(){const c=V3.cam,sd=V3.sun.position.clone().sub(V3.sun.target.position).normalize(),day=V3.sun.intensity>.15&&dark()<.5,p=c.position.clone().addScaledVector(sd,100).project(c);
+ const inV=p.z<1&&Math.abs(p.x)<1.4&&Math.abs(p.y)<1.4;if(inV&&day){if(V3.fr%3==0)FV.flW=fvCast(c.position,sd,60,fvList(2))?0:1}else FV.flW=0;FV.fl+=(FV.flW-FV.fl)*Math.min(1,FV.dt*10);
+ if(!inV||FV.fl<.01)return;const W_=VW,H_=VH,sx=(p.x*.5+.5)*W_,sy=(-p.y*.5+.5)*H_,cx=W_/2,cy=H_/2,dx=cx-sx,dy=cy-sy,edge=1-Math.min(1,Math.hypot(p.x,p.y)/1.4),a=FV.fl*(.35+.65*edge);
+ g.save();g.globalCompositeOperation='lighter';const gl=g.createRadialGradient(sx,sy,0,sx,sy,W_*.35);gl.addColorStop(0,'rgba(255,220,160,'+(.45*a)+')');gl.addColorStop(1,'rgba(255,140,60,0)');g.fillStyle=gl;g.fillRect(0,0,W_,H_);
+ const disc=(x,y,r,col)=>{g.fillStyle=col;for(let yy=-r;yy<=r;yy++){const w=Math.round(Math.sqrt(r*r-yy*yy));g.fillRect(Math.round(x)-w,Math.round(y)+yy,w*2,1)}};
+ disc(sx,sy,7,'rgba(255,250,230,'+(.9*FV.fl)+')');disc(sx,sy,4,'rgba(255,255,255,'+FV.fl+')');g.fillStyle='rgba(255,230,190,'+(.25*a)+')';g.fillRect(sx-W_*.25,Math.round(sy),W_*.5,1);
+ for(const[t,r,col,al]of[[.35,10,'255,180,90',.25],[.55,4,'180,220,255',.35],[.75,16,'255,120,60',.12],[1.05,7,'140,255,180',.2],[1.3,22,'200,140,255',.1],[1.6,5,'255,240,200',.3]])disc(sx+dx*t,sy+dy*t,Math.round(r*H_/240),'rgba('+col+','+(al*a)+')');
+ g.restore()}
+function fvOver(){const ui=fvUI();noTr=true;try{fvSky();fvWeapon();
+ const vg=g.createRadialGradient(VW/2,VH/2,VH*.45,VW/2,VH/2,VH*.95);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.3)');g.fillStyle=vg;g.fillRect(0,0,VW,VH);
+ if(!ui){const col=FV.hit&&FV.hit.foe?'#ff6a4a':FV.hit&&FV.hit.d<3.2?'#fff2a0':'rgba(255,240,210,.85)',x=Math.round(VW/2),y=Math.round(VH/2);Q(x-5,y,3,1,col);Q(x+3,y,3,1,col);Q(x,y-5,1,3,col);Q(x,y+3,1,3,col);Q(x,y,1,1,col);
+  if(!FV.lock&&!FV.noLock){const h=LANG=='hu',t=h?'Kattints a nézelődéshez  ·  F4: 2D nézet':'Click to look around  ·  F4: 2D view';g.font=fnt(0,9);const w=Math.round(g.measureText(t).width)+16;uiPanel(VW/2-w/2,VH/2+32,w,15,{soft:1});txt(t,VW/2-w/2+8,VH/2+43,'#fff2c8')}}}finally{noTr=false}}
+{const hu157=hud;hud=function(){if(FV.zm!=null){ZM=FV.zm;FV.zm=null}if(fvOn())try{fvOver()}catch(e){noTr=false}return hu157.apply(this,arguments)}}
+/* ---------- input: mouse look with pointer lock, F4, jump ---------- */
+function fvLock(){try{const p=C.requestPointerLock&&C.requestPointerLock();if(p&&p.catch)p.catch(()=>{FV.noLock=true})}catch(e){FV.noLock=true}}
+function fvUnlock(){try{if(document.pointerLockElement)document.exitPointerLock()}catch(e){}FV.lock=false}
+document.addEventListener('pointerlockchange',()=>{FV.lock=document.pointerLockElement===C;if(!FV.lock)mdown=false});
+document.addEventListener('pointerlockerror',()=>{FV.noLock=true;FV.lock=false});
+function fvCenter(e){try{const r=C.getBoundingClientRect();Object.defineProperty(e,'clientX',{value:r.left+r.width/2,configurable:true});Object.defineProperty(e,'clientY',{value:r.top+r.height/2,configurable:true})}catch(_){}}
+addEventListener('mousemove',e=>{if(FV.lock){FV.yaw-=(e.movementX||0)*FV.sens;FV.pitch=cl(FV.pitch-(e.movementY||0)*FV.sens,-1.3,1.3);fvCenter(e)}
+ else if(FV.noLock&&e.isTrusted&&fvLive()){FV.yaw-=(e.movementX||0)*FV.sens*1.3;FV.pitch=cl(FV.pitch-(e.movementY||0)*FV.sens*1.3,-1.3,1.3)}},true);
+addEventListener('mousedown',e=>{if(FV.lock){fvCenter(e);return}if(!e.isTrusted||FV.noLock||e.button!==0||!fvLive())return;if(e.target!==C&&!(V3&&e.target===V3.cv))return;e.preventDefault();e.stopImmediatePropagation();fvLock()},true);
+addEventListener('mouseup',e=>{if(FV.lock)fvCenter(e)},true);
+addEventListener('wheel',e=>{if(FV.lock)fvCenter(e)},{capture:true,passive:true});
+function fvToggle(){FPV=!FPV;try{localStorage.setItem('pxc_fps',FPV?'1':'0')}catch(e){}if(FPV&&typeof CLASSIC!='undefined'&&CLASSIC)try{setRetro(false)}catch(e){}if(!FPV)fvUnlock();
+ const h=LANG=='hu';say(FPV?(inD?(h?'FPS nézet: a felszínen kapcsol be':'FPS view: turns on at the surface'):(h?'FPS nézet — F4: vissza 2D-re':'FPS view — F4: back to 2D')):(h?'2D nézet — F4: FPS nézet':'2D view — F4: FPS view'))}
+addEventListener('keydown',e=>{if(e.code=='F4'){if(state=='play'){e.preventDefault();e.stopImmediatePropagation();fvToggle()}return}
+ if(!fvLive())return;if(e.code=='Space'){e.preventDefault();e.stopImmediatePropagation();if(!e.repeat)fvJump();return}
+ if(e.code.startsWith('Arrow'))e.preventDefault()},true);
+addEventListener('keyup',e=>{if(e.code=='Space'&&fvOn()){K.Space=0;JA=null;e.stopImmediatePropagation()}},true);
+try{TUT.hu.push(['FPS nézet','A világot belső nézetből is bejárhatod: igazi 3D házak, pixeles sprite-ok, napárnyék és lens flare. F4-gyel kapcsolod, a föld alatt 2D marad.','Egér: nézelődés (kattints a képre) · WASD: mozgás · Shift: futás · Szóköz: ugrás (kerítésen, patakon át) · Ctrl/Z: guggolás · futás közben Ctrl: csúszás. E: amire nézel.']);
+ TUT.en.push(['FPS view','You can walk the world in first person: real 3D houses, pixel sprites, sun shadows and lens flare. F4 switches it; underground stays 2D.','Mouse: look (click the picture) · WASD: move · Shift: run · Space: jump (over fences and streams) · Ctrl/Z: crouch · Ctrl while running: slide. E: whatever you look at.'])}catch(e){}
+/* objective arrows point the way you look */
+{const ar157=arrow112;arrow112=function(tx,ty,col,lab){if(!fvOn())return ar157.apply(this,arguments);const d=Math.round(Math.hypot(tx-P.x,ty-P.y)/T),v=new THREE.Vector3(tx/T,v3HW(tx,ty)+1.3,ty/T).project(V3.cam),b=Math.round(Math.sin(performance.now()/200)*2);
+ if(v.z<1&&Math.abs(v.x)<.9&&Math.abs(v.y)<.85){const sx=Math.round((v.x*.5+.5)*VW),sy=Math.round((-v.y*.5+.5)*VH);g.fillStyle=col;g.beginPath();g.moveTo(sx,sy+b);g.lineTo(sx-5,sy-8+b);g.lineTo(sx+5,sy-8+b);g.closePath();g.fill();noTr=true;txt(lab+' '+d+'m',sx,sy-12+b,col,'center');noTr=false;return}
+ const rt=((tx-P.x)*Math.cos(FV.yaw)-(ty-P.y)*Math.sin(FV.yaw))>0,ax=rt?VW-26:26,ay=Math.round(VH/2-36);g.save();g.translate(ax,ay);if(!rt)g.rotate(Math.PI);
+ g.fillStyle='rgba(0,0,0,.5)';g.beginPath();g.moveTo(9,1);g.lineTo(-5,-6);g.lineTo(-2,1);g.lineTo(-5,8);g.closePath();g.fill();g.fillStyle=col;g.beginPath();g.moveTo(8,0);g.lineTo(-6,-7);g.lineTo(-3,0);g.lineTo(-6,7);g.closePath();g.fill();g.restore();
+ noTr=true;txt(lab+' '+d+'m',ax,ay+16,col,'center');noTr=false}}
+{const sa157=stArrow;stArrow=function(x,y,to){if(!fvOn())return sa157.apply(this,arguments);const dx=to[0]-P.x,dy=to[1]-P.y,af=Math.atan2(-Math.cos(FV.yaw),-Math.sin(FV.yaw)),a=Math.atan2(dy,dx)-af-Math.PI/2,d=Math.round(Math.hypot(dx,dy)/T);
+ g.save();g.translate(x,y);g.rotate(a);g.fillStyle='#ffd84a';g.beginPath();g.moveTo(5,0);g.lineTo(-3,-3.5);g.lineTo(-1,0);g.lineTo(-3,3.5);g.closePath();g.fill();g.restore();txt(d+' m',x+8,y+3,'#ffd84a')}}
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
