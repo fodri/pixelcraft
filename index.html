@@ -8755,7 +8755,7 @@ function setlDraw(){if(!SETLUI)return;const h=sH(),F=setlFlag();if(!F){setlClose
  if(!ks.length){g.font=fnt(0,7);txt(sB('Üres. Reggelente ide kerül, amit a lakók termelnek.','Empty. What people make arrives here each morning.'),sx,sy+16,'#a89878')}
  const fy=sy+6+4*30+6,fu=setlFoodUnits();g.font=fnt(0,7);txt(sB('Élelem: ','Food: ')+fu+sB(' adag · napi igény: ',' portions · daily need: ')+R_.length,sx,fy,fu>=R_.length?'#a8d890':'#ff8a6a');
  const fc=Object.entries(setlForecast()).map(([k,v])=>'+'+v+' '+tr(LBL[k]||k).toLowerCase()).join(', ');if(fc)txt(sB('Holnap reggel: ','Tomorrow morning: ')+fc,sx,fy+11,'#c8c0a8');
- if(R_.some(n=>n.res.j=='or'))txt(sB('Az őrök éjjel lövik a tábor közelébe jövő fertőzötteket.','Guards shoot infected that come near the camp at night.'),sx,fy+22,'#c8c0a8');
+ if(R_.some(n=>n.res.j=='or'))txt(sB('Az őrök éjjel lövik a közeli fertőzötteket.','Guards shoot nearby infected at night.'),sx,fy+22,'#c8c0a8');
  /* buttons */
  const btn=(bx,label,a)=>{const bw=Math.ceil((g.font=fnt(1,8),g.measureText(label).width))+16,by=y0+hh-24,hov=ms.x>=bx&&ms.x<bx+bw&&ms.y>=by&&ms.y<by+16;Q(bx,by,bw,16,hov?'#6a5430':'#3e3220');Q(bx,by,bw,1,'#a88a50');txt(label,bx+bw/2,by+11,'#ffe9b0','center');rc.push({x:bx,y:by,w:bw,h:16,a});return bx+bw+8};
  let bx=x0+8;bx=btn(bx,sB('Mindent elviszek','Take everything'),'take');bx=btn(bx,sB('Élelmet adok','Give food'),'food');btn(bx,sB('Bezár (Esc)','Close (Esc)'),'close');
@@ -8821,7 +8821,7 @@ function seaDraw(){if(!seaOn()||inD)return;const s=seasonIdx(),now=performance.n
  if(s==3){const b=bm?bm[Math.floor(P.y/T)*W+Math.floor(P.x/T)]|0:0;if(b==2)return;g.fillStyle='rgba(200,220,240,.07)';g.fillRect(0,0,VW,VH);
   if(SEA.snow.length<70)SEA.snow.push({x:Math.random()*VW,y:-4,v:12+Math.random()*16,p:Math.random()*6});const dt=Math.min(.05,(now-(SEA.st||now))/1000);SEA.st=now;
   for(let i=SEA.snow.length-1;i>=0;i--){const f=SEA.snow[i];f.y+=f.v*dt;f.x+=Math.sin(now/900+f.p)*.3;if(f.y>VH+4){f.y=-4;f.x=Math.random()*VW}Q(f.x,f.y,f.v>22?2:1,f.v>22?2:1,'rgba(255,255,255,.85)')}}
- else if(s==2){g.fillStyle='rgba(214,126,48,.07)';g.fillRect(0,0,VW,VH)}
+ else if(s==2){g.fillStyle='rgba(214,126,48,.035)';g.fillRect(0,0,VW,VH)}
  else if(s==1){g.fillStyle='rgba(255,226,140,.04)';g.fillRect(0,0,VW,VH)}}
 {const dr150=drawRoofs;drawRoofs=function(){const r=dr150.apply(this,arguments);try{seaDraw()}catch(e){}return r}}
 /* the season and threat under the clock */
@@ -8836,7 +8836,7 @@ try{TUT.hu.push(['Évszakok és veszély','Hétnaponta vált az évszak: tavasz,
  TUT.en.push(['Seasons and danger','The season turns every 7 days: spring, summer (faster crops), autumn (bigger harvests), winter.','In winter outdoor crops barely grow (indoors and in garden beds they do), and it freezes everywhere at night — winter coat, fur hat, fire.','The danger rises week by week: tougher infected, bigger hordes. You get a warning before a horde — your camp guards help.'])}catch(e){}
 
 /* ===== v151: release polish — a guided first ten minutes, gamepad support, photo mode (F2), a gentler Easy, winter wind, and the game keeps running (and keeps a backup save) if something goes wrong ===== */
-GAMEV=151;
+GAMEV=152;
 const gH=(a,b)=>LANG=='hu'?a:b;
 /* ---------- guided start ---------- */
 let GSX=null;
