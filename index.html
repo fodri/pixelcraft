@@ -9683,8 +9683,8 @@ const FVPP={ok:false};
 function fvPPInit(){if(FVPP.ok||!V3||!V3.ok)return;const R=V3.R;FVPP.rt=new THREE.WebGLRenderTarget(4,4,{minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter});
  FVPP.mat=new THREE.ShaderMaterial({uniforms:{t:{value:null},px:{value:new THREE.Vector2(1,1)},bl:{value:1}},depthTest:false,depthWrite:false,
   vertexShader:'varying vec2 vU;void main(){vU=uv;gl_Position=vec4(position.xy,0.,1.);}',
-  fragmentShader:'uniform sampler2D t;uniform vec2 px;uniform float bl;varying vec2 vU;vec3 br(vec2 o){vec3 c=texture2D(t,vU+o*px).rgb;float l=max(max(c.r,c.g),c.b);return c*smoothstep(.72,1.,l);}'+
-  'void main(){vec3 c=texture2D(t,vU).rgb;vec3 b=vec3(0.);for(int i=-3;i<=3;i++)for(int j=-3;j<=3;j++){vec2 o=vec2(float(i),float(j));b+=br(o*2.)*(1.-length(o)/5.);}b/=22.;c+=b*.55*bl;'+
+  fragmentShader:'uniform sampler2D t;uniform vec2 px;uniform float bl;varying vec2 vU;vec3 br(vec2 o){vec3 c=texture2D(t,vU+o*px).rgb;float l=max(max(c.r,c.g),c.b);return c*smoothstep(.86,1.,l);}'+
+  'void main(){vec3 c=texture2D(t,vU).rgb;vec3 b=vec3(0.);for(int i=-3;i<=3;i++)for(int j=-3;j<=3;j++){vec2 o=vec2(float(i),float(j));b+=br(o*2.)*(1.-length(o)/5.);}b/=34.;c+=b*.3*bl;'+
   'float l=dot(c,vec3(.299,.587,.114));c=mix(vec3(l),c,1.14);c=(c-.5)*1.07+.5;c*=vec3(1.03,1.,.96);vec2 d=vU-.5;c*=1.-dot(d,d)*.6;gl_FragColor=vec4(clamp(c,0.,1.),1.);}'});
  FVPP.s=new THREE.Scene();FVPP.s.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2),FVPP.mat));FVPP.c=new THREE.Camera();FVPP.sz=new THREE.Vector2();FVPP.ok=true;
  const r0=R.render.bind(R);R.render=function(s,c){if(s===V3.S&&shaderOn&&fvOn()){R.getDrawingBufferSize(FVPP.sz);if(FVPP.rt.width!==FVPP.sz.x||FVPP.rt.height!==FVPP.sz.y)FVPP.rt.setSize(FVPP.sz.x,FVPP.sz.y);FVPP.mat.uniforms.px.value.set(1/FVPP.sz.x,1/FVPP.sz.y);
@@ -9895,13 +9895,13 @@ function fvRoomLook(b,R_,i){const s=(b.x*31+b.y*17+i*7)>>>0,rf=b.rf||'house',P_=
  if(R_.kind=='kit'&&(rf=='house'||rf=='hut'||rf=='ruin'||rf=='apt'))return{w:['kit',P_(['#e8dcb8','#d8e0c8','#f0e0c0']),'#e8e0c8',s],c:[rf=='hut'?'plank':'plaster',s],f:'kit'};
  if(rf=='ruin')return{w:['ruin',P_(['#8a7a5a','#6a7a6a','#8a6a6a','#7a6a8a']),P_(['#a89870','#8a9a88','#a88a84']),s],c:['ruin',s]};
  if(rf=='hosp')return{w:['hosp','#a8c8b8','#e8ece6',s],c:['panel',s]};
- if(rf=='police')return{w:['hosp','#7a8a9a','#d8dce0',s],c:['panel',s]};
- if(rf=='office'||rf=='shop'||rf=='fire'||rf=='lib'||rf=='school'||rf=='bunker')return{w:['paint',P_(['#d8d4c8','#c8ccc4','#d8ccb8','#c0c8cc']),'#4a4a4a',s],c:['panel',s]};
+ if(rf=='police')return{w:['hosp','#8a8a80','#e0dcd2',s],c:['panel',s]};
+ if(rf=='office'||rf=='shop'||rf=='fire'||rf=='lib'||rf=='school'||rf=='bunker')return{w:['paint',P_(['#d8d4c8','#c8ccc4','#d8ccb8','#cfc8bc']),'#4a4a4a',s],c:['panel',s]};
  if(rf=='church')return{w:['paint','#d8ccb0','#6a5a44',s],c:['plaster',s]};
  if(rf=='hut')return{w:[P_(['wains','paper','dam']),P_(['#c8b890','#a8b898','#c8a888','#b8a8c0']),P_(['#a89870','#88a080','#a88068','#9a88a8']),s],c:['plank',s]};
- if(R_.kind=='bed')return{w:[P_(['dam','paper']),P_(['#c8b0b8','#b0c0d0','#d0c4a8','#b8c8b0']),P_(['#a88890','#8898b0','#b0a080','#90a888']),s],c:[rf=='hut'?'plank':'plaster',s]};
- if(R_.kind=='liv')return{w:['wains',P_(['#c8b890','#9ab0a0','#c8a0a0','#a8b8c8']),P_(['#b0a070','#7a9888','#a88080','#8898b0']),s],c:[rf=='hut'?'plank':'plaster',s]};
- return{w:[P_(['paper','dam','wains','paper']),P_(['#c8b890','#9ab0a0','#c8a0a0','#a8b8c8','#d0c4a0']),P_(['#b0a070','#7a9888','#a88080','#8898b0','#b0a478']),s],c:['plaster',s]}}
+ if(R_.kind=='bed')return{w:[P_(['dam','paper']),P_(['#c8b0b8','#d0c0a8','#d0c4a8','#b8c8b0']),P_(['#a88890','#a89070','#b0a080','#90a888']),s],c:[rf=='hut'?'plank':'plaster',s]};
+ if(R_.kind=='liv')return{w:['wains',P_(['#c8b890','#9ab0a0','#c8a0a0','#c8b8a0']),P_(['#b0a070','#7a9888','#a88080','#a89070']),s],c:[rf=='hut'?'plank':'plaster',s]};
+ return{w:[P_(['paper','dam','wains','paper']),P_(['#c8b890','#9ab0a0','#c8a0a0','#c8b8a0','#d0c4a0']),P_(['#b0a070','#7a9888','#a88080','#a89070','#b0a478']),s],c:['plaster',s]}}
 
 /* ---------- build the inside of one building ---------- */
 function fvInterior(b,G){if(!FVB||inD)return;const RM=fvRooms(b);if(!RM.closed||!RM.rooms.length)return;const top=fvBBase(b)+FV_WALL,acc=new Map(),get=m=>{let a=acc.get(m);if(!a){a={P:[],N:[],U:[],C:[]};acc.set(m,a)}return a};
@@ -10155,7 +10155,7 @@ function fvDetector(){if(!(FVAN.nd<8)||inD)return;const x=VW-96,y=40,s=Math.max(
 try{TUT.hu.push(['Anomáliák és artefaktumok','A vadonban és a reaktor körül anomáliamezők vannak: villámló (kék szikrák), gravitációs (sötét örvény, beszippant) és égető (megperzselt folt, lángcsóva). A detektor egyre gyorsabban sípol, ahogy közeledsz.','A mezőkben artefaktum terem: ha nálad van, lassan kiszívja a sugárzást és gyógyít egy kicsit. Pár naponta új nő.']);
  TUT.en.push(['Anomalies and artifacts','Anomaly fields lie in the wild and around the reactor: electric (blue sparks), gravity (a dark swirl that pulls you in) and burner (a scorched spot, a jet of flame). The detector beeps faster as you get closer.','Artifacts grow in the fields: carried with you, one slowly draws out radiation and heals a little. New ones grow every few days.'])}catch(e){}
 
-GAMEV=165;
+GAMEV=166;
 /* ---------- v164b: real homes — kitchen, living room, bedroom and bathroom behind their own doors (new worlds) ---------- */
 /* village houses 9x8 (inside 7x6), front door under column 2 */
 const HPL4=[["Qj#..am","J.#..nm","#D#D###","v...#Kf",".RR.D..","NN.p#rj"],
@@ -10194,7 +10194,7 @@ FU.elev=(q,w,d,c,gl)=>{const st=fuC(0xa8b0b8),fr=fuC(0x5a6068);q(0,0,0,1,2.4,.12
 function fvIndoor(){try{const tx=Math.floor(P.x/T),ty=Math.floor(P.y/T);if(underRoof(tx,ty))return true;const R_=fvRoomAt(tx,ty);return!!(R_&&!R_.open)}catch(e){return false}}
 {const we163=weather;weather=function(){if(typeof fvOn=='function'&&fvOn()&&fvIndoor())return;return we163.apply(this,arguments)}}
 /* the morning and evening sun stays warm but no longer paints the ground orange */
-{const fl163d=fvLight;fvLight=function(){fl163d.apply(this,arguments);try{if(FVB&&!inD){V3.sun.color.lerp(new THREE.Color(0xfff4e6),.55)}}catch(e){}}}
+{const fl163d=fvLight;fvLight=function(){fl163d.apply(this,arguments);try{if(FVB&&!inD){V3.sun.color.lerp(new THREE.Color(0xfff4e6),.55);const k=Math.max(0,1-dark()/.85);V3.hemi.color.lerp(new THREE.Color(0xfff0dc),.55*k);V3.hemi.groundColor.lerp(new THREE.Color(0x6a5a44),.4*k)}}catch(e){}}}
 try{const ix=new Map(HU.map((e,i)=>[e,i]));HU.sort((a,b)=>(b[0].length-a[0].length)||(ix.get(a)-ix.get(b)))}catch(e){}
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
