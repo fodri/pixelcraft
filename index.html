@@ -7986,7 +7986,7 @@ function jnQuests(){const L=[];jnHead(L,JB('Fő küldetés','Main quest'));
  if(typeof STORY!='undefined'&&STORY&&STORY.on){const a=SACT[STORY.act];if(STORY.done)jnText(L,JB('A történet véget ért. A világ tovább él — te is.','The story is over. The world goes on — and so do you.'),{c:'#4a6a2a'});
   else if(a){jnText(L,['I','II','III','IV','V'][STORY.act]+'. '+a.n[jh()?0:1],{b:1,c:'#2a1a10'});a.steps.forEach((s,i)=>{const d=i<STORY.step,cur=i==STORY.step;if(i>STORY.step)return;let pr='';if(cur&&s.p){try{const q=s.p();pr='  ('+q[0]+'/'+q[1]+')'}catch(e){}}jnText(L,(d?'✓ ':'▸ ')+s.t[jh()?0:1]+pr,{c:d?'#7a6a50':'#2a1a10',b:cur,in:4});if(cur&&s.h)jnText(L,s.h[jh()?0:1],{c:'#6a5a40',in:12,sz:7})});
    if(STORY.act>0){jnGap(L);jnText(L,JB('Korábbi fejezetek:','Earlier chapters:'),{c:'#6a5a40',sz:7});for(let i=0;i<STORY.act;i++)jnText(L,'✓ '+['I','II','III','IV','V'][i]+'. '+SACT[i].n[jh()?0:1],{c:'#7a6a50',in:4,sz:7})}}}
- else jnText(L,JB('Túlélő mód: nincs megírt történet. Élj túl, építs, fedezd fel a világot — a napló mindent megjegyez.','Survival mode: no written story. Survive, build, explore — the journal remembers everything.'),{c:'#4a3a28'});
+ else{let d=0;try{if(typeof spJn=='function'&&spOn()){spJn(L);d=1}}catch(e){}if(!d)jnText(L,JB('Túlélő mód: nincs megírt történet. Élj túl, építs, fedezd fel a világot — a napló mindent megjegyez.','Survival mode: no written story. Survive, build, explore — the journal remembers everything.'),{c:'#4a3a28'})}
  for(const f of JNQX){try{f(L)}catch(e){}}
  jnHead(L,JB('Mellékküldetések','Side quests'),'#2a4a6a');
  try{if(DQ112.L.length){jnText(L,JB('Mai kihívások','Today’s challenges')+(DQ112.streak?' · '+DQ112.streak+JB(' napos sorozat',' day streak'):''),{b:1,c:'#2a1a10'});for(const q of DQ112.L){const p=dqProg112(q);jnText(L,(q.done?'✓ ':'· ')+dqTxt112(q)+(q.done?'':'  ('+p+'/'+q.g+')'),{c:q.done?'#4a7a3a':'#3a2a18',in:4})}
@@ -8636,10 +8636,10 @@ function tpDraw(){const s=TPV;if(!s)return;const h=tpH(),D=TPD[s.dist],lR=Math.r
  Q(0,0,VW,18,'rgba(10,8,6,.75)');g.font=fnt(0,8);txt((h?'LŐTÉR · ':'RANGE · ')+D.m+' m',8,12,'#ff9a7a');
  if(s.st!='pick'){txt((h?'Lövés ':'Shot ')+Math.min(s.n,s.shot+1)+'/'+s.n+'   '+(h?'Pont: ':'Score: ')+s.sc+'   '+(h?'Rekord: ':'Record: ')+(TPREC[s.dist]|0),cx,12,'#ffd84a','center');
   const w=s.wind,ws=Math.abs(w)<.15?(h?'szélcsend':'calm'):(w<0?'← ':'')+(h?'szél ':'wind ')+Math.round(Math.abs(w)*D.W*40)+(w>0?' →':'');txt(ws,VW-8,12,'#cfe0f0','right')}
- if(s.st=='pick'){Q(cx-130,cy-56,260,112,'rgba(10,8,6,.86)');Q(cx-130,cy-56,260,1,'#c8302a');g.font=fnt(1,10);txt(h?'Válassz távot':'Pick a distance',cx,cy-38,'#ffe9a0','center');
+ if(s.st=='pick'){uiPanel(cx-130,cy-56,260,112);g.font=fnt(1,10);txt(h?'Válassz távot':'Pick a distance',cx,cy-38,'#ffe9a0','center');
   for(let k=0;k<3;k++){const y=cy-22+k*22,hov=ms.x>cx-110&&ms.x<cx+110&&ms.y>y-12&&ms.y<y+6;Q(cx-110,y-12,220,18,hov?'rgba(255,216,74,.22)':'rgba(255,255,255,.06)');g.font=fnt(0,8);txt((k+1)+'.  '+TPD[k].m+' m  ·  ×'+TPD[k].mul+(h?' pont':' pts')+'  ·  '+(h?'rekord ':'record ')+(TPREC[k]|0),cx,y+1,'#e8e4d8','center')}
   g.font=fnt(0,7);txt(h?'Katt vagy 1-3 · Esc: kilépés':'Click or 1-3 · Esc: leave',cx,cy+50,'#a89878','center')}
- if(s.st=='end'){Q(cx-120,cy-40,240,80,'rgba(10,8,6,.86)');Q(cx-120,cy-40,240,1,'#ffd84a');g.font=fnt(1,12);txt((h?'Kör vége: ':'Round over: ')+s.sc+(h?' pont':' pts'),cx,cy-18,s.rec?'#ffd84a':'#e8e4d8','center');g.font=fnt(0,8);txt(s.log.join(' · '),cx,cy-2,'#c8c0a8','center');
+ if(s.st=='end'){uiPanel(cx-120,cy-40,240,80);g.font=fnt(1,12);txt((h?'Kör vége: ':'Round over: ')+s.sc+(h?' pont':' pts'),cx,cy-18,s.rec?'#ffd84a':'#e8e4d8','center');g.font=fnt(0,8);txt(s.log.join(' · '),cx,cy-2,'#c8c0a8','center');
   txt(s.rec?(h?'ÚJ REKORD!':'NEW RECORD!'):(h?'Rekord: ':'Record: ')+(TPREC[s.dist]|0),cx,cy+12,s.rec?'#ffd84a':'#a89878','center');txt(h?'Katt / Szóköz: új kör   ·   Esc: kilépés':'Click / Space: again   ·   Esc: leave',cx,cy+30,'#e8e4d8','center')}
  if(s.st=='aim'){g.font=fnt(0,7);txt(h?'Katt / Szóköz: megállít   ·   Esc: kilépés':'Click / Space: stop   ·   Esc: leave',8,VH-6,'#e8e4d8')}
  noTr=false}
@@ -8720,7 +8720,7 @@ function setlDawn(){const R_=setlRes();if(!R_.length||!setlFlag())return;const m
 /* ---------- daily life: going home, working, guarding ---------- */
 let SETLT=0;
 function setlTick(dt){if(state!='play')return;const now=performance.now();
- if(day!==SETL.last){const first=SETL.last<0;SETL.last=day;if(!first&&!inD)setlDawn();if(day>=SETL.wt){SETL.wt=day+1+Math.floor(Math.random()*2);if(day>=2&&NPCS.filter(n=>n.wd).length<2)setlSpawnWanderer()}}
+ if(day!==SETL.last){const first=SETL.last<0;SETL.last=day;if(!first&&!inD)setlDawn();if(day>=SETL.wt){SETL.wt=day+1+Math.floor(Math.random()*2);if(day>=2&&NPCS.filter(n=>n.wd).length<2&&!(typeof evBusy=='function'&&evBusy(day)))setlSpawnWanderer()}}
  if(inD)return;const F=setlFlag();
  for(const n of NPCS){if(!n.res)continue;if(n.go149&&(Math.hypot(n.x-P.x,n.y-P.y)>300||now-n.go149>25000)){n.x=n.hx+(Math.random()-.5)*3*T;n.y=n.hy+(Math.random()-.5)*2*T;n.go149=0}
   if(F&&dk0()<.35&&Math.random()<dt*.8&&Math.hypot(n.x-P.x,n.y-P.y)<260){const j=n.res.j,c=j=='fa'?'#c8a070':j=='ko'?'#9a9a98':j=='kert'||j=='gyujt'?'#6aa83a':j=='vad'?'#8a5a3a':j=='szak'?'rgba(230,230,230,.7)':null;if(c)parts.push({x:n.x+(Math.random()-.5)*8,y:n.y-6,vx:(Math.random()-.5)*30,vy:-16,l:.5,c})}}
@@ -8740,7 +8740,7 @@ function setlClose(){SETLUI=null}
 function setlForecast(){const R_=setlRes(),mul=setlMul(),f={};for(const n of R_){const j=n.res.j,m=n.res.m>=40?1:.5;if(j=='fa')f.wood=(f.wood|0)+Math.round(5*mul*m);else if(j=='ko')f.stone=(f.stone|0)+Math.round(4*mul*m);else if(j=='gyujt'){f.berry=(f.berry|0)+Math.round(3*mul*m);f.fiber=(f.fiber|0)+Math.round(2*mul*m)}else if(j=='vad')f.meat=(f.meat|0)+Math.round(2*mul*m);else if(j=='kert')f.carrot=(f.carrot|0)+Math.round(2*mul*m)}return f}
 function setlFoodUnits(){let u=0;for(const k of SEDIBLE)u+=(SETL.st[k]|0)*(SFOODV[k]||1);return u}
 function setlDraw(){if(!SETLUI)return;const h=sH(),F=setlFlag();if(!F){setlClose();return}const R_=setlRes(),cap=setlCap(),lv=setlLevel(),x0=40,y0=24,w=VW-80,hh=VH-48,rc=[];SETLUI.rects=rc;noTr=true;
- Q(0,0,VW,VH,'rgba(0,0,0,.45)');Q(x0-2,y0-2,w+4,hh+4,'#6a4a2a');Q(x0,y0,w,hh,'#1c1610');Q(x0,y0,w,20,'#2a2016');
+ Q(0,0,VW,VH,'rgba(0,0,0,.45)');uiPanel(x0,y0,w,hh,{head:20});
  g.font=fnt(1,10);txt(sB('Táborod','Your camp')+' · '+SLV[lv][h?0:1],x0+8,y0+14,'#ffd88a');g.font=fnt(0,8);txt(sB('Lakók: ','People: ')+R_.length+'/'+cap+(lv>=2?'   '+sB('termés ×','yield ×')+setlMul():''),x0+w-8,y0+14,'#c8c0a8','right');
  /* residents */
  const lx=x0+8,ly=y0+30;g.font=fnt(1,8);txt(sB('Lakók és munkájuk','People and their work'),lx,ly,'#e8d8b0');
@@ -8858,7 +8858,7 @@ function gsTick(dt){if(!gsOn()||inD||state!='play')return;if(GSX.lf==null){GSX.l
   if(GSX.s>=GSS.length){GSX.done=1;try{toast112(gH('Megvannak az alapok!','You know the basics!'),gH('Innen a világ a tiéd. Tab: napló — küldetések, útmutató, térkép.','The world is yours now. Tab: journal — quests, guide, map.'),'#ffd84a');fanfare112()}catch(e){}}}}
 function gsHud(){if(!gsOn()||inD||invOpen||book||skOpen||showMap||(typeof JN!='undefined'&&JN)||(typeof TPV!='undefined'&&TPV)||(typeof SETLUI!='undefined'&&SETLUI)||tut||(typeof PHOTO!='undefined'&&PHOTO))return;const st=GSS[GSX.s];if(!st)return;const h=LANG=='hu';noTr=true;
  const x=6,y=74,w=168;g.font=fnt(0,7);const lines=[];{let cur='';for(const wd of st.d[h?0:1].split(' ')){const t=cur?cur+' '+wd:wd;if(g.measureText(t).width>w-22){lines.push(cur);cur=wd}else cur=t}if(cur)lines.push(cur)}
- const hh=26+lines.length*9;Q(x,y,w,hh,'rgba(12,10,8,.62)');Q(x,y,2,hh,'#ffd84a');g.font=fnt(0,6.5);txt((h?'ELSŐ LÉPÉSEK  ':'FIRST STEPS  ')+(GSX.s+1)+'/'+GSS.length,x+6,y+9,'#ffd84a');
+ const hh=26+lines.length*9;uiPanel(x,y,w,hh,{soft:1});g.font=fnt(0,6.5);txt((h?'ELSŐ LÉPÉSEK  ':'FIRST STEPS  ')+(GSX.s+1)+'/'+GSS.length,x+6,y+9,'#ffd84a');
  g.font=fnt(1,8);txt(st.t[h?0:1],x+6,y+20,'#fff2c8');g.font=fnt(0,7);lines.forEach((l,i)=>txt(l,x+6,y+30+i*9,'#d8d0bc'));
  for(let i=0;i<GSS.length;i++)Q(x+w-8-(GSS.length-1-i)*6,y+4,4,4,i<GSX.s?'#ffd84a':i==GSX.s?'#c8a050':'rgba(255,255,255,.2)');
  /* a little arrow from the player towards what you need */
@@ -8951,7 +8951,7 @@ function advNew(k,from){if(ADV.L.length>=3)return null;let A=null;const id=++ADV
  if(k=='rescue'){const bs=BLD.filter(b=>['house','apt','shop','office','farm','barn'].includes(b.rf)&&Math.hypot(b.x-P.x/T,b.y-P.y/T)>22&&Math.hypot(b.x-P.x/T,b.y-P.y/T)<70);const b=bs[Math.floor(Math.random()*bs.length)];if(b)A={id,k,x:b.x+Math.floor(b.w/2),y:b.y+Math.floor(b.h/2),st:0};else{const s=advSpot(24,55);if(s)A={id,k,x:s[0],y:s[1],st:0}}}
  else if(k=='beast'||k=='nest'){const s=advSpot(24,60,(x,y)=>!ob[y*W+x]);if(s)A={id,k,x:s[0],y:s[1],st:0}}
  else if(k=='survey'){const pts=[];for(let j=0;j<3;j++){let s=null;for(let t=0;t<30&&!s;t++){const c=advSpot(26,75);if(c&&!(typeof fogSeen=='function'&&fogSeen(c[0],c[1]))&&pts.every(p=>Math.hypot(p[0]-c[0],p[1]-c[1])>14))s=c}if(s)pts.push([s[0],s[1],0])}if(pts.length==3)A={id,k,x:pts[0][0],y:pts[0][1],pts,st:0}}
- if(!A)return null;A.d0=day;A.L=L;A.from=from||'';ADV.L.push(A);try{gainXp(5)}catch(e){}return A}
+ if(!A)return null;if(ADV.L.some(o=>{const t=advTarget(o);return t&&Math.hypot(t[0]-A.x,t[1]-A.y)<10}))return null;A.d0=day;A.L=L;A.from=from||'';ADV.L.push(A);try{gainXp(5)}catch(e){}return A}
 function advName(A){const h=LANG=='hu';return ADVT[A.k][h?0:1]}
 function advDesc(A){const h=LANG=='hu',L=A.L;if(A.k=='rescue')return A.st>=1?(h?'Megtaláltad. Tisztítsd meg a környéket, aztán beszélj vele.':'You found them. Clear the area, then talk to them.'):(h?'Valaki egy házban rekedt, körülötte fertőzöttek. Hozd ki élve.':'Someone is trapped in a house, surrounded by infected. Bring them out alive.');
  if(A.k=='beast')return h?'Egy hatalmas mutáns tartja rettegésben a környéket. Vadászd le.':'A huge mutant terrorises the area. Hunt it down.';
@@ -8976,10 +8976,10 @@ function advEngage(A){const L=A.L||1;A.st=1;
 function advLoot(L){const pool=[['iron',3,6],['copper',2,4],['gold',1,3],['bandage',2,3],['canned',2,3],['arrow',6,12],['cloth',2,4],['leather',1,3],['coal',3,6],['medkit',1,1]],got=[];const n=2+Math.min(3,L);for(let k=0;k<n;k++){const p=pool[Math.floor(Math.random()*pool.length)];if(!(p[0] in LBL))continue;const c=p[1]+Math.floor(Math.random()*(p[2]-p[1]+1));inv[p[0]]=(inv[p[0]]|0)+c;got.push('+'+c+' '+tr(LBL[p[0]]).toLowerCase())}if(L>=3&&Math.random()<.35&&'diamond' in LBL){inv.diamond=(inv.diamond|0)+1;got.push('+1 '+tr(LBL.diamond).toLowerCase())}return got}
 function advDone(A,extra){if(A.st>=2)return;A.st=2;ADV.n++;const L=A.L||1,xp=60+25*L+(A.k=='beast'?40:0);try{gainXp(xp)}catch(e){}const got=advLoot(L);if(A.k=='survey'&&(('tmap' in LBL)||('tmap' in LBLX)||inv.tmap!=null)){inv.tmap=(inv.tmap|0)+1;got.push('+1 '+tr(LBL.tmap).toLowerCase())}
  ADV.L=ADV.L.filter(a=>a!==A);try{toast112(aH('Kaland teljesítve: ','Adventure complete: ')+advName(A),(extra?extra+' · ':'')+'+'+xp+' XP · '+got.slice(0,3).join(', '),'#ffd84a');fanfare112()}catch(e){}
- try{jnFind('adv_'+ADV.n,advName(A)+' #'+ADV.n,advName(A)+' #'+ADV.n,'Teljesítetted: '+advDesc(A).split('.')[0]+'.','Completed: '+advDesc(A).split('.')[0]+'.')}catch(e){}}
+}
 function advTick(dt){if(state!='play'||inD)return;const now=performance.now();
  /* the radio brings a rescue now and then */
- if(day>=ADV.nx&&!(typeof STORY!='undefined'&&STORY)&&!creative){ADV.nx=day+2+Math.floor(Math.random()*2);if(ADV.L.length<3&&!(typeof GSX!='undefined'&&GSX&&!GSX.done)){const A=advNew(Math.random()<.6?'rescue':'survey','radio');if(A)try{toast112(aH('Segélykérés a rádión','A call for help on the radio'),advName(A)+' — '+advDir(A.x,A.y)+aH(' · Tab: napló',' · Tab: journal'),ADVT[A.k][2])}catch(e){}}}
+ if(day>=ADV.nx&&!(typeof STORY!='undefined'&&STORY)&&!creative){ADV.nx=day+2+Math.floor(Math.random()*2);if(ADV.L.length<3&&!(typeof GSX!='undefined'&&GSX&&!GSX.done)&&!(typeof evBusy=='function'&&evBusy(day))){const A=advNew(Math.random()<.6?'rescue':'survey','radio');if(A)try{toast112(aH('Segélykérés a rádión','A call for help on the radio'),advName(A)+' — '+advDir(A.x,A.y)+aH(' · Tab: napló',' · Tab: journal'),ADVT[A.k][2])}catch(e){}}}
  for(const A of ADV.L.slice()){const tg=advTarget(A);if(!tg)continue;const d=Math.hypot(tg[0]*T+8-P.x,tg[1]*T+8-P.y)/T;
   if(A.k=='survey'){const p=A.pts.find(p=>!p[2]);if(p&&d<3.5){p[2]=1;snd('ui');try{fogReveal(P.x,P.y,16)}catch(e){}const n=A.pts.filter(p=>p[2]).length;if(n>=3)advDone(A);else say(aH('Felrajzoltad! ','Mapped! ')+n+'/3')}continue}
   if(A.st==0&&d<13)advEngage(A);
@@ -9015,6 +9015,51 @@ function advArrow(){if(inD||!ADV.L.length||invOpen||book||showMap||(typeof JN!='
 function npcTagShow(n){try{if(TALK&&TALK.n===n)return true;if(n.sayT>0)return true;if(Math.hypot(n.x-P.x,n.y-P.y)<4.5*T)return true;const mx=ms.x/ZM+cam.x,my=ms.y/ZM+cam.y;if(Math.hypot(n.x-mx,n.y-12-my)<16)return true}catch(e){return true}return false}
 try{TUT.hu.push(['Kalandok','A táborok lakói munkát adnak: „Van valami munka a környéken?” A rádión is jönnek segélykérések.','Mentőakció: hozz ki valakit egy körbezárt házból — ha van táborod, csatlakozik. Bestia: vadássz le egy óriás mutánst. Fészek: zúzd szét a spórafészket. Feltérképezés: járj el három ismeretlen helyre.','Egyszerre legfeljebb 3 kaland. A napló Küldetések fejezetében és a térképen látod őket, a képernyő szélén nyíl mutatja az elsőt.']);
  TUT.en.push(['Adventures','People at the camps give you work: “Any work around here?” Calls for help come over the radio too.','Rescue: get someone out of a house full of infected — with a camp they join you. Beast: hunt a giant mutant. Nest: smash a spore nest. Survey: visit three unknown places.','Up to 3 adventures at once. They are in the journal\'s Quests chapter and on the map; an arrow at the screen edge points to the first.'])}catch(e){}
+
+/* ===== v154: one clear thread — survival gets a main path (7 chapters from the first night to legend) that ties the camp, hordes, winter and adventures together; big events no longer pile onto the same day; panels share one look ===== */
+GAMEV=154;
+const uH=(a,b)=>LANG=='hu'?a:b;
+/* ---------- one panel style for the whole game ---------- */
+function uiPanel(x,y,w,h,o){o=o||{};x=Math.round(x);y=Math.round(y);w=Math.round(w);h=Math.round(h);const a=o.soft?.72:.95;
+ Q(x+2,y+2,w,h,'rgba(0,0,0,'+(o.soft?.25:.4)+')');Q(x-1,y-1,w+2,h+2,'#0c0906');Q(x,y,w,h,'rgba(26,20,14,'+a+')');
+ Q(x,y,w,1,o.accent||'#c8a050');Q(x,y+h-1,w,1,'#3a2a18');Q(x,y,1,h,'#4a3620');Q(x+w-1,y,1,h,'#2a1e12');
+ Q(x-1,y-1,1,1,'rgba(0,0,0,0)');if(o.head){Q(x+1,y+1,w-2,o.head,'rgba(255,220,150,.06)');Q(x+1,y+o.head,w-2,1,'rgba(200,160,80,.25)')}}
+/* ---------- the survival path ---------- */
+let SURVP={c:0,hw:0,init:0};
+const SPATH=[
+ {n:['Az első napok','The first days'],d:['Tanuld meg az alapokat, és éld túl az első éjszakát.','Learn the basics and live through the first night.'],ok:()=>day>=2&&(!GSX||!!GSX.done),pr:()=>GSX&&!GSX.done?uH('lépés ','step ')+(GSX.s+1)+'/6':uH('nap ','day ')+Math.min(day,2)+'/2'},
+ {n:['Saját tábor','A camp of your own'],d:['Tűzz le egy táborzászlót, vedd birtokba (E), és fogadj be egy túlélőt.','Plant a camp flag, claim it (E) and take in a survivor.'],ok:()=>!!setlFlag()&&setlRes().length>=1,pr:()=>(setlFlag()?'✓ ':'')+uH('zászló · lakó ','flag · people ')+setlRes().length+'/1'},
+ {n:['Közösség','Community'],d:['Legyen 3 lakód, és verj vissza egy hordát.','Have 3 people living with you and hold off a horde.'],ok:()=>setlRes().length>=3&&SURVP.hw>=1,pr:()=>uH('lakó ','people ')+Math.min(3,setlRes().length)+'/3 · '+uH('horda ','horde ')+Math.min(1,SURVP.hw)+'/1'},
+ {n:['Kalandor','Adventurer'],d:['Teljesíts 3 kalandot — kérdezd a táborok lakóit, vagy figyeld a rádiót.','Complete 3 adventures — ask people at the camps or listen to the radio.'],ok:()=>ADV.n>=3,pr:()=>uH('kaland ','adventures ')+Math.min(3,ADV.n)+'/3'},
+ {n:['Az első tél','The first winter'],d:['Készülj fel, és éld túl az első telet: meleg ruha, tűz, teli kamra.','Get ready and live through the first winter: warm clothes, fire, full stores.'],ok:()=>day>=29,pr:()=>uH('nap ','day ')+Math.min(day,29)+'/29'},
+ {n:['Falu','Village'],d:['Növeszd faluvá a tábort: 6 lakó kell hozzá.','Grow your camp into a village: 6 people.'],ok:()=>setlRes().length>=6,pr:()=>uH('lakó ','people ')+Math.min(6,setlRes().length)+'/6'},
+ {n:['Legenda','Legend'],d:['10 kaland, 5 visszavert horda, és két teljes év (57. nap).','10 adventures, 5 hordes held off, and two full years (day 57).'],ok:()=>ADV.n>=10&&SURVP.hw>=5&&day>=57,pr:()=>Math.min(10,ADV.n)+'/10 · '+Math.min(5,SURVP.hw)+'/5 · '+uH('nap ','day ')+Math.min(day,57)+'/57'}];
+function spOn(){return!(typeof STORY!='undefined'&&STORY)&&!(typeof ZS!='undefined'&&ZS)&&!creative}
+function spTick(){if(!spOn()||state!='play')return;if(!SURVP.init){SURVP.init=1;while(SURVP.c<SPATH.length&&(()=>{try{return SPATH[SURVP.c].ok()}catch(e){return false}})())SURVP.c++;return}
+ const C=SPATH[SURVP.c];if(!C)return;let ok=false;try{ok=C.ok()}catch(e){}if(!ok)return;const i=SURVP.c;SURVP.c++;const xp=100*(i+1);try{gainXp(xp)}catch(e){}let got=[];try{got=advLoot(1+Math.floor(i/2))}catch(e){}
+ const next=SPATH[SURVP.c];try{toast112(uH('Fejezet teljesítve: ','Chapter complete: ')+C.n[LANG=='hu'?0:1],'+'+xp+' XP'+(got.length?' · '+got.slice(0,2).join(', '):'')+(next?uH(' · Következő: ',' · Next: ')+next.n[LANG=='hu'?0:1]:''),'#ffd84a');fanfare112()}catch(e){}
+
+ if(!next)try{setTimeout(()=>{toast112(uH('A vidék legendája lettél','You are the legend of these lands'),uH('A világ tovább él — és most már rólad mesélnek.','The world goes on — and now they tell stories about you.'),'#ffd84a');fanfare112()},2600)}catch(e){}}
+{const hm154=hordeMorning;hordeMorning=function(){const w0=HRD.won,r=hm154.apply(this,arguments);try{if(HRD.won!==w0&&!HRD.died)SURVP.hw++}catch(e){}return r}}
+/* the journal's main quest in survival */
+function spJn(L){jnText(L,uH('Túlélő út','The survival path'),{b:1,c:'#2a1a10'});SPATH.forEach((C,i)=>{if(i>SURVP.c)return;const done=i<SURVP.c;jnText(L,(done?'✓ ':'▸ ')+C.n[LANG=='hu'?0:1]+(done?'':'  ('+C.pr()+')'),{c:done?'#7a6a50':'#2a1a10',b:!done,in:4});if(!done)jnText(L,C.d[LANG=='hu'?0:1],{c:'#6a5a40',in:12,sz:7})});
+ if(SURVP.c>=SPATH.length)jnText(L,uH('Végigjártad az utat. A világ tovább él — te is.','You walked the whole path. The world goes on — and so do you.'),{c:'#4a6a2a'})}
+/* a small goal box on screen (after the first steps) */
+function spHud(){if(!spOn()||inD||invOpen||book||skOpen||showMap||(typeof JN!='undefined'&&JN)||(typeof TPV!='undefined'&&TPV)||(typeof SETLUI!='undefined'&&SETLUI)||tut||(typeof PHOTO!='undefined'&&PHOTO))return;if(typeof GSX!='undefined'&&GSX&&!GSX.done)return;const C=SPATH[SURVP.c];if(!C)return;const h=LANG=='hu';noTr=true;
+ const x=6,y=74;g.font=fnt(1,7);const t=C.n[h?0:1],p=C.pr();const w=Math.max(110,Math.ceil(Math.max(g.measureText(t).width,(g.font=fnt(0,7),g.measureText(p).width)))+16);uiPanel(x,y,w,30,{soft:1});
+ g.font=fnt(0,6.5);txt((h?'TÚLÉLŐ ÚT  ':'SURVIVAL PATH  ')+(SURVP.c+1)+'/'+SPATH.length,x+5,y+9,'#c8a050');g.font=fnt(1,7);txt(t,x+5,y+18,'#fff2c8');g.font=fnt(0,7);txt(p,x+5,y+27,'#d8d0bc');noTr=false}
+/* ---------- events never pile up on one day ---------- */
+function evBusy(d){try{return hordeDay(d)||EV112.bmd===d||(d>=5&&d%5==0)}catch(e){return false}}
+{const hd154=hordeDay;hordeDay=function(d){if(d%5==1&&d>5)return false;return hd154(d)}}
+{const ad154=adTick112;adTick112=function(){try{if(!EV112.ad&&typeof ABS112=='function'&&ABS112()>=EV112.nad&&evBusy(day))EV112.nad=Math.floor(ABS112())+1.12}catch(e){}return ad154.apply(this,arguments)}}
+/* hooks */
+{const up154=update;update=function(dt){const r=up154.apply(this,arguments);try{spTick()}catch(e){}return r}}
+{const dw154=draw;draw=function(){const r=dw154.apply(this,arguments);try{if(state=='play')spHud()}catch(e){noTr=false}return r}}
+{const sv154=save;save=function(){const r=sv154.apply(this,arguments);try{localStorage.setItem(SKEY()+'_sp',JSON.stringify(SURVP))}catch(e){}return r}}
+{const ld154=load;load=function(){const r=ld154.apply(this,arguments);try{const d=JSON.parse(localStorage.getItem(SKEY()+'_sp')||'null');SURVP=d&&typeof d.c=='number'?{c:d.c,hw:d.hw|0,init:1}:{c:0,hw:0,init:0}}catch(e){SURVP={c:0,hw:0,init:0}}return r}}
+{const in154=init;init=function(...a){SURVP={c:0,hw:0,init:1};return in154.apply(this,a)}}
+try{TUT.hu.push(['Túlélő út','A túlélő módnak is van fő szála: hét fejezet az első éjszakától a legendáig. Tábor, közösség, kalandok, az első tél, falu.','Az aktuális célt a bal felső sarokban látod, a teljes utat a napló Küldetések fejezetében. Minden fejezet XP-t és zsákmányt ad.']);
+ TUT.en.push(['The survival path','Survival has a main thread too: seven chapters from the first night to legend. Camp, community, adventures, the first winter, a village.','The current goal is in the top-left corner, the whole path in the journal\'s Quests chapter. Every chapter pays XP and loot.'])}catch(e){}
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
