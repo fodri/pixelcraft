@@ -10089,9 +10089,10 @@ function fvParts(){const dt=Math.min(.05,FV.dt||.016);for(let k=FVPT.length-1;k>
 LBL.artf='Artifact';HU.push(['Artifact','Artefaktum'],['artifact','artefaktum']);try{if(!NEWK.includes('artf'))NEWK.push('artf')}catch(e){}
 {const ic163=icon2;icon2=function(k,x,y){if(k=='artf'){const p=.5+.5*Math.sin(performance.now()/300);Q(x+5,y+5,10,10,'rgba(120,255,200,'+(.25+.25*p).toFixed(2)+')');Q(x+7,y+4,6,12,'#3ac8a0');Q(x+5,y+7,10,6,'#3ac8a0');Q(x+8,y+6,4,8,'#9affe0');Q(x+9,y+7,2,2,'#ffffff');Q(x+6,y+12,2,2,'#1a8a6a');return true}return ic163(k,x,y)}}
 const FVAN={ws:null,L:[],F:[],nd:99,bt:0};
-function fvAnoms(){if(inD)return null;if(FVAN.ws===wseed&&FVAN.W===W&&FVAN.B===BLD)return FVAN;FVAN.ws=wseed;FVAN.W=W;FVAN.B=BLD;FVAN.L=[];FVAN.F=[];
+function fvAnKeep(){const L=[];try{if(typeof ZS!='undefined'&&ZS){for(const k of['box','tower','bunker','hq0'])if(ZS[k]&&isFinite(ZS[k].x))L.push([ZS[k].x,ZS[k].y]);if(ZS.camp&&isFinite(ZS.camp.x))L.push([ZS.camp.x,ZS.camp.y])}}catch(e){}return L}
+function fvAnoms(){if(inD)return null;if(FVAN.kws!==wseed){FVAN.kws=wseed;FVAN.kp=[]}for(const q of fvAnKeep())if(!FVAN.kp.some(r=>r[0]==q[0]&&r[1]==q[1]))FVAN.kp.push(q);const kp=FVAN.kp,kk=kp.length;if(FVAN.ws===wseed&&FVAN.W===W&&FVAN.B===BLD&&FVAN.kk===kk)return FVAN;FVAN.ws=wseed;FVAN.W=W;FVAN.B=BLD;FVAN.kk=kk;FVAN.L=[];FVAN.F=[];
  const rn=mb(((wseed|0)^0x5a17c3)>>>0),zona=typeof ZS!='undefined',nf=zona?10:6,K=['elek','gravi','egeto'];
- const ok=(x,y)=>{if(x<3||y<3||x>=W-3||y>=H-3)return false;const i=y*W+x,m=map[i];if(!(m==0||m==2||m==6||m==3||m==14))return false;if(ob[i])return false;return!fvBMap()[i]};
+ const ok=(x,y)=>{if(x<3||y<3||x>=W-3||y>=H-3)return false;const i=y*W+x,m=map[i];if(!(m==0||m==2||m==6||m==3||m==14))return false;if(ob[i])return false;if(kp.some(q=>Math.hypot(q[0]-x,q[1]-y)<9))return false;return!fvBMap()[i]};
  let rc=null;try{rc=locReactor()}catch(e){}
  for(let tr=0;tr<5000&&FVAN.F.length<nf;tr++){let cx,cy;if(rc&&FVAN.F.length<2){const a=rn()*6.283,d=13+rn()*9;cx=Math.round(rc.x+Math.cos(a)*d);cy=Math.round(rc.y+Math.sin(a)*d)}else{cx=8+Math.floor(rn()*(W-16));cy=8+Math.floor(rn()*(H-16))}
   if(!ok(cx,cy)||Math.hypot(cx-SX,cy-SY)<40||FVAN.F.some(f=>Math.hypot(f.x-cx,f.y-cy)<30))continue;let near=false;for(const b of BLD)if(Math.abs(b.x+b.w/2-cx)<b.w/2+10&&Math.abs(b.y+b.h/2-cy)<b.h/2+10){near=true;break}if(near)continue;
