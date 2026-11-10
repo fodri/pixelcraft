@@ -427,7 +427,7 @@ function city(N,WT){for(let n=0,i=0;n<(N||14)&&i<400;i++){const w=6+Math.floor(R
 function mkMapOld(){mapC=document.createElement('canvas');mapC.width=W*2;mapC.height=H*2;const m=mapC.getContext('2d'),OC={tree:'#1d3a24',sblock:'#9aa0a4',hatch:'#d9b84a',cabin:'#e0a040',stairs:'#d9b84a',fire:'#ff8a30',chest:'#d9b84a',rock:'#6c7274',fcrate:'#ffb030'};for(let y=0;y<H;y++)for(let x=0;x<W;x++){const t=map[y*W+x],o=ob[y*W+x];m.fillStyle=t==1?'#2f98ae':t==6?'#a8d0e0':t==7?'#226f85':t==2?'#e0ca90':t==3?'#6c7078':t==5?'#0e0f12':t==4?'#4a3a28':t==8?'#7a7e80':t==9?'#e8561a':inD?'#222':(el&&el[y*W+x]==2?HC[bm[y*W+x]][1]:el&&el[y*W+x]==1?HC[bm[y*W+x]][0]:PAL[bm[y*W+x]][2]);m.fillRect(x*2,y*2,2,2);if(o&&OC[o.t]){m.fillStyle=OC[o.t];m.fillRect(x*2,y*2,2,2)}}}
 function weather(){if(!wea||inD)return;const b=cb,hv=wea==2,n=hv?150:60;while(wp.length<n)wp.push({x:R()*VW,y:R()*VH,s:.6+R()*.8});
  const nw=performance.now(),wnd=Math.sin(nw/2500)*.5+.5,wx=(b==2?200:b==1?22:-40)*(hv?2.2:1)*(.4+wnd);
- Q(0,0,VW,VH,b==2?'rgba(190,140,70,'+(hv?.35:.15)+')':'rgba(20,30,50,'+(hv?.28:.1)+')');
+ if(!fvNoOv())Q(0,0,VW,VH,b==2?'rgba(190,140,70,'+(hv?.35:.15)+')':'rgba(20,30,50,'+(hv?.28:.1)+')');
  for(let i=0;i<n;i++){const p=wp[i];p.y+=p.s*(b==1?(hv?50:22):b==2?8:(hv?230:160))*.016;p.x+=p.s*wx*.016;if(p.y>VH)p.y=0;if(p.x>VW)p.x=0;if(p.x<0)p.x=VW;
   if(b==1)Q(p.x,p.y,hv?3:2,2,'#eef4f6');else if(b==2)Q(p.x,p.y,hv?9:6,1,'rgba(230,200,140,.6)');else Q(p.x,p.y,1,hv?7:5,'rgba(170,190,220,.6)')}
  if(b==1||hv){const a=b==1?(hv?.75:.4):.2,gr=g.createRadialGradient(VW/2,VH/2,hv?35:70,VW/2,VH/2,hv?150:260);gr.addColorStop(0,'rgba(225,235,240,0)');gr.addColorStop(1,'rgba(225,235,240,'+a+')');g.fillStyle=gr;g.fillRect(0,0,VW,VH);
@@ -6961,7 +6961,7 @@ function wbTarget105(){const tx=Math.floor(P.x/T),ty=Math.floor(P.y/T);let s=0,d
 {const we106=weather;weather=function(){if(!CONT6()||!wea||inD||(typeof WFORCE!='undefined'&&WFORCE[cb|0]))return we106();
  const hv=wea==2,n=hv?150:60,ws=Math.max(0,Math.min(1,WB105.s)),wd=Math.max(0,Math.min(1-ws,WB105.d)),wr=Math.max(0,1-ws-wd);while(wp.length<n)wp.push({x:R()*VW,y:R()*VH,s:.6+R()*.8});
  const nw=performance.now(),wnd=Math.sin(nw/2500)*.5+.5,wx=(200*wd+22*ws-40*wr)*(hv?2.2:1)*(.4+wnd);
- if(wd>.02)Q(0,0,VW,VH,'rgba(190,140,70,'+((hv?.35:.15)*wd).toFixed(3)+')');if(wr+ws>.02)Q(0,0,VW,VH,'rgba(20,30,50,'+((hv?.28:.1)*(wr+ws*.4)).toFixed(3)+')');
+ if(wd>.02&&!fvNoOv())Q(0,0,VW,VH,'rgba(190,140,70,'+((hv?.35:.15)*wd).toFixed(3)+')');if(wr+ws>.02&&!fvNoOv())Q(0,0,VW,VH,'rgba(20,30,50,'+((hv?.28:.1)*(wr+ws*.4)).toFixed(3)+')');
  for(let i=0;i<n;i++){const p=wp[i],u=i/n,ty=u<ws?1:u<ws+wd?2:0;p.y+=p.s*(ty==1?(hv?50:22):ty==2?8:(hv?230:160))*.016;p.x+=p.s*(ty==1?wx*.5:ty==2?wx:wx*.6)*.016;if(p.y>VH)p.y=0;if(p.x>VW)p.x=0;if(p.x<0)p.x=VW;
   if(ty==1)Q(p.x,p.y,hv?3:2,2,'#eef4f6');else if(ty==2)Q(p.x,p.y,hv?9:6,1,'rgba(230,200,140,.6)');else Q(p.x,p.y,1,hv?7:5,'rgba(170,190,220,.6)')}
  const fogA=ws*(hv?.75:.4)+(hv?.2*(1-ws):0);if(fogA>.02){const gr=g.createRadialGradient(VW/2,VH/2,hv?35:70,VW/2,VH/2,hv?150:260);gr.addColorStop(0,'rgba(225,235,240,0)');gr.addColorStop(1,'rgba(225,235,240,'+fogA.toFixed(3)+')');g.fillStyle=gr;g.fillRect(0,0,VW,VH);
@@ -7619,7 +7619,7 @@ function arrow112(tx,ty,col,lab){const sx=(tx-cam.x)*ZM,sy=(ty-cam.y)*ZM,cx=(P.x
  const a=Math.atan2(sy-cy,sx-cx),R=Math.min(VW,VH)/2-26,ax=Math.max(16,Math.min(VW-16,cx+Math.cos(a)*R)),ay=Math.max(24,Math.min(VH-40,cy+Math.sin(a)*R));
  g.save();g.translate(ax,ay);g.rotate(a);g.fillStyle='rgba(0,0,0,.5)';g.beginPath();g.moveTo(9,1);g.lineTo(-5,-6);g.lineTo(-2,1);g.lineTo(-5,8);g.closePath();g.fill();g.fillStyle=col;g.beginPath();g.moveTo(8,0);g.lineTo(-6,-7);g.lineTo(-3,0);g.lineTo(-6,7);g.closePath();g.fill();g.restore();
  noTr=true;txt(lab+' '+d+'m',ax,ay+16,col,'center');noTr=false}
-{const hd112=hud;hud=function(){if(state=='play'&&!inD&&bmOn112()&&GMODE!=3&&!view){g.save();g.setTransform(1,0,0,1,0,0);const cv=g.canvas,p=.5+.12*Math.sin(performance.now()/900);g.globalCompositeOperation='multiply';g.fillStyle='rgba(255,110,100,'+(.75*p).toFixed(3)+')';g.fillRect(0,0,cv.width,cv.height);g.globalCompositeOperation='screen';g.fillStyle='rgba(90,0,0,'+(.18*p).toFixed(3)+')';g.fillRect(0,0,cv.width,cv.height);g.globalCompositeOperation='source-over';
+{const hd112=hud;hud=function(){if(state=='play'&&!inD&&bmOn112()&&GMODE!=3&&!view&&!fvNoOv()){g.save();g.setTransform(1,0,0,1,0,0);const cv=g.canvas,p=.5+.12*Math.sin(performance.now()/900);g.globalCompositeOperation='multiply';g.fillStyle='rgba(255,110,100,'+(.75*p).toFixed(3)+')';g.fillRect(0,0,cv.width,cv.height);g.globalCompositeOperation='screen';g.fillStyle='rgba(90,0,0,'+(.18*p).toFixed(3)+')';g.fillRect(0,0,cv.width,cv.height);g.globalCompositeOperation='source-over';
    const vg=g.createRadialGradient(cv.width/2,cv.height/2,Math.min(cv.width,cv.height)*.3,cv.width/2,cv.height/2,Math.max(cv.width,cv.height)*.7);vg.addColorStop(0,'rgba(120,0,0,0)');vg.addColorStop(1,'rgba(90,0,0,'+(.45*p).toFixed(3)+')');g.fillStyle=vg;g.fillRect(0,0,cv.width,cv.height);g.restore()}
   const r=hd112.apply(this,arguments);if(state!='play')return r;try{hud112()}catch(e){console.error(e)}return r}}
 var PLN112=null;
@@ -9611,6 +9611,87 @@ fu3('wtorch',(q,w,d,c,gl)=>{q(.46,1.0,.46,.54,1.5,.54,fuWd);gl(.43,1.5,.43,.57,1
 fu3('vase',(q,w,d,c)=>{q(.32,0,.32,.68,.5,.68,c);q(.38,.5,.38,.62,.62,.62,fuDark(c,.8))});
 fu3('tchest',fuCrate);fu3('kzgate',(q,w,d,c)=>{for(let x=0;x<1;x+=.2)q(x+.06,0,.45,x+.12,2.9,.55,fuGr);q(0,2.6,.44,1,2.7,.56,fuGr);q(0,1.2,.44,1,1.28,.56,fuGr)});
 fu3('stairs',(q,w,d,c)=>{for(let s=0;s<5;s++)q(.1,0,.1+s*.16,.9,.25+s*.25,.26+s*.16,fuDark(c,.9+s*.03))},false);
+
+/* ===== v160: FPS polish — weather and blood moon as real fog instead of a flat tint, an X on talk boxes, people look at you (and turn DOOM-style), the cursor comes back for menus, no climbing walls of earth, Minecraft-style digging and building, and the shader in 3D ===== */
+GAMEV=160;
+function fvNoOv(){return typeof FVB!='undefined'&&FVB&&typeof V3!='undefined'&&V3&&V3.on}
+/* ---------- weather and blood moon in 3D: fog and sky, not a coloured sheet over the screen ---------- */
+{const fl160=fvLights;fvLights=function(){const r=fl160();try{if(!inD){const S=V3.S,f=S.fog;let col=null,nr=0,fr=0;
+  if(wea){const hv=wea==2,b=cb|0;if(b==2){col=0xc8a070;nr=2;fr=hv?13:24}else if(b==1){col=0xd8e0e8;nr=4;fr=hv?15:26}else{col=0x7a8898;nr=6;fr=hv?20:30}}
+  if(col!=null){const k=1-Math.min(1,dark()/.85),c=new THREE.Color(col).multiplyScalar(.25+.75*k);S.background.lerp(c,.85);f.color.copy(S.background);f.near=Math.min(f.near,nr);f.far=Math.min(f.far,fr);V3.sun.intensity*=wea==2?.35:.65}
+  if(typeof bmOn112=='function'&&bmOn112()){S.background.lerp(new THREE.Color(0x6a0808),.7);f.color.copy(S.background);V3.hemi.color.lerp(new THREE.Color(0xff5040),.6);f.far=Math.min(f.far,26)}
+  if(FV.dome)FV.dome.material.color.copy(S.background)}}catch(e){}return r}}
+/* ---------- talk boxes get an X ---------- */
+function fvXR(){const L=[];try{if(typeof TALK!='undefined'&&TALK){const q=talkRect();L.push({x:q.x+q.w-13,y:q.y+2,k:'t'})}else if(DLG){const r=dlRect();L.push({x:r.x+r.w-15,y:r.y+3,k:'d'})}}catch(e){}return L}
+function fvXDraw(){for(const b of fvXR()){const hov=ms.x>=b.x&&ms.x<b.x+11&&ms.y>=b.y&&ms.y<b.y+11;Q(b.x,b.y,11,11,hov?'rgba(160,50,40,.95)':'rgba(30,22,16,.9)');Q(b.x,b.y,11,1,'#c8a050');Q(b.x,b.y+10,11,1,'#3a2a18');for(let k=2;k<9;k++){Q(b.x+k,b.y+k,1,1,'#fff2c8');Q(b.x+10-k,b.y+k,1,1,'#fff2c8')}}}
+function fvXClose(k){try{if(k=='t'&&TALK)talkClose();let n=0;while(DLG&&n++<60)dlNext();DLG=null;if(typeof DLQ!='undefined')DLQ.length=0}catch(e){DLG=null}try{snd('ui')}catch(e){}}
+addEventListener('mousedown',e=>{if(state!='play')return;const L=fvXR();if(!L.length)return;const r=C.getBoundingClientRect(),mx=(e.clientX-r.left)/r.width*VW,my=(e.clientY-r.top)/r.height*VH;
+ for(const b of L)if(mx>=b.x-1&&mx<b.x+12&&my>=b.y-1&&my<b.y+12){e.preventDefault();e.stopImmediatePropagation();fvXClose(b.k);return}},true);
+addEventListener('keydown',e=>{if(state=='play'&&e.code=='Escape'&&(DLG||(typeof TALK!='undefined'&&TALK))){e.preventDefault();e.stopImmediatePropagation();fvXClose(TALK?'t':'d')}},true);
+{const hu160=hud;hud=function(){if(FV.lock&&fvUI())fvUnlock();const r=hu160.apply(this,arguments);try{noTr=true;fvXDraw()}catch(e){}noTr=false;return r}}
+/* ---------- people look at you while they talk, and turn like DOOM sprites in first person ---------- */
+function fvTalker(){try{if(typeof TALK!='undefined'&&TALK&&TALK.n)return TALK.n;if(DLG&&DLG.src&&isFinite(DLG.src.x)&&DLG.src!==P)return DLG.src}catch(e){}return null}
+{const up160=update;update=function(dt){const r=up160.apply(this,arguments);try{const n=fvTalker();if(n&&NPCS.includes(n)){const dx=P.x-n.x,dy=P.y-n.y,l=Math.hypot(dx,dy)||1;n.fx=dx/l;n.fy=dy/l;n.mv=0}}catch(e){}return r}}
+{const dn160=drawNPC;drawNPC=function(n){if(!(fvOn()&&V3.cam))return dn160(n);const fx=n.fx,fy=n.fy,c=V3.cam.position,tx=c.x*T-n.x,ty=c.z*T-n.y,a=Math.PI/2-Math.atan2(ty,tx),f0x=isFinite(fx)?fx:0,f0y=isFinite(fy)?fy:1;
+ n.fx=f0x*Math.cos(a)-f0y*Math.sin(a);n.fy=f0x*Math.sin(a)+f0y*Math.cos(a);try{return dn160(n)}finally{n.fx=fx;n.fy=fy}}}
+/* ---------- you can step up one block, not climb a wall of earth (like Minecraft with auto-jump) ---------- */
+{const so160=solid;solid=function(px,py){if(so160(px,py))return true;const s=FV.stepC;if(!s)return false;const tx=Math.floor(px/T),ty=Math.floor(py/T);if(tx<0||ty<0||tx>=W||ty>=H)return true;return fvHgt()[ty*W+tx]-s.h>s.lim}}
+{const mv160=mv;mv=function(e,dx,dy,r){if(e!==P||!FVB||!(V3&&V3.on)||drv||creative||P.boat)return mv160.apply(this,arguments);FV.stepC={h:fvHgt()[Math.floor(P.y/T)*W+Math.floor(P.x/T)],lim:1.08*FVU};try{return mv160.apply(this,arguments)}finally{FV.stepC=null}}}
+/* ---------- Minecraft-style digging and building on the landscape ---------- */
+var FVD=new Map();
+LBL.dirt='Dirt';HU.push(['Dirt','Föld'],['dirt','föld']);
+{const ic160=icon2;icon2=function(k,x,y){if(k=='dirt'){Q(x+4,y+5,12,11,'#7a5a3c');Q(x+4,y+5,12,3,'#5a9a3a');Q(x+4,y+8,12,1,'#4a7a2a');Q(x+7,y+11,2,2,'#5a4028');Q(x+12,y+13,2,1,'#5a4028');Q(x+15,y+5,1,11,'#5a4028');return true}return ic160(k,x,y)}}
+{const hg160=fvHgt;fvHgt=function(){const fresh=!(FVHT&&FVHT.map===map&&FVHT.ob===ob);const h=hg160();if(fresh&&!inD)for(const[i,e]of FVD)h[i]+=e.d*FVU;return h}}
+{const sc160=fvSideCol;fvSideCol=function(m,b){if(!inD&&m==14)return fuC(0x8a8680);return sc160(m,b)}}
+function fvRebuild(i){if(!V3||!V3.ok)return;const x=i%W,y=Math.floor(i/W),S=new Set();for(const[dx,dy]of[[0,0],[1,0],[-1,0],[0,1],[0,-1]]){const cx=Math.floor((x+dx)/GQS),cy=Math.floor((y+dy)/GQS);S.add(cx+','+cy)}
+ for(const k of S){const ch=V3.chunks.get(k);if(ch){try{v3BuildGround(ch)}catch(e){}}}}
+function fvEdit(i,dd,mat){let e=FVD.get(i);if(!e){e={d:0,m:0,o:map[i]};FVD.set(i,e)}e.d+=dd;if(dd>0&&mat)e.m=mat;
+ if(dd>0&&e.m==2)map[i]=14;if(e.d<=0&&e.m==2){map[i]=e.o;e.m=0}if(e.d==0&&!e.m&&map[i]===e.o)FVD.delete(i);
+ if(FVHT&&FVHT.map===map)FVHT.h[i]+=dd*FVU;fvRebuild(i)}
+const FVDIG={0:1,2:1,6:1,3:1,4:1,14:1};
+function fvMC(){const h=FV.hit;if(!h||!h.terr||h.d>5)return false;const it=HB[hb];if(GUN[it]||it=='bow'||it=='rod'||(FOODK&&FOODK[it])||PL[it]||it=='snowball'||it=='dirt'||it=='stone')return false;
+ if(P.cd>0)return true;const i=FV.tHit;if(i==null||ob[i])return false;const m=map[i],e=FVD.get(i),tl=tool();if(!FVDIG[m])return false;
+ const x=(i%W)*T+8,y=Math.floor(i/W)*T+8;
+ if(e&&e.m==2&&e.d>0){if(!(tl&&tl.k=='pickaxe')){if(edge)say(LANG=='hu'?'Kőhöz csákány kell':'Stone needs a pickaxe');P.cd=.3;return true}fvEdit(i,-1);inv.stone=(inv.stone|0)+1;wear(it);P.cd=.45;hit(x,y,'#9a968e');return true}
+ if((e?e.d:0)<=-3){if(edge)say(LANG=='hu'?'Ennél mélyebbre nem ásol':'Can’t dig deeper here');P.cd=.3;return true}
+ if(m==14&&!(e&&e.m==2))return false;
+ fvEdit(i,-1);inv.dirt=(inv.dirt|0)+1;givehb('dirt');if(tl)wear(it);P.cd=tl&&tl.k=='shovel'?.28:tl?.5:.75;hit(x,y,m==2?'#d8c690':'#7a5a3c');try{snd('pick')}catch(e){}return true}
+{const ac160=act;act=function(){if(fvOn()&&FVB&&!inD)try{if(fvMC())return}catch(e){}return ac160.apply(this,arguments)}}
+function fvPlace(){const it=HB[hb];if(!(inv[it]>0))return false;const i=FV.tPlace;if(i==null||!FV.hit||FV.hit.d>5)return false;const tx=i%W,ty=Math.floor(i/W);
+ if(ob[i]||wt(map[i])||!(FVDIG[map[i]]||map[i]==8))return say(LANG=='hu'?'Ide nem rakhatsz blokkot':'Can’t place a block here'),true;
+ if(tx==Math.floor(P.x/T)&&ty==Math.floor(P.y/T))return true;const e=FVD.get(i);if((e?e.d:0)>=8)return true;
+ fvEdit(i,1,it=='stone'?2:1);inv[it]--;if(!inv[it]&&HB[hb]==it){}try{snd('place')}catch(e){}return true}
+{const rc160=rclick;rclick=function(){if(fvOn()&&FVB&&!inD&&(HB[hb]=='dirt'||HB[hb]=='stone')){try{if(fvPlace())return}catch(e){}}return rc160.apply(this,arguments)}}
+/* aim: which block you hit and where a new one would go */
+{const fa160=fvAim;fvAim=function(){fa160();FV.tHit=FV.tPlace=null;const h=FV.lastHit;if(!h||!FV.hit)return;const n=h.face?h.face.normal:{x:0,y:1,z:0},p=h.point,ud=h.object.userData;
+ FV.hit.terr=!!(ud.terr);const ix=Math.floor(p.x-n.x*.05),iz=Math.floor(p.z-n.z*.05);if(ix<0||iz<0||ix>=W||iz>=H)return;FV.tHit=iz*W+ix;
+ if(Math.abs(n.y)>.5)FV.tPlace=FV.hit.terr?FV.tHit:null;else{const px=Math.floor(p.x+n.x*.5),pz=Math.floor(p.z+n.z*.5);if(px>=0&&pz>=0&&px<W&&pz<H)FV.tPlace=pz*W+px}}}
+{const bg160=v3BuildGround;v3BuildGround=function(ch){const r=bg160.apply(this,arguments);try{if(FVB&&ch.gm){ch.gm.userData.terr=1;for(const c of ch.gm.children)c.userData.terr=1;if(ch.am)ch.am.userData.terr=0}}catch(e){}return r}}
+/* the Minecraft block outline */
+let FVOL=null;function fvOutline(){if(!FVOL){FVOL=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1,1,1)),new THREE.LineBasicMaterial({color:0x101010,fog:false}));FVOL.renderOrder=5;V3.S.add(FVOL)}
+ const it=HB[hb],blk=(it=='dirt'||it=='stone')&&inv[it]>0,i=blk?FV.tPlace:FV.tHit;FVOL.visible=!!(fvLive()&&FV.hit&&!FV.hit.foe&&!FV.hit.ent&&i!=null&&FV.hit.d<5);if(!FVOL.visible)return;
+ const x=i%W,z=Math.floor(i/W),h=fvHgt()[i],o=ob[i];let y0,y1;if(blk){y0=h;y1=h+FVU}else if(FV.hit.terr){y0=h-FVU;y1=h}else{y0=h;y1=h+((o&&(BOX3[o.t]||o.t=='door'||o.t=='win'))?FV_WALL:o&&o.t=='tree'?FVU*2:FVU)}
+ FVOL.material.color.setHex(blk?0xf0f0f0:0x101010);FVOL.scale.set(1.004,y1-y0+.004,1.004);FVOL.position.set(x+.5,(y0+y1)/2,z+.5)}
+{const fl160b=fvLights;fvLights=function(){const r=fl160b();try{V3.hl.material.visible=false;fvOutline()}catch(e){}return r}}
+{const rs160=fvRestore;fvRestore=function(){if(FVOL)FVOL.visible=false;return rs160()}}
+/* keep the landscape edits with the save */
+{const sv160=save;save=function(){const r=sv160.apply(this,arguments);try{localStorage.setItem(SKEY()+'_fvd',JSON.stringify([...FVD].map(([i,e])=>[i,e.d,e.m,e.o])))}catch(e){}return r}}
+{const ld160=load;load=function(){const r=ld160.apply(this,arguments);try{FVD=new Map();const a=JSON.parse(localStorage.getItem(SKEY()+'_fvd')||'[]');for(const q of a)FVD.set(q[0],{d:q[1],m:q[2],o:q[3]});FVHT=null;if(V3&&V3.ok&&FVB)fvClear()}catch(e){FVD=new Map()}return r}}
+{const in160=init;init=function(...a){FVD=new Map();FVHT=null;return in160.apply(this,a)}}
+/* ---------- the shader in 3D: bloom, colour grade and vignette on the pixel picture ---------- */
+const FVPP={ok:false};
+function fvPPInit(){if(FVPP.ok||!V3||!V3.ok)return;const R=V3.R;FVPP.rt=new THREE.WebGLRenderTarget(4,4,{minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter});
+ FVPP.mat=new THREE.ShaderMaterial({uniforms:{t:{value:null},px:{value:new THREE.Vector2(1,1)},bl:{value:1}},depthTest:false,depthWrite:false,
+  vertexShader:'varying vec2 vU;void main(){vU=uv;gl_Position=vec4(position.xy,0.,1.);}',
+  fragmentShader:'uniform sampler2D t;uniform vec2 px;uniform float bl;varying vec2 vU;vec3 br(vec2 o){vec3 c=texture2D(t,vU+o*px).rgb;float l=max(max(c.r,c.g),c.b);return c*smoothstep(.72,1.,l);}'+
+  'void main(){vec3 c=texture2D(t,vU).rgb;vec3 b=vec3(0.);for(int i=-3;i<=3;i++)for(int j=-3;j<=3;j++){vec2 o=vec2(float(i),float(j));b+=br(o*2.)*(1.-length(o)/5.);}b/=22.;c+=b*.55*bl;'+
+  'float l=dot(c,vec3(.299,.587,.114));c=mix(vec3(l),c,1.14);c=(c-.5)*1.07+.5;c*=vec3(1.03,1.,.96);vec2 d=vU-.5;c*=1.-dot(d,d)*.6;gl_FragColor=vec4(clamp(c,0.,1.),1.);}'});
+ FVPP.s=new THREE.Scene();FVPP.s.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2),FVPP.mat));FVPP.c=new THREE.Camera();FVPP.sz=new THREE.Vector2();FVPP.ok=true;
+ const r0=R.render.bind(R);R.render=function(s,c){if(s===V3.S&&shaderOn&&fvOn()){R.getDrawingBufferSize(FVPP.sz);if(FVPP.rt.width!==FVPP.sz.x||FVPP.rt.height!==FVPP.sz.y)FVPP.rt.setSize(FVPP.sz.x,FVPP.sz.y);FVPP.mat.uniforms.px.value.set(1/FVPP.sz.x,1/FVPP.sz.y);
+  R.setRenderTarget(FVPP.rt);r0(s,c);R.setRenderTarget(null);FVPP.mat.uniforms.t.value=FVPP.rt.texture;FVPP.mat.uniforms.bl.value=dark()>.5?1.4:1;r0(FVPP.s,FVPP.c);return}r0(s,c)}}
+{const fl160c=fvLights;fvLights=function(){const r=fl160c();try{if(!FVPP.ok)fvPPInit()}catch(e){}return r}}
+try{TUT.hu.push(['Ásás és építés (FPS)','Belső nézetben a tájat is alakíthatod, mint a Minecraftban: kattintással kiásod a földet (lapáttal gyorsabb), a föld a táskádba kerül.','Jobb kattintással lerakod a földet vagy a követ oda, ahová nézel, egymásra is. Egy blokkra fel tudsz lépni, kettőre már nem. A követ csákánnyal bontod vissza.']);
+ TUT.en.push(['Digging and building (FPS)','In first person you can shape the land like in Minecraft: click to dig out earth (faster with a shovel), the dirt goes into your bag.','Right-click places dirt or stone where you look, stacked too. You can step up one block, not two. Stone comes back out with a pickaxe.'])}catch(e){}
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
