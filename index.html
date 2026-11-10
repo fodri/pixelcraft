@@ -2479,7 +2479,7 @@ function npcTick(dt){if(inD||!NPCS.length)return;for(const n of NPCS){if(!isFini
  if(Math.abs(dx)>Math.abs(dy)){n.fx=Math.sign(dx);n.fy=0}else{n.fx=0;n.fy=Math.sign(dy)}}}
 function drawNPC(n){const x=n.x-cam.x,y=n.y-cam.y;if(x<-30||y<-40||x>VW/ZM+30||y>VH/ZM+40)return;drawChar(x,y,chOf(n.c),n.mv?1+Math.floor(n.an||0)%4:0,isFinite(n.fx)?n.fx:0,isFinite(n.fy)?n.fy:1,1,{});OVQ.push(n)}
 var OVQ=[];
-function npcOverlay(){const q=OVQ;OVQ=[];for(const n of q){const x=n.x-cam.x,y=n.y-cam.y;lbl(n.nm,x,y-24);
+function npcOverlay(){const q=OVQ;OVQ=[];for(const n of q){const x=n.x-cam.x,y=n.y-cam.y;if(typeof npcTagShow!='function'||npcTagShow(n))lbl(n.nm,x,y-24);
  if(n.sayT>0&&n.line){n.sayT-=1/60;noTr=true;g.font=fnt(0,8);const w=Math.min(VW/ZM-4,Math.ceil(g.measureText(n.line).width)+8),bx=Math.round(Math.max(2,Math.min(VW/ZM-w-2,x-w/2))),by=Math.round(Math.max(2,y-46));
   Q(bx-1,by-1,w+2,14,'#ffd84a');Q(bx,by,w,12,'rgba(20,16,10,.94)');Q(Math.round(x)-1,by+13,3,3,'#ffd84a');txt(n.line,bx+4,by+9,'#f0e6b8');noTr=false}}
  if(net)for(const p of net.peers){const q=p.presence;if(!q||!peerSame(q)||q.rd)continue;const qx=(isFinite(p.sx)?p.sx:q.x)-cam.x,qy=(isFinite(p.sy)?p.sy:q.y)-cam.y;if(underRoof(Math.floor((qx+cam.x)/T),Math.floor((qy+cam.y)/T)-2))lbl(String(q.n||'?'),qx,qy-24)}}
@@ -3680,7 +3680,7 @@ menuKey=function(c){const n=mainLabels().length;if(msel>=n)msel=0;if(c=='ArrowUp
 menuClick=function(){const n=mainLabels().length;for(let i=0;i<n;i++)if(ms.x>=MB.x&&ms.x<MB.x+MB.w&&ms.y>=mbY(i)&&ms.y<mbY(i)+MB.h){msel=i;menuAct(i);return}};
 MB.y=106;MB.h=16;MB.g=2;
 {const mn0=menu;menu=function(){if(msel>=mainLabels().length)msel=0;mn0();const hu=LANG=='hu';noTr=true;
- txt('Alpha build '+GAMEV,6,VH-6,'#6f7c62');
+ txt('v1.0 · build '+GAMEV,6,VH-6,'#6f7c62');
  if(SVF&&performance.now()-SVF<2500){const a=1-(performance.now()-SVF)/2500;g.globalAlpha=Math.min(1,a*2);txt(hu?'✔ Játék mentve':'✔ Game saved',MB.x+MB.w/2,mbY(mainLabels().length)+6,'#9be07d','center');g.globalAlpha=1}
  else if(canSave())txt(hu?'Gyors mentés játék közben: Ctrl+S':'Quick save in game: Ctrl+S',MB.x+MB.w/2,mbY(mainLabels().length)+6,'#6f7c62','center');noTr=false}}
 addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.code=='KeyS'){e.preventDefault();e.stopImmediatePropagation();if(state=='play'||state=='title'){if(doSave())snd('ui')}}},true);
@@ -7100,7 +7100,7 @@ DVOICE.critic=DVOICE.player;
 
 /* ===== v108: a gloomier world (no jump scares): washed-out colours, cold tint, vignette, drifting mist, darker nights, a quiet unsettling soundscape ===== */
 GAMEV=120;
-var MOOD=1,MDS=.7;try{const a=localStorage.getItem('pxc_mood'),b=localStorage.getItem('pxc_mds');if(a!=null&&a!=='')MOOD=+a;if(b!=null&&b!=='')MDS=Math.max(0,Math.min(1,+b))}catch(e){}
+var MOOD=0,MDS=.7;try{const a=localStorage.getItem('pxc_mood'),b=localStorage.getItem('pxc_mds');if(a!=null&&a!=='')MOOD=+a;if(b!=null&&b!=='')MDS=Math.max(0,Math.min(1,+b))}catch(e){}
 function mdSave(){try{localStorage.setItem('pxc_mood',String(MOOD));localStorage.setItem('pxc_mds',String(MDS))}catch(e){}}
 /* settings: Graphics → Mood */
 try{const R=GPAGES.main.rows,ix=R.findIndex(r=>r.k=='mode')+1;R.splice(ix,0,
@@ -8687,7 +8687,7 @@ function setlSpawnWanderer(){if(inD||SETL.nw>=10)return;const ptx=Math.floor(P.x
   const ang=Math.atan2(ty-pty,tx-ptx),dirs=sH()?['keletre','délkeletre','délre','délnyugatra','nyugatra','északnyugatra','északra','északkeletre']:['east','south-east','south','south-west','west','north-west','north','north-east'],d=dirs[(Math.round(ang/(Math.PI/4))+8)%8];
   try{toast112(sB('Vándor a közelben','A wanderer nearby'),sB('Füstöt látsz '+d+' — talán csatlakozna hozzád','You see smoke to the '+d+' — maybe they would join you'),'#c8b890')}catch(e){}return n}}
 /* ---------- talking: join, change work ---------- */
-function setlCanInvite(n){return n&&!n.res&&!n.sci&&!n.zr&&!n.gd&&!n.guard&&!n.bandit&&!n.robot&&!n.story&&n.job!='vezeto'&&n.job!='kereskedo'&&!(typeof shopOf=='function'&&shopOf(n))}
+function setlCanInvite(n){return n&&!n.res&&!n.adv&&!n.sci&&!n.zr&&!n.gd&&!n.guard&&!n.bandit&&!n.robot&&!n.story&&n.job!='vezeto'&&n.job!='kereskedo'&&!(typeof shopOf=='function'&&shopOf(n))}
 {const to149=talkOpts;talkOpts=function(){const L=to149();try{const n=TALK&&TALK.n;if(!n)return L;const bi=Math.max(0,L.findIndex(o=>o.k=='bye'));
   if(n.res){L.splice(1,0,{k:'setl_job',l:sB('Munka: ','Work: ')+RJOB[n.res.j][sH()?0:1]+sB(' → váltás',' → change')});}
   else if(setlCanInvite(n)&&(n.wd||(n.fr||0)>=3))L.splice(Math.min(bi,1),0,{k:'setl_join',l:sB('Gyere a táborunkba!','Come and live in our camp!')});}catch(e){}return L}}
@@ -8930,6 +8930,91 @@ function err151(where,e){ERR151.n++;try{console.error('[pixelcraft '+where+']',e
 {const ld151=load;load=function(){const r=ld151.apply(this,arguments);try{const d=JSON.parse(localStorage.getItem(SKEY()+'_gs')||'null');GSX=d&&!d.done?{s:d.s|0,th:0,fd:0,at:0,done:0}:{done:1}}catch(e){GSX={done:1}}PHOTO=null;return r}}
 try{TUT.hu.push(['Kontroller és fotó','Kontroller: bal kar mozgás, jobb kar célzás, RT használat/ütés, LT jobb klikk, A interakció, B vissza, X újratöltés, Y tárgyak, LB/RB eszközváltás, D-pad le: evés, Select: térkép, Start: menü.','F2: fotó mód — eltűnik a kijelző, WASD-dal mozgatod a kamerát, Enterrel elmented a képet.','Könnyű és Békés fokozaton lassabban éhezel és szomjazol, a hordák csak a 10. naptól jönnek.']);
  TUT.en.push(['Controller and photos','Controller: left stick move, right stick aim, RT use/hit, LT right click, A interact, B back, X reload, Y inventory, LB/RB switch tool, D-pad down: eat, Select: map, Start: menu.','F2: photo mode — the HUD disappears, WASD moves the camera, Enter saves the picture.','On Easy and Peaceful you get hungry and thirsty slower, and hordes only come from day 10.'])}catch(e){}
+
+/* ===== v153: adventures — people at the camps (and the radio) hand out jobs: rescue a trapped survivor, hunt a beast, burn out an infected nest, survey the unknown; the story teaches the recipes it asks for; fewer name tags; calmer defaults ===== */
+GAMEV=153;
+const aH=(a,b)=>LANG=='hu'?a:b;
+/* ---------- the story never asks for something you can't make ---------- */
+const STLK={fish:['rod'],sleep:['bed','tent'],bench:['workbench'],gear:['mask'],dog:[],fire:['fire']};
+let STLK0='';
+function stTeach(){if(!STORY||STORY.done||typeof stCur!='function')return;const s=stCur();if(!s)return;const key=STORY.act+':'+s.id;if(key===STLK0)return;STLK0=key;const ks=(STLK[s.id]||[]).filter(k=>REC.some(r=>r[0]==k));const got=[];for(const k of ks)if(typeof lkLearn=='function'&&lkLearn(k,['Eszembe jutott, hogyan kell — mintha csináltam volna már.','It comes back to me — as if I had made one before.']))got.push(tr(LBL[k]||k));
+ if(got.length)try{toast112(aH('Eszembe jutott','I remember now'),got.join(', '),'#c8b890')}catch(e){}}
+/* the basics everybody knows */
+function basicKnow(){if(!LK||typeof LK!='object')return;for(const k of['rod','tent','flag'])if(!LK[k]&&REC.some(r=>r[0]==k))LK[k]=1}
+/* ---------- adventures ---------- */
+let ADV={L:[],n:0,nx:3,uid:0};
+const ADVT={rescue:['Mentőakció','Rescue','#6ab0ff'],beast:['Bestia','Beast hunt','#ff7a4a'],nest:['Fertőzött fészek','Infected nest','#b0d040'],survey:['Feltérképezés','Survey','#e8d070']};
+function advLv(){try{return threatLv()}catch(e){return 1}}
+function advSpot(min,max,need){const px=Math.floor(P.x/T),py=Math.floor(P.y/T);for(let k=0;k<400;k++){const a=Math.random()*6.283,r=min+Math.random()*(max-min),x=Math.round(px+Math.cos(a)*r),y=Math.round(py+Math.sin(a)*r);if(x<6||y<6||x>W-7||y>H-7)continue;const i=y*W+x;if(map[i]==1||!WALKM(map[i]))continue;if(need&&!need(x,y))continue;if(typeof RIC!='undefined'&&RIC&&Math.hypot(x-RIC[0],y-RIC[1])<RIC[2]+5)continue;return[x,y]}return null}
+function advDir(x,y){const a=Math.atan2(y*T-P.y,x*T-P.x),d=Math.round(Math.hypot(x*T-P.x,y*T-P.y)/T);const D=LANG=='hu'?['keletre','délkeletre','délre','délnyugatra','nyugatra','északnyugatra','északra','északkeletre']:['east','south-east','south','south-west','west','north-west','north','north-east'];return D[(Math.round(a/(Math.PI/4))+8)%8]+' ~'+d+(LANG=='hu'?' mezőre':' tiles')}
+function advNew(k,from){if(ADV.L.length>=3)return null;let A=null;const id=++ADV.uid,L=advLv();
+ if(k=='rescue'){const bs=BLD.filter(b=>['house','apt','shop','office','farm','barn'].includes(b.rf)&&Math.hypot(b.x-P.x/T,b.y-P.y/T)>22&&Math.hypot(b.x-P.x/T,b.y-P.y/T)<70);const b=bs[Math.floor(Math.random()*bs.length)];if(b)A={id,k,x:b.x+Math.floor(b.w/2),y:b.y+Math.floor(b.h/2),st:0};else{const s=advSpot(24,55);if(s)A={id,k,x:s[0],y:s[1],st:0}}}
+ else if(k=='beast'||k=='nest'){const s=advSpot(24,60,(x,y)=>!ob[y*W+x]);if(s)A={id,k,x:s[0],y:s[1],st:0}}
+ else if(k=='survey'){const pts=[];for(let j=0;j<3;j++){let s=null;for(let t=0;t<30&&!s;t++){const c=advSpot(26,75);if(c&&!(typeof fogSeen=='function'&&fogSeen(c[0],c[1]))&&pts.every(p=>Math.hypot(p[0]-c[0],p[1]-c[1])>14))s=c}if(s)pts.push([s[0],s[1],0])}if(pts.length==3)A={id,k,x:pts[0][0],y:pts[0][1],pts,st:0}}
+ if(!A)return null;A.d0=day;A.L=L;A.from=from||'';ADV.L.push(A);try{gainXp(5)}catch(e){}return A}
+function advName(A){const h=LANG=='hu';return ADVT[A.k][h?0:1]}
+function advDesc(A){const h=LANG=='hu',L=A.L;if(A.k=='rescue')return A.st>=1?(h?'Megtaláltad. Tisztítsd meg a környéket, aztán beszélj vele.':'You found them. Clear the area, then talk to them.'):(h?'Valaki egy házban rekedt, körülötte fertőzöttek. Hozd ki élve.':'Someone is trapped in a house, surrounded by infected. Bring them out alive.');
+ if(A.k=='beast')return h?'Egy hatalmas mutáns tartja rettegésben a környéket. Vadászd le.':'A huge mutant terrorises the area. Hunt it down.';
+ if(A.k=='nest')return h?'Spórafészek: amíg áll, fertőzöttek bújnak elő belőle. Zúzd szét.':'A spore nest: while it stands, infected crawl out of it. Smash it.';
+ if(A.k=='survey'){const n=A.pts.filter(p=>p[2]).length;return(h?'Járj el három ismeretlen helyre, és rajzold fel őket. ':'Visit three unknown places and map them. ')+n+'/3'}return''}
+function advTarget(A){if(A.k=='survey'){const p=A.pts.find(p=>!p[2]);return p?[p[0],p[1]]:null}return[A.x,A.y]}
+/* nest object */
+Object.assign(LBL,{nest153:'Spore nest'});Object.assign(LBLX,{nest153:'Spore nest'});HU.unshift(['Spore nest','Spórafészek']);Object.assign(SOLID,{nest153:1});
+Object.assign(DRAWX,{nest153(o,x,y){const t=performance.now()/600,p=.5+.5*Math.sin(t*2+x);W_(x-6,y+10,28,5,'rgba(0,0,0,.35)');W_(x-4,y-6,24,18,'#4a3a2a');W_(x-6,y,28,12,'#5a4430');W_(x-2,y-10,20,8,'#6a5038');
+ for(const[a,b,r]of[[2,-4,3],[12,-2,4],[6,4,3],[16,6,2],[-2,6,2]]){W_(x+a,y+b,r,r,'#a8c040');W_(x+a,y+b,1,1,'rgba(240,255,160,'+(.5+p*.5)+')')}
+ const hp=o.hp/o.mx;if(hp<1){W_(x-4,y-14,24,3,'#200');W_(x-4,y-14,Math.round(24*hp),3,'#b0d040')}
+ if(Math.random()<.04)parts.push({x:x+8,y:y-6,vx:(Math.random()-.5)*14,vy:-10-Math.random()*10,l:1.2,c:'rgba(180,220,80,.7)'})}});
+{const a153=act;act=function(){try{if(!inD&&mtx>=0&&mty>=0&&mtx<W&&mty<H&&P.cd<=0){const i=mty*W+mtx,o=ob[i];if(o&&o.t=='nest153'&&Math.hypot(mtx*T+8-P.x,mty*T+8-P.y)<40){const tl=typeof tool=='function'?tool():null;const dmg=tl&&tl.dmg?tl.dmg:(HB[hb]&&/axe|pick|sword|spear|mace|bat|hammer/.test(HB[hb])?4:2);o.hp-=dmg;P.cd=.35;snd('hit');hit(mtx*T+8,mty*T+4,'#a8c040');try{shk=Math.min(.3,(shk||0)+.12)}catch(e){}
+  if(o.hp<=0){ob[i]=null;for(let k=0;k<14;k++)parts.push({x:mtx*T+8,y:mty*T+4,vx:(Math.random()-.5)*90,vy:-30-Math.random()*50,l:.9,c:k%2?'#a8c040':'#5a4430'});const A=ADV.L.find(a=>a.k=='nest'&&a.x==mtx&&a.y==mty);if(A)advDone(A)}return}}}catch(e){}return a153()}}
+/* projectiles hurt the nest too */
+function advNestShots(){for(const A of ADV.L){if(A.k!='nest'||A.st<1)continue;const o=ob[A.y*W+A.x];if(!o||o.t!='nest153')continue;try{for(const b of(typeof arrs!='undefined'?arrs:[])){if(!b||b.hit153)continue;if(Math.hypot(b.x-(A.x*T+8),b.y-(A.y*T+4))<12){b.hit153=1;o.hp-=b.dmg||4;hit(A.x*T+8,A.y*T+4,'#a8c040');if(o.hp<=0){ob[A.y*W+A.x]=null;advDone(A)}}}}catch(e){}}}
+function advSpawnZ(x,y,n,r){const L=advLv(),ids=[];for(let k=0;k<n*3&&ids.length<n;k++){const a=Math.random()*6.283,rr=(r||4)+Math.random()*3,zx=x*T+8+Math.cos(a)*rr*T,zy=y*T+8+Math.sin(a)*rr*T;if(blocked(zx,zy,5))continue;const v=pickV(zx,zy),z={id:nid(),x:zx,y:zy,hp:Math.round(VHP[v]*(1+.15*(L-1))),a:0,t:0,vx:0,vy:0,z:1,v,al:20,th150:1,adv153:1};zs.push(z);ids.push(z.id)}return ids}
+function advEngage(A){const L=A.L||1;A.st=1;
+ if(A.k=='rescue'){const n={x:A.x*T+8,y:A.y*T+8,hx:A.x*T+8,hy:A.y*T+8,wr:0,c:lookRnd(),nm:NPCNM[Math.floor(Math.random()*NPCNM.length)],tr:Math.floor(Math.random()*TRD.length),g:Math.floor(Math.random()*NPCL.en.length),kn:1,shopK:0,adv:A.id,wd:1};NPCS.push(n);A.ni=NPCS.length-1;A.z=advSpawnZ(A.x,A.y,3+L,5);say(aH('Segítség! Itt vagyok bent!','Help! I\'m in here!'))}
+ else if(A.k=='beast'){const m=mkMut('b',A.x*T+8,A.y*T+8);m.hp=m.mx=Math.round(MUHP.b*(2.2+.3*L));m.al=30;m.adv153=1;m.alpha153=1;zs.push(m);A.bz=m.id;A.z=advSpawnZ(A.x,A.y,2,3);say(aH('Valami hatalmas mozog a fák között…','Something huge moves between the trees…'))}
+ else if(A.k=='nest'){const i=A.y*W+A.x;if(ob[i]&&ob[i].t!='nest153')ob[i]=null;ob[i]={t:'nest153',hp:30+10*L,mx:30+10*L};A.sp=0;say(aH('Spóraszag. A fészek közel van.','The smell of spores. The nest is close.'))}}
+function advLoot(L){const pool=[['iron',3,6],['copper',2,4],['gold',1,3],['bandage',2,3],['canned',2,3],['arrow',6,12],['cloth',2,4],['leather',1,3],['coal',3,6],['medkit',1,1]],got=[];const n=2+Math.min(3,L);for(let k=0;k<n;k++){const p=pool[Math.floor(Math.random()*pool.length)];if(!(p[0] in LBL))continue;const c=p[1]+Math.floor(Math.random()*(p[2]-p[1]+1));inv[p[0]]=(inv[p[0]]|0)+c;got.push('+'+c+' '+tr(LBL[p[0]]).toLowerCase())}if(L>=3&&Math.random()<.35&&'diamond' in LBL){inv.diamond=(inv.diamond|0)+1;got.push('+1 '+tr(LBL.diamond).toLowerCase())}return got}
+function advDone(A,extra){if(A.st>=2)return;A.st=2;ADV.n++;const L=A.L||1,xp=60+25*L+(A.k=='beast'?40:0);try{gainXp(xp)}catch(e){}const got=advLoot(L);if(A.k=='survey'&&(('tmap' in LBL)||('tmap' in LBLX)||inv.tmap!=null)){inv.tmap=(inv.tmap|0)+1;got.push('+1 '+tr(LBL.tmap).toLowerCase())}
+ ADV.L=ADV.L.filter(a=>a!==A);try{toast112(aH('Kaland teljesítve: ','Adventure complete: ')+advName(A),(extra?extra+' · ':'')+'+'+xp+' XP · '+got.slice(0,3).join(', '),'#ffd84a');fanfare112()}catch(e){}
+ try{jnFind('adv_'+ADV.n,advName(A)+' #'+ADV.n,advName(A)+' #'+ADV.n,'Teljesítetted: '+advDesc(A).split('.')[0]+'.','Completed: '+advDesc(A).split('.')[0]+'.')}catch(e){}}
+function advTick(dt){if(state!='play'||inD)return;const now=performance.now();
+ /* the radio brings a rescue now and then */
+ if(day>=ADV.nx&&!(typeof STORY!='undefined'&&STORY)&&!creative){ADV.nx=day+2+Math.floor(Math.random()*2);if(ADV.L.length<3&&!(typeof GSX!='undefined'&&GSX&&!GSX.done)){const A=advNew(Math.random()<.6?'rescue':'survey','radio');if(A)try{toast112(aH('Segélykérés a rádión','A call for help on the radio'),advName(A)+' — '+advDir(A.x,A.y)+aH(' · Tab: napló',' · Tab: journal'),ADVT[A.k][2])}catch(e){}}}
+ for(const A of ADV.L.slice()){const tg=advTarget(A);if(!tg)continue;const d=Math.hypot(tg[0]*T+8-P.x,tg[1]*T+8-P.y)/T;
+  if(A.k=='survey'){const p=A.pts.find(p=>!p[2]);if(p&&d<3.5){p[2]=1;snd('ui');try{fogReveal(P.x,P.y,16)}catch(e){}const n=A.pts.filter(p=>p[2]).length;if(n>=3)advDone(A);else say(aH('Felrajzoltad! ','Mapped! ')+n+'/3')}continue}
+  if(A.st==0&&d<13)advEngage(A);
+  if(A.st>=1&&A.k=='beast'){const b=zs.find(z=>z.id===A.bz);if(!b||b.hp<=0)advDone(A,aH('Leterítetted a bestiát','You brought down the beast'))}
+  if(A.st>=1&&A.k=='nest'){const o=ob[A.y*W+A.x];if(!o||o.t!='nest153'){advDone(A);continue}A.sp-=dt;if(A.sp<=0&&d<16){A.sp=7;if(zs.filter(z=>z.adv153&&z.hp>0&&Math.hypot(z.x-A.x*T,z.y-A.y*T)<12*T).length<3+A.L)advSpawnZ(A.x,A.y,1,1)}}}
+ advNestShots()}
+/* talk: ask for work; free the trapped survivor */
+{const to153=talkOpts;talkOpts=function(){const L=to153();try{const n=TALK&&TALK.n;if(!n)return L;const bi=Math.max(0,L.findIndex(o=>o.k=='bye'));
+  if(n.adv&&n.wd&&!n.res)L.splice(Math.min(bi,0),0,{k:'adv_free',l:aH('Gyere, kiviszlek innen!','Come on, I\'ll get you out of here!')});
+  else if(!n.res&&!n.wd&&!n.sci&&!n.zr&&ADV.L.length<3)L.splice(Math.min(bi,2),0,{k:'adv_ask',l:aH('Van valami munka a környéken?','Any work around here?')})}catch(e){}return L}}
+{const tp153=talkPick;talkPick=function(i){if(!TALK)return tp153(i);const o=talkOpts()[i];if(!o||(o.k!='adv_ask'&&o.k!='adv_free'))return tp153(i);const n=TALK.n;TALK.sel=i;snd('ui');
+ if(o.k=='adv_ask'){if(n.advT&&day-n.advT<2){talkSay(aH('Most nincs semmi, nézz vissza pár nap múlva.','Nothing right now — come back in a few days.'));return}const ks=['rescue','beast','nest','survey'],k=ks[Math.floor(Math.random()*ks.length)],A=advNew(k,n.nm);if(!A){talkSay(aH('Most nem hallottam semmiről.','I haven\'t heard of anything just now.'));return}n.advT=day;
+  const lines={rescue:['A '+advDir(A.x,A.y)+' lévő házban rekedt valaki. Hallottuk a kiáltásait, de oda már senki nem mer menni.','Someone is trapped in a house '+advDir(A.x,A.y)+'. We heard them shouting, but nobody dares go there.'],beast:['Egy óriás mutáns jár '+advDir(A.x,A.y)+'. Két vadászunkat már elvitte. Ha leteríted, megjutalmazunk.','A giant mutant roams '+advDir(A.x,A.y)+'. It already took two of our hunters. Bring it down and we\'ll reward you.'],nest:['Spórafészek nőtt '+advDir(A.x,A.y)+'. Onnan jönnek éjjelente. Zúzd szét, mielőtt nagyobb lesz.','A spore nest has grown '+advDir(A.x,A.y)+'. That\'s where they come from at night. Smash it before it grows.'],survey:['Azt a vidéket senki nem ismeri. Járj utána három helynek, és rajzold fel nekünk.','Nobody knows that country. Check out three places and map them for us.']}[k];
+  talkSay(aH(lines[0],lines[1]));try{toast112(aH('Új kaland: ','New adventure: ')+advName(A),aH('Tab: napló · a térképen jelölve','Tab: journal · marked on the map'),ADVT[k][2])}catch(e){}return}
+ const A=ADV.L.find(a=>a.id===n.adv);if(!A){n.adv=0;talkSay(aH('Köszönöm…','Thank you…'));return}const near=zs.filter(z=>z.hp>0&&!z.w&&Math.hypot(z.x-n.x,z.y-n.y)<7*T).length;if(near){talkSay(aH('Még ott vannak! Előbb intézd el őket, aztán megyek.','They\'re still out there! Deal with them first, then I\'ll come.'));return}
+ let joined=false;try{const F=typeof setlFlag=='function'?setlFlag():null;if(F&&setlRes().length<setlCap()){n.res={j:['fa','ko','gyujt','kert','vad','szak','or'][Math.floor(Math.random()*7)],m:85};n.wd=0;n.hx=F.x;n.hy=F.y+T;n.wr=6;n.go149=performance.now();joined=true}}catch(e){}
+ if(!joined){n.wd=1;n.wr=3;n.adv=0}else n.adv=0;
+ talkClose(joined?aH('Életemet köszönhetem neked. Megyek a táborodba — ott hasznomat veszed.','I owe you my life. I\'ll go to your camp — I\'ll make myself useful there.'):aH('Életemet köszönhetem neked! Ha lesz egy táborod, keress meg.','I owe you my life! If you ever have a camp, come find me.'));
+ advDone(A,joined?(n.nm+aH(' csatlakozott a táborodhoz',' joined your camp')):'');try{setlLvCheck()}catch(e){}}}
+/* journal, map, compass */
+JNQX.push(L=>{if(!ADV.L.length&&!ADV.n)return;jnHead(L,aH('Kalandok','Adventures'),'#2a5a8a');if(!ADV.L.length)jnText(L,aH('Nincs folyamatban. Kérdezd a táborok lakóit: „Van valami munka?”','None right now. Ask people at the camps: “Any work around here?”'),{in:4});
+ for(const A of ADV.L){const tg=advTarget(A);jnText(L,'◆ '+advName(A)+(A.from&&A.from!='radio'?' — '+A.from:A.from=='radio'?aH(' — rádió',' — radio'):''),{b:1,c:'#2a1a10'});jnText(L,advDesc(A),{in:6});if(tg)jnText(L,aH('Irány: ','Heading: ')+advDir(tg[0],tg[1]),{in:6,c:'#6a5a40'})}
+ if(ADV.n)jnText(L,aH('Teljesített kalandok: ','Adventures completed: ')+ADV.n,{in:4,c:'#6a5a40'})});
+{const mm153=mapMarks;mapMarks=function(){const r=mm153();try{for(const A of ADV.L){const tg=advTarget(A);if(tg)r.push({k:'w',x:tg[0]*T+8,y:tg[1]*T+8,n:advName(A),c:ADVT[A.k][2]})}}catch(e){}return r}}
+function advArrow(){if(inD||!ADV.L.length||invOpen||book||showMap||(typeof JN!='undefined'&&JN)||(typeof PHOTO!='undefined'&&PHOTO)||(typeof TPV!='undefined'&&TPV)||(typeof SETLUI!='undefined'&&SETLUI))return;const A=ADV.L[0],tg=advTarget(A);if(!tg)return;const d=Math.hypot(tg[0]*T+8-P.x,tg[1]*T+8-P.y);if(d<5*T)return;try{arrow112(tg[0]*T+8,tg[1]*T+8,ADVT[A.k][2],advName(A))}catch(e){}}
+{const dw153=draw;draw=function(){const r=dw153.apply(this,arguments);try{if(state=='play')advArrow()}catch(e){}return r}}
+{const up153=update;update=function(dt){const r=up153.apply(this,arguments);try{stTeach();basicKnow();advTick(dt||1/60)}catch(e){}return r}}
+{const sv153=save;save=function(){const r=sv153.apply(this,arguments);try{localStorage.setItem(SKEY()+'_adv',JSON.stringify({L:ADV.L,n:ADV.n,nx:ADV.nx,uid:ADV.uid,a:NPCS.map(n=>n.adv||0)}))}catch(e){}return r}}
+{const ld153=load;load=function(){const r=ld153.apply(this,arguments);ADV={L:[],n:0,nx:day+2,uid:0};STLK0='';try{const d=JSON.parse(localStorage.getItem(SKEY()+'_adv')||'null');if(d){ADV.L=Array.isArray(d.L)?d.L:[];ADV.n=d.n|0;ADV.nx=d.nx||day+2;ADV.uid=d.uid|0;if(Array.isArray(d.a)&&d.a.length==NPCS.length)d.a.forEach((v,i)=>{if(v)NPCS[i].adv=v})}
+  for(const A of ADV.L)if(A.st==1&&A.k=='beast'&&!zs.some(z=>z.id===A.bz))A.st=0}catch(e){}return r}}
+{const in153=init;init=function(...a){ADV={L:[],n:0,nx:3,uid:0};STLK0='';return in153.apply(this,a)}}
+/* fewer name tags: only near you, under the mouse, or while talking */
+function npcTagShow(n){try{if(TALK&&TALK.n===n)return true;if(n.sayT>0)return true;if(Math.hypot(n.x-P.x,n.y-P.y)<4.5*T)return true;const mx=ms.x/ZM+cam.x,my=ms.y/ZM+cam.y;if(Math.hypot(n.x-mx,n.y-12-my)<16)return true}catch(e){return true}return false}
+try{TUT.hu.push(['Kalandok','A táborok lakói munkát adnak: „Van valami munka a környéken?” A rádión is jönnek segélykérések.','Mentőakció: hozz ki valakit egy körbezárt házból — ha van táborod, csatlakozik. Bestia: vadássz le egy óriás mutánst. Fészek: zúzd szét a spórafészket. Feltérképezés: járj el három ismeretlen helyre.','Egyszerre legfeljebb 3 kaland. A napló Küldetések fejezetében és a térképen látod őket, a képernyő szélén nyíl mutatja az elsőt.']);
+ TUT.en.push(['Adventures','People at the camps give you work: “Any work around here?” Calls for help come over the radio too.','Rescue: get someone out of a house full of infected — with a camp they join you. Beast: hunt a giant mutant. Nest: smash a spore nest. Survey: visit three unknown places.','Up to 3 adventures at once. They are in the journal\'s Quests chapter and on the map; an arrow at the screen edge points to the first.'])}catch(e){}
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
