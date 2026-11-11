@@ -10531,7 +10531,7 @@ function wSprite(k,f){if(WSPR[k])return WSPR[k];const W_=120,H_=96,c=cvs(W_,H_,x
  for(let i=0;i<a.length;i+=4)if(a[i+3]>0&&a[i+3]<255){o[i+3]=a[i+3]>100?255:0}d.data.set(o);x.putImageData(d,0,0);WSPR[k]=c;return c}
 /* ---------- weapons in 3D: low-poly view models with hands, lit by the room you stand in ---------- */
 const VM={ok:false,cur:0,sw:0,lt:1,sh:0};
-const VMP={pistol:[0,-.07,-.22,1.05,.06,0],shotgun:[0,-.072,-.23,1,.05,0],chain:[0,-.082,-.25,1,.05,0],rocket:[0,-.082,-.28,.95,.04,0],plasma:[0,-.076,-.24,1,.05,0],saw:[0,-.095,-.3,.85,.06,0],fist:[.03,-.085,-.22,.9,.02,.05]};VM.P=VMP;
+const VMP={pistol:[0,-.098,-.22,1.05,.05,0],shotgun:[0,-.1,-.23,1,.04,0],chain:[0,-.11,-.25,1,.04,0],rocket:[0,-.115,-.28,.95,.03,0],plasma:[0,-.105,-.24,1,.04,0],saw:[0,-.12,-.3,.85,.05,0],fist:[.03,-.1,-.22,.9,.02,.05]};VM.P=VMP;
 function vmMat(c,o){return new THREE.MeshPhongMaterial(Object.assign({color:c,flatShading:true,shininess:o&&o.sh!=null?o.sh:8,specular:o&&o.sp!=null?o.sp:0x111111},o&&o.em?{emissive:o.em}:{}))}
 function vmInit(){if(VM.ok)return;VM.S=new THREE.Scene();VM.cam=new THREE.PerspectiveCamera(50,1,.01,5);VM.hemi=new THREE.HemisphereLight(0xfff4e0,0x3a3428,.95);VM.S.add(VM.hemi);VM.dir=new THREE.DirectionalLight(0xffffff,.55);VM.dir.position.set(-.6,1,.5);VM.S.add(VM.dir);
  VM.fl=new THREE.PointLight(0xffa040,0,1.2);VM.fl.position.set(0,-.02,-.45);VM.S.add(VM.fl);
@@ -10896,7 +10896,7 @@ function silDraw(){if(CLASSIC||state!='play'||!silHidden())return;if(!SILC)SILC=
 try{GQC.clear&&GQC.clear()}catch(e){}
 
 /* ===== v173: the NOT DOOM cabinet calls you — a bobbing joystick bubble above it (over the pub roof too), a glowing screen, "E: play" when you stand by it, and a hint the first time you come near ===== */
-GAMEV=178;
+GAMEV=179;
 const ARCL={k:'',t:0,L:[],told:false};
 function arcList(){const now=performance.now();if(ARCL.k===wseed+'|'+W&&now-ARCL.t<3000)return ARCL.L;ARCL.k=wseed+'|'+W;ARCL.t=now;ARCL.L=[];for(let i=0;i<ob.length;i++){const o=ob[i];if(o&&o.t=='arcade'&&o.pm==null)ARCL.L.push(i)}return ARCL.L}
 function arcCall(){if(inD||state!='play'||(typeof ARC!='undefined'&&ARC.on()))return;const now=performance.now()/1000,ptx=P.x/T,pty=P.y/T;
