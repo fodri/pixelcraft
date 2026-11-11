@@ -10653,7 +10653,7 @@ try{TUT.hu.push(['Kocsma','A tábor kocsmájában áll a NOT DOOM játékgép; J
 try{const ix=new Map(HU.map((e,i)=>[e,i]));HU.sort((a,b)=>(b[0].length-a[0].length)||(ix.get(a)-ix.get(b)))}catch(e){}
 
 /* ===== v169: the inside view joins the graphics modes — "Inside view · Modern" and "Inside view · Modern Plus": a 3D world with real houses, and the characters as DOOM-style 2.5D sprites ===== */
-GAMEV=170;
+GAMEV=171;
 var FVSPR=true;
 /* the inside view is a graphics mode now, not a test switch */
 try{const R=GPAGES.main.rows,i=R.findIndex(r=>r.k=='fps3');if(i>=0)R.splice(i,1)}catch(e){}
@@ -10669,6 +10669,27 @@ try{const row=GPAGES.main.rows.find(r=>r.k=='mode'),od=row.desc;
 /* Modern inside view: no shadow maps at all */
 {const fl169=fvLights;fvLights=function(){const r=fl169();try{if(FVB&&GMODE!=2){V3.sun.castShadow=false;if(V3.spot)V3.spot.castShadow=false;for(const l of V3.lights)l.castShadow=false}}catch(e){}return r}}
 try{for(const L of[TUT.hu,TUT.en])for(const t of L)for(let i=1;i<t.length;i++)if(typeof t[i]=='string')t[i]=t[i].replace('a Grafikai beállításokban kapcsolod be (teszt)','a Grafikai módnál választod: Belső nézet · Modern vagy Modern Plusz').replace('switch it on in Graphics settings (test)','pick it under Graphics mode: Inside view · Modern or Modern Plus')}catch(e){}
+/* ---------- colour fix: on some graphics cards a small canvas reaches WebGL with red and blue swapped (orange water, teal grass, blue wood). We test it once and, where needed, hand the pixels over as raw RGBA instead ---------- */
+const BGRF={small:false,big:false,force:null};
+try{const f=localStorage.getItem('pxc_bgr');if(f=='1'||f=='0')BGRF.force=f=='1'}catch(e){}
+function bgrTest(){try{const cv=document.createElement('canvas');cv.width=cv.height=4;const gl=cv.getContext('webgl2')||cv.getContext('webgl');if(!gl)return;
+ const t=src=>{const tx=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tx);for(const p of[gl.TEXTURE_MIN_FILTER,gl.TEXTURE_MAG_FILTER])gl.texParameteri(gl.TEXTURE_2D,p,gl.NEAREST);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,src);const fb=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,fb);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,tx,0);
+  const px=new Uint8Array(4);gl.readPixels(1,1,1,1,gl.RGBA,gl.UNSIGNED_BYTE,px);gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.deleteFramebuffer(fb);gl.deleteTexture(tx);return px[2]>180&&px[0]<80};
+ const mk=n=>{const c=document.createElement('canvas');c.width=c.height=n;const x=c.getContext('2d');x.fillStyle='#ff1010';x.fillRect(0,0,n,n);x.getImageData(0,0,1,1);return c};
+ const sm=mk(64),bg=mk(512);for(const fy of[false,true])for(const cs of[0x9244,0]){gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,fy);gl.pixelStorei(0x9243,cs);if(t(sm))BGRF.small=true;if(t(bg))BGRF.big=true}const e=gl.getExtension('WEBGL_lose_context');if(e)e.loseContext();if(BGRF.small||BGRF.big)console.info('colour fix on',BGRF)}catch(e){}}
+bgrTest();
+function bgrOn(){return BGRF.force!=null?BGRF.force:(BGRF.small||BGRF.big)}
+function bgrNeed(c){if(!(c instanceof HTMLCanvasElement)||!c.width||!c.height)return false;if(BGRF.force!=null)return BGRF.force;return c.width*c.height>=65536?BGRF.big:BGRF.small}
+function bgrSrc(c){try{const x=c.getContext('2d');if(x)return x.getImageData(0,0,c.width,c.height)}catch(e){}return c}
+for(const K of[window.WebGLRenderingContext,window.WebGL2RenderingContext]){if(!K)continue;const pr=K.prototype,o1=pr.texImage2D,o2=pr.texSubImage2D;
+ pr.texImage2D=function(){const a=Array.prototype.slice.call(arguments);if(a.length==6&&bgrNeed(a[5]))a[5]=bgrSrc(a[5]);return o1.apply(this,a)};
+ pr.texSubImage2D=function(){const a=Array.prototype.slice.call(arguments);if(a.length==7&&bgrNeed(a[6]))a[6]=bgrSrc(a[6]);return o2.apply(this,a)}}
+function bgrRefresh(){try{if(typeof V3!='undefined'&&V3&&V3.S)V3.S.traverse(o=>{const m=o.material;if(!m)return;for(const q of Array.isArray(m)?m:[m])if(q&&q.map)q.map.needsUpdate=true});if(typeof V3!='undefined'&&V3&&V3.chunks)for(const ch of V3.chunks.values()){if(ch.tex)ch.tex.needsUpdate=true;if(ch.atex)ch.atex.needsUpdate=true}}catch(e){}}
+try{const R=GPAGES.main.rows,ix=R.findIndex(r=>r.k=='mode')+1;R.splice(ix,0,{k:'bgr',l:['Színjavítás (3D)','Colour fix (3D)'],ty:'cyc',
+ get:()=>{const h=hu_();return BGRF.force==null?(h?'Automatikus':'Auto')+' ('+(bgrOn()?(h?'be':'on'):(h?'ki':'off'))+')':BGRF.force?(h?'Be':'On'):(h?'Ki':'Off')},
+ step:()=>{BGRF.force=BGRF.force==null?true:BGRF.force?false:null;try{if(BGRF.force==null)localStorage.removeItem('pxc_bgr');else localStorage.setItem('pxc_bgr',BGRF.force?'1':'0')}catch(e){}bgrRefresh()},
+ desc:()=>hu_()?'Ha a 3D-ben narancs a víz, kékes a fa vagy türkiz a fű, a videokártya felcseréli a piros és kék színt. Az automatikus mód ezt felismeri; ha mégsem, kapcsold Be-re.':'If water looks orange, wood blue or grass teal in 3D, your graphics card swaps red and blue. Auto detects this; if it misses, switch it On.'})}catch(e){}
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
