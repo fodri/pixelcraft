@@ -10531,7 +10531,7 @@ function wSprite(k,f){if(WSPR[k])return WSPR[k];const W_=120,H_=96,c=cvs(W_,H_,x
  for(let i=0;i<a.length;i+=4)if(a[i+3]>0&&a[i+3]<255){o[i+3]=a[i+3]>100?255:0}d.data.set(o);x.putImageData(d,0,0);WSPR[k]=c;return c}
 /* ---------- weapons in 3D: low-poly view models with hands, lit by the room you stand in ---------- */
 const VM={ok:false,cur:0,sw:0,lt:1,sh:0};
-const VMP={pistol:[0,-.098,-.22,1.05,.05,0],shotgun:[0,-.1,-.23,1,.04,0],chain:[0,-.11,-.25,1,.04,0],rocket:[0,-.115,-.28,.95,.03,0],plasma:[0,-.105,-.24,1,.04,0],saw:[0,-.12,-.3,.85,.05,0],fist:[.03,-.1,-.22,.9,.02,.05]};VM.P=VMP;
+const VMP={pistol:[0,-.098,-.22,1.05,.05,0],shotgun:[0,-.1,-.23,1,.04,0],chain:[0,-.14,-.26,1,.06,0],rocket:[0,-.115,-.28,.95,.03,0],plasma:[0,-.105,-.24,1,.04,0],saw:[0,-.12,-.3,.85,.05,0],fist:[.03,-.1,-.22,.9,.02,.05]};VM.P=VMP;
 function vmMat(c,o){return new THREE.MeshPhongMaterial(Object.assign({color:c,flatShading:true,shininess:o&&o.sh!=null?o.sh:8,specular:o&&o.sp!=null?o.sp:0x111111},o&&o.em?{emissive:o.em}:{}))}
 function vmInit(){if(VM.ok)return;VM.S=new THREE.Scene();VM.cam=new THREE.PerspectiveCamera(50,1,.01,5);VM.hemi=new THREE.HemisphereLight(0xfff4e0,0x3a3428,.95);VM.S.add(VM.hemi);VM.dir=new THREE.DirectionalLight(0xffffff,.55);VM.dir.position.set(-.6,1,.5);VM.S.add(VM.dir);
  VM.fl=new THREE.PointLight(0xffa040,0,1.2);VM.fl.position.set(0,-.02,-.45);VM.S.add(VM.fl);
@@ -10561,11 +10561,15 @@ function vmBuild(n){const M=VM.M,R=new THREE.Group(),G=new THREE.Group();R.add(G
   vmBox(G,.006,.006,.006,M.g3,0,.029,-.55);vmBox(G,.03,.05,.05,M.wd,0,-.035,.08,.2);vmBox(G,.03,.06,.04,M.wd,0,-.05,.06,-.3);
   const pump=new THREE.Group();G.add(pump);vmCyl(pump,.02,.13,M.wd,0,-.012,-.2,8);for(let i=0;i<5;i++)vmCyl(pump,.0205,.006,M.wd2,0,-.012,-.15-i*.024,8);m.pump=pump;
   m.hand=vmHand(G,0,-.07,.06,1);m.hand2=vmHand(pump,-.004,-.05,-.2,1.05,true);m.fx=vmMuzzle(G,0,.014,-.57,1.3);m.mz=[0,.014,-.57]}
- else if(n=='chain'){R.position.set(.05,-.112,-.26);
-  const bar=new THREE.Group();bar.position.set(0,.03,-.24);G.add(bar);for(let i=0;i<6;i++){const a=i/6*Math.PI*2;vmCyl(bar,.008,.34,M.g1,Math.cos(a)*.024,Math.sin(a)*.024,0,8)}vmCyl(bar,.01,.36,M.g0,0,0,0,8);m.bar=bar;
-  vmCyl(G,.042,.024,M.g2,0,.03,-.1,12);vmCyl(G,.04,.016,M.g2,0,.03,-.38,12);vmCyl(G,.032,.012,M.g0,0,.03,-.41,12);vmBox(G,.07,.055,.17,M.g0,0,-.012,.02);vmBox(G,.072,.008,.16,M.g2,0,.012,.02);
-  vmBox(G,.01,.03,.01,M.g1,.03,.03,-.0);vmBox(G,.01,.03,.01,M.g1,.03,.03,.08);vmBox(G,.01,.01,.1,M.g2,.03,.046,.04);vmBox(G,.03,.05,.08,M.ol,-.052,-.02,.03);vmBox(G,.032,.004,.08,M.ol2,-.052,.006,.03);vmBox(G,.006,.03,.03,M.yel,-.069,-.02,.03);
-  m.hand=vmHand(G,.0,-.07,.07,1.05);m.hand2=vmHand(G,-.05,-.03,-.06,1,true);m.fx=vmMuzzle(G,0,.03,-.44,1.3);m.mz=[0,.03,-.44]}
+ else if(n=='chain'){
+  /* the body: a heavy receiver and a barrel shroud the six barrels come out of */
+  vmBox(G,.1,.085,.18,M.g0,0,.012,.03);vmBox(G,.102,.01,.17,M.g1,0,.056,.03);for(let i=0;i<4;i++)vmBox(G,.104,.05,.006,M.g1,0,.01,-.03+i*.035);
+  vmCyl(G,.05,.09,M.g1,0,.03,-.105,14);vmCyl(G,.053,.016,M.g2,0,.03,-.065,14);vmCyl(G,.053,.016,M.g2,0,.03,-.145,14);for(let i=0;i<6;i++){const a=i/6*Math.PI*2+.26;vmBox(G,.012,.006,.07,M.g0,Math.cos(a)*.051,.03+Math.sin(a)*.051,-.105,0,0,a)}
+  vmCyl(G,.046,.012,M.g0,0,.03,-.155,14);
+  const bar=new THREE.Group();bar.position.set(0,.03,-.255);G.add(bar);for(let i=0;i<6;i++){const a=i/6*Math.PI*2;vmCyl(bar,.011,.2,i%2?M.g1:M.g0,Math.cos(a)*.033,Math.sin(a)*.033,0,8);vmCyl(bar,.006,.204,M.rub,Math.cos(a)*.033,Math.sin(a)*.033,0,6)}vmCyl(bar,.014,.2,M.rub,0,0,0,8);vmCyl(bar,.046,.014,M.g2,0,0,-.02,12);vmCyl(bar,.044,.014,M.g2,0,0,-.092,12);vmCyl(bar,.03,.01,M.g0,0,0,-.1,12);m.bar=bar;
+  
+  vmBox(G,.034,.06,.1,M.ol,-.07,-.005,.02);vmBox(G,.036,.004,.1,M.ol2,-.07,.026,.02);vmBox(G,.006,.02,.03,M.yel,-.088,0,.02);
+  m.hand=vmHand(G,.0,-.07,.09,1.05);m.hand2=vmHand(G,-.06,-.04,-.08,1,true);m.fx=vmMuzzle(G,0,.03,-.37,1.4);m.mz=[0,.03,-.37]}
  else if(n=='rocket'){R.position.set(.07,-.1,-.27);
   vmCyl(G,.046,.56,M.ol,0,0,-.16,14);vmCyl(G,.05,.03,M.ol2,0,0,-.43,14);vmCyl(G,.05,.03,M.ol2,0,0,.1,14);vmCyl(G,.036,.02,M.g0,0,0,-.445,12);vmCyl(G,.05,.012,M.ol2,0,0,.118,14);vmCyl(G,.022,.014,M.g0,0,0,.12,10);vmCyl(G,.032,.013,M.g1,0,0,.119,12);
   vmBox(G,.012,.03,.04,M.g0,-.04,.04,-.05);vmBox(G,.022,.014,.05,M.g1,-.04,.06,-.05);vmBox(G,.006,.006,.006,M.red,-.04,.07,-.075);for(let i=0;i<3;i++)vmBox(G,.094,.006,.012,M.ol2,0,0,-.33+i*.12);
@@ -10896,7 +10900,7 @@ function silDraw(){if(CLASSIC||state!='play'||!silHidden())return;if(!SILC)SILC=
 try{GQC.clear&&GQC.clear()}catch(e){}
 
 /* ===== v173: the NOT DOOM cabinet calls you — a bobbing joystick bubble above it (over the pub roof too), a glowing screen, "E: play" when you stand by it, and a hint the first time you come near ===== */
-GAMEV=179;
+GAMEV=180;
 const ARCL={k:'',t:0,L:[],told:false};
 function arcList(){const now=performance.now();if(ARCL.k===wseed+'|'+W&&now-ARCL.t<3000)return ARCL.L;ARCL.k=wseed+'|'+W;ARCL.t=now;ARCL.L=[];for(let i=0;i<ob.length;i++){const o=ob[i];if(o&&o.t=='arcade'&&o.pm==null)ARCL.L.push(i)}return ARCL.L}
 function arcCall(){if(inD||state!='play'||(typeof ARC!='undefined'&&ARC.on()))return;const now=performance.now()/1000,ptx=P.x/T,pty=P.y/T;
