@@ -2452,8 +2452,8 @@ function genVillage(cx,cy,RX,RY){RX=RX||13;RY=RY||11;const des=bm[cy*W+cx]==2,PA
  for(let y=cy-PZ;y<=cy+PZ;y++)for(let x=cx-PZ;x<=cx+PZ;x++)map[y*W+x]=PATH;
  for(let x=cx-RX;x<=cx+RX;x++)path(x,cy);for(let y=cy-RY;y<=cy+RY;y++)path(cx,y);
  ob[cy*W+cx]=null;if(HAM){ob[(cy+3)*W+cx+3]={t:'well'};ob[(cy+3)*W+cx+5]={t:'fire',on:true,fl:999};ob[(cy+5)*W+cx+2]={t:'slamp',b:0};for(let y=cy+1;y<=cy+5;y++)for(let x=cx+1;x<=cx+6;x++)if(!ob[y*W+x]&&vLand(x,y))map[y*W+x]=PATH}else{ob[(cy-1)*W+cx]={t:'well'};ob[(cy+1)*W+cx+1]={t:'fire',on:true,fl:999};if(RX>=10)setFP({t:'bench',hp:10,r:0,on:true},cx-3,cy+2,2,1);ob[(cy-1)*W+cx+PZ]={t:'slamp',b:0}}
- const BIGH=RX>=13&&RY>=11&&typeof HPL4!='undefined',HW_=BIGH?9:6,HH_=BIGH?8:7,L=cx-RX+1,Rr=cx+RX-HW_,Tp=cy-RY+1,Bt=cy+RY-HH_,HS=[[L,Tp,1],[Rr,Tp,1],[L,Bt,0],[Rr,Bt,0]];if(HAM)HS.pop();
- for(const[hx,hy,top]of HS){shell(hx,hy,HW_,HH_,'wall',12,{win:1});{const PL_=BIGH?HPL4:HPL,hp_=PL_[Math.floor(R()*PL_.length)];putPlan(hx+1,hy+1,top?hp_:hp_.slice().reverse(),false,{junk:.02})}
+ const BIGH=RX>=11&&RY>=11&&typeof HPL4!='undefined',HW_=BIGH?9:(RX>=10&&typeof HPL5!='undefined')?7:6,HH_=BIGH?8:7,L=cx-RX+1,Rr=cx+RX-HW_,Tp=cy-RY+1,Bt=cy+RY-HH_,HS=[[L,Tp,1],[Rr,Tp,1],[L,Bt,0],[Rr,Bt,0]];if(HAM)HS.pop();
+ for(const[hx,hy,top]of HS){shell(hx,hy,HW_,HH_,'wall',12,{win:1});{const PL_=BIGH?HPL4:HW_==7?HPL5:HPL,hp_=PL_[Math.floor(R()*PL_.length)];putPlan(hx+1,hy+1,top?hp_:hp_.slice().reverse(),false,{junk:.02})}
   const dy=top?hy+HH_-1:hy,dx=hx+3;ob[dy*W+dx]={t:'door',open:false};BLD.push({x:hx,y:top?hy:hy+1,w:HW_,h:top?HH_:HH_-1,rf:'hut',c:Math.floor(R()*3),v4:BIGH?1:0});
   const sy=top?hy+HH_:hy-1;for(let y=sy;top?y<cy:y>cy;y+=top?1:-1)path(dx,y);for(let x=Math.min(dx,cx);x<=Math.max(dx,cx);x++)path(x,cy);
   if(RX>=13){const gx=hx<cx?hx:hx+1,gy=top?cy-3:cy+1;for(let y=gy;y<gy+3;y++)for(let x=gx;x<gx+5;x++){const i=y*W+x;if(ob[i]||map[i]==PATH)continue;map[i]=4;if(x%2==0&&R()<.8)ob[i]={t:'bush',b:R()<.6?1:0,r:20}}}}
@@ -2461,7 +2461,7 @@ function genVillage(cx,cy,RX,RY){RX=RX||13;RY=RY||11;const des=bm[cy*W+cx]==2,PA
  for(let y=cy-RY;y<=cy+RY;y++)for(const x of[cx-RX,cx+RX]){if(Math.abs(y-cy)<=1||R()<.15||!vLand(x,y))continue;const i=y*W+x;if(!ob[i])ob[i]={t:'fence',hp:60}}
  const n=RX>=10?3+Math.floor(R()*3):2+Math.floor(R()*2);for(let k=0;k<n;k++){const a=R()*6.28,r=1+R()*PZ;NPCS.push({x:(cx+Math.cos(a)*r)*T+8,y:(cy+Math.sin(a)*r)*T+8,hx:cx*T+8,hy:cy*T+8,wr:Math.min(8,RX-3),c:lookRnd(),nm:NPCNM[Math.floor(R()*NPCNM.length)],tr:Math.floor(R()*TRD.length),g:Math.floor(R()*NPCL.en.length)})}}
 function genVillages(){const isl=biome==4,want=isl?[0,1,2]:(biome==3?[]:[biome,biome]),done=[];
- for(const b of want){let placed=false;for(const[RX,RY]of[[13,11],[10,9],[8,8],[7,8]]){const cand=[];for(let y=RY+3;y<H-RY-3;y+=2)for(let x=RX+3;x<W-RX-3;x+=2)if(bm[y*W+x]==b&&vLand(x,y))cand.push([x,y]);for(let k=cand.length-1;k>0;k--){const j=Math.floor(R()*(k+1));[cand[k],cand[j]]=[cand[j],cand[k]]}
+ for(const b of want){let placed=false;for(const[RX,RY]of[[13,11],[11,11],[10,9],[8,8],[7,8]]){const cand=[];for(let y=RY+3;y<H-RY-3;y+=2)for(let x=RX+3;x<W-RX-3;x+=2)if(bm[y*W+x]==b&&vLand(x,y))cand.push([x,y]);for(let k=cand.length-1;k>0;k--){const j=Math.floor(R()*(k+1));[cand[k],cand[j]]=[cand[j],cand[k]]}
   for(let a=0;a<cand.length&&!placed;a++){const[x,y]=cand[a];if(Math.hypot(x-SX,y-SY)<RX+6)continue;if(done.some(d=>Math.hypot(d[0]-x,d[1]-y)<50))continue;
   if(!vArea(x,y,RX<8?RX-2:RX-1,RY<8?RY-2:RY-1))continue;genVillage(x,y,RX,RY);done.push([x,y]);placed=true}if(placed)break}}}
 function genDesertTowers(){const isl=biome==4;if(!(isl||biome==2))return;const want=isl?1:2,got=[];
@@ -10690,6 +10690,56 @@ try{const R=GPAGES.main.rows,ix=R.findIndex(r=>r.k=='mode')+1;R.splice(ix,0,{k:'
  get:()=>{const h=hu_();return BGRF.force==null?(h?'Automatikus':'Auto')+' ('+(bgrOn()?(h?'be':'on'):(h?'ki':'off'))+')':BGRF.force?(h?'Be':'On'):(h?'Ki':'Off')},
  step:()=>{BGRF.force=BGRF.force==null?true:BGRF.force?false:null;try{if(BGRF.force==null)localStorage.removeItem('pxc_bgr');else localStorage.setItem('pxc_bgr',BGRF.force?'1':'0')}catch(e){}bgrRefresh()},
  desc:()=>hu_()?'Ha a 3D-ben narancs a víz, kékes a fa vagy türkiz a fű, a videokártya felcseréli a piros és kék színt. Az automatikus mód ezt felismeri; ha mégsem, kapcsold Be-re.':'If water looks orange, wood blue or grass teal in 3D, your graphics card swaps red and blue. Auto detects this; if it misses, switch it On.'})}catch(e){}
+
+/* ===== v170: homes that make sense in 3D — small huts get a bathroom, a bedroom and a kitchen-living room; the loft is reached by a stairwell door, not a ladder; house walls and roofs get one clean material per house instead of the patchwork of 2D tiles; one colour scheme per home; you can slip between trees ===== */
+GAMEV=172;
+/* ---------- hut plans: 5x5 inside (villages from 10 tiles up), 4x5 for hamlets ---------- */
+const HPL5=[["Qj#ma","..#mn","#D.D#","K...v","fr.NN"],["QJ#am","j.#nm","#D.D#","v...K","NN.rf"],["am#jQ","nm#..","#D.D#","v...K","NN.rf"],["mn#Qj","ma#.J","#D.D#","K...v","fr.NN"]];
+HPL.length=0;HPL.push(["Q#mn","j#m.","D#D#","K..v","fr.."],["nm#Q","am#j","#D#D","v..K","NN.f"]);
+/* ---------- the loft is reached through a stairwell door, never a ladder ---------- */
+FU.oup=(q,w,d,c,gl,o)=>fuStairDoor(q,gl,1,!(o&&(o.k=='ruin'||o.k=='vhut')));
+/* ---------- one clean exterior per house ---------- */
+let FVCH=null;
+{const bo170=v3BuildObjs;v3BuildObjs=function(ch){FVCH=ch;try{return bo170.apply(this,arguments)}finally{FVCH=null}}}
+const FVXT={wall:1,sblock:1,twall:1,win:1};
+const FVXP={};
+function fvXPal(b){return[['#d8ccac','#c0b088'],['#c8d0c0','#a8b8a0'],['#d8c8b8','#c0a898'],['#d0cad8','#b0a8c0'],['#e0d4b8','#c8b890']][((b.x*31+b.y*17)>>>0)%5]}
+function fvXStyle(b){if(!b)return null;const rf=b.rf||'';if(rf=='hut')return'log';if(rf=='house'||rf=='apt')return'pl'+((b.c|0)%6);return null}
+function fvXCell(st,win){const k=st+(win?'w':'');if(FVXP[k])return FVXP[k];const c=document.createElement('canvas');c.width=16;c.height=24;const x=c.getContext('2d');let h=0;const rn=()=>{h=(h*1103515245+12345)&0x7fffffff;return h/0x7fffffff};
+ if(st=='log'){x.fillStyle='#3a2818';x.fillRect(0,0,16,6);for(let r=0;r<3;r++){const y=6+r*6;x.fillStyle=r%2?'#7a5232':'#86593a';x.fillRect(0,y,16,6);x.fillStyle='#9a6c44';x.fillRect(0,y,16,1);x.fillStyle='#4e3420';x.fillRect(0,y+5,16,1);x.fillStyle='rgba(0,0,0,.08)';for(let i=0;i<16;i+=3)x.fillRect(i,y+2+(i%2),2,1)}}
+ else if(st[0]=='#'){x.fillStyle='#5a4a3a';x.fillRect(0,0,16,6);x.fillStyle=st;x.fillRect(0,6,16,18);for(let i=0;i<30;i++){x.fillStyle=rn()<.5?'rgba(0,0,0,.03)':'rgba(255,255,255,.04)';x.fillRect(rn()*16|0,6+(rn()*18|0),1,1)}}
+ else{const P_=['#e6dcc2','#d8c89e','#c9d3bd','#e2cbb8','#cfd6dc','#e8e2d2'][+st.slice(2)];x.fillStyle='#6a5a48';x.fillRect(0,0,16,6);x.fillStyle=P_;x.fillRect(0,6,16,18);
+  for(let i=0;i<40;i++){x.fillStyle=rn()<.5?'rgba(0,0,0,.035)':'rgba(255,255,255,.05)';x.fillRect(rn()*16|0,6+(rn()*18|0),1,1)}}
+ if(win){x.fillStyle=st=='log'?'#5a3a22':'#f2f0e8';x.fillRect(3,9,10,10);x.fillStyle='#3e5a6e';x.fillRect(4,10,8,8);x.fillStyle='#6a8aa0';x.fillRect(4,10,8,3);x.fillStyle=st=='log'?'#5a3a22':'#f2f0e8';x.fillRect(7,10,2,8);x.fillRect(4,13,8,1);x.fillStyle='rgba(0,0,0,.25)';x.fillRect(3,19,10,1)}
+ return FVXP[k]=c}
+{const ba170=boxA93;boxA93=function(A,x0,y0,z0,x1,y1,z1,cell,skip,o){try{if(typeof FVB!='undefined'&&FVB&&!inD&&o&&FVXT[o.t]&&FVCH&&FVCH.atl){const k=fvBMap()[z0*W+x0];if(k){let st=fvXStyle(BLD[k-1]);if(st&&o.t=='twall')st=fvXPal(BLD[k-1])[0];if(st){const ac=FVCH.atl.getContext('2d');ac.clearRect((cell%16)*16,Math.floor(cell/16)*24,16,24);ac.drawImage(fvXCell(st,o.t=='win'),(cell%16)*16,Math.floor(cell/16)*24)}}}}catch(e){}return ba170.apply(this,arguments)}}
+/* roofs: even shingles in one colour per house */
+const FVRC=new Map();
+{const rc170=roofCanvas;roofCanvas=function(b,k){if(!(typeof FVB!='undefined'&&FVB&&!inD))return rc170.apply(this,arguments);const st=fvXStyle(b);if(!st)return rc170.apply(this,arguments);
+ const key=k+'|'+b.x+','+b.y+','+b.w+','+b.h;let cv=FVRC.get(key);if(cv)return cv;cv=document.createElement('canvas');const w=b.w*T+6,h=(b.h-1)*T+6;cv.width=w;cv.height=h;const x=cv.getContext('2d');
+ const base=st=='log'?['#5a3e2a','#4a3220','#6a4a32']:[['#9a4a32','#7e3a26','#b05a3e'],['#4a4e56','#3a3e46','#5a5e66'],['#6a4a36','#563a28','#7a5a42'],['#4a5a4a','#3a4a3a','#5a6a5a']][(b.c|0)%4];
+ x.fillStyle=base[0];x.fillRect(0,0,w,h);for(let r=0;r*4<h;r++){const y=r*4;x.fillStyle=base[1];x.fillRect(0,y+3,w,1);for(let c=(r%2)*3;c<w;c+=6){x.fillStyle=base[1];x.fillRect(c,y,1,3);x.fillStyle=((c*7+r*13)%5==0)?base[2]:base[0];x.fillRect(c+1,y,5,3)}}
+ FVRC.set(key,cv);return cv}}
+/* ---------- one colour scheme per home: bathroom tiles, kitchen tiles, the same wallpaper in the other rooms ---------- */
+{const rl170=fvRoomLook;fvRoomLook=function(b,R_,i){const rf=b.rf||'house';if(!(rf=='house'||rf=='hut'||rf=='apt'))return rl170.apply(this,arguments);
+ const s=(b.x*31+b.y*17)>>>0,PA=fvXPal(b),ce=rf=='hut'?'plank':'plaster';
+ if(R_.kind=='bath')return{w:['bath','#e6e2d4','#eef2f2',s],c:['plaster',s],f:'bath'};
+ if(R_.kind=='kit')return{w:['kit','#e8dcb8','#e8e0c8',s],c:[ce,s],f:'kit'};
+ if(R_.kind=='liv')return{w:['wains',PA[0],PA[1],s],c:[ce,s]};
+ return{w:['paper',PA[0],PA[1],s],c:[ce,s]}}}
+/* ---------- trees: in the inside view only the round trunk blocks you, so you slip between trees like in the picture ---------- */
+function fvTreeAt(tx,ty){if(tx<0||ty<0||tx>=W||ty>=H)return false;const o=ob[ty*W+tx];return !!(o&&o.t=='tree')}
+{const so170=solid;solid=function(px,py){if(typeof FVB!='undefined'&&FVB&&!inD){const tx=Math.floor(px/T),ty=Math.floor(py/T);if(fvTreeAt(tx,ty)){const m=map[ty*W+tx];if(!(m==5||m==8||((m==1||m==7||m==11)&&!swim))){const o=ob[ty*W+tx];o.open=true;try{return so170(px,py)}finally{delete o.open}}}}return so170(px,py)}}
+function fvTrunkPush(e,rad){const tx=Math.floor(e.x/T),ty=Math.floor(e.y/T);for(let y=ty-1;y<=ty+1;y++)for(let x=tx-1;x<=tx+1;x++){if(!fvTreeAt(x,y))continue;const cx=x*T+8,cy=y*T+8,R_=rad+(aHash(x,y,23)<.035?4.5:3);let dx=e.x-cx,dy=e.y-cy,d=Math.hypot(dx,dy);if(d>=R_)continue;if(d<.01){dx=0;dy=1;d=1}e.x=cx+dx/d*R_;e.y=cy+dy/d*R_}}
+{const up170=update;update=function(dt){const r=up170.apply(this,arguments);try{if(typeof FVB!='undefined'&&FVB&&!inD&&state=='play'){fvTrunkPush(P,4);for(const z of zs)if(Math.abs(z.x-P.x)<T*20&&Math.abs(z.y-P.y)<T*20)fvTrunkPush(z,4);for(const n of NPCS)if(Math.abs(n.x-P.x)<T*20&&Math.abs(n.y-P.y)<T*20)fvTrunkPush(n,4)}}catch(e){}return r}}
+/* ---------- the loft: a stairwell door set into the inner wall, opening onto the living room ---------- */
+function vhutStair(b){let ent=null;for(let x=b.x;x<b.x+b.w&&!ent;x++)for(const y of[b.y-1,b.y,b.y+b.h-1,b.y+b.h]){const o=ob[y*W+x];if(o&&o.t=='door'&&(y<=b.y||y>=b.y+b.h-1)){const iy=y<=b.y?y+1:y-1;if(iy>=b.y&&iy<b.y+b.h&&!ob[iy*W+x])ent=[x,iy]}}
+ if(!ent)return false;const inB=(x,y)=>x>b.x&&x<b.x+b.w-1&&y>=b.y&&y<b.y+b.h,seen=new Set([ent[1]*W+ent[0]]),Q_=[ent];
+ while(Q_.length){const[x,y]=Q_.pop();for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy,i=ny*W+nx;if(!inB(nx,ny)||seen.has(i))continue;const q=ob[i];if(q&&(SOLID[q.t]||q.t=='door'||q.t=='twall'||q.t=='wall'||q.t=='sblock'))continue;seen.add(i);Q_.push([nx,ny])}}
+ for(let y=b.y;y<b.y+b.h;y++)for(let x=b.x+1;x<b.x+b.w-1;x++){const q=ob[y*W+x];if(!q||q.t!='twall')continue;
+  for(const[dx,dy]of[[0,1],[0,-1],[1,0],[-1,0]]){if(!seen.has((y+dy)*W+x+dx))continue;const bk=ob[(y-dy)*W+x-dx];if(!(bk&&(bk.t=='twall'||bk.t=='wall'||bk.t=='sblock')))continue;if(Math.abs(x+dx-ent[0])+Math.abs(y+dy-ent[1])<1)continue;
+   ob[y*W+x]={t:'oup',n:1,k:'vhut',bw:b.w,bh:b.h,sx:x-b.x,sy:y-b.y,nb:1};b.st2=1;return true}}return false}
+{const gv170=genVillage;genVillage=function(cx,cy,RX,RY){const n0=BLD.length;gv170.apply(this,arguments);for(let k=n0;k<BLD.length;k++){const b=BLD[k];if(b.rf!='hut'||hutUp(b))continue;if(R()<.5)continue;try{vhutStair(b)}catch(e){}}}}
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
