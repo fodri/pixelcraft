@@ -10479,7 +10479,7 @@ function levelDone(){S.mode='done';S.doneT=0;unlockPtr();sfx('good');const id=LV
 /* ---------- drawing ---------- */
 function draw3(){const k=cellOf(PL.x,PL.z),bob=PL.swim?Math.sin(L.t*2)*.03:Math.sin(PL.bob)*.025;cam.position.set(PL.x,PL.y+.6+(PL.dead?-.45:bob),PL.z);cam.rotation.set(PL.pitch+(PL.kick>0?PL.kick*.3:0),PL.yaw,PL.dead?.4:0);
  const under=cam.position.y<0&&inWater(PL.x,PL.z,cam.position.y);scene.fog.color.setHex(under?0x10405a:L.D.fog);scene.fog.near=under?.3:4;scene.fog.far=under?6:(L.D.sky?26:20);if(sky)sky.position.set(PL.x,PL.y+9,PL.z);
- R3.setSize(VW3,VH3,false);cam.aspect=VW3/VH3;cam.updateProjectionMatrix();R3.render(scene,cam);return under}
+ R3.setSize(VW3,VH3,false);cam.aspect=VW3/VH3;cam.updateProjectionMatrix();R3.render(scene,cam);if(!VM.fail)try{vmRender()}catch(e){VM.fail=1;console.warn('vm',e)}return under}
 function txt2(t,x,y,c,sz,al){g2.font=(sz||8)+'px monospace';g2.textAlign=al||'left';g2.fillStyle='#000';g2.fillText(t,x+1,y+1);g2.fillStyle=c||'#fff';g2.fillText(t,x,y);g2.textAlign='left'}
 function bigTxt(t,x,y,c,sz){g2.font='bold '+(sz||16)+'px monospace';g2.textAlign='center';g2.fillStyle='#3a0a00';g2.fillText(t,x+2,y+2);g2.fillStyle=c||'#e83a1a';g2.fillText(t,x,y);g2.textAlign='left'}
 /* weapons: each one painted as one solid pixel sprite (hands holding the gun), then outlined — cached per frame */
@@ -10513,7 +10513,78 @@ function wSprite(k,f){if(WSPR[k])return WSPR[k];const W_=120,H_=96,c=cvs(W_,H_,x
  /* one pass of dark outline around the whole shape */
  const x=c.getContext('2d'),d=x.getImageData(0,0,W_,H_),a=d.data,o=new Uint8ClampedArray(a);for(let y=0;y<H_;y++)for(let q=0;q<W_;q++){const i=(y*W_+q)*4;if(a[i+3])continue;let n=false;for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){const X=q+dx,Y=y+dy;if(X>=0&&Y>=0&&X<W_&&Y<H_&&a[(Y*W_+X)*4+3]>128){n=true;break}}if(n){o[i]=20;o[i+1]=12;o[i+2]=8;o[i+3]=255}}
  for(let i=0;i<a.length;i+=4)if(a[i+3]>0&&a[i+3]<255){o[i+3]=a[i+3]>100?255:0}d.data.set(o);x.putImageData(d,0,0);WSPR[k]=c;return c}
-function drawWeapon(){const w=VW3,h=VH3-32,g=g2,cx=Math.round(w/2+Math.sin(PL.bob)*7),by=Math.round(h+2+Math.abs(Math.cos(PL.bob))*5+(PL.kick>0?PL.kick*40:0)),sc=Math.max(1,h/185);
+/* ---------- weapons in 3D: low-poly view models with hands, lit by the room you stand in ---------- */
+const VM={ok:false,cur:0,sw:0,lt:1,sh:0};
+const VMP={pistol:[.052,-.062,-.24,1,-.1,.12],shotgun:[.065,-.07,-.25,1,-.1,.1],chain:[.07,-.075,-.27,1,-.1,.1],rocket:[.08,-.065,-.3,1,-.08,.1],plasma:[.065,-.07,-.27,1,-.1,.14],saw:[.075,-.085,-.33,.85,-.12,.22],fist:[.075,-.095,-.25,.9,-.1,.15]};VM.P=VMP;
+function vmMat(c,o){return new THREE.MeshPhongMaterial(Object.assign({color:c,flatShading:true,shininess:o&&o.sh!=null?o.sh:8,specular:o&&o.sp!=null?o.sp:0x111111},o&&o.em?{emissive:o.em}:{}))}
+function vmInit(){if(VM.ok)return;VM.S=new THREE.Scene();VM.cam=new THREE.PerspectiveCamera(50,1,.01,5);VM.hemi=new THREE.HemisphereLight(0xfff4e0,0x3a3428,.95);VM.S.add(VM.hemi);VM.dir=new THREE.DirectionalLight(0xffffff,.55);VM.dir.position.set(-.6,1,.5);VM.S.add(VM.dir);
+ VM.fl=new THREE.PointLight(0xffa040,0,1.2);VM.fl.position.set(0,-.02,-.45);VM.S.add(VM.fl);
+ const M=VM.M={g0:vmMat(0x24262a,{sh:60,sp:0x555555}),g1:vmMat(0x3c4048,{sh:50,sp:0x444444}),g2:vmMat(0x6a707a,{sh:40,sp:0x666666}),g3:vmMat(0x9aa0aa,{sh:60,sp:0x888888}),rub:vmMat(0x18181a),wd:vmMat(0x7a4a26,{sh:12}),wd2:vmMat(0x5a3418),
+  sk:vmMat(0xd29a6c),sk2:vmMat(0xb47a50),sl:vmMat(0x3a3a30),ol:vmMat(0x4e5a3a,{sh:20}),ol2:vmMat(0x3a4428),red:vmMat(0xb02a1a,{sh:30}),org:vmMat(0xd8661c,{sh:30}),yel:vmMat(0xe8c020),
+  pl:vmMat(0x5a6a7a,{sh:50,sp:0x556677}),pl2:vmMat(0x3a4656,{sh:40}),glow:new THREE.MeshBasicMaterial({color:0x7ad8ff}),glow2:new THREE.MeshBasicMaterial({color:0x3aa0ff}),chn:vmMat(0x8a8e94,{sh:70,sp:0x999999}),wht:vmMat(0xe8e4dc)};
+ const fc=cvs(32,32,(x)=>{const g=x.createRadialGradient(16,16,1,16,16,15);g.addColorStop(0,'rgba(255,255,220,1)');g.addColorStop(.35,'rgba(255,200,60,.95)');g.addColorStop(.7,'rgba(255,90,10,.6)');g.addColorStop(1,'rgba(255,40,0,0)');x.fillStyle=g;x.beginPath();for(let k=0;k<16;k++){const a=k/16*Math.PI*2,r=k%2?7:16;x.lineTo(16+Math.cos(a)*r,16+Math.sin(a)*r)}x.fill()});
+ VM.ft=ctex(fc);VM.fm=new THREE.MeshBasicMaterial({map:VM.ft,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide});VM.fpm=new THREE.MeshBasicMaterial({map:VM.ft,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,color:0x88ccff});
+ VM.models={};VM.ok=true}
+function vmBox(G,w,h,d,m,x,y,z,rx,ry,rz){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.rotation.set(rx||0,ry||0,rz||0);G.add(o);return o}
+function vmCyl(G,r,len,m,x,y,z,seg,r2){const o=new THREE.Mesh(new THREE.CylinderGeometry(r2!=null?r2:r,r,len,seg||10),m);o.rotation.x=Math.PI/2;o.position.set(x,y,z);G.add(o);return o}
+/* a hand gripping something upright at (x,y,z): palm, four curled fingers in front, a thumb on the side, the wrist going down to the camera */
+function vmHand(G,x,y,z,s,left,flat){const M=VM.M,H=new THREE.Group();H.position.set(x,y,z);s=s||1;const sd=left?-1:1;
+ vmBox(H,.05*s,.065*s,.05*s,M.sk,0,0,.012*s);for(let i=0;i<4;i++){vmBox(H,.046*s,.014*s,.018*s,i%2?M.sk:M.sk2,0,.024*s-i*.016*s,-.018*s);vmBox(H,.04*s,.012*s,.01*s,M.sk2,0,.024*s-i*.016*s,-.03*s)}
+ vmBox(H,.016*s,.016*s,.05*s,M.sk,sd*-.03*s,.03*s,-.012*s,0,0,0);vmBox(H,.014*s,.014*s,.02*s,M.sk2,sd*-.03*s,.034*s,-.04*s);
+ if(!flat){vmBox(H,.05*s,.05*s,.16*s,M.sk,0,-.05*s,.07*s,-.55,0,0);vmBox(H,.058*s,.058*s,.14*s,M.sl,0,-.1*s,.15*s,-.55,0,0)}G.add(H);return H}
+function vmMuzzle(G,x,y,z,s,plasma){const f=new THREE.Group();for(let k=0;k<2;k++){const p=new THREE.Mesh(new THREE.PlaneGeometry(.12*s,.12*s),plasma?VM.fpm:VM.fm);p.rotation.y=k?Math.PI/2:0;f.add(p)}const p2=new THREE.Mesh(new THREE.PlaneGeometry(.14*s,.14*s),plasma?VM.fpm:VM.fm);p2.rotation.x=-Math.PI/2;f.add(p2);f.position.set(x,y,z);f.visible=false;G.add(f);return f}
+function vmBuild(n){const M=VM.M,R=new THREE.Group(),G=new THREE.Group();R.add(G);const m={R,G};
+ if(n=='pistol'){R.position.set(.042,-.1,-.235);
+  vmBox(G,.034,.036,.2,M.g0,0,0,-.08);vmBox(G,.036,.004,.18,M.g1,0,.019,-.08);for(let i=0;i<6;i++)vmBox(G,.037,.026,.004,M.g1,0,.002,.006-i*.008);
+  vmBox(G,.012,.008,.018,M.g2,.019,.006,-.07);vmBox(G,.03,.022,.15,M.g1,0,-.028,-.07);vmBox(G,.008,.006,.01,M.g0,-.011,.022,.012);vmBox(G,.008,.006,.01,M.g0,.011,.022,.012);vmBox(G,.006,.007,.008,M.g3,0,.022,-.175);
+  vmBox(G,.012,.014,.012,M.g0,0,.006,.026);vmBox(G,.028,.1,.044,M.rub,0,-.08,.002,-.22);for(let i=0;i<5;i++)vmBox(G,.03,.004,.04,M.g0,0,-.05-i*.016,.004,-.22);
+  vmBox(G,.026,.004,.05,M.g1,0,-.045,-.04);vmBox(G,.004,.016,.004,M.g2,0,-.04,-.03);vmCyl(G,.007,.01,M.g0,0,.004,-.181,8);
+  m.hand=vmHand(G,0,-.075,.0,1);m.fx=vmMuzzle(G,0,.004,-.2,1);m.mz=[0,.004,-.2]}
+ else if(n=='shotgun'){R.position.set(.05,-.104,-.25);
+  vmCyl(G,.012,.52,M.g0,0,.014,-.3,10);vmCyl(G,.0105,.42,M.g1,0,-.012,-.26,10);vmBox(G,.04,.05,.15,M.g0,0,0,-.0);vmBox(G,.041,.006,.14,M.g1,0,.026,0);vmBox(G,.012,.02,.05,M.g2,.02,.006,-.01);
+  vmBox(G,.006,.006,.006,M.g3,0,.029,-.55);vmBox(G,.03,.052,.16,M.wd,0,-.035,.14,.2);vmBox(G,.032,.008,.16,M.wd2,0,-.01,.13,.2);vmBox(G,.03,.06,.04,M.wd,0,-.05,.06,-.3);
+  const pump=new THREE.Group();G.add(pump);vmCyl(pump,.02,.13,M.wd,0,-.012,-.2,8);for(let i=0;i<5;i++)vmCyl(pump,.0205,.006,M.wd2,0,-.012,-.15-i*.024,8);m.pump=pump;
+  m.hand=vmHand(G,0,-.07,.06,1);m.hand2=vmHand(pump,-.004,-.05,-.2,1.05,true);m.fx=vmMuzzle(G,0,.014,-.57,1.3);m.mz=[0,.014,-.57]}
+ else if(n=='chain'){R.position.set(.05,-.112,-.26);
+  const bar=new THREE.Group();bar.position.set(0,.03,-.24);G.add(bar);for(let i=0;i<6;i++){const a=i/6*Math.PI*2;vmCyl(bar,.008,.34,M.g1,Math.cos(a)*.024,Math.sin(a)*.024,0,8)}vmCyl(bar,.01,.36,M.g0,0,0,0,8);m.bar=bar;
+  vmCyl(G,.042,.024,M.g2,0,.03,-.1,12);vmCyl(G,.04,.016,M.g2,0,.03,-.38,12);vmCyl(G,.032,.012,M.g0,0,.03,-.41,12);vmBox(G,.07,.055,.17,M.g0,0,-.012,.02);vmBox(G,.072,.008,.16,M.g2,0,.012,.02);
+  vmBox(G,.01,.03,.01,M.g1,.03,.03,-.0);vmBox(G,.01,.03,.01,M.g1,.03,.03,.08);vmBox(G,.01,.01,.1,M.g2,.03,.046,.04);vmBox(G,.03,.05,.08,M.ol,-.052,-.02,.03);vmBox(G,.032,.004,.08,M.ol2,-.052,.006,.03);vmBox(G,.006,.03,.03,M.yel,-.069,-.02,.03);
+  m.hand=vmHand(G,.0,-.07,.07,1.05);m.hand2=vmHand(G,-.05,-.03,-.06,1,true);m.fx=vmMuzzle(G,0,.03,-.44,1.3);m.mz=[0,.03,-.44]}
+ else if(n=='rocket'){R.position.set(.07,-.1,-.27);
+  vmCyl(G,.046,.56,M.ol,0,0,-.16,14);vmCyl(G,.05,.03,M.ol2,0,0,-.43,14);vmCyl(G,.05,.03,M.ol2,0,0,.1,14);vmCyl(G,.036,.02,M.g0,0,0,-.445,12);vmCyl(G,.04,.01,M.g0,0,0,.118,12);
+  vmBox(G,.012,.03,.04,M.g0,-.04,.04,-.05);vmBox(G,.022,.014,.05,M.g1,-.04,.06,-.05);vmBox(G,.006,.006,.006,M.red,-.04,.07,-.075);for(let i=0;i<3;i++)vmBox(G,.094,.006,.012,M.ol2,0,0,-.33+i*.12);
+  vmBox(G,.024,.08,.035,M.rub,0,-.075,.0,-.2);const w=new THREE.Mesh(new THREE.ConeGeometry(.032,.09,10),M.red);w.rotation.x=-Math.PI/2;w.position.set(0,0,-.47);G.add(w);m.war=w;vmCyl(G,.033,.03,M.wht,0,0,-.43,10);
+  m.hand=vmHand(G,0,-.06,.0,1.05);m.fx=vmMuzzle(G,0,0,-.5,1.8);m.mz=[0,0,-.5]}
+ else if(n=='plasma'){R.position.set(.05,-.105,-.26);
+  vmBox(G,.06,.055,.3,M.pl,0,0,-.1);vmBox(G,.062,.01,.28,M.pl2,0,.03,-.1);vmBox(G,.044,.044,.12,M.pl2,0,.002,-.3);for(let i=0;i<4;i++)vmBox(G,.046,.008,.01,M.g0,0,.002,-.26-i*.022);
+  const cells=[];for(let i=0;i<4;i++){cells.push(vmBox(G,.014,.012,.03,M.glow,-.018+((i%2)*.036),.038,-.02-Math.floor(i/2)*.08))}m.cells=cells;
+  const em=vmCyl(G,.02,.01,M.glow2,0,.002,-.363,12);m.em=em;vmCyl(G,.026,.012,M.g0,0,.002,-.356,12);vmBox(G,.03,.03,.06,M.pl2,0,-.04,-.12);
+  for(let i=0;i<3;i++){vmBox(G,.004,.012,.05,M.g0,-.031,-.004,-.03-i*.07);vmBox(G,.002,.004,.04,M.glow2,-.0325,-.004,-.03-i*.07)}vmBox(G,.004,.006,.26,M.pl2,.031,.012,-.1);vmBox(G,.03,.02,.05,M.g1,0,.04,.05);vmBox(G,.02,.012,.012,M.g3,0,.052,.03);vmBox(G,.028,.09,.04,M.rub,0,-.07,.02,-.22);m.hand=vmHand(G,0,-.065,.02,1);m.hand2=vmHand(G,-.01,-.05,-.16,1,true);m.fx=vmMuzzle(G,0,.002,-.38,1.3,true);m.mz=[0,.002,-.38]}
+ else if(n=='saw'){R.position.set(.06,-.125,-.26);
+  vmBox(G,.09,.08,.17,M.red,0,0,.02);vmBox(G,.092,.02,.12,M.g0,0,.045,.0);vmBox(G,.06,.03,.05,M.g1,.046,-.01,.05);vmBox(G,.04,.04,.03,M.yel,-.046,.01,.08);
+  vmBox(G,.014,.014,.1,M.rub,0,.08,.02);vmBox(G,.03,.006,.06,M.yel,.046,.02,.02);vmCyl(G,.012,.03,M.g0,-.04,-.02,.11,8);vmBox(G,.012,.012,.02,M.rub,.03,.045,.1);vmBox(G,.014,.04,.014,M.rub,0,.06,-.03);vmBox(G,.014,.04,.014,M.rub,0,.06,.07);
+  vmBox(G,.01,.05,.44,M.g2,0,-.005,-.28);vmBox(G,.011,.05,.02,M.g1,0,-.005,-.06);const ch=[];for(let i=0;i<22;i++){const t=vmBox(G,.014,.008,.012,M.chn,0,0,0);ch.push(t)}m.ch=ch;
+  m.hand=vmHand(G,.0,-.06,.1,1.05)}
+ else if(n=='fist'){R.position.set(.08,-.125,-.22);const H=new THREE.Group();G.add(H);
+  vmBox(H,.075,.06,.07,M.sk,0,0,0);for(let i=0;i<4;i++){vmBox(H,.016,.016,.02,i%2?M.sk:M.sk2,-.027+i*.018,.024,-.034)}for(let i=0;i<4;i++)vmBox(H,.017,.03,.02,M.sk2,-.027+i*.018,.0,-.04);
+  vmBox(H,.02,.02,.05,M.sk,-.045,-.005,-.01);vmBox(H,.06,.055,.18,M.sk,0,-.04,.11,-.45);vmBox(H,.068,.064,.16,M.sl,0,-.09,.22,-.45);m.H=H}
+ R.scale.setScalar(1.3);R.rotation.x=-.05;VM.S.add(R);R.visible=false;return m}
+function vmKey(){const c=PL.cur;return c==1?(PL.wp.saw?'saw':'fist'):c==2?'pistol':c==3?'shotgun':c==4?'chain':c==5?'rocket':'plasma'}
+function vmRender(){if(S.mode!='play'||PL.dead)return;vmInit();const key=vmKey();if(!VM.models[key])VM.models[key]=vmBuild(key);
+ if(VM.cur!==key){if(VM.cur&&VM.models[VM.cur])VM.models[VM.cur].R.visible=false;VM.cur=key;VM.sw=.25}
+ const m=VM.models[key],R=m.R,G=m.G,t=S.t,pp=VMP[key];R.position.set(pp[0],pp[1],pp[2]);R.scale.setScalar(pp[3]);R.rotation.set(pp[4],pp[5]||0,0);const dt=Math.min(.05,t-(VM.t0||t));VM.t0=t;R.visible=true;if(VM.sw>0)VM.sw=Math.max(0,VM.sw-dt);
+ /* light from the room */try{const k=cellOf(PL.x,PL.z),lt=clamp(L.light[k]||.6,.3,1.1);VM.lt+=(lt-VM.lt)*.1;VM.hemi.intensity=.35+.75*VM.lt;VM.dir.intensity=.2+.45*VM.lt}catch(e){}
+ const bx=Math.sin(PL.bob)*.012,by=-Math.abs(Math.cos(PL.bob))*.008,k=PL.kick>0?PL.kick:0;G.position.set(bx,by-VM.sw*.5+(PL.swim?Math.sin(t*2)*.01:0),k*.35);G.rotation.set(k*1.2,0,bx*.6);
+ const fl=PL.flash>0;if(m.fx){m.fx.visible=fl;if(fl){const s=.8+Math.random()*.5;m.fx.scale.setScalar(s);m.fx.rotation.z=Math.random()*6}}VM.fl.intensity=fl?(key=='plasma'?1.2:2.2):0;VM.fl.color.setHex(key=='plasma'?0x66bbff:0xffa040);if(m.mz)VM.fl.position.set(R.position.x+m.mz[0],R.position.y+m.mz[1]+.03,R.position.z+m.mz[2]+.1);
+ if(key=='shotgun'){const pump=PL.cd>.15&&PL.cd<.7?Math.sin((.7-PL.cd)/.55*Math.PI):0;m.pump.position.z=pump*.09;G.rotation.x+=pump*.08;G.rotation.z+=pump*.12}
+ if(key=='chain'){VM.sp=(VM.sp||0)*.93+((PL.cd>0||fl||MB.l)?.9:0)*.07;m.bar.rotation.z+=VM.sp*.6}
+ if(key=='rocket')m.war.visible=!(PL.cd>.35)&&PL.am.r>0;
+ if(key=='plasma'){const on=fl||Math.sin(t*8)>.2;for(const c of m.cells)c.material=on?VM.M.glow:VM.M.glow2;m.em.scale.setScalar(fl?1.6:1)}
+ if(key=='saw'){const run=PL.swing>0,sp=run?2.6:.6;VM.sh=(VM.sh+dt*sp)%1;const n=m.ch.length,per=.95;for(let i=0;i<n;i++){let u=(i/n+VM.sh)%1,y,z;const L_=.42;if(u<.5){z=-.06-u*2*L_;y=.022}else{z=-.06-(1-(u-.5)*2)*L_;y=-.032}m.ch[i].position.set(0,y-.005,z)}
+  const j=run?.004:.0015;G.position.x+=(Math.random()-.5)*j;G.position.y+=(Math.random()-.5)*j;if(run)G.position.z-=.03}
+ if(key=='fist'){const s_=PL.swing>0?Math.sin((1-PL.swing/.3)*Math.PI):0;m.H.position.set(-s_*.05,s_*.03,-s_*.12);m.H.rotation.set(-s_*.2,0,-s_*.2)}
+ const vh=VH3-32;VM.cam.aspect=VW3/vh;VM.cam.updateProjectionMatrix();const ac=R3.autoClear;R3.autoClear=false;R3.setViewport(0,32,VW3,vh);R3.clearDepth();R3.render(VM.S,VM.cam);R3.setViewport(0,0,VW3,VH3);R3.autoClear=ac}
+function drawWeapon(){if(VM.ok&&!VM.fail)return;const w=VW3,h=VH3-32,g=g2,cx=Math.round(w/2+Math.sin(PL.bob)*7),by=Math.round(h+2+Math.abs(Math.cos(PL.bob))*5+(PL.kick>0?PL.kick*40:0)),sc=Math.max(1,h/185);
  const flash=(x,y,r,c1,c2)=>{const p=[];for(let k=0;k<12;k++){const a=k/12*Math.PI*2+S.t*9,rr=k%2?r*.5:r;p.push([x+Math.cos(a)*rr,y+Math.sin(a)*rr*.85])}g.fillStyle=c1||'#ff3a10';g.beginPath();p.forEach((q,i)=>i?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1]));g.fill();g.fillStyle=c2||'#ffb020';g.beginPath();g.ellipse(x,y,r*.55,r*.45,0,0,7);g.fill();g.fillStyle='#fff6c0';g.beginPath();g.ellipse(x,y,r*.25,r*.2,0,0,7);g.fill()};
  const put=(sp,ox,oy,rot)=>{g.imageSmoothingEnabled=false;const W_=sp.width*sc,H_=sp.height*sc,x0=Math.round(cx-W_/2+(ox||0)),y0=Math.round(by-H_+(oy||0));if(rot){g.save();g.translate(cx,by);g.rotate(rot);g.translate(-cx,-by)}g.drawImage(sp,x0,y0,W_,H_);if(rot)g.restore();return[x0,y0]};
  const cur=PL.cur,fl=PL.flash>0;
@@ -10584,7 +10655,7 @@ function open(){try{setup()}catch(e){console.warn('arcade',e);return}S.on=true;S
 function close(){S.on=false;unlockPtr();if(c3){c3.style.display=c2.style.display='none'}for(const k in K)K[k]=false;try{for(const k in window.K||{})window.K[k]=0}catch(e){}}
 function frame(dt){if(!S.on)return;fit();dt=Math.min(.05,dt||.016);if(S.mode=='play'&&L){step(dt);music()}else if(S.mode=='dead'){S.deadT+=dt;if(L)step(dt*.3)}else if(S.mode=='done'){S.doneT+=dt}else S.t+=dt;
  let under=false;if(L&&S.mode!='title'&&S.mode!='win')under=draw3();else{R3.setSize(VW3,VH3,false);R3.setClearColor(0x000000);R3.clear()}drawHud(under)}
-return{open,close,frame,on:()=>S.on,S,PL,get L(){return L},LV,startLevel,newRun,step,use,fire,pressSwitch,MON}})();
+return{open,close,frame,on:()=>S.on,S,PL,VM,get L(){return L},LV,startLevel,newRun,step,use,fire,pressSwitch,MON}})();
 
 /* ---------- the cabinet in the world ---------- */
 Object.assign(LBL,{arcade:'Arcade'});try{Object.assign(LBLX,{arcade:'Arcade'})}catch(e){}if(!NEWK.includes('arcade'))NEWK.push('arcade');if(inv.arcade==null)inv.arcade=0;
@@ -10770,7 +10841,7 @@ function td3Post(){try{for(const r of V3.roofs.values())for(const m of(r.G.userD
 {const hg171=fvHgt;fvHgt=function(){const h=hg171.apply(this,arguments);if(FVHT&&!FVHT.sm){FVHT.sm=1;for(let pass=0;pass<2;pass++)for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const i=y*W+x;if(wt(map[i]))continue;const a=h[i-1],b=h[i+1],c=h[i-W],d=h[i+W],mx=Math.max(a,b,c,d),mn=Math.min(a,b,c,d);if(h[i]>mx+.01)h[i]=mx;else if(h[i]<mn-.01)h[i]=mn}}return h}}
 
 /* ===== v172: one look — Retro, or Modern (pixel art with 3D sun shadows): tidy pitched roofs, one colour per house, chimney smoke, shade at the foot of cliffs, and you show through trees and houses as a silhouette ===== */
-GAMEV=174;
+GAMEV=175;
 /* ---------- two graphics modes ---------- */
 GMN.hu[2]='Modern';GMN.en[2]='Modern';
 {const sg172=setGMode;setGMode=function(m,quiet){m=((m%4)+4)%4;if(m==1||m==3)m=GMODE==0?2:0;return sg172(m,quiet)}}
