@@ -10478,7 +10478,7 @@ function levelDone(){S.mode='done';S.doneT=0;unlockPtr();sfx('good');const id=LV
  if(S.lv==LV.length-1){try{if(!PRG.won){PRG.won=1;saveP();if(typeof gainXp=='function')gainXp(150)}}catch(e){}}}
 /* ---------- drawing ---------- */
 /* ---------- PS1 look: wobbling vertices, affine (warping) textures, 15-bit colour with ordered dithering ---------- */
-const PS1={on:true,u:{v:{value:1},snap:{value:new THREE.Vector2(160,90)}}};try{PS1.on=localStorage.getItem('pxc_ps1')!=='0'}catch(e){}
+const PS1={on:true,u:{v:{value:1},snap:{value:new THREE.Vector2(160,90)}}};PS1.on=false;
 function ps1Mat(m){if(!m||m.userData.ps1||m.isShaderMaterial||m.isSpriteMaterial||m.isPointsMaterial)return;m.userData.ps1=1;const pv=m.onBeforeCompile;
  m.onBeforeCompile=function(sh,r){if(pv)pv.call(this,sh,r);sh.uniforms.uPs1=PS1.u.v;sh.uniforms.uSnap=PS1.u.snap;
   sh.vertexShader='uniform float uPs1;uniform vec2 uSnap;varying float vPsW;\n'+sh.vertexShader.replace('#include <project_vertex>','#include <project_vertex>\nvPsW=1.;if(uPs1>.5){vec4 q=gl_Position;q.xy=floor(q.xy/q.w*uSnap+.5)/uSnap*q.w;gl_Position=q;\n#ifdef USE_UV\nvUv*=q.w;vPsW=q.w;\n#endif\n}');
@@ -10641,7 +10641,7 @@ function drawTitle(){const w=VW3,h=VH3,g=g2;g.fillStyle='#0a0302';g.fillRect(0,0
  if(S.sub=='sel'){LV.forEach((l,i)=>{const lock=i>=PRG.unl,b=(PRG.best[l.id]||{}).t;txt2((i==S.sel?'> ':'  ')+(i+1)+'. '+tx_(l.nm[0],l.nm[1])+(lock?tx_(' [locked]',' [zárva]'):'')+(b?'   '+Math.floor(b/60)+':'+String(b%60).padStart(2,'0'):''),w/2-70,84+i*14,lock?'#5a5a52':i==S.sel?'#ffe060':'#c8c8c0',10)});txt2(tx_('Esc: back','Esc: vissza'),w/2,h-12,'#8a8a82',7,'center')}
  else MENU().forEach((m,i)=>txt2((i==S.sel?'> ':'  ')+m[0],w/2-70,84+i*14,i==S.sel?'#ffe060':'#c8c8c0',10));
  txt2(tx_('WASD move · mouse look · click fire · E use · 1-6 weapons · Shift run','WASD mozgás · egér nézés · klikk lövés · E használ · 1-6 fegyver · Shift futás'),w/2,h-34,'#8a8a82',7,'center');txt2(tx_('In water: Space up, C down · Esc menu · M music','Vízben: Space fel, C le · Esc menü · M zene'),w/2,h-24,'#8a8a82',7,'center')}
-function drawPause(){const w=VW3,h=VH3,g=g2;g.fillStyle='rgba(0,0,0,.65)';g.fillRect(0,0,w,h);bigTxt(tx_('PAUSED','SZÜNET'),w/2,60,'#e83a1a',18);const M=[[tx_('CONTINUE','FOLYTATÁS'),'cont'],[tx_('RESTART LEVEL','PÁLYA ÚJRA'),'retry'],[tx_('PS1 EFFECT: ','PS1 HATÁS: ')+(PS1.on?tx_('ON','BE'):tx_('OFF','KI')),'ps1'],[tx_('TITLE','CÍMLAP'),'title'],[tx_('LEAVE THE CABINET','KILÉPÉS A GÉPBŐL'),'quit']];S.pm=M;M.forEach((m,i)=>txt2((i==S.sel?'> ':'  ')+m[0],w/2-60,90+i*14,i==S.sel?'#ffe060':'#c8c8c0',10))}
+function drawPause(){const w=VW3,h=VH3,g=g2;g.fillStyle='rgba(0,0,0,.65)';g.fillRect(0,0,w,h);bigTxt(tx_('PAUSED','SZÜNET'),w/2,60,'#e83a1a',18);const M=[[tx_('CONTINUE','FOLYTATÁS'),'cont'],[tx_('RESTART LEVEL','PÁLYA ÚJRA'),'retry'],[tx_('TITLE','CÍMLAP'),'title'],[tx_('LEAVE THE CABINET','KILÉPÉS A GÉPBŐL'),'quit']];S.pm=M;M.forEach((m,i)=>txt2((i==S.sel?'> ':'  ')+m[0],w/2-60,90+i*14,i==S.sel?'#ffe060':'#c8c8c0',10))}
 /* ---------- input ---------- */
 function lockPtr(){try{if(c2&&document.pointerLockElement!==c2)c2.requestPointerLock()}catch(e){}}
 function unlockPtr(){try{if(document.pointerLockElement)document.exitPointerLock()}catch(e){}}
@@ -10857,7 +10857,7 @@ function td3Post(){try{for(const r of V3.roofs.values())for(const m of(r.G.userD
 {const hg171=fvHgt;fvHgt=function(){const h=hg171.apply(this,arguments);if(FVHT&&!FVHT.sm){FVHT.sm=1;for(let pass=0;pass<2;pass++)for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const i=y*W+x;if(wt(map[i]))continue;const a=h[i-1],b=h[i+1],c=h[i-W],d=h[i+W],mx=Math.max(a,b,c,d),mn=Math.min(a,b,c,d);if(h[i]>mx+.01)h[i]=mx;else if(h[i]<mn-.01)h[i]=mn}}return h}}
 
 /* ===== v172: one look — Retro, or Modern (pixel art with 3D sun shadows): tidy pitched roofs, one colour per house, chimney smoke, shade at the foot of cliffs, and you show through trees and houses as a silhouette ===== */
-GAMEV=176;
+GAMEV=177;
 /* ---------- two graphics modes ---------- */
 GMN.hu[2]='Modern';GMN.en[2]='Modern';
 {const sg172=setGMode;setGMode=function(m,quiet){m=((m%4)+4)%4;if(m==1||m==3)m=GMODE==0?2:0;return sg172(m,quiet)}}
@@ -10894,6 +10894,20 @@ function silDraw(){if(CLASSIC||state!='play'||!silHidden())return;if(!SILC)SILC=
 /* ---------- shade at the foot of cliffs ---------- */
 {const gt172=gTile;gTile=function(tx,ty,now){gt172(tx,ty,now);if(CLASSIC||inD||tx<0||ty<1||tx>=W||ty>=H)return;const i=ty*W+tx;if(map[i]==8||map[i-W]!=8||wt(map[i]))return;const px=tx*T,py=ty*T;W_(px,py,T,2,'rgba(20,14,8,.26)');W_(px,py+2,T,2,'rgba(20,14,8,.14)');W_(px,py+4,T,2,'rgba(20,14,8,.06)')}}
 try{GQC.clear&&GQC.clear()}catch(e){}
+
+/* ===== v173: the NOT DOOM cabinet calls you — a bobbing joystick bubble above it (over the pub roof too), a glowing screen, "E: play" when you stand by it, and a hint the first time you come near ===== */
+GAMEV=177;
+const ARCL={k:'',t:0,L:[],told:false};
+function arcList(){const now=performance.now();if(ARCL.k===wseed+'|'+W&&now-ARCL.t<3000)return ARCL.L;ARCL.k=wseed+'|'+W;ARCL.t=now;ARCL.L=[];for(let i=0;i<ob.length;i++){const o=ob[i];if(o&&o.t=='arcade'&&o.pm==null)ARCL.L.push(i)}return ARCL.L}
+function arcCall(){if(inD||state!='play'||(typeof ARC!='undefined'&&ARC.on()))return;const now=performance.now()/1000,ptx=P.x/T,pty=P.y/T;
+ for(const i of arcList()){const tx=i%W,ty=(i/W)|0,d=Math.hypot(tx+.5-ptx,ty+.5-pty);if(d>26)continue;const sx=tx*T-cam.x,sy=ty*T-cam.y;if(sx<-40||sy<-60||sx>VW/ZM+40||sy>VH/ZM+40)continue;
+  const blink=Math.floor(now*2.5)%2,bob=Math.round(Math.sin(now*3)*2),bx=Math.round(sx+8),by=Math.round(sy-22+bob);
+  /* glow on the screen */g.save();g.globalCompositeOperation='lighter';g.globalAlpha=.25+.2*Math.sin(now*6);g.fillStyle='#ff5a3a';g.beginPath();g.arc(sx+8,sy-2,9+Math.sin(now*4)*2,0,6.28);g.fill();g.restore();
+  /* bubble with a joystick */Q(bx-10,by-9,21,13,'#1a0a08');Q(bx-9,by-10,19,15,'#1a0a08');Q(bx-9,by-9,19,13,blink?'#e83a1a':'#c8281a');Q(bx-9,by-9,19,1,'#ff8a5a');
+  Q(bx-2,by+4,5,1,'#1a0a08');Q(bx-1,by+5,3,1,'#1a0a08');Q(bx,by+6,1,1,'#1a0a08');Q(bx-5,by-1,11,4,'#2a2a2a');Q(bx-5,by-1,11,1,'#5a5a5a');Q(bx,by-6,1,5,'#d8d8d8');Q(bx-1,by-8,3,3,blink?'#ffe060':'#ffd030');Q(bx+3,by-3,2,2,'#40c040');
+  if(d<3.2){noTr=true;const h=LANG=='hu',s=h?'E: Játék — NOT DOOM':'E: Play — NOT DOOM';g.font=fnt(1,8);const w=Math.ceil(g.measureText(s).width)+8;Q(bx-w/2,by-24,w,11,'rgba(10,6,4,.85)');Q(bx-w/2,by-24,w,1,'#e83a1a');txt(s,bx,by-16,blink?'#ffe060':'#fff2c8','center');noTr=false}
+  if(!ARCL.told&&d<9){ARCL.told=true;try{say(LANG=='hu'?'Egy játékgép villog a sarokban — menj oda, és nyomd meg az E-t!':'An arcade cabinet is blinking in the corner — walk up and press E!')}catch(e){}}}}
+{const dr173=drawRoofs;drawRoofs=function(){const r=dr173.apply(this,arguments);try{arcCall()}catch(e){noTr=false}return r}}
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
