@@ -1878,7 +1878,7 @@ function ashFx(){if(inD||!bm)return;const rc=locReactor&&locReactor();const tx=M
 
 /* ===================== HANDBOOK (tabs + animated demos) & PRACTICE MODE ===================== */
 const HB_TABS=[
- {en:'Basics',hu:'Alapok',d:'basics',ten:['Move with W A S D. Hold Shift to run.','The mouse aims: your character faces the cursor.','Space: jump over gaps (aim where to land).','V: retro / modern graphics (in 3D view: camera angle).','New here? Open the Practice tab for a guided run.'],thu:['Mozgás: W A S D. Futás: tartsd nyomva a Shiftet.','Az egérrel célzol: a karakter a kurzor felé néz.','Space: ugrás szakadék fölött (célozz a landolásra).','V: retró / modern grafika (3D nézetben: kameraállás).','Új vagy? Nyisd meg a Gyakorlás fület.']},
+ {en:'Basics',hu:'Alapok',d:'basics',ten:['Move with W A S D. Hold Shift to run.','The mouse aims: your character faces the cursor.','Space: jump over gaps (aim where to land).','V: retro / modern graphics.','New here? Open the Practice tab for a guided run.'],thu:['Mozgás: W A S D. Futás: tartsd nyomva a Shiftet.','Az egérrel célzol: a karakter a kurzor felé néz.','Space: ugrás szakadék fölött (célozz a landolásra).','V: retró / modern grafika.','Új vagy? Nyisd meg a Gyakorlás fület.']},
  {en:'Gathering',hu:'Gyűjtés',d:'gather',ten:['Aim at a tree and click (hold) to chop it.','An axe chops faster, a pickaxe mines rock and ore.','Berry bushes regrow. Click water with an empty hand to drink.','New items drop into the hotbar (1-9, mouse wheel).','I opens the inventory: click an item, then a hotbar slot.'],thu:['Célozz egy fára és kattints (tartsd) a vágáshoz.','Baltával gyorsabb, csákánnyal követ és ércet bányászol.','A bogyóbokor újranő. Üres kézzel kattints a vízre: iszol.','Az új tárgyak a gyorssávba kerülnek (1-9, görgő).','I: tárhely. Katt egy tárgyra, majd egy gyorssáv-helyre.']},
  {en:'Crafting',hu:'Készítés',d:'craft',ten:['Press C to open the crafting book.','Bright items can be crafted: click them.','Grey items need more materials (missing ones in red).','Type to search, A/D switch categories.','Furnace (E): ore + coal/wood = metal bars for tools & armor.'],thu:['A C gombbal nyílik a készítő könyv.','A világos tárgyak elkészíthetők: kattints rájuk.','A szürkékhez több anyag kell (ami hiányzik, piros).','Gépelj a kereséshez, A/D: kategóriák.','Kemence (E): érc + szén/fa = fémrúd eszközhöz, páncélhoz.']},
  {en:'Building',hu:'Építés',d:'build',ten:['Select a buildable item, then click the ground.','Green preview = OK, red = blocked.','R rotates before placing - and rotates placed furniture.','Click a placed item to knock it back into your bag.','Cabins next to each other merge into one long house.'],thu:['Válassz építhető tárgyat, majd kattints a földre.','Zöld előnézet = mehet, piros = foglalt.','R: forgatás lerakás előtt - és a lerakott bútoroké is.','Kattints egy lerakott tárgyra: visszakerül a táskába.','Az egymás mellé rakott faházak egy hosszú házzá olvadnak.']},
@@ -5925,7 +5925,7 @@ function s3Frame(){if(!v3Init())return false;if(!S3.shMat)S3.shMat=new THREE.Sha
  if(!S3.R){S3.cv=document.createElement('canvas');S3.R=new THREE.WebGLRenderer({canvas:S3.cv,alpha:true,antialias:false,premultipliedAlpha:false});S3.R.shadowMap.enabled=true;S3.R.shadowMap.type=THREE.PCFSoftShadowMap;S3.R.setClearColor(0x000000,0)}
  const rs=SHQ==0?1:2,W2=Math.round(vw*rs),H2=Math.round(vh*rs);if(S3.w!==W2||S3.h!==H2){S3.w=W2;S3.h=H2;S3.R.setSize(W2,H2,false)}
  const bg=V3.S.background,fg=V3.S.fog;V3.S.background=null;V3.S.fog=null;S3.R.render(V3.S,c);V3.S.background=bg;V3.S.fog=fg;return true}
-{const gd94=groundDraw;groundDraw=function(x0,y0,now){gd94(x0,y0,now);if(!s3Want())return;try{if(s3Frame()){const sm=g.imageSmoothingEnabled;g.imageSmoothingEnabled=true;g.drawImage(S3.cv,0,0,VW/ZM,VH/ZM);g.imageSmoothingEnabled=sm}}catch(e){S3D=false;console.error('s3',e)}}}
+{const gd94=groundDraw;groundDraw=function(x0,y0,now){gd94(x0,y0,now);if(!s3Want())return;try{if(s3Frame()){const sm=g.imageSmoothingEnabled;g.imageSmoothingEnabled=true;g.drawImage(S3.cv,Math.round((S3.ox==null?cam.x:S3.ox)-cam.x),Math.round((S3.oy==null?cam.y:S3.oy)-cam.y),VW/ZM,VH/ZM);g.imageSmoothingEnabled=sm}}catch(e){S3D=false;console.error('s3',e)}}}
 
 /* ---------- graphics: 4 modes + personal settings ---------- */
 var GMODE=1,SHS=.7,SHQ=1,SHON=true,LTON=true,SHSOFT=true,BLS=.5;try{SHQ=matchMedia('(pointer:coarse)').matches?0:1}catch(e){}
@@ -7656,7 +7656,7 @@ function hud112(){const now=performance.now(),busy=invOpen||(typeof showMap!='un
    ts((q.done?'✓ ':'· ')+s,x+3,y,q.done?'#7adf6a':'#e8e4d8');ts(q.done?'':p+'/'+q.g,x+w-3,y,'#9ab8d0','right')});
   ts(gs111()+B111(' FP',' GP')+'   ★ '+Object.keys(ACHG112).length+'/'+ACH112.length,x+3,y0+8+(n+1)*lh+1,'#9ab8d0');g.textAlign='left'}
  /* toasts */
- if(TQ112.length){const q=TQ112[0];if(!q.t0)q.t0=now;const e=(now-q.t0)/1000;if(e>4.2){TQ112.shift()}else{const sl=e<.3?e/.3:e>3.8?(4.2-e)/.4:1,w=Math.max(200,Math.min(VW-20,(q.sub.length*4.6|0)+60)),x=VW/2-w/2,y=-30+sl*70;
+ if(TQ112.length){const q=TQ112[0];if(!q.t0)q.t0=now;const e=(now-q.t0)/1000;if(e>4.2){TQ112.shift()}else{const sl=e<.3?e/.3:e>3.8?(4.2-e)/.4:1,w=Math.max(200,Math.min(VW-20,(q.sub.length*4.6|0)+60)),x=Math.max(VW/2-w/2,Math.min(184,VW-w-6)),y=-30+sl*70;
   Q(x,y,w,30,'rgba(12,10,8,.88)');Q(x,y,w,1,q.col);Q(x,y+29,w,1,q.col);Q(x+8,y+7,12,9,q.col);Q(x+11,y+16,6,3,q.col);Q(x+9,y+19,10,2,q.col);Q(x+6,y+8,2,5,q.col);Q(x+20,y+8,2,5,q.col);Q(x+10,y+9,3,3,'rgba(255,255,255,.6)');
   noTr=true;txt(q.title,x+28,y+12,q.col);txt(q.sub,x+28,y+23,'#e8e4d8');noTr=false}}}
 /* ---------- save / load ---------- */
@@ -10736,7 +10736,7 @@ function arcPub(){const[cx,cy]=pubCenter(),w=11,h=9;let spot=null;
  BLD.push({x,y,w,h,rf:'house',c:3});
  /* the barkeeper behind the counter */
  try{const like=NPCS.find(n=>!n.zr&&n.c)||{};const bx=(x+1+2)*T+8,by=(y+1+1)*T+8,hu=LANG=='hu';NPCS.push({x:bx,y:by,hx:bx,hy:by,wr:1,c:like.c||'134302',nm:hu?'Józsi kocsmáros':'Joe the barkeep',sx:'m',tr:0,g:0,kn:0,fr:0,pub:1})}catch(e){}
- try{say(LANG=='hu'?'A tábor kocsmájában áll a NOT DOOM játékgép.':'The NOT DOOM cabinet stands in the camp pub.')}catch(e){}return true}
+ return true}
 const PUBW={};
 function pubHas(){for(let i=0;i<ob.length;i++){const o=ob[i];if(!o)continue;if(o.t=='pubsign')return true;if(o.t=='arcade'){const x=i%W,y=(i/W)|0;if(BLD.some(b=>x>b.x&&x<b.x+b.w-1&&y>b.y&&y<b.y+b.h-1))return true}}return false}
 {const up168=update;update=function(dt){try{if(state=='play'&&!inD&&!(typeof net!='undefined'&&net&&!net.isHost)&&!ARC.on()){const wk=wseed+'|'+W;if(!PUBW[wk]){PUBW[wk]=1;if(!pubHas())arcPub()}}}catch(e){console.warn('pub',e)}return up168.apply(this,arguments)}}
@@ -11049,6 +11049,31 @@ function atmLeaves(dt){if(!atmOk())return;const aut=typeof seasonIdx=='function'
 try{const R_=GPAGES.main.rows,ix=R_.findIndex(r=>r.k=='flt')+1;R_.splice(ix,0,{k:'atm',l:['Élő világ','Living world'],ty:'tog',get:()=>OnOff(ATM.on),step:()=>{ATM.on=!ATM.on;try{localStorage.setItem('pxc_atm',ATM.on?'1':'0')}catch(e){}},
  desc:()=>hu_()?'Felhőárnyékok vonulnak a táj fölött, lábnyomot hagysz homokban, hóban és sárban, nyári éjjel szentjánosbogarak világítanak, ősszel és szélben hullanak a levelek.':'Cloud shadows drift over the land, you leave footprints in sand, snow and mud, fireflies glow on summer nights, leaves fall in autumn and wind.'})}catch(e){}
 try{const R_=GPAGES.main.rows,i=R_.findIndex(r=>r.k=='shtype');if(i>=0){const r=R_.splice(i,1)[0];R_.splice(R_.findIndex(q=>q.k=='mode')+1,0,r)}}catch(e){}
+
+/* ===== v178: polish — the old 3D hotkey is gone, the help pages no longer talk about views that are not in the game ===== */
+GAMEV=187;
+/* F8 used to switch the old 3D view on; F4 the first-person view — both are swallowed now */
+addEventListener('keydown',e=>{if(e.code=='F8'||e.code=='F4'){e.preventDefault();e.stopImmediatePropagation()}},true);
+try{if(V3D){V3D=false;localStorage.setItem('pxc_3d','0')}}catch(e){}
+try{if(FPV){FPV=false;localStorage.setItem('pxc_fps','0')}}catch(e){}
+/* help pages: drop the first-person ones */
+try{const gone=new Set(['FPS nézet','FPS view','Ásás és építés (FPS)','Digging and building (FPS)','FPS: tájékozódás','FPS: finding your way']);for(const L of[TUT.hu,TUT.en])for(let i=L.length-1;i>=0;i--)if(gone.has(L[i][0]))L.splice(i,1)}catch(e){}
+/* ---------- the sun shadows are drawn every second frame (every third on a slow machine) and slide with the camera in between ---------- */
+const S3K={n:0,ft:16,t:0};
+{const sf178=s3Frame;s3Frame=function(){const now=performance.now();if(S3K.t)S3K.ft=S3K.ft*.95+Math.min(200,now-S3K.t)*.05;S3K.t=now;const every=S3K.ft>34?3:2;
+ if(S3.cv&&S3.ox!=null&&(S3K.n++%every)!==0&&Math.abs(cam.x-S3.ox)<40&&Math.abs(cam.y-S3.oy)<40)return true;
+ const r=sf178.apply(this,arguments);if(r){S3.ox=cam.x;S3.oy=cam.y}return r}}
+/* ---------- Graphics page: short descriptions that fit on screen, one clear name per row ---------- */
+try{const R_=GPAGES.main.rows,f=k=>R_.find(r=>r.k==k),H=()=>LANG=='hu';
+ const md=f('mode');if(md)md.desc=()=>GMODE==0?(H()?'Az első verzió egyszerű, letisztult kinézete.':'The simple look of the first version.'):(H()?'Pixelgrafika napárnyékkal, fényekkel, rendezett tetőkkel.':'Pixel art with sun shadows, lights and tidy roofs.');
+ const st=f('shtype');if(st){st.l=['Árnyék típusa','Shadow type'];st.desc=()=>H()?'Valódi: mozgó napárnyék. Egyszerű: könnyebb 2D, gyengébb gépre.':'Real: moving sun shadows. Simple: lighter 2D shadows for weaker PCs.'}
+ const fl=f('flt');if(fl)fl.desc=()=>H()?'Extra kinézet: Game Boy, Virtual Boy, CGA, régi fotó, éjjellátó.':'Extra look: Game Boy, Virtual Boy, CGA, old photo, night vision.';
+ const at=f('atm');if(at)at.desc=()=>H()?'Felhőárnyék, lábnyomok, szentjánosbogarak, hulló levelek.':'Cloud shadows, footprints, fireflies, falling leaves.'}catch(e){}
+/* ---------- a calmer start: the cabinet hint waits until you have played two minutes, so it does not pile up on the opening messages ---------- */
+ARCL.told=true;const ARCT={t:0,ws:null};
+{const up178=update;update=function(dt){const r=up178.apply(this,arguments);try{if(state=='play'){const k=wseed+'|'+W;if(ARCT.ws!==k){ARCT.ws=k;ARCT.t=0;ARCL.told=true}ARCT.t+=Math.min(.1,dt||.016);if(ARCT.t>120&&ARCL.told&&!ARCT.done){ARCT.done=k;ARCL.told=false}if(ARCT.done&&ARCT.done!==k)ARCT.done=null}}catch(e){}return r}}
+/* V switches between Retro and Modern through the graphics mode, so the menu always agrees */
+toggleGfx=function(){setGMode(GMODE==0?2:0,true);say(GMODE==0?(LANG=='hu'?'Retró grafika (V)':'Retro graphics (V)'):(LANG=='hu'?'Modern grafika (V)':'Modern graphics (V)'))};
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
