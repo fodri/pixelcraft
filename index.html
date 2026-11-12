@@ -10900,7 +10900,7 @@ function silDraw(){if(CLASSIC||state!='play'||!silHidden())return;if(!SILC)SILC=
 try{GQC.clear&&GQC.clear()}catch(e){}
 
 /* ===== v173: the NOT DOOM cabinet calls you — a bobbing joystick bubble above it (over the pub roof too), a glowing screen, "E: play" when you stand by it, and a hint the first time you come near ===== */
-GAMEV=180;
+GAMEV=181;
 const ARCL={k:'',t:0,L:[],told:false};
 function arcList(){const now=performance.now();if(ARCL.k===wseed+'|'+W&&now-ARCL.t<3000)return ARCL.L;ARCL.k=wseed+'|'+W;ARCL.t=now;ARCL.L=[];for(let i=0;i<ob.length;i++){const o=ob[i];if(o&&o.t=='arcade'&&o.pm==null)ARCL.L.push(i)}return ARCL.L}
 function arcCall(){if(inD||state!='play'||(typeof ARC!='undefined'&&ARC.on()))return;const now=performance.now()/1000,ptx=P.x/T,pty=P.y/T;
@@ -10912,6 +10912,18 @@ function arcCall(){if(inD||state!='play'||(typeof ARC!='undefined'&&ARC.on()))re
   if(d<3.2){noTr=true;const h=LANG=='hu',s=h?'E: Játék — NOT DOOM':'E: Play — NOT DOOM';g.font=fnt(1,8);const w=Math.ceil(g.measureText(s).width)+8;Q(bx-w/2,by-24,w,11,'rgba(10,6,4,.85)');Q(bx-w/2,by-24,w,1,'#e83a1a');txt(s,bx,by-16,blink?'#ffe060':'#fff2c8','center');noTr=false}
   if(!ARCL.told&&d<9){ARCL.told=true;try{say(LANG=='hu'?'Egy játékgép villog a sarokban — menj oda, és nyomd meg az E-t!':'An arcade cabinet is blinking in the corner — walk up and press E!')}catch(e){}}}}
 {const dr173=drawRoofs;drawRoofs=function(){const r=dr173.apply(this,arguments);try{arcCall()}catch(e){noTr=false}return r}}
+/* ---------- English names when the game is in English ---------- */
+const NMEN={'Béla':'Ben','Marika':'Mary','Józsi':'Joe','Erzsi':'Liz','Laci':'Larry','Kati':'Kate','Feri':'Frank','Ilona':'Helen','Pista':'Steve','Zsuzsa':'Susan','Gyuri':'George','Anna':'Anna','Sanyi':'Sam','Juli':'Julie','Misi':'Mike','Rozi':'Rosie',
+ 'Éva':'Eve','Margit':'Maggie','Teri':'Terry','Panni':'Penny','Jani':'Johnny','Karcsi':'Charlie','Ottó':'Otto','Bandi':'Andy','Bence':'Ben','Marci':'Marty','Zoli':'Zack','Tibor':'Toby','Jóska':'Joey','Edit':'Edith','Dénes':'Dennis','Gabi':'Gabe','Ildi':'Hilda',
+ 'Fekete':'Black','Rozsdás':'Rusty','Vörös':'Red','Kígyós':'Snake','Hamvas':'Ashen','Láncos':'Chains','Szürke':'Grey','Vas':'Iron','Hollós':'Raven','Csonka':'Stumpy','Sánta':'Limpy','Kormos':'Sooty','őrmester':'Sergeant','kocsmáros':'the barkeep'};
+const NMFULL={'Kovács őrmester':'Sergeant Kovács','Józsi kocsmáros':'Joe the barkeep','Dr. Bíró Zita':'Dr. Zita Biro','Dr. Fehér Lilla':'Dr. Lilla Feher','Dr. Kovács Anna':'Dr. Anna Kovacs','Dr. Molnár Ádám':'Dr. Adam Molnar','Dr. Szabó Gábor':'Dr. Gabor Szabo','Dr. Varga Péter':'Dr. Peter Varga'};
+const NMBACK={};for(const k in NMFULL)NMBACK[NMFULL[k]]=k;
+function nmEn(h){if(!h)return h;if(NMFULL[h])return NMFULL[h];return h.split(' ').map(w=>NMEN[w]||w).join(' ')}
+function nmFix(o,en){if(!o||typeof o.nm!='string'||!o.nm)return;if(o._nh==null||(o._ns!==o.nm)){o._nh=NMBACK[o.nm]||o.nm}const want=en?nmEn(o._nh):o._nh;if(o.nm!==want)o.nm=want;o._ns=want}
+let NMLG=null,NMN=-1;
+function nmLang(){const en=LANG!='hu',n=NPCS.length+zs.length;if(NMLG===en&&NMN===n&&(performance.now()%1000)>60)return;NMLG=en;NMN=n;
+ for(const o of NPCS)nmFix(o,en);for(const z of zs)if(z.nm)nmFix(z,en);try{if(typeof ZS!='undefined'&&ZS&&ZS.bty){for(const b of ZS.bty.L||[])nmFix(b,en);if(ZS.bty.act)nmFix(ZS.bty.act,en)}}catch(e){}}
+{const up173=update;update=function(){const r=up173.apply(this,arguments);try{nmLang()}catch(e){}return r}}
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
