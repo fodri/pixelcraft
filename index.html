@@ -10982,6 +10982,37 @@ const TGL=new Map();
  g.drawImage(cv,Math.round(x-cam.x)-3,Math.round(y-cam.y)-4)}}
 try{GQC.clear&&GQC.clear()}catch(e){}
 
+/* ===== v176: extra looks — screen filters on top of the game: Game Boy, Game Boy Pocket, Virtual Boy, CGA, old photo and night vision ===== */
+GAMEV=184;
+const FLT={m:0,gl:null};try{FLT.m=+(localStorage.getItem('pxc_flt')||0)||0}catch(e){}
+const FLTN={hu:['Nincs','Game Boy','Game Boy Pocket','Virtual Boy','CGA','Régi fotó','Éjjellátó'],en:['None','Game Boy','Game Boy Pocket','Virtual Boy','CGA','Old photo','Night vision']};
+function fltInit(){if(FLT.gl!==null)return FLT.gl;FLT.gl=false;try{const cv=document.createElement('canvas');cv.id='flt';cv.style.cssText='position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;display:none;image-rendering:pixelated';const wrap=document.getElementById('wrap')||C.parentNode;wrap.appendChild(cv);
+ const gl=cv.getContext('webgl',{alpha:false,antialias:false,preserveDrawingBuffer:false});if(!gl)return false;
+ const sh=(ty,src)=>{const o=gl.createShader(ty);gl.shaderSource(o,src);gl.compileShader(o);if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(o));return o};
+ const FSF=`precision mediump float;varying vec2 uv;uniform sampler2D tx;uniform float md,t;uniform vec2 rs;
+float b2(vec2 p){return mod(2.*p.x+3.*p.y,4.);}float bay(vec2 p){p=floor(mod(p,4.));return(4.*b2(mod(p,2.))+b2(floor(p/2.)))/16.;}
+float hsh(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}
+vec3 pal4(float l,vec3 a,vec3 b,vec3 c,vec3 d){float i=floor(clamp(l,0.,.999)*4.);return i<1.?a:i<2.?b:i<3.?c:d;}
+void main(){vec2 px=floor(gl_FragCoord.xy/2.);vec3 c=texture2D(tx,uv).rgb;float l=dot(c,vec3(.299,.587,.114)),d=bay(px)-.5;vec3 o=c;
+ if(md<1.5){o=pal4((l-.16)*1.55+d*.3,vec3(.06,.22,.06),vec3(.19,.38,.19),vec3(.55,.67,.06),vec3(.61,.74,.06));if(mod(gl_FragCoord.x,4.)<1.||mod(gl_FragCoord.y,4.)<1.)o*=.92;}
+ else if(md<2.5){o=pal4((l-.14)*1.5+d*.3,vec3(.1,.1,.09),vec3(.35,.35,.32),vec3(.66,.66,.61),vec3(.91,.91,.86));if(mod(gl_FragCoord.x,4.)<1.||mod(gl_FragCoord.y,4.)<1.)o*=.93;}
+ else if(md<3.5){o=pal4(l*1.15+d*.28,vec3(0.),vec3(.33,0.,0.),vec3(.66,0.,.02),vec3(1.,.08,.06));if(mod(gl_FragCoord.y,3.)<1.)o*=.8;}
+ else if(md<4.5){vec3 q=c+d*.35;vec3 P0=vec3(0.),P1=vec3(.33,1.,1.),P2=vec3(1.,.33,1.),P3=vec3(1.);float e0=distance(q,P0),e1=distance(q,P1),e2=distance(q,P2),e3=distance(q,P3);o=P0;float e=e0;if(e1<e){e=e1;o=P1;}if(e2<e){e=e2;o=P2;}if(e3<e){o=P3;}}
+ else if(md<5.5){vec2 v=uv-.5;o=vec3(l)*vec3(1.08,.9,.68)*1.06+(hsh(px+floor(t*12.))-.5)*.07;o*=1.-dot(v,v)*.9;o=mix(o,vec3(.42,.34,.24),.08);}
+ else{vec2 v=uv-.5;o=vec3(.12,1.,.25)*pow(l*1.5+.05,.9)+(hsh(px+floor(t*20.))-.5)*.12;if(mod(gl_FragCoord.y,3.)<1.)o*=.75;o*=1.-dot(v,v)*1.6;}
+ gl_FragColor=vec4(o,1.);}`;
+ const pr=gl.createProgram();gl.attachShader(pr,sh(gl.VERTEX_SHADER,VS));gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,FSF));gl.linkProgram(pr);if(!gl.getProgramParameter(pr,gl.LINK_STATUS))throw new Error('link');gl.useProgram(pr);
+ const bf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,bf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);const lc=gl.getAttribLocation(pr,'p');gl.enableVertexAttribArray(lc);gl.vertexAttribPointer(lc,2,gl.FLOAT,false,0,0);
+ const tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex);for(const[a,v]of[[gl.TEXTURE_MIN_FILTER,gl.NEAREST],[gl.TEXTURE_MAG_FILTER,gl.NEAREST],[gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE],[gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE]])gl.texParameteri(gl.TEXTURE_2D,a,v);
+ FLT.gl={cv,gl,U:{md:gl.getUniformLocation(pr,'md'),t:gl.getUniformLocation(pr,'t'),rs:gl.getUniformLocation(pr,'rs'),tx:gl.getUniformLocation(pr,'tx')}}}catch(e){console.warn('filter',e);FLT.gl=false}return FLT.gl}
+function fltDraw(){const on=FLT.m>0;if(!on){if(FLT.gl&&FLT.vis){FLT.gl.cv.style.display='none';FLT.vis=false}return}const F=fltInit();if(!F)return;
+ const src=(shaderOn&&GLX&&fxShown)?GLX.cv:C,{cv,gl,U}=F;if(cv.width!==src.width||cv.height!==src.height){cv.width=src.width;cv.height=src.height}gl.viewport(0,0,cv.width,cv.height);
+ try{gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,src)}catch(e){return}gl.uniform1i(U.tx,0);gl.uniform1f(U.md,FLT.m);gl.uniform1f(U.t,(performance.now()/1000)%100);gl.uniform2f(U.rs,cv.width,cv.height);gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+ if(!FLT.vis){cv.style.display='block';FLT.vis=true}}
+{const fx176=fx;fx=function(){const r=fx176.apply(this,arguments);try{fltDraw()}catch(e){}return r}}
+try{const R_=GPAGES.main.rows,ix=R_.findIndex(r=>r.k=='mode')+1;R_.splice(ix,0,{k:'flt',l:['Szűrő','Filter'],ty:'cyc',wide:1,get:()=>FLTN[LANG=='hu'?'hu':'en'][FLT.m]||'',step:d=>{FLT.m=(FLT.m+(d<0?6:1))%7;try{localStorage.setItem('pxc_flt',FLT.m)}catch(e){}},
+ desc:()=>hu_()?'Extra kinézet a játék fölött: Game Boy zöld, Pocket szürke, Virtual Boy piros, CGA, régi fotó vagy éjjellátó.':'An extra look over the game: Game Boy green, Pocket grey, Virtual Boy red, CGA, old photo or night vision.'})}catch(e){}
+
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
  if(state=='title')menu();if(state=='opts')optsMenu();if(state=='sndo')sndMenu();if(state=='gfxo')gfxMenu();if(state=='slots')svMenu();if(state=='keys')keysMenu();if(state=='wthr')wthrMenu();if(state=='char')charMenu();if(state=='lobby')drawLobby();if(state=='hb'){Q(0,0,VW,VH,'rgba(6,10,6,.6)');drawHB()}if(0)title('ASHFALL',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Hold the fire. Survive the nights.','','WASD move \u2022 Space chop / fish / attack \u2022 Tab recipes','Press any key']);
