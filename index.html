@@ -11205,7 +11205,7 @@ const funDrain=()=>DIFF<=1?.5:DIFF==2?.65:.9;
 function funPickTick(){if(creative)return;const now=performance.now(),cur=FUN.inv0;if(!cur){FUN.inv0=Object.assign({},inv);return}let kinds=0;const add=[];
  for(const k in inv){const d=(inv[k]|0)-(cur[k]|0);if(d>0){kinds++;add.push([k,d])}}FUN.inv0=Object.assign({},inv);if(kinds>5)return;
  for(const[k,d]of add){if(d>60||k=='hand')continue;const p=FUN.pick.find(q=>q.k==k&&now-q.t0<900);if(p){p.n+=d;p.t0=now}else FUN.pick.push({k,n:d,t0:now})}if(FUN.pick.length>5)FUN.pick.splice(0,FUN.pick.length-5)}
-function funPickDraw(){const n=performance.now();FUN.pick=FUN.pick.filter(p=>n-p.t0<1600);if(!FUN.pick.length)return;noTr=true;
+function funPickDraw(){try{if(CUT.on)return}catch(e){}const n=performance.now();FUN.pick=FUN.pick.filter(p=>n-p.t0<1600);if(!FUN.pick.length)return;noTr=true;
  FUN.pick.forEach((p,i)=>{const a=(n-p.t0)/1600,y=P.y-cam.y-8-(FUN.pick.length-1-i)*9-a*6,x=P.x-cam.x+11;g.globalAlpha=Math.max(0,Math.min(1,(1-a)*2.2));txt('+'+p.n+' '+tr(LBL[p.k]||p.k),x,y,'#c8f08a','left')});g.globalAlpha=1;noTr=false}
 {const dd179=drawDmgN;drawDmgN=function(){const r=dd179.apply(this,arguments);try{if(state=='play')funPickDraw()}catch(e){noTr=false;g.globalAlpha=1}return r}}
 
@@ -11213,7 +11213,7 @@ function funPickDraw(){const n=performance.now();FUN.pick=FUN.pick.filter(p=>n-p
 function funGive(rw){const out=[];for(const k in rw){const n=rw[k];inv[k]=(inv[k]|0)+n;try{if(DMAX[k])du[k]=DMAX[k];if(TOOL[k]||(typeof GUN!='undefined'&&GUN[k]))givehb(k)}catch(e){}out.push((TOOL[k]&&n==1?'':n+' ')+tr(LBL[k]||k).toLowerCase())}return out.join(', ')}
 {const sa179=stAdvance;stAdvance=function(){let s=null;try{s=stCur()}catch(e){}const r=sa179.apply(this,arguments);
  try{if(s){const h=funHu();let b='',c='';const rw=FUN.reward?FUN.reward(s):null;if(rw){c=(h?'Jutalom: ':'Reward: ')+funGive(rw[0]);b=rw[1][h?0:1]}FUN.ban={t0:performance.now(),a:'✔ '+s.t[h?0:1],b,c};XS.xp=(XS.xp||0)+25;try{fanfare112()}catch(e){}FUN.inv0=null}}catch(e){console.error(e)}return r}}
-function funBanner(){const B=FUN.ban;if(!B)return;const t=(performance.now()-B.t0)/1000;if(t>5.2){FUN.ban=null;return}if(showMap||book||invOpen||stOpen)return;const a=Math.min(1,t*4,(5.2-t)*2.5);g.font=fnt(0,9);
+function funBanner(){const B=FUN.ban;if(!B)return;try{if(CUT.on)return}catch(e){}const t=(performance.now()-B.t0)/1000;if(t>5.2){FUN.ban=null;return}if(showMap||book||invOpen||stOpen)return;const a=Math.min(1,t*4,(5.2-t)*2.5);g.font=fnt(0,9);
  const tw=Math.max(...[B.a,B.b,B.c].map(s=>s?g.measureText(s).width:0))+20,w=Math.min(VW-12,Math.max(170,tw)),x=Math.round(VW/2-w/2),y=88+Math.round((1-Math.min(1,t*4))*-8),h=B.c?42:B.b?32:22,cx=x+w/2;
  g.globalAlpha=a*.9;Q(x,y,w,h,'#14120c');g.globalAlpha=a;Q(x,y,w,1,'#ffd84a');Q(x,y+h-1,w,1,'#6a5a2a');noTr=true;txt(B.a,cx,y+12,'#ffd84a','center');if(B.b)txt(B.b,cx,y+24,'#d8d0b8','center');if(B.c)txt(B.c,cx,y+35,'#9ad870','center');noTr=false;g.globalAlpha=1}
 
@@ -11256,6 +11256,67 @@ addEventListener('mousedown',e=>{if(state!='play'||!showMap||inD||e.button!==0)r
 
 /* ---------- first launch: speak the player's language ---------- */
 try{if(!localStorage.getItem('ashl')){const nl=String(navigator.language||'').toLowerCase();setLang(nl.startsWith('hu')?'hu':'en')}}catch(e){}
+
+/* ===== v180: story cutscenes — the opening is now filmed over the real world (letterbox, camera flights, wrapped subtitles),
+   and every new act opens with a short flight to where it begins. Enter/click: next line · Esc: skip ===== */
+GAMEV=192;
+const CUT={on:false,sh:null,i:0,t0:0,c0:null,c1:null,pan:1,typ:0,end:null,fade:0,out:0,kind:''};
+const cutHu=()=>LANG=='hu';
+function cutCam(tx,ty){return[cl(tx-VW/(2*ZM),0,W*T-VW/ZM),cl(ty-VH/(2*ZM),0,H*T-VH/ZM)]}
+function cutPt(f){let p=null;try{p=f&&f()}catch(e){}return p&&isFinite(p[0])?p:[P.x,P.y]}
+function cutPlay(shots,end,kind){if(!shots.length){end&&end();return}CUT.on=true;CUT.sh=shots;CUT.i=-1;CUT.end=end;CUT.kind=kind||'';CUT.fade=performance.now();CUT.out=0;FUN.pick=[];cutShot(0)}
+function cutShot(i){const S=CUT.sh[i];if(!S){cutStop();return}CUT.i=i;CUT.t0=performance.now();CUT.typ=0;const to=cutPt(S.at);
+ CUT.c0=isFinite(cam.x)?[cam.x,cam.y]:cutCam(to[0],to[1]);const tgt=cutCam(to[0]+(S.dx||0)*T,to[1]+(S.dy||0)*T);CUT.c1=tgt;const d=Math.hypot(tgt[0]-CUT.c0[0],tgt[1]-CUT.c0[1])/T;
+ CUT.pan=S.cut?0:d<1?0:Math.min(4.2,1.2+d/70);if(S.cut){cam.x=tgt[0];cam.y=tgt[1];CUT.c0=tgt}}
+function cutStop(){if(!CUT.on)return;CUT.on=false;const e=CUT.end;CUT.end=null;CUT.sh=null;try{cam.x=cl(P.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y-VH/(2*ZM),0,H*T-VH/ZM)}catch(_){}try{e&&e()}catch(err){console.error(err)}if(FUN.ban)FUN.ban.t0=performance.now();CUT.out=performance.now()}
+function cutTxt(S){if(!S)return'';const h=cutHu();return S.tx?S.tx[h?0:1]||'':''}
+function cutNext(){if(!CUT.on)return;const S=CUT.sh[CUT.i],L=cutTxt(S);if(CUT.typ<L.length){CUT.typ=L.length;return}if(performance.now()-CUT.t0<350)return;snd('ui');cutShot(CUT.i+1)}
+function cutTick(dt){const S=CUT.sh[CUT.i];if(!S)return;try{ms.x=-9999;ms.y=-9999}catch(e){}const t=(performance.now()-CUT.t0)/1000,k=CUT.pan>0?Math.min(1,t/CUT.pan):1,e=k*k*(3-2*k);
+ cam.x=CUT.c0[0]+(CUT.c1[0]-CUT.c0[0])*e+(S.drift||0)*t*6;cam.y=CUT.c0[1]+(CUT.c1[1]-CUT.c0[1])*e;
+ const L=cutTxt(S);if(t>CUT.pan*.6)CUT.typ=Math.min(L.length,CUT.typ+dt*42);const hold=S.title?3.4:Math.max(2.8,L.length/17);if(CUT.typ>=L.length&&t>CUT.pan+hold+(S.hold||0))cutShot(CUT.i+1)}
+function cutWrap(s,w){const out=[];let line='';for(const word of s.split(' ')){const tryL=line?line+' '+word:word;if(g.measureText(tryL).width>w&&line){out.push(line);line=word}else line=tryL}if(line)out.push(line);return out}
+function cutDraw(){const now=performance.now(),S=CUT.sh&&CUT.sh[CUT.i];if(!S)return;const t=(now-CUT.t0)/1000,bh=Math.round(VH*.15),bb=Math.round(VH*.2),fin=Math.min(1,(now-CUT.fade)/900);
+ noTr=true;
+ /* vignette */
+ const vg=g.createRadialGradient(VW/2,VH/2,VH*.3,VW/2,VH/2,VW*.7);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.55)');g.fillStyle=vg;g.fillRect(0,0,VW,VH);
+ if(S.tint){g.fillStyle=S.tint;g.fillRect(0,0,VW,VH)}
+ /* fade in from black at the very start */
+ if(fin<1){g.globalAlpha=1-fin;Q(0,0,VW,VH,'#000');g.globalAlpha=1}
+ if(S.black){const a=Math.min(1,t/.6);Q(0,0,VW,VH,'#05070a');g.globalAlpha=1}
+ /* letterbox */
+ Q(0,0,VW,bh,'#000');Q(0,VH-bb,VW,bb,'#000');
+ /* title card */
+ if(S.title){const a=Math.min(1,Math.max(0,(t-CUT.pan*.4)/.9));g.globalAlpha=a;g.font=fnt(1,Math.min(30,Math.floor(VW/14)));g.textAlign='center';g.fillStyle='#000';g.fillText(S.title[cutHu()?0:1],VW/2+1,VH/2-2);g.fillStyle=S.tc||'#e8eef4';g.fillText(S.title[cutHu()?0:1],VW/2,VH/2-3);
+  if(S.st){g.font=fnt(0,9);g.fillStyle='#000';g.fillText(S.st[cutHu()?0:1],VW/2+1,VH/2+15);g.fillStyle='#d8e4f0';g.fillText(S.st[cutHu()?0:1],VW/2,VH/2+14)}g.globalAlpha=1}
+ /* subtitles */
+ const L=cutTxt(S);if(L){g.font=fnt(0,10);const lines=cutWrap(L,Math.min(VW-48,420));let n=Math.floor(CUT.typ),y=VH-bb+14+Math.max(0,(3-lines.length))*5;g.textAlign='center';
+  if(S.who){g.fillStyle=S.wc||'#ffd84a';g.font=fnt(1,9);g.fillText(S.who,VW/2,y-2);y+=11;g.font=fnt(0,10)}
+  for(const ln of lines){const part=ln.slice(0,Math.max(0,n));n-=ln.length+1;if(part){g.fillStyle='#e8eef4';g.fillText(part,VW/2,y)}y+=12}}
+ g.font=fnt(0,7);g.textAlign='right';g.fillStyle='rgba(200,210,220,'+(.35+.25*Math.sin(now/400))+')';g.fillText(cutHu()?'Enter / katt: tovább · Esc: kihagyás':'Enter / click: next · Esc: skip',VW-8,VH-6);
+ g.textAlign='left';noTr=false}
+
+/* ---------- the openings ---------- */
+function cutIntroShots(){const I=INTRO,z=!!(STORY&&STORY.z),rc=()=>{const r=locReactor();return r?[r.x*T+8,r.y*T+8]:null},bk=()=>ZS&&ZS.bunker?[ZS.bunker.x*T+8,ZS.bunker.y*T+8]:null,pl=()=>[P.x,P.y];
+ if(z)return[{at:rc,cut:1,title:I[0],tc:'#c8e0a0',st:['Sztori mód','Story mode'],drift:.6},{at:rc,tx:I[3],drift:.5,tint:'rgba(60,80,20,.12)'},{at:bk,tx:I[4],drift:-.4},{at:pl,tx:I[1]},{at:pl,tx:I[2],dy:-1},{at:pl,tx:I[5]}];
+ const far=()=>{const r=rc();return r?[(P.x+r[0])/2,(P.y+r[1])/2]:[P.x+40*T,P.y-20*T]};
+ return[{at:far,cut:1,title:I[0],tc:'#cfe6ff',st:['Sztori mód','Story mode'],drift:.6},{at:pl,tx:I[1]},{at:pl,tx:I[2],dy:-1},{at:rc,tx:I[3],drift:.4,tint:'rgba(120,160,220,.08)'},{at:far,tx:I[4],drift:.6,tint:'rgba(120,160,220,.08)'},{at:pl,tx:I[5]}]}
+{const in180=introNext;introNext=function(){if(CUT.on&&CUT.kind=='intro'){const ev=typeof event!='undefined'?event:null;if(ev&&ev.code=='Escape'){CUT.sh.length=0;cutStop();return}cutNext();return}return in180.apply(this,arguments)}}
+
+/* ---------- each new act: a flight to where it starts ---------- */
+{const ba180=stBeginAct;stBeginAct=function(a){const r=ba180.apply(this,arguments);try{if(a>0&&state=='play'&&!net&&STORY&&!STORY.done){const A=SACT[a],s=A&&A.steps[0];let to=null;try{to=s&&s.to?s.to():null}catch(e){}const h=cutHu(),far=to&&Math.hypot(to[0]-P.x,to[1]-P.y)>14*T,
+  title=[ROMAN[a]+' '+A.n[0],ROMAN[a]+' '+A.n[1]],shots=[{at:()=>[P.x,P.y],title,tc:'#ffd84a',st:['▸ '+s.t[0],'▸ '+s.t[1]],hold:-.6}];
+  if(far)shots.push({at:()=>to,tx:s.h,drift:.3},{at:()=>[P.x,P.y],tx:[h?'Indulás.':'Let’s go.','Let’s go.'],hold:-1.6});else if(s.h)shots.push({at:()=>[P.x,P.y],tx:s.h});
+  cutPlay(shots,null,'act')}}catch(e){console.error(e)}return r}}
+
+/* ---------- wiring: pause the world, draw over it, take input ---------- */
+{const up180=update;update=function(dt){if(state=='play'&&STORY&&STORY.intro&&!CUT.on&&!CUT.done0){CUT.done0=true;cutPlay(cutIntroShots(),()=>{if(STORY&&STORY.intro){STORY.intro.i=INTRO.length-1;STORY.intro.t0=0;introNext()}},'intro')}
+ if(CUT.on){if(state!='play'){CUT.on=false;CUT.sh=null;return up180.apply(this,arguments)}cutTick(dt);return}return up180.apply(this,arguments)}}
+{const st180=startMode;startMode=function(){CUT.done0=false;CUT.on=false;return st180.apply(this,arguments)}}
+{const hu180=hud;hud=function(){if(CUT.on&&state=='play'){try{weather()}catch(e){}return}return hu180.apply(this,arguments)}}
+{const ds180=drawStory;drawStory=function(){if(CUT.on){try{cutDraw()}catch(e){noTr=false;console.error(e)}return}return ds180.apply(this,arguments)}}
+addEventListener('keydown',e=>{if(!CUT.on||CUT.kind=='intro'||state!='play')return;const c=e.code;if(c=='Enter'||c=='Space'||c=='NumpadEnter'||c=='KeyE'){e.preventDefault();e.stopImmediatePropagation();cutNext()}else if(c=='Escape'){e.preventDefault();e.stopImmediatePropagation();cutStop()}else{e.preventDefault();e.stopImmediatePropagation()}},true);
+addEventListener('mousedown',e=>{if(!CUT.on||CUT.kind=='intro'||state!='play')return;e.preventDefault();e.stopImmediatePropagation();cutNext()},true);
+{const xt180=xpTop;xpTop=function(){if(CUT.on&&state=='play')return;return xt180.apply(this,arguments)}}
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
