@@ -10925,6 +10925,28 @@ function nmLang(){const en=LANG!='hu',n=NPCS.length+zs.length;if(NMLG===en&&NMN=
  for(const o of NPCS)nmFix(o,en);for(const z of zs)if(z.nm)nmFix(z,en);try{if(typeof ZS!='undefined'&&ZS&&ZS.bty){for(const b of ZS.bty.L||[])nmFix(b,en);if(ZS.bty.act)nmFix(ZS.bty.act,en)}}catch(e){}}
 {const up173=update;update=function(){const r=up173.apply(this,arguments);try{nmLang()}catch(e){}return r}}
 
+/* ===== v174: cosy interiors — once you are inside, the walls of a home are drawn like a hand-made pixel room: the north walls show their face (brick or logs above, a stone or wood skirting below, a lamp now and then), every other wall is a thick wall top with a warm amber edge ===== */
+GAMEV=182;
+const IWT={wall:1,sblock:1,twall:1,iwall:1,win:1};
+function iwIs(x,y){if(x<0||y<0||x>=W||y>=H)return true;const q=ob[y*W+x];return!!(q&&(IWT[q.t]||q.t=='door'))}
+function iwHome(tx,ty){const k=fvBMap()[ty*W+tx];if(!k)return null;const b=BLD[k-1];if(!b||!(b.rf=='hut'||b.rf=='house'))return null;if(typeof isCityB=='function'&&isCityB(b)&&cityDm(b)>=3)return null;return b}
+function iwDraw(o,x,y,tx,ty,b){const log=b.rf=='hut',hsh=(a)=>{const v=Math.sin(tx*12.9898+ty*78.233+a*37.7)*43758.5453;return v-Math.floor(v)};
+ const inS=ty+1<H&&!iwIs(tx,ty+1)&&ty+1<b.y+b.h-1,TOP='#5a3a24',TOPD='#3e2616',AMB='#d89a3a',AMBD='#a06a26';
+ if(inS){/* the face of a north wall: a cap, the wall, the skirting */
+  W_(x,y,T,4,TOP);W_(x,y+3,T,1,AMB);
+  if(log){for(let r=0;r<3;r++){const yy=y+4+r*3;W_(x,yy,T,3,r%2?'#8a5a34':'#966438');W_(x,yy,T,1,'#a8784a');W_(x,yy+2,T,1,'#6a4224')}}
+  else{W_(x,y+4,T,8,'#a8603a');for(let r=0;r<2;r++){const yy=y+4+r*4;W_(x,yy+3,T,1,'#7a4026');for(let c=(r%2)*4+(tx%2)*2;c<T;c+=8)W_(x+c,yy,1,3,'#7a4026');W_(x,yy,T,1,'#bc7448')}}
+  const sk=log?'#6e4a2c':'#b8b2a4',skd=log?'#4e321c':'#8a8478';W_(x,y+12,T,4,sk);W_(x,y+12,T,1,log?'#8a6440':'#d4cec0');W_(x+((tx*5)%8),y+13,1,3,skd);W_(x+8+((tx*3)%6),y+13,1,3,skd);W_(x,y+15,T,1,skd);
+  if(o.t=='win'){W_(x+3,y+4,10,8,'#e8e0cc');W_(x+4,y+5,8,6,'#5a8aa8');W_(x+4,y+5,8,2,'#8ab8d0');W_(x+7,y+5,2,6,'#e8e0cc');W_(x+3,y+11,10,1,'#9a8a70')}
+  else if(hsh(1)<.22&&!iwIs(tx-1,ty+1)){W_(x+6,y+5,4,1,'#3a2a1a');W_(x+7,y+6,2,4,'#2a2a2a');W_(x+6,y+7,4,3,'#ffd060');W_(x+7,y+8,2,1,'#fff4c0')}
+  return}
+ /* the top of every other wall: dark wood with an amber edge where it meets the room */
+ W_(x,y,T,T,TOP);for(let k=0;k<3;k++)W_(x+((tx*7+k*5)%14),y+3+k*4,2,1,TOPD);
+ const inn=(dx,dy)=>{const xx=tx+dx,yy=ty+dy;return xx>=b.x&&xx<b.x+b.w&&yy>=b.y&&yy<b.y+b.h&&!iwIs(xx,yy)};
+ if(inn(0,1)){W_(x,y+T-2,T,2,AMB);W_(x,y+T-1,T,1,AMBD)}if(inn(-1,0)){W_(x,y,2,T,AMB);W_(x,y,1,T,AMBD)}if(inn(1,0)){W_(x+T-2,y,2,T,AMB);W_(x+T-1,y,1,T,AMBD)}if(inn(0,-1)){W_(x,y,T,2,AMB)}
+ if(o.t=='win'){W_(x+2,y+5,12,6,'#8ab8d0');W_(x+2,y+5,12,1,'#e8e0cc');W_(x+2,y+10,12,1,'#e8e0cc');W_(x+7,y+5,2,6,'#e8e0cc')}}
+{const do174=drawObj;drawObj=function(o,x,y){if(o&&IWT[o.t]&&o.pm==null&&!CLASSIC&&!inD){try{const tx=Math.round(x/T),ty=Math.round(y/T),b=iwHome(tx,ty);if(b&&b.a!=null&&b.a<.55){iwDraw(o,x,y,tx,ty,b);return}}catch(e){}}return do174.apply(this,arguments)}}
+
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
  if(state=='title')menu();if(state=='opts')optsMenu();if(state=='sndo')sndMenu();if(state=='gfxo')gfxMenu();if(state=='slots')svMenu();if(state=='keys')keysMenu();if(state=='wthr')wthrMenu();if(state=='char')charMenu();if(state=='lobby')drawLobby();if(state=='hb'){Q(0,0,VW,VH,'rgba(6,10,6,.6)');drawHB()}if(0)title('ASHFALL',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Hold the fire. Survive the nights.','','WASD move \u2022 Space chop / fish / attack \u2022 Tab recipes','Press any key']);
