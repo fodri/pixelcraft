@@ -1,6 +1,6 @@
 /* ===== v131: ZÓNA 2100 on top of PixelCRAFT's fun pack — pick a difficulty, a reward for every story step,
    the camp, bunker and tower on the fast-travel map, a quieter first act, a run summary at the end ===== */
-GAMEV=193;
+GAMEV=194;
 const ZF={dq:null,dqOk:false};
 
 /* ---------- difficulty when a Zóna story begins ---------- */
