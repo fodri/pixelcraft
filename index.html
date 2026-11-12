@@ -10864,10 +10864,12 @@ function td3Post(){try{for(const r of V3.roofs.values())for(const m of(r.G.userD
 GAMEV=177;
 /* ---------- two graphics modes ---------- */
 GMN.hu[2]='Modern';GMN.en[2]='Modern';
-{const sg172=setGMode;setGMode=function(m,quiet){m=((m%4)+4)%4;if(m==1||m==3)m=GMODE==0?2:0;return sg172(m,quiet)}}
+var SHSIMP=false;try{SHSIMP=localStorage.getItem('pxc_shsimp')==='1'}catch(e){}
+{const sg172=setGMode;setGMode=function(m,quiet){m=((m%4)+4)%4;if(m==3||(m==1&&!SHSIMP))m=GMODE==0?2:0;if(m==2&&SHSIMP)m=1;return sg172(m,quiet)}}
 try{if(FPV){FPV=false;localStorage.setItem('pxc_fps','0')}}catch(e){}
-try{if(GMODE==1||GMODE==3)setGMode(2,true)}catch(e){}
+try{if(GMODE==3||(GMODE==1&&!SHSIMP))setGMode(2,true);else if(GMODE==2&&SHSIMP)setGMode(1,true)}catch(e){}
 try{const R_=GPAGES.main.rows,row=R_.find(r=>r.k=='mode');row.get=()=>GMODE==0?'Retro':'Modern';row.step=()=>setGMode(GMODE==0?2:0,true);
+ const si=R_.findIndex(r=>r.k=='mode')+1;R_.splice(si,0,{k:'shtype',l:['Árnyékok','Shadows'],ty:'cyc',get:()=>GMODE==0?(hu_()?'Retróban nincs':'Not in Retro'):SHSIMP?(hu_()?'Egyszerű (2D)':'Simple (2D)'):(hu_()?'Valódi (napárnyék)':'Real (sun)'),step:()=>{if(GMODE==0)return;SHSIMP=!SHSIMP;try{localStorage.setItem('pxc_shsimp',SHSIMP?'1':'0')}catch(e){}setGMode(2,true)},desc:()=>hu_()?'Valódi: a 3D-motor számolja a napárnyékot, mozog a nappal. Egyszerű: a régi, könnyebb 2D árnyékok — gyengébb gépre.':'Real: the 3D engine casts sun shadows that move with the day. Simple: the old, lighter 2D shadows — for weaker machines.'});
  row.desc=()=>GMODE==0?(hu_()?'Az első verzió egyszerű, letisztult kinézete.':'The simple look of the first version.'):(hu_()?'Pixelgrafika valódi napárnyékokkal, fényekkel, rendezett tetőkkel; fák és házak mögött is látszol.':'Pixel art with real sun shadows and lights, tidy roofs; you stay visible behind trees and houses.');
  const bi=R_.findIndex(r=>r.k=='bgr');if(bi>=0)R_.splice(bi,1)}catch(e){}
 /* ---------- tidy pitched roofs: even shingles, a ridge, a chimney; one colour per house ---------- */
@@ -11014,7 +11016,7 @@ try{const R_=GPAGES.main.rows,ix=R_.findIndex(r=>r.k=='mode')+1;R_.splice(ix,0,{
  desc:()=>hu_()?'Extra kinézet a játék fölött: Game Boy zöld, Pocket szürke, Virtual Boy piros, CGA, régi fotó vagy éjjellátó.':'An extra look over the game: Game Boy green, Pocket grey, Virtual Boy red, CGA, old photo or night vision.'})}catch(e){}
 
 /* ===== v177: a living world — cloud shadows drift over the land, you leave footprints in sand, snow and mud, fireflies light up warm nights, and leaves fall from the trees in autumn and wind ===== */
-GAMEV=185;
+GAMEV=186;
 const ATM={on:true,pr:[],last:null,step:0,cl:null,ff:[],lv:[]};try{ATM.on=localStorage.getItem('pxc_atm')!=='0'}catch(e){}
 const atmOk=()=>ATM.on&&!CLASSIC&&!inD&&state=='play';
 const AH=(x,y,s)=>{const v=Math.sin(x*127.1+y*311.7+s*74.7)*43758.5453;return v-Math.floor(v)};
@@ -11046,6 +11048,7 @@ function atmLeaves(dt){if(!atmOk())return;const aut=typeof seasonIdx=='function'
 {const as177=ashFx;ashFx=function(){const r=as177.apply(this,arguments);try{if(ATM.ff.length&&atmOk()){g.save();g.setTransform(RS*ZM,0,0,RS*ZM,0,0);for(const[x,y,b]of ATM.ff){const sx=Math.round(x-cam.x),sy=Math.round(y-cam.y);g.globalAlpha=.35*b;g.fillStyle='#d8ff70';g.fillRect(sx-1,sy-1,3,3);g.globalAlpha=b;g.fillStyle='#f4ffb0';g.fillRect(sx,sy,1,1)}g.restore()}}catch(e){}return r}}
 try{const R_=GPAGES.main.rows,ix=R_.findIndex(r=>r.k=='flt')+1;R_.splice(ix,0,{k:'atm',l:['Élő világ','Living world'],ty:'tog',get:()=>OnOff(ATM.on),step:()=>{ATM.on=!ATM.on;try{localStorage.setItem('pxc_atm',ATM.on?'1':'0')}catch(e){}},
  desc:()=>hu_()?'Felhőárnyékok vonulnak a táj fölött, lábnyomot hagysz homokban, hóban és sárban, nyári éjjel szentjánosbogarak világítanak, ősszel és szélben hullanak a levelek.':'Cloud shadows drift over the land, you leave footprints in sand, snow and mud, fireflies glow on summer nights, leaves fall in autumn and wind.'})}catch(e){}
+try{const R_=GPAGES.main.rows,i=R_.findIndex(r=>r.k=='shtype');if(i>=0){const r=R_.splice(i,1)[0];R_.splice(R_.findIndex(q=>q.k=='mode')+1,0,r)}}catch(e){}
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
