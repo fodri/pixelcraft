@@ -11192,6 +11192,71 @@ ARCL.told=true;const ARCT={t:0,ws:null};
 /* V switches between Retro and Modern through the graphics mode, so the menu always agrees */
 toggleGfx=function(){setGMode(GMODE==0?2:0,true);say(GMODE==0?(LANG=='hu'?'Retró grafika (V)':'Retro graphics (V)'):(LANG=='hu'?'Modern grafika (V)':'Modern graphics (V)'))};
 
+/* ===== v179: the fun pack — gentler hunger and thirst, +items beside you, a short freeze and shake when something dies,
+   a banner for every story step, fast travel between places you have found, and the game speaks your language on first launch ===== */
+GAMEV=191;
+const FUN={age:0,hs:0,pick:[],inv0:null,ban:null,tv:0,k:0,vis:{},src:[],block:[],reward:null,sc:null,scT:0};
+const funHu=()=>LANG=='hu',funB=(h,e)=>LANG=='hu'?h:e;
+
+/* ---------- hunger and thirst: slower, and slower still on Easy ---------- */
+const funDrain=()=>DIFF<=1?.5:DIFF==2?.65:.9;
+
+/* ---------- +items beside you ---------- */
+function funPickTick(){if(creative)return;const now=performance.now(),cur=FUN.inv0;if(!cur){FUN.inv0=Object.assign({},inv);return}let kinds=0;const add=[];
+ for(const k in inv){const d=(inv[k]|0)-(cur[k]|0);if(d>0){kinds++;add.push([k,d])}}FUN.inv0=Object.assign({},inv);if(kinds>5)return;
+ for(const[k,d]of add){if(d>60||k=='hand')continue;const p=FUN.pick.find(q=>q.k==k&&now-q.t0<900);if(p){p.n+=d;p.t0=now}else FUN.pick.push({k,n:d,t0:now})}if(FUN.pick.length>5)FUN.pick.splice(0,FUN.pick.length-5)}
+function funPickDraw(){const n=performance.now();FUN.pick=FUN.pick.filter(p=>n-p.t0<1600);if(!FUN.pick.length)return;noTr=true;
+ FUN.pick.forEach((p,i)=>{const a=(n-p.t0)/1600,y=P.y-cam.y-8-(FUN.pick.length-1-i)*9-a*6,x=P.x-cam.x+11;g.globalAlpha=Math.max(0,Math.min(1,(1-a)*2.2));txt('+'+p.n+' '+tr(LBL[p.k]||p.k),x,y,'#c8f08a','left')});g.globalAlpha=1;noTr=false}
+{const dd179=drawDmgN;drawDmgN=function(){const r=dd179.apply(this,arguments);try{if(state=='play')funPickDraw()}catch(e){noTr=false;g.globalAlpha=1}return r}}
+
+/* ---------- a banner for every story step (a story can hand out a reward through FUN.reward) ---------- */
+function funGive(rw){const out=[];for(const k in rw){const n=rw[k];inv[k]=(inv[k]|0)+n;try{if(DMAX[k])du[k]=DMAX[k];if(TOOL[k]||(typeof GUN!='undefined'&&GUN[k]))givehb(k)}catch(e){}out.push((TOOL[k]&&n==1?'':n+' ')+tr(LBL[k]||k).toLowerCase())}return out.join(', ')}
+{const sa179=stAdvance;stAdvance=function(){let s=null;try{s=stCur()}catch(e){}const r=sa179.apply(this,arguments);
+ try{if(s){const h=funHu();let b='',c='';const rw=FUN.reward?FUN.reward(s):null;if(rw){c=(h?'Jutalom: ':'Reward: ')+funGive(rw[0]);b=rw[1][h?0:1]}FUN.ban={t0:performance.now(),a:'✔ '+s.t[h?0:1],b,c};XS.xp=(XS.xp||0)+25;try{fanfare112()}catch(e){}FUN.inv0=null}}catch(e){console.error(e)}return r}}
+function funBanner(){const B=FUN.ban;if(!B)return;const t=(performance.now()-B.t0)/1000;if(t>5.2){FUN.ban=null;return}if(showMap||book||invOpen||stOpen)return;const a=Math.min(1,t*4,(5.2-t)*2.5);g.font=fnt(0,9);
+ const tw=Math.max(...[B.a,B.b,B.c].map(s=>s?g.measureText(s).width:0))+20,w=Math.min(VW-12,Math.max(170,tw)),x=Math.round(VW/2-w/2),y=88+Math.round((1-Math.min(1,t*4))*-8),h=B.c?42:B.b?32:22,cx=x+w/2;
+ g.globalAlpha=a*.9;Q(x,y,w,h,'#14120c');g.globalAlpha=a;Q(x,y,w,1,'#ffd84a');Q(x,y+h-1,w,1,'#6a5a2a');noTr=true;txt(B.a,cx,y+12,'#ffd84a','center');if(B.b)txt(B.b,cx,y+24,'#d8d0b8','center');if(B.c)txt(B.c,cx,y+35,'#9ad870','center');noTr=false;g.globalAlpha=1}
+
+/* ---------- fast travel: home, the settlements and towns you have walked into, plus whatever a story adds (FUN.src) ---------- */
+function funSettle(){const now=performance.now();if(FUN.sc&&now-FUN.scT<5000)return FUN.sc;const L=[],used=new Set();
+ for(const n of NPCS){if(n.zr||used.has(n)||!isFinite(n.hx))continue;const grp=NPCS.filter(q=>!q.zr&&isFinite(q.hx)&&Math.hypot(q.hx-n.hx,q.hy-n.hy)<20*T);grp.forEach(q=>used.add(q));const cx=grp.reduce((s,q)=>s+q.hx,0)/grp.length/T,cy=grp.reduce((s,q)=>s+q.hy,0)/grp.length/T;
+  L.push({k:'S'+Math.round(cx/6)+'_'+Math.round(cy/6),x:Math.round(cx),y:Math.round(cy),r:12,big:grp.length})}
+ try{for(const t of(typeof TOWNS105!='undefined'?TOWNS105:[]))if(isFinite(t.x))L.push({k:'T'+t.x+'_'+t.y,x:t.x,y:t.y,r:16,town:1})}catch(e){}
+ FUN.sc=L;FUN.scT=now;return L}
+function funCands(){let L=[];for(const f of FUN.src){try{L=L.concat(f()||[])}catch(e){}}const own=L.slice();for(const s of funSettle()){if(own.some(q=>Math.hypot(q.x-s.x,q.y-s.y)<22))continue;L.push(s)}return L}
+function funName(c){if(c.n)return c.n;const no=FUN.vis[c.k]|0,h=funHu();return(c.town?(h?'Város':'Town'):c.big>=4?(h?'Falu':'Village'):(h?'Tanya':'Homestead'))+(no>0?' '+no:'')}
+function funPlaces(){const L=funCands().filter(c=>FUN.vis[c.k]).map(c=>({k:c.k,n:funName(c),x:c.x,y:c.y+(c.dy|0)}));if(typeof home!='undefined'&&home&&isFinite(home.x))L.push({k:'home',n:funB('Otthon','Home'),x:Math.floor(home.x/T),y:Math.floor(home.y/T)+1});return L}
+function funVisit(){const px=P.x/T,py=P.y/T;for(const c of funCands()){if(FUN.vis[c.k]||Math.hypot(c.x-px,c.y-py)>=(c.r||12))continue;FUN.vis[c.k]=Object.keys(FUN.vis).filter(k=>k[0]==c.k[0]).length+1;say(funB('Gyorsutazás: ','Fast travel: ')+funName(c)+funB(' felkerült a térképre (M).',' is now on your map (M).'))}}
+function funFree(x,y){for(let r=0;r<7;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(Math.max(Math.abs(dx),Math.abs(dy))!=r)continue;const tx=x+dx,ty=y+dy;if(tx<2||ty<2||tx>=W-2||ty>=H-2)continue;const i=ty*W+tx;try{if(wt(map[i]))continue;if(blocked(tx*T+8,ty*T+8,4))continue}catch(e){continue}return[tx,ty]}return null}
+function funWhyNot(){const h=funHu();if(inD)return h?'Odabentről nem lehet.':'Not from inside.';if(drv||P.boat)return h?'Előbb szállj ki.':'Get out first.';if(net&&!net.dead)return h?'Közös játékban nincs gyorsutazás.':'No fast travel in co-op.';
+ for(const f of FUN.block){try{const w=f();if(w)return w}catch(e){}}if(zs.some(z=>z.hp>0&&!z.cap&&!z.sur&&Math.hypot(z.x-P.x,z.y-P.y)<12*T))return h?'Ellenség van a közelben!':'Enemies nearby!';return null}
+function funTravel(p){const why=funWhyNot();if(why){say(why);snd('click');return}const f=funFree(p.x,p.y);if(!f){snd('click');return}const d=Math.hypot(f[0]-P.x/T,f[1]-P.y/T),walk=d/3.9,DL=240*(typeof DAYSLOW=='number'?DAYSLOW:1);
+ P.x=f[0]*T+8;P.y=f[1]*T+8;showMap=false;time+=walk*.6/DL;if(time>=1){time-=1;day++}if(surv){P.food=Math.max(8,P.food-walk*.15);if(P.th!=null)P.th=Math.max(8,P.th-walk*.2)}
+ try{cam.x=cl(P.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y-VH/(2*ZM),0,H*T-VH/ZM)}catch(e){}FUN.inv0=null;snd('ui');const hrs=Math.max(1,Math.round(walk*.6*24/DL));say(funB('Megérkeztél: ','Arrived: ')+p.n+funB(' (eltelt kb. '+hrs+' óra)',' (about '+hrs+' h passed)'))}
+function funMapPts(){const G=mapGeo();return funPlaces().map(p=>({p,X:Math.round(G.x0+(p.x+.5)*G.mf),Y:Math.round(G.y0+(p.y+.5)*G.mf)}))}
+{const dm179=drawMapFull;drawMapFull=function(){const r=dm179.apply(this,arguments);try{if(!inD&&state=='play'){const pts=funMapPts();if(pts.length){noTr=true;const why=funWhyNot();
+ for(const q of pts){const hov=Math.hypot(ms.x-q.X,ms.y-q.Y)<8;Q(q.X-4,q.Y-4,9,9,'#000');Q(q.X-3,q.Y-3,7,7,hov?'#ffd84a':'#d8803a');Q(q.X-1,q.Y-1,3,3,'#1a1208');txt(q.p.n,q.X+7,q.Y+3,hov?'#ffd84a':'#f0d8b0')}
+ const G=mapGeo();txt(why?funB('Gyorsutazás most nem megy: ','Fast travel unavailable: ')+why:funB('Gyorsutazás: kattints egy narancs pontra','Fast travel: click an orange marker'),VW/2,G.fy+G.MS+12,why?'#c08a6a':'#d8b080','center');noTr=false}}}catch(e){noTr=false}return r}}
+addEventListener('mousedown',e=>{if(state!='play'||!showMap||inD||e.button!==0)return;try{sc(e)}catch(_){}let hit=null;try{for(const q of funMapPts())if(Math.hypot(ms.x-q.X,ms.y-q.Y)<8)hit=q.p}catch(_){}if(!hit)return;e.preventDefault();e.stopImmediatePropagation();funTravel(hit)},true);
+
+/* ---------- new game, save, load ---------- */
+{const in179=init;init=function(...a){FUN.age=0;FUN.k=0;FUN.vis={};FUN.sc=null;FUN.inv0=null;FUN.pick=[];return in179.apply(this,a)}}
+{const sv179=save;save=function(){const r=sv179.apply(this,arguments);try{localStorage.setItem(SKEY()+'_fun',JSON.stringify({k:FUN.k,vis:FUN.vis}))}catch(e){}return r}}
+{const ld179=load;load=function(){const r=ld179.apply(this,arguments);try{const d=JSON.parse(localStorage.getItem(SKEY()+'_fun')||'null');FUN.age=0;FUN.k=d&&d.k|0||0;FUN.vis=d&&d.vis||{};FUN.sc=null;FUN.inv0=null}catch(e){}return r}}
+
+/* ---------- per frame: hunger, kills, pickups, places ---------- */
+{const up179=update;update=function(dt){if(FUN.hs>0&&state=='play'&&!net){FUN.hs-=Math.min(dt,.05);return}
+ const play=state=='play',f0=play?P.food:0,t0=play?P.th:0,near=[];
+ if(play)for(const z of zs){if(z.hp>0&&Math.abs(z.x-P.x)<200&&Math.abs(z.y-P.y)<200)near.push(z)}
+ const r=up179.apply(this,arguments);if(state!='play')return r;
+ try{const m=funDrain();if(surv&&isFinite(f0)&&P.food<f0&&f0-P.food<2)P.food=f0-(f0-P.food)*m;if(surv&&isFinite(t0)&&P.th!=null&&P.th<t0&&t0-P.th<2)P.th=t0-(t0-P.th)*m;
+  let kill=0;for(const z of near)if(!(z.hp>0)&&!z.cap)kill++;if(kill){FUN.k+=kill;FUN.hs=.055;shk=Math.min(.35,shk+.1)}
+  funPickTick();FUN.age+=dt;FUN.tv-=dt;if(FUN.tv<=0){FUN.tv=.5;if(!inD&&FUN.age>12)funVisit()}}catch(e){console.error(e)}return r}}
+{const dr179=draw;draw=function(){const r=dr179.apply(this,arguments);try{if(state=='play')funBanner();else FUN.inv0=null}catch(e){noTr=false;g.globalAlpha=1}return r}}
+
+/* ---------- first launch: speak the player's language ---------- */
+try{if(!localStorage.getItem('ashl')){const nl=String(navigator.language||'').toLowerCase();setLang(nl.startsWith('hu')?'hu':'en')}}catch(e){}
+
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
  if(state=='title')menu();if(state=='opts')optsMenu();if(state=='sndo')sndMenu();if(state=='gfxo')gfxMenu();if(state=='slots')svMenu();if(state=='keys')keysMenu();if(state=='wthr')wthrMenu();if(state=='char')charMenu();if(state=='lobby')drawLobby();if(state=='hb'){Q(0,0,VW,VH,'rgba(6,10,6,.6)');drawHB()}if(0)title('ASHFALL',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Hold the fire. Survive the nights.','','WASD move \u2022 Space chop / fish / attack \u2022 Tab recipes','Press any key']);
