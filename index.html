@@ -12702,7 +12702,7 @@ GAMEV=225;
 /* ---------- co-op: health and XP travel with the presence ---------- */
 {const up210=update;update=function(dt){up210(dt);try{if(net&&net.r&&!net.r._p210){const r=net.r,p0=r.presence;r._p210=1;r.presence=function(d){try{if(d&&typeof d=='object'){d.hp=Math.round(P.hp);d.lv=XS.lv|0;d.xf=+(Math.min(1,XS.xp/Math.max(1,xpNeed(XS.lv)))).toFixed(2);d.cr=creative?1:0}}catch(e){}return p0.call(r,d)}}}catch(e){}}}
 function coopRows210(){if(typeof net=='undefined'||!net||!net.peers||!net.peers.length)return[];return net.peers.filter(p=>p&&p.presence)}
-function chRect210(){try{if(!DQ112.L.length||skOpen||book||invOpen||tut||(typeof jnChalShow=='function'&&!jnChalShow()))return null;return[VW-118,1,118,11+DQ112.L.length*8+9+16]}catch(e){return null}}
+function chRect210(){try{if(!DQ112.L.length||skOpen||book||invOpen||tut||(typeof jnChalShow=='function'&&!jnChalShow()))return null;return[VW-117,1,117,11+DQ112.L.length*8+9+6]}catch(e){return null}}
 function coopY210(){const c=chRect210();return c&&!(HUD210.o.ch&&(HUD210.o.ch[0]||HUD210.o.ch[1]))?c[1]+c[3]+3:5}
 function coopDraw210(ox,oy){const L=coopRows210();if(!L.length)return;const h=LANG=='hu',w=112,x=VW-w-5+(ox|0),y=coopY210()+(oy|0);noTr=true;
  const hh=6+L.length*20;Q(x,y,w,hh,'rgba(12,11,9,.5)');Q(x,y,w,1,'#9ab8d0');
@@ -12718,7 +12718,7 @@ function hudSave210(){try{localStorage.setItem('pc_hud210',JSON.stringify({o:HUD
 function hudWidgets210(){const W_=[];const h=LANG=='hu';
  let sb=46;try{if(typeof calBottom209=='function'&&calOn209())sb=Math.max(sb,calBottom209()+2,(CALMP209||0)+3)}catch(e){}
  W_.push({id:'st',n:h?'Állapot':'Status',r:[[0,0,139,sb]],ex:[[112,0,52,24]]});
- if(!creative)W_.push({id:'xp',n:'XP',r:[[139,0,236,10.5],[139,10.5,210,12]]});
+ if(!creative)W_.push({id:'xp',n:'XP',r:[[139,0,222,10.5],[139,10.5,222,12]]});
  {const c=chRect210();if(c)W_.push({id:'ch',n:h?'Kihívások':'Challenges',r:[c]})}
  W_.push({id:'mm',n:h?'Térkép':'Map',r:[[2,VH-78,72,74]]});
  {let dy=0;try{dy=Math.max(0,Math.max(calBottom209(),(CALMP209||0)+3)+4-74)}catch(e){}W_.push({id:'gl',n:h?'Feladat':'Goal',r:[[3,72+dy,200,36]]})}
@@ -12764,7 +12764,7 @@ function hudOverlay210(){const h=LANG=='hu';noTr=true;g.save();
  if(!HUD210.pin)txt(h?'Ctrl + húzd a paneleket':'Ctrl + drag the panels',VW/2,52,'rgba(255,242,200,.8)','center');
  g.restore();noTr=false}
 function hudClamp210(w,dx,dy){const[x,y,ww,hh]=w.bb;return[Math.round(Math.max(-x,Math.min(VW-ww-x,dx))),Math.round(Math.max(-y,Math.min(VH-hh-y,dy)))]}
-addEventListener('mousedown',e=>{if(e.button!==0||!(e.ctrlKey||CTRLH)||!hudFree210())return;try{sc(e)}catch(_){return}
+addEventListener('mousedown',e=>{if(e.button!==0||!(e.ctrlKey||CTRLH)||!hudFree210())return;try{sc(e)}catch(_){return}if(typeof hudPre213=='function'&&hudPre213(e))return;
  for(const b of hudBtns210())if(ms.x>=b.x&&ms.x<b.x+b.w&&ms.y>=b.y&&ms.y<b.y+b.h){e.preventDefault();e.stopImmediatePropagation();if(b.k=='pin')HUD210.pin=!HUD210.pin;else{HUD210.o={}}hudSave210();try{snd('ui')}catch(_){}return}
  if(HUD210.pin)return;const L=hudWidgets210();for(let i=L.length-1;i>=0;i--){const w=L[i],[x,y,ww,hh]=w.bb,X=x+w.dx,Y=y+w.dy;if(ms.x>=X&&ms.x<X+ww&&ms.y>=Y&&ms.y<Y+hh){e.preventDefault();e.stopImmediatePropagation();HUD210.drag={id:w.id,mx:ms.x,my:ms.y,dx:w.dx,dy:w.dy};return}}},true);
 addEventListener('mousemove',e=>{const d=HUD210.drag;if(!d)return;try{sc(e)}catch(_){return}const w=hudWidgets210().find(q=>q.id==d.id);if(!w)return;HUD210.o[d.id]=hudClamp210(w,d.dx+ms.x-d.mx,d.dy+ms.y-d.my);e.stopImmediatePropagation()},true);
@@ -12867,40 +12867,96 @@ GAMEV=227;
    bit smaller (80%). Every panel shrinks towards its own corner of the screen, so nothing drifts into the middle. ===== */
 GAMEV=228;
 let HUDS213=.8;try{const v=parseFloat(localStorage.getItem('pc_huds'));if(v>=.6&&v<=1.3)HUDS213=v}catch(e){}
-function hudsSave213(){try{localStorage.setItem('pc_huds',String(HUDS213))}catch(e){}}
+let HSZ213={};try{HSZ213=JSON.parse(localStorage.getItem('pc_hudsz')||'{}')||{}}catch(e){}
+function hudsSave213(){try{localStorage.setItem('pc_huds',String(HUDS213));localStorage.setItem('pc_hudsz',JSON.stringify(HSZ213))}catch(e){}}
+function sOf213(id){const v=HSZ213[id];return v>=.5&&v<=1.5?v:HUDS213}
 function anc213(bb){const cx=bb[0]+bb[2]/2,cy=bb[1]+bb[3]/2;return[cx<VW/3?bb[0]:cx>VW*2/3?bb[0]+bb[2]:cx,cy<VH/2?bb[1]:bb[1]+bb[3]]}
-{const hw213=hudWidgets210;hudWidgets210=function(){const L=hw213.apply(this,arguments),s=HUDS213;const st=L.find(w=>w.id=='st'),ch=L.find(w=>w.id=='ch');
- for(const w of L){w.ob=w.bb.slice();const a=anc213(w.ob);w.ax=a[0];w.ay=a[1];w.sx=0;w.sy=0;
+{const hw213=hudWidgets210;hudWidgets210=function(){const L=hw213.apply(this,arguments);const st=L.find(w=>w.id=='st'),ch=L.find(w=>w.id=='ch');
+ for(const w of L){const s=sOf213(w.id);w.s=s;w.ob=w.bb.slice();const a=anc213(w.ob);w.ax=a[0];w.ay=a[1];w.sx=0;w.sy=0;
   /* the goal box follows the shrunken status panel, the partner panel the shrunken challenge list */
-  if(w.id=='gl'&&st&&!(st.dx||st.dy)){w.ay=w.ob[1];w.sy=(st.ob[1]+st.ob[3]*s+4)-w.ob[1]}
-  if(w.id=='cp'&&ch&&!(ch.dx||ch.dy)){w.ay=w.ob[1];w.sy=(ch.ob[1]+ch.ob[3]*s+3)-w.ob[1]}
+  if(w.id=='gl'&&st&&!(st.dx||st.dy)){w.ay=w.ob[1];w.sy=(st.ob[1]+st.ob[3]*sOf213('st')+4)-w.ob[1]}
+  if(w.id=='cp'&&ch&&!(ch.dx||ch.dy)){w.ay=w.ob[1];w.sy=(ch.ob[1]+ch.ob[3]*sOf213('ch')+3)-w.ob[1]}
   if(w.id=='cp'&&!ch){w.ay=w.ob[1]}
   w.bb=[w.ax+(w.ob[0]-w.ax)*s+w.sx,w.ay+(w.ob[1]-w.ay)*s+w.sy,w.ob[2]*s,w.ob[3]*s]}
  return L}}
-{const hm213=hudMoved210;hudMoved210=function(){return Math.abs(HUDS213-1)>.001||hm213.apply(this,arguments)}}
+{const hm213=hudMoved210;hudMoved210=function(){return Math.abs(HUDS213-1)>.001||Object.values(HSZ213).some(v=>Math.abs(v-1)>.001)||hm213.apply(this,arguments)}}
 const SC213=[];
 hudFlush210=function(){if(!HL210.on)return;HL210.on=false;HL210.fl=1;const L=HL210.cv,c=HL210.cx,g0=HL210.g0,m=HL210.m;g=g0;
- const k=m.a,s=HUDS213,W_=hudWidgets210(),cut=[];c.setTransform(1,0,0,1,0,0);
- for(const w of W_){if(w.dir)continue;const moved=w.dx||w.dy||w.sx||w.sy||Math.abs(s-1)>.001;if(!moved)continue;
-  for(const r of w.r){const px=Math.max(0,Math.floor(r[0]*k+m.e)),py=Math.max(0,Math.floor(r[1]*k+m.f)),pw=Math.min(L.width-px,Math.ceil(r[2]*k)),ph=Math.min(L.height-py,Math.ceil(r[3]*k));if(pw<=0||ph<=0)continue;
+ const k=m.a,W_=hudWidgets210(),cut=[];c.setTransform(1,0,0,1,0,0);
+ for(const w of W_){if(w.dir)continue;const s=w.s;const moved=w.dx||w.dy||w.sx||w.sy||Math.abs(s-1)>.001;if(!moved)continue;
+  for(const r of exSplit213(w.r)){const px=Math.max(0,Math.floor(r[0]*k+m.e)),py=Math.max(0,Math.floor(r[1]*k+m.f)),pw=Math.min(L.width-px,Math.ceil(r[2]*k)),ph=Math.min(L.height-py,Math.ceil(r[3]*k));if(pw<=0||ph<=0)continue;
    const i=cut.length;if(!SC213[i])SC213[i]=document.createElement('canvas');const sc=SC213[i];if(sc.width<pw||sc.height<ph){sc.width=Math.max(sc.width,pw);sc.height=Math.max(sc.height,ph)}const sx=sc.getContext('2d');sx.clearRect(0,0,sc.width,sc.height);sx.drawImage(L,px,py,pw,ph,0,0,pw,ph);c.clearRect(px,py,pw,ph);
    /* where this piece lands, in logical units */
-   const lx=(px-m.e)/k,ly=(py-m.f)/k,X=w.ax+(lx-w.ax)*s+w.sx+w.dx,Y=w.ay+(ly-w.ay)*s+w.sy+w.dy;cut.push([sc,pw,ph,X*k+m.e,Y*k+m.f,pw*s,ph*s])}}
+   const lx=(px-m.e)/k,ly=(py-m.f)/k,X=w.ax+(lx-w.ax)*s+w.sx+w.dx,Y=w.ay+(ly-w.ay)*s+w.sy+w.dy;cut.push([sc,pw,ph,X*k+m.e,Y*k+m.f,pw*s,ph*s,s])}}
  g.save();g.setTransform(1,0,0,1,0,0);g.globalAlpha=1;g.globalCompositeOperation='source-over';g.filter='none';
- DI0.call(g,L,0,0);g.imageSmoothingEnabled=Math.abs(s-1)>.001;try{g.imageSmoothingQuality='high'}catch(e){}
- for(const[sc,pw,ph,x,y,dw,dh]of cut)DI0.call(g,sc,0,0,pw,ph,Math.round(x),Math.round(y),Math.round(dw),Math.round(dh));g.restore()};
+ DI0.call(g,L,0,0);try{g.imageSmoothingQuality='high'}catch(e){}
+ for(const[sc,pw,ph,x,y,dw,dh,s]of cut){g.imageSmoothingEnabled=Math.abs(s-1)>.001;DI0.call(g,sc,0,0,pw,ph,Math.round(x),Math.round(y),Math.round(dw),Math.round(dh))}g.restore()};
 /* the thermometer and the partner panel are painted after the cut-and-paste, with the same scale */
-{const th213=thermo210;thermo210=function(ox,oy){const s=HUDS213;if(Math.abs(s-1)<.001)return th213.apply(this,arguments);g.save();g.translate(ox|0,oy|0);g.scale(s,s);try{return th213.call(this,0,0)}finally{g.restore()}}}
-{const cd213=coopDraw210;coopDraw210=function(ox,oy){const s=HUDS213;if(Math.abs(s-1)<.001)return cd213.apply(this,arguments);let w=null;try{w=hudWidgets210().find(q=>q.id=='cp')}catch(e){}if(!w)return cd213.apply(this,arguments);
+{const th213=thermo210;thermo210=function(ox,oy){const s=sOf213('st');if(Math.abs(s-1)<.001)return th213.apply(this,arguments);g.save();g.translate(ox|0,oy|0);g.scale(s,s);try{return th213.call(this,0,0)}finally{g.restore()}}}
+{const cd213=coopDraw210;coopDraw210=function(ox,oy){const s=sOf213('cp');if(Math.abs(s-1)<.001)return cd213.apply(this,arguments);let w=null;try{w=hudWidgets210().find(q=>q.id=='cp')}catch(e){}if(!w)return cd213.apply(this,arguments);
  g.save();g.translate(w.ax+w.sx+(ox|0),w.ay+w.sy+(oy|0));g.scale(s,s);g.translate(-w.ax,-w.ay);try{return cd213.call(this,0,0)}finally{g.restore()}}}
 /* − / + next to the lock */
 function hudSz213(){if(HUD210.pin)return[];const b=hudBtns210(),last=b[b.length-1],x=last.x+last.w+6,y=last.y;return[{k:'-',x,y,w:13,h:13},{k:'%',x:x+15,y,w:30,h:13},{k:'+',x:x+47,y,w:13,h:13}]}
 {const ho213=hudOverlay210;hudOverlay210=function(){const r=ho213.apply(this,arguments);try{noTr=true;for(const b of hudSz213()){const hov=b.k!='%'&&ms.x>=b.x&&ms.x<b.x+b.w&&ms.y>=b.y&&ms.y<b.y+b.h;Q(b.x,b.y,b.w,b.h,hov?'rgba(70,56,24,.95)':'rgba(20,16,10,.88)');Q(b.x,b.y,b.w,1,'#c8a050');
   txt(b.k=='%'?Math.round(HUDS213*100)+'%':b.k=='-'?'−':'+',b.x+b.w/2,b.y+10,'#fff2c8','center')}noTr=false}catch(e){noTr=false}return r}}
 addEventListener('mousedown',e=>{if(e.button!==0||!(e.ctrlKey||CTRLH)||!hudFree210()||HUD210.pin)return;try{sc(e)}catch(_){return}
- for(const b of hudSz213()){if(b.k=='%')continue;if(ms.x>=b.x&&ms.x<b.x+b.w&&ms.y>=b.y&&ms.y<b.y+b.h){e.preventDefault();e.stopImmediatePropagation();HUDS213=Math.round(Math.max(.6,Math.min(1.3,HUDS213+(b.k=='+'?.1:-.1)))*10)/10;hudsSave213();try{snd('ui')}catch(_){}return}}},true);
+ for(const b of hudSz213()){if(b.k=='%')continue;if(ms.x>=b.x&&ms.x<b.x+b.w&&ms.y>=b.y&&ms.y<b.y+b.h){e.preventDefault();e.stopImmediatePropagation();HUDS213=Math.round(Math.max(.6,Math.min(1.3,HUDS213+(b.k=='+'?.1:-.1)))*10)/10;HSZ213={};hudsSave213();try{snd('ui')}catch(_){}return}}},true);
 /* "reset" also brings the size back to the default */
-{const hs213=hudSave210;hudSave210=function(){try{const b=hudBtns210().find(q=>q.k=='rst');if(b&&ms.x>=b.x&&ms.x<b.x+b.w&&ms.y>=b.y&&ms.y<b.y+b.h){HUDS213=.8;hudsSave213()}}catch(e){}return hs213.apply(this,arguments)}}
+{const hs213=hudSave210;hudSave210=function(){try{const b=hudBtns210().find(q=>q.k=='rst');if(b&&ms.x>=b.x&&ms.x<b.x+b.w&&ms.y>=b.y&&ms.y<b.y+b.h){HUDS213=.8;HSZ213={};hudsSave213()}}catch(e){}return hs213.apply(this,arguments)}}
+/* each panel has its own − / + beside its name tag */
+function wBtns213(){const out=[];if(HUD210.pin)return out;let L=[];try{L=hudWidgets210()}catch(e){return out}for(const w of L){const[x,y,ww,hh]=w.bb,X=Math.round(x+w.dx),Y=Math.round(y+w.dy),lw=Math.ceil(w.n.length*4.6)+8,ly=Y+hh+1>VH-12?Y-11:Y+hh+1,bx=X+lw+2;
+ out.push({id:w.id,k:'-',x:bx,y:ly,w:10,h:10},{id:w.id,k:'%',x:bx+11,y:ly,w:22,h:10},{id:w.id,k:'+',x:bx+34,y:ly,w:10,h:10})}return out}
+function hudPre213(e){for(const b of wBtns213()){if(b.k=='%')continue;if(ms.x>=b.x&&ms.x<b.x+b.w&&ms.y>=b.y&&ms.y<b.y+b.h){e.preventDefault();e.stopImmediatePropagation();const v=sOf213(b.id);HSZ213[b.id]=Math.round(Math.max(.5,Math.min(1.5,v+(b.k=='+'?.1:-.1)))*10)/10;hudsSave213();try{snd('ui')}catch(_){}return true}}return false}
+{const ho213b=hudOverlay210;hudOverlay210=function(){const r=ho213b.apply(this,arguments);try{noTr=true;for(const b of wBtns213()){const hov=b.k!='%'&&ms.x>=b.x&&ms.x<b.x+b.w&&ms.y>=b.y&&ms.y<b.y+b.h;Q(b.x,b.y,b.w,b.h,hov?'rgba(70,56,24,.95)':'rgba(20,16,10,.85)');
+  if(b.k=='%'){g.font=fnt(0,7);txt(Math.round(sOf213(b.id)*100)+'%',b.x+b.w/2,b.y+8,'#e8d8a8','center')}else txt(b.k=='-'?'−':'+',b.x+b.w/2,b.y+9,'#fff2c8','center')}noTr=false}catch(e){noTr=false}return r}}
+/* toasts slide over the panels: their rectangle is left out of the cut, so a toast never gets carried off with a panel */
+function exRects213(){const L=[];try{if(TQ112.length){const q=TQ112[0];if(q.t0){const e=(performance.now()-q.t0)/1000,sl=e<.3?e/.3:e>3.8?(4.2-e)/.4:1,w=Math.max(200,Math.min(VW-20,(q.sub.length*4.6|0)+60)),x=Math.max(VW/2-w/2,Math.min(184,VW-w-6)),y=-30+sl*70;L.push([x-2,y-2,w+4,34])}}}catch(e){}return L}
+function exSplit213(R){const EX=exRects213();if(!EX.length)return R;let out=R.slice();for(const e of EX){const nx=[];for(const r of out){const ix0=Math.max(r[0],e[0]),iy0=Math.max(r[1],e[1]),ix1=Math.min(r[0]+r[2],e[0]+e[2]),iy1=Math.min(r[1]+r[3],e[1]+e[3]);
+  if(ix0>=ix1||iy0>=iy1){nx.push(r);continue}
+  if(iy0>r[1])nx.push([r[0],r[1],r[2],iy0-r[1]]);if(iy1<r[1]+r[3])nx.push([r[0],iy1,r[2],r[1]+r[3]-iy1]);if(ix0>r[0])nx.push([r[0],iy0,ix0-r[0],iy1-iy0]);if(ix1<r[0]+r[2])nx.push([ix1,iy0,r[0]+r[2]-ix1,iy1-iy0])}out=nx}return out}
+/* status lines painted inside the weather pass (wet clothes, …) wait until the panel layer is open, so they shrink and move with it */
+const Q213=[];
+{const tx213=txt;txt=function(s,x,y,c,al){if(CAL209===1&&x===6&&y>=50&&y<=90&&HL210.inh&&!HL210.on){try{if(hudFree210()&&hudMoved210()){Q213.push([s,x,y,c,al]);return}}catch(e){}}return tx213.apply(this,arguments)}}
+{const we213=weather;weather=function(){Q213.length=0;const r=we213.apply(this,arguments);try{if(Q213.length){const L=Q213.splice(0);if(HL210.on)for(const a of L)txt.apply(null,a);else{const sv=CAL209;for(const a of L)txt.apply(null,a)}}}catch(e){}return r}}
+
+/* ===== v214: armour can be upgraded, up to +3. In the inventory, right-click a worn piece while you stand by a crafting table:
+   each level adds 1 armour point and a quarter more durability, and the piece comes back fully mended. Costs grow with the level
+   (bars of the piece's own metal, plus cloth; winter clothes take wool and cloth). The 75% damage cap stays. ===== */
+GAMEV=229;
+let UPG214={};const UPGMAX214=3;
+function upgBase214(k){const a=ARM[k];if(!a)return null;if(a.bp==null){a.bp=a.p;a.bd=DMAX[k]||0}return a}
+function upgApply214(k){const a=upgBase214(k);if(!a)return;const L=UPG214[k]|0;a.p=a.bp+L;if(a.bd)DMAX[k]=Math.round(a.bd*(1+.25*L))}
+function upgAll214(){for(const k in ARM)if(ARM[k].bp!=null||UPG214[k])upgApply214(k)}
+function upgOk214(k){const a=ARM[k];return !!a&&(a.s=='h'||a.s=='c'||a.s=='l'||a.s=='b')&&(ATIERS.includes(a.tier)||k=='wcoat'||k=='what')}
+function upgCost214(k){const a=ARM[k],L=(UPG214[k]|0)+1;if(k=='wcoat'||k=='what')return{wool:L+1,cloth:L};const m=AMAT[a.tier];const c={[m]:L+1,cloth:L};if(L==3)c[m]+=1;return c}
+function upgBench214(){const px=Math.floor(P.x/T),py=Math.floor(P.y/T);for(let y=py-3;y<=py+3;y++)for(let x=px-3;x<=px+3;x++){if(x<0||y<0||x>=W||y>=H)continue;let o=ob[y*W+x];if(o&&o.pm!=null)o=ob[o.pm];if(o&&o.t=='workbench')return true}return creative}
+function upgTry214(k){const h=LANG=='hu';if(!upgOk214(k)){say(h?'Ezt nem lehet fejleszteni':'This can’t be upgraded');return}const L=UPG214[k]|0;
+ if(L>=UPGMAX214){say(h?'Ez már a legerősebb (+3)':'Already at the maximum (+3)');return}
+ if(!upgBench214()){say(h?'Barkácsasztal mellett tudod fejleszteni':'Stand by a crafting table to upgrade');return}
+ const c=upgCost214(k);if(!creative){const miss=Object.keys(c).filter(m=>(inv[m]|0)<c[m]);if(miss.length){say((h?'Hiányzik: ':'Missing: ')+miss.map(m=>(c[m]-(inv[m]|0))+' '+tr(LBL[m]||LBLX[m]||m).toLowerCase()).join(', '));return}for(const m in c)inv[m]-=c[m]}
+ UPG214[k]=L+1;upgApply214(k);du[k]=DMAX[k];try{snd('craft')}catch(e){try{snd('pick')}catch(_){}}say((h?'Fejlesztve: ':'Upgraded: ')+tr(LBL[k]||k)+' +'+(L+1));try{upgSave214()}catch(e){}}
+function upgSave214(){try{localStorage.setItem(SKEY()+'_upg',JSON.stringify(UPG214))}catch(e){}}
+function upgLoad214(){try{UPG214=JSON.parse(localStorage.getItem(SKEY()+'_upg')||'{}')||{}}catch(e){UPG214={}}upgAll214()}
+{const sv214=save;save=function(){const r=sv214.apply(this,arguments);upgSave214();return r}}
+{const ld214=load;load=function(){const r=ld214.apply(this,arguments);try{upgLoad214()}catch(e){}return r}}
+{const in214=init;init=function(){UPG214={};for(const k in ARM){const a=ARM[k];if(a.bp!=null){a.p=a.bp;if(a.bd)DMAX[k]=a.bd}}return in214.apply(this,arguments)}}
+/* the inventory: a +N badge on upgraded pieces, the hover card tells the next level's price; right-click a worn piece to upgrade */
+{const di214=drawInv;drawInv=function(){const r=di214.apply(this,arguments);try{const h=LANG=='hu';noTr=true;
+ for(const[q,x,y]of SLOT2_189){const k=EQ[q];if(!k)continue;const L=UPG214[k]|0;if(L){Q(x+24,y+2,11,9,'rgba(10,8,6,.85)');txt('+'+L,x+29,y+10,'#ffd84a','center')}}
+ const L_=invList();for(let i=0;i<Math.min(L_.length,IV2_189.cols*IV2_189.rows);i++){const k=L_[i],L=UPG214[k]|0;if(!L)continue;const c=iv2c189(i);txt('+'+L,c.x+IV2_189.cw-3,c.y+10,'#ffd84a','right')}
+ const s=SLOT2_189.find(s=>inR189(s[1],s[2],36,34));const k=s&&EQ[s[0]];
+ if(k&&upgOk214(k)){const L=UPG214[k]|0,lines=[];lines.push([tr(LBL[k]||k)+(L?' +'+L:'')+'   ('+(h?'szint ':'level ')+L+'/'+UPGMAX214+')','#f0e6b8']);
+  if(L>=UPGMAX214)lines.push([h?'Teljesen fejlesztve':'Fully upgraded','#9be07d']);
+  else{const c=upgCost214(k),ok=Object.keys(c).every(m=>(inv[m]|0)>=c[m])||creative,bn=upgBench214();lines.push([(h?'Következő: +1 védelem, +25% tartósság':'Next: +1 armour, +25% durability'),'#c8c0a8']);
+   lines.push([(h?'Ára: ':'Cost: ')+Object.keys(c).map(m=>c[m]+' '+tr(LBL[m]||LBLX[m]||m).toLowerCase()+' ('+(inv[m]|0)+')').join(', '),ok?'#9be07d':'#e07a6a']);
+   lines.push([bn?(h?'Jobb klikk: fejlesztés':'Right-click: upgrade'):(h?'Barkácsasztal mellett fejleszthető':'Upgrade by a crafting table'),bn?'#ffd84a':'#e0a070'])}
+  g.font=fnt(0,9);let w=0;for(const[t]of lines)w=Math.max(w,g.measureText(t).width);w=Math.ceil(w)+12;const bx=Math.max(4,Math.min(VW-w-4,ms.x-w-6)),by=Math.min(VH-lines.length*10-8,ms.y+6);
+  Q(bx,by,w,lines.length*10+6,'rgba(10,8,6,.94)');Q(bx,by,w,1,'#c8a050');lines.forEach(([t,c],i)=>txt(t,bx+6,by+11+i*10,c))}
+ noTr=false}catch(e){noTr=false}return r}}
+addEventListener('mousedown',e=>{if(!invOpen||state!='play'||e.button!==2)return;try{sc(e)}catch(_){return}const s=SLOT2_189.find(s=>inR189(s[1],s[2],36,34));if(!s)return;const k=EQ[s[0]];if(!k||!upgOk214(k))return;
+ e.preventDefault();e.stopImmediatePropagation();upgTry214(k)},true);
+addEventListener('contextmenu',e=>{if(invOpen&&state=='play')e.preventDefault()},true);
+HU.unshift(['Upgraded: ','Fejlesztve: '],['Missing: ','Hiányzik: ']);
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
