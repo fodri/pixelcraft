@@ -11791,11 +11791,11 @@ const HOME191=new Set();
  /* 4x5 inside: hamlet huts, small town houses */
  S(HPL,[["mn.a","m..K","RR.f","hT.j","p..k"],["Kfnm","j..m","hT..","a.RR","p..."]]);
  /* 5x5 inside: village huts */
- S(HPL5,[["mn.Kf","m...j","aR.hT","NN..k",".v..p"],["fK.nm","j...m","Th.Ra","k.NN.","p..v."]]);
+ S(HPL5,[["mn.Kf","m...j",".R.hT","NN..k","av..p"],["fK.nm","j...m","Th.R.","k..NN","p..va"]]);
  /* 7x6 inside: big village houses, villas */
- S(HPL4,[["Qj#mn.a","J.#m...","#D...hT","K...NN.","f..RRR.","j...v.p"],["a.nm#jQ","...m#.J","Th...D#",".NN...K",".RRR..f","pv....j"]]);
+ S(HPL4,[["Qj#mn.a","J.#m...","#D...hT","K...NN.","f..RRR.","j...v.p"],["a.nm#jQ","...m#.J","Th...D#","NN....K","RRR...f","pv....j"]]);
  /* 8x7 inside: town houses */
- S(HPL8,[["Qj#mnanm","J.#m...m","#D......","K...NN.h","f..RRR.T","r..RRR.h","j...v..p"],["mnanm#jQ","m...m#.J","Th....D#",".NN....K",".RRR...f",".RRR...r","pv.....j"]]);}
+ S(HPL8,[["Qj#mnanm","J.#m...m","#D......","K...NN.h","f..RRR.T","r..RRR.h","j...v..p"],["mnanm#jQ","m...m#.J","......D#","NN..hT.K","RRR....f","RRR....r","pv.....j"]]);}
 {const pp191=putPlan;putPlan=function(x0,y0,plan,mir,opt){const home=HOME191.has(plan)||[...HOME191].some(A=>A.includes(plan))||[...HOME191].some(A=>A.some(p=>p.length==plan.length&&p.every((r,i)=>r==plan[plan.length-1-i])));
  const r=pp191.apply(this,arguments);
  if(home){try{const rows=plan.length,cols=plan[0].length;let pap=0;for(let yy=y0;yy<y0+rows;yy++)for(let xx=x0;xx<x0+cols;xx++){const i=yy*W+xx,o=ob[i];if(!o)continue;if(o.t=='bones')ob[i]=null;else if(o.t=='papers'&&++pap>1)ob[i]=null;else if(o.t=='rubble'&&!'gbksfox'.includes(plan[yy-y0][mir?cols-1-(xx-x0):xx-x0]))ob[i]=null}}catch(e){}}
@@ -11889,6 +11889,52 @@ function jnSig192(){let s='';try{if(gsOn())s+='g'+GSX.s}catch(e){}try{s+='|'+DQ1
 /* a new step pops up briefly instead of the card */
 let GSL192=null;
 {const up192=update;update=function(dt){const r=up192.apply(this,arguments);try{if(state=='play'&&gsOn()){if(GSL192!=null&&GSX.s!==GSL192){const st=GSS[GSX.s],h=LANG=='hu';if(st)toast112((h?'Új feladat: ':'New task: ')+st.t[h?0:1],st.d[h?0:1]+(h?'  (Tab: napló)':'  (Tab: journal)'),'#ffd84a')}GSL192=GSX.s}else GSL192=null}catch(e){}return r}}
+
+/* ===== v193: nothing stands in the doorway any more (also tidied in worlds made with the last build); berry bushes and shrubs drawn from
+   the painted plant set instead of round blobs; palms, jungle trees and the painted plants regraded to the soft, pastel green of the
+   ordinary trees; a sapling looks like a little tree that grows. ===== */
+GAMEV=208;
+/* ---------- keep the way in clear ---------- */
+const FURN193=t=>t&&!/^(wall|twall|sblock|win|gwall|door|oup|odn|elev|stairs|hatch|rdown|p_.*)$/.test(t);
+function clearDoors193(){let n=0;for(const b of BLD){if(b.rf=='ruin')continue;const inB=(x,y)=>x>b.x&&x<b.x+b.w-1&&y>b.y&&y<b.y+b.h-1;
+ for(let x=b.x;x<b.x+b.w;x++)for(const y of[b.y,b.y+b.h-1]){const o=ob[y*W+x];if(!o||o.t!='door')continue;const dy=y==b.y?1:-1;
+  for(let k=1;k<=2;k++){const yy=y+dy*k;if(!inB(x,yy))break;const i=yy*W+x;let q=ob[i];if(!q)continue;const mi=q.pm!=null?q.pm:i,m=ob[mi];if(!m||!FURN193(m.t))break;
+   const t=m.t,fw=m.fw||1,fh=m.fh||1;let spot=-1;
+   for(let yy2=b.y+1;yy2<b.y+b.h-1&&spot<0;yy2++)for(let xx=b.x+1;xx<b.x+b.w-1-(fw-1);xx++){if(Math.abs(xx-x)<=1&&Math.abs(yy2-y)<=3)continue;let ok=true;for(let a=0;a<fw&&ok;a++)for(let c=0;c<fh&&ok;c++){const j=(yy2+c)*W+xx+a;if(ob[j]||!inB(xx+a,yy2+c)||yy2+c>=b.y+b.h-1)ok=false}
+    if(!ok)continue;const wl=j=>{const z=ob[j];return z&&/^(wall|twall|sblock|win|gwall)$/.test(z.t)};if(!(wl(yy2*W+xx-1)||wl(yy2*W+xx+fw)||wl((yy2-1)*W+xx)||wl((yy2+fh)*W+xx)))continue;spot=yy2*W+xx}
+   try{rmObj(mi)}catch(e){ob[mi]=null}if(spot>=0){const o2=Object.assign({},m);delete o2.pm;if(fw>1||fh>1)setFP(o2,spot%W,(spot/W)|0,fw,fh);else ob[spot]=o2}n++}}}return n}
+{const g193=genDesertTowers;genDesertTowers=function(){const r=g193.apply(this,arguments);try{clearDoors193()}catch(e){}return r}}
+let CDR193=false;{const ld193=load;load=function(){CDR193=false;return ld193.apply(this,arguments)}}
+{const up193=update;update=function(dt){up193(dt);if(!CDR193&&state=='play'&&!inD&&!inC){CDR193=true;try{clearDoors193()}catch(e){}}}}
+/* ---------- regrade the saturated painted plants to the pastel tree green ---------- */
+function grade193(src){const c=document.createElement('canvas');c.width=src.width;c.height=src.height;const x=c.getContext('2d');x.drawImage(src,0,0);const d=x.getImageData(0,0,c.width,c.height),a=d.data;
+ for(let i=0;i<a.length;i+=4){if(a[i+3]==0)continue;let r=a[i]/255,gg=a[i+1]/255,bb=a[i+2]/255;const mx=Math.max(r,gg,bb),mn=Math.min(r,gg,bb);let l=(mx+mn)/2,h=0,s=0;
+  if(mx!=mn){const dd=mx-mn;s=l>.5?dd/(2-mx-mn):dd/(mx+mn);h=mx==r?(gg-bb)/dd+(gg<bb?6:0):mx==gg?(bb-r)/dd+2:(r-gg)/dd+4;h*=60}
+  const green=h>=48&&h<=170&&s>.12,wt=green?1:.55;
+  if(green){h+=Math.max(0,28-Math.max(0,h-110)*.6);s*=.44;l=.15+l*1.1}else{s*=.72;l=.08+l*1.02}
+  l=Math.min(.92,l);const q=l<.5?l*(1+s):l+s-l*s,p=2*l-q,f=t=>{t=(t%360+360)%360/360;const u=t<1/6?p+(q-p)*6*t:t<.5?q:t<2/3?p+(q-p)*(2/3-t)*6:p;return Math.round(u*255)};
+  if(s==0){a[i]=a[i+1]=a[i+2]=Math.round(l*255)}else{a[i]=f(h+120);a[i+1]=f(h);a[i+2]=f(h-120)}}
+ x.putImageData(d,0,0);return c}
+let GRD193=0;
+function gradePlants193(){if(GRD193)return true;const hj=HDMAP.get(JTR.img),hp=HDMAP.get(JPL.img);if(!JTR.ok||!JPL.ok||!(hj&&hj.ok)||!(hp&&hp.ok))return false;
+ try{const j1=grade193(JTR.img),j2=grade193(hj.img),p1=grade193(JPL.img),p2=grade193(hp.img);JTR.img=j1;JPL.img=p1;HDMAP.set(j1,{img:j2,ok:true});HDMAP.set(p1,{img:p2,ok:true});JPALMC.clear();try{ASP.clear()}catch(e){}}catch(e){console.warn('grade193',e)}GRD193=1;return true}
+{const t193=setInterval(()=>{if(gradePlants193())clearInterval(t193)},120)}
+/* ---------- bushes from the painted set ---------- */
+const BLEAF193=[74,1,13,3,21,8];
+{const bu193=DRAWX.bush;DRAWX.bush=function(o,x,y,t){if(CLASSIC||!JPL.ok||!GRD193)return bu193.apply(this,arguments);const tx=Math.round(x/T),ty=Math.round(y/T),bb=inD?0:(bm?bm[ty*W+tx]|0:0);if(bb==2)return bu193.apply(this,arguments);
+ const hh=aHash(tx,ty,193),k=o.b?(hh<.75?78:76):BLEAF193[Math.floor(hh*BLEAF193.length)],q=JPL.s[k];if(!q)return bu193.apply(this,arguments);
+ const sc=o.b?1:1.15,w=Math.round(q[2]*sc),h=Math.round(q[3]*sc),cx=Math.round(x-cam.x+8),by=Math.round(y-cam.y+15);
+ g.fillStyle='rgba(10,20,8,.26)';g.beginPath();g.ellipse(cx,by-1,Math.max(4,w*.42),2.4,0,0,6.28);g.fill();
+ if(!o.b&&hh>.5){const q2=JPL.s[BLEAF193[(Math.floor(hh*31))%BLEAF193.length]];g.drawImage(JPL.img,q2[0],q2[1],q2[2],q2[3],cx-q2[2]+3,by-q2[3]+1,q2[2],q2[3])}
+ g.drawImage(JPL.img,q[0],q[1],q[2],q[3],cx-Math.floor(w/2),by-h,w,h);
+ if(bb==1){g.fillStyle='rgba(236,242,248,.9)';for(let i=0;i<5;i++){const a=Math.floor(aHash(tx,i,194)*(w-4)),b_=Math.floor(aHash(ty,i,195)*4);g.fillRect(cx-Math.floor(w/2)+2+a,by-h+2+b_,3,1)}}}}
+/* ---------- the sapling: a small tree that grows ---------- */
+{const sp193=DRAWX.sapl;DRAWX.sapl=function(o,x,y,t){if(CLASSIC||!JW.ok)return sp193.apply(this,arguments);const p=Math.min(1,Math.max(0,(gtime()-(o.pt||0))/2)),cx=Math.round(x-cam.x+8),by=Math.round(y-cam.y+14);
+ g.fillStyle='#5a4428';g.beginPath();g.ellipse(cx,by,5,2,0,0,6.28);g.fill();g.fillStyle='#7a5c36';g.fillRect(cx-3,by-1,6,1);
+ if(o.jt!=null&&JPL.ok){const q=JPL.s[[13,21,1][o.jt%3]],k=.45+.5*p;g.drawImage(JPL.img,q[0],q[1],q[2],q[3],cx-Math.round(q[2]*k/2),by-Math.round(q[3]*k),Math.round(q[2]*k),Math.round(q[3]*k));return}
+ const tk=JW.trees[Math.floor(aHash(Math.round(x/T),Math.round(y/T),196)*JW.trees.length)],q=JW.s[tk];if(!q)return sp193.apply(this,arguments);const k=.16+.24*p,w=Math.round(q[2]/2*k),h=Math.round(q[3]/2*k);
+ g.fillStyle='rgba(10,20,8,.22)';g.beginPath();g.ellipse(cx,by,Math.max(3,w*.35),1.5,0,0,6.28);g.fill();DI0.call(g,JW.img,q[0],q[1],q[2],q[3],cx-Math.floor(w/2),by-h,w,h)}}
+{const ic193=ICX.sapling;ICX.sapling=(x,y)=>{if(CLASSIC||!JW.ok||!JW.trees.length)return ic193(x,y);const q=JW.s[JW.trees[0]],k=Math.min(18/(q[2]/2),18/(q[3]/2));const w=Math.round(q[2]/2*k),h=Math.round(q[3]/2*k);Q(x+6,y+17,8,2,'#5a4428');DI0.call(g,JW.img,q[0],q[1],q[2],q[3],x+10-Math.floor(w/2),y+18-h,w,h)}}
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
