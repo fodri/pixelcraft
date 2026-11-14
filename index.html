@@ -12096,6 +12096,53 @@ HU.push(['Searched the ','Átkutattad: '],[' (E again: repair & drive)',' (E új
 /* no round blob shrubs in the undergrowth either */
 {const dj196=drawObj;const SW196=['u0','u2','u3','u6','u7','u1','u5','u8'];drawObj=function(o,x,y){if(o&&o.t=='jbush'&&(o.k=='u9'||o.k=='u10'||o.k=='u4'))o.k=SW196[Math.floor(aHash(Math.round(x/T),Math.round(y/T),305)*SW196.length)];return dj196(o,x,y)}}
 
+/* ===== v197: weather that matters — morning and evening fog (the world fades out past a few steps, and the infected creep closer in
+   it), sandstorms that close in around you in the desert, lightning in thunderstorms; rain soaks your clothes (wet clothes make the
+   cold bite harder until you dry off by a fire or indoors) and puts out campfires left in the open. ===== */
+GAMEV=212;
+const hu197=()=>LANG=='hu',B197=(a,b)=>hu197()?a:b;
+const FOG197={d:0,tg:0,until:-1,lastDay:-1,zT:20};
+let FOGTX197=null;
+function fogTex197(){if(FOGTX197)return FOGTX197;const S=256,c=document.createElement('canvas');c.width=c.height=S;const x=c.getContext('2d');
+ for(let k=0;k<70;k++){const cx=Math.random()*S,cy=Math.random()*S,r=20+Math.random()*60;for(const[ox,oy]of[[0,0],[S,0],[-S,0],[0,S],[0,-S]]){const gr=x.createRadialGradient(cx+ox,cy+oy,0,cx+ox,cy+oy,r);gr.addColorStop(0,'rgba(255,255,255,.22)');gr.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=gr;x.fillRect(cx+ox-r,cy+oy-r,r*2,r*2)}}
+ return FOGTX197=c}
+const outdoor197=()=>!inD&&!(typeof inBuild=='function'&&inBuild())&&!(typeof underRoof=='function'&&underRoof(Math.floor(P.x/T),Math.floor(P.y/T)));
+const raining197=()=>wea>0&&!inD&&(cb|0)!=1&&(cb|0)!=2;
+const pb197=()=>bm?bm[Math.floor(P.y/T)*W+Math.floor(P.x/T)]|0:0;
+/* ---------- the overlay: drawn over the world, under the HUD ---------- */
+{const we197=weather;weather=function(){const r=we197.apply(this,arguments);try{if(state!='play'||inD)return r;const b=pb197(),sand=wea==2&&b==2,fd=FOG197.d,now=performance.now();
+ if(fd>.02&&!sand){const tx=fogTex197(),ox=((-cam.x*.6-now*.006)%256+256)%256,oy=((-cam.y*.6)%256+256)%256,a=fd*.9;g.save();g.globalAlpha=a;for(let y=-oy;y<VH;y+=256)for(let x=-ox;x<VW;x+=256)g.drawImage(tx,Math.round(x),Math.round(y));g.globalAlpha=1;
+  const px=(P.x-cam.x)*ZM,py=(P.y-cam.y-6)*ZM,cl=b==1?'226,232,238':'196,204,200',gr=g.createRadialGradient(px,py,40,px,py,Math.max(VW,VH)*.62);gr.addColorStop(0,'rgba('+cl+',0)');gr.addColorStop(.45,'rgba('+cl+','+(fd*.55).toFixed(3)+')');gr.addColorStop(1,'rgba('+cl+','+(fd*.88).toFixed(3)+')');g.fillStyle=gr;g.fillRect(0,0,VW,VH);g.restore()}
+ if(sand){const px=(P.x-cam.x)*ZM,py=(P.y-cam.y-6)*ZM,gr=g.createRadialGradient(px,py,30,px,py,Math.max(VW,VH)*.55);gr.addColorStop(0,'rgba(196,150,90,.08)');gr.addColorStop(.4,'rgba(186,140,80,.55)');gr.addColorStop(1,'rgba(150,104,58,.92)');g.fillStyle=gr;g.fillRect(0,0,VW,VH);
+  const tx=fogTex197(),ox=((-cam.x-now*.09)%256+256)%256;g.save();g.globalAlpha=.5;g.globalCompositeOperation='multiply';for(let y=0;y<VH;y+=256)for(let x=-ox;x<VW;x+=256)g.drawImage(tx,Math.round(x),y);g.restore()}
+ if(LIT197.t>0){g.fillStyle='rgba(235,240,255,'+(Math.min(1,LIT197.t/.12)*.55).toFixed(3)+')';g.fillRect(0,0,VW,VH)}
+ if((P.wet||0)>.15){const k=P.wet;txt(B197('Vizes ruha ','Wet clothes ')+Math.round(k*100)+'%',6,66,'#8ab8e0')}}catch(e){}return r}}
+const LIT197={t:0,next:6};
+/* ---------- ticking: fog schedule, lightning, wet clothes, fires going out in the rain, creeping infected ---------- */
+let RF197=0;
+{const up197=update;update=function(dt){up197(dt);if(state!='play')return;try{const b=pb197();
+ /* fog: some mornings and evenings, never in the desert */
+ const dd=day|0;if(FOG197.lastDay!==dd&&time<.08){FOG197.lastDay=dd;if(Math.random()<.42){FOG197.tg=.6+Math.random()*.3;FOG197.until=.13+Math.random()*.06}}
+ if(FOG197.until>0&&time>FOG197.until&&time<.5){FOG197.tg=0;FOG197.until=-1}
+ if(FOG197.until<0&&time>.63&&time<.64&&FOG197.tg==0&&Math.random()<.004){FOG197.tg=.45+Math.random()*.25;FOG197.until=.8}
+ if(FOG197.until>.5&&time>FOG197.until){FOG197.tg=0;FOG197.until=-1}
+ const want=(b==2||wea==2)?0:FOG197.tg*(b==1?.7:1);FOG197.d+=(want-FOG197.d)*Math.min(1,dt*.25);
+ /* creeping infected in thick fog */
+ if(FOG197.d>.5&&!inD&&surv&&!creative){FOG197.zT-=dt;if(FOG197.zT<=0){FOG197.zT=14+Math.random()*12;const a=Math.random()*6.283,r=170+Math.random()*60,x=P.x+Math.cos(a)*r,y=P.y+Math.sin(a)*r,tx=Math.floor(x/T),ty=Math.floor(y/T);
+  if(tx>2&&ty>2&&tx<W-2&&ty<H-2&&!ob[ty*W+tx]&&map[ty*W+tx]!=1&&map[ty*W+tx]!=9&&zs.length<60)zs.push({x,y,hp:2,a:0,t:0,vx:0,vy:0,z:1})}}
+ /* lightning */
+ if(LIT197.t>0)LIT197.t-=dt;if(wea==2&&b!=2&&b!=1&&!inD){LIT197.next-=dt;if(LIT197.next<=0){LIT197.next=5+Math.random()*12;LIT197.t=.18;setTimeout(()=>{try{snd('thunder')}catch(e){}},300+Math.random()*900)}}
+ /* wet clothes */
+ const out=outdoor197();let w=P.wet||0;if(raining197()&&out&&!P.boat)w+=dt*(wea==2?.05:.022);else{const warm=typeof nearWarm=='function'&&nearWarm(80);w-=dt*(warm?.09:out?.012:.025)}
+ if(typeof P.swim!='undefined'&&P.swim)w=1;P.wet=Math.max(0,Math.min(1,w));
+ /* fires in the open go out in the rain */
+ RF197-=dt;if(RF197<=0){RF197=3;if(raining197()){const tx=Math.floor(P.x/T),ty=Math.floor(P.y/T);let said=false;for(let y=Math.max(0,ty-18);y<=Math.min(H-1,ty+18);y++)for(let x=Math.max(0,tx-24);x<=Math.min(W-1,tx+24);x++){const o=ob[y*W+x];if(!o||o.t!='fire'||!o.on)continue;
+   if(typeof underRoof=='function'&&underRoof(x,y))continue;let cover=false;for(const[a,c]of[[0,-1],[-1,0],[1,0]]){const q=ob[(y+c)*W+x+a];if(q&&/tent|ctent|stent|roof|shelter/.test(q.t))cover=true}if(cover)continue;
+   if(Math.random()<(wea==2?.35:.15)){o.on=false;if(o.fl!=null)o.fl=Math.min(o.fl,0);for(let k=0;k<6;k++)parts.push({x:x*T+8,y:y*T+4,vx:(Math.random()-.5)*20,vy:-20-Math.random()*20,l:.9,c:'rgba(160,160,160,.6)'});if(!said&&Math.abs(x-tx)<10&&Math.abs(y-ty)<8){said=true;say(B197('Az eső eloltotta a tüzet. Tegyél fölé tetőt, vagy rakd sátor mellé.','The rain put out the fire. Build a roof over it, or set it beside a tent.'))}}}}}
+ }catch(e){}}}
+/* wet clothes make the cold bite harder */
+{const cm197=coldMul;coldMul=function(){return cm197.apply(this,arguments)*(1+(P.wet||0)*.9)}}
+
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
  if(state=='title')menu();if(state=='opts')optsMenu();if(state=='sndo')sndMenu();if(state=='gfxo')gfxMenu();if(state=='slots')svMenu();if(state=='keys')keysMenu();if(state=='wthr')wthrMenu();if(state=='char')charMenu();if(state=='lobby')drawLobby();if(state=='hb'){Q(0,0,VW,VH,'rgba(6,10,6,.6)');drawHB()}if(0)title('ASHFALL',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Hold the fire. Survive the nights.','','WASD move \u2022 Space chop / fish / attack \u2022 Tab recipes','Press any key']);
