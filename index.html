@@ -12792,6 +12792,69 @@ addEventListener('mousedown',e=>{if(e.button!==0||!(e.ctrlKey||CTRLH)||state!='p
  e.preventDefault();e.stopImmediatePropagation();CLK210=hit;try{const code=(typeof KB!='undefined'&&KB.use)||'KeyE';dispatchEvent(new KeyboardEvent('keydown',{code,key:'e',bubbles:true}));dispatchEvent(new KeyboardEvent('keyup',{code,key:'e',bubbles:true}))}finally{CLK210=null}},true);
 HU.unshift(['Too far — get closer','Túl messze van — menj közelebb']);
 
+/* ===== v211: a tidier map — switches beside the big map choose what it shows (names, camps, marks, ruins and shrines, fast-travel
+   points, partners, the rest); names can be hidden and then only appear under the mouse. Click a marker (your gravestone, home,
+   a camp, a ruin, a mark…) to follow it: a dashed line and an arrow with the distance lead you there, on screen and on the minimap. ===== */
+GAMEV=226;
+const MF211={on:{nm:1,cmp:1,wp:1,rn:1,ft:1,pl:1,ot:1},drawing:false,G:null,chips:[]};
+try{const d=JSON.parse(localStorage.getItem('pc_mapf211')||'null');if(d)Object.assign(MF211.on,d)}catch(e){}
+function mfSave211(){try{localStorage.setItem('pc_mapf211',JSON.stringify(MF211.on))}catch(e){}}
+const MFL211=[['nm','Feliratok','Names'],['cmp','Táborok','Camps'],['wp','Jelölések','Marks'],['rn','Romok','Ruins'],['ft','Gyorsutazás','Fast travel'],['pl','Társak','Partners'],['ot','Egyéb','Other']];
+function mfCat211(k){return k=='w'?'wp':(k=='rv'||k=='rx'||k=='r2')?'rn':k=='p'?'pl':(k=='d'||k=='h'||k=='s')?null:'ot'}
+{const mm211=mapMarks;mapMarks=function(){const r=mm211.apply(this,arguments);if(!MF211.drawing)return r;return r.filter(m=>{const c=mfCat211(m.k);return !c||MF211.on[c]})}}
+{const fp211=funPlaces;funPlaces=function(){if(MF211.drawing&&!MF211.on.ft)return[];return fp211.apply(this,arguments)}}
+{const tx211=txt;txt=function(s,x,y,c,al){if(MF211.drawing&&!MF211.on.nm&&MF211.G){const G=MF211.G;if(x>=G.fx&&x<=G.fx+G.MS&&y>G.fy+16&&y<G.fy+G.MS-10&&Math.hypot(ms.x-x,ms.y-y)>28&&!(typeof TRK211!='undefined'&&TRK211&&TRK211.lab===s))return}return tx211.apply(this,arguments)}}
+/* trackable things on the big map, in world coordinates */
+function mfTargets211(){const h=LANG=='hu',L=[];
+ try{for(const m of mapMarks()){if(m.k=='s'||m.k=='p')continue;const c=mfCat211(m.k);if(c&&!MF211.on[c])continue;
+  const lab=m.k=='d'?(h?'Sírkő':'Gravestone'):m.k=='h'?(h?'Otthon':'Home'):m.k=='w'?(m.n||(h?'Jelölés':'Mark')):m.k=='rv'?(h?'Rom':'Ruin'):(m.k=='rx'||m.k=='r2')?(h?'Szentély':'Shrine'):(m.n||'?');
+  const col=m.k=='d'?'#ff5a4a':m.k=='h'?'#ffe9a0':m.c||'#ffd84a';L.push({x:m.x,y:m.y,lab,col,k:m.k})}}catch(e){}
+ if(MF211.on.cmp){const seen=[];for(const n of NPCS){if(seen.some(s=>Math.hypot(s[0]-n.hx,s[1]-n.hy)<40)||!fogSeen(n.hx/T,n.hy/T))continue;seen.push([n.hx,n.hy]);L.push({x:n.hx,y:n.hy,lab:h?'Tábor':'Camp',col:'#f0d890',k:'camp'})}}
+ for(const b of BLD){if(b.rf!='hosp'||!fogSeen(b.x+b.w/2,b.y+b.h/2))continue;L.push({x:(b.x+b.w/2)*T,y:(b.y+b.h/2)*T,lab:h?'Kórház':'Hospital',col:'#ff9a9a',k:'hosp'})}
+ return L}
+let TRK211=null;
+function trkSet211(t){TRK211=t?{x:t.x,y:t.y,lab:t.lab,col:t.col||'#ffd84a',k:t.k}:null}
+/* the big map: filters around it, a ring around the followed target */
+function mfChips211(G){const h=LANG=='hu',x=G.fx+G.MS+8,w=Math.min(84,VW-x-4),out=[];let y=G.fy;if(w<40)return out;
+ for(const[k,hu,en]of MFL211){out.push({k,x,y,w,h:12,t:h?hu:en});y+=14}return out}
+{const dm211=drawMapFull;drawMapFull=function(){const G=mapGeo();MF211.G=G;MF211.drawing=true;const sv=NPCS;if(!MF211.on.cmp)NPCS=[];let r;
+ try{r=dm211.apply(this,arguments)}finally{NPCS=sv;MF211.drawing=false}
+ try{if(!inD){noTr=true;const h=LANG=='hu';
+  if(TRK211){const X=Math.round(G.x0+TRK211.x/T*G.mf),Y=Math.round(G.y0+TRK211.y/T*G.mf),p=(performance.now()/400)%1;g.save();g.beginPath();g.rect(G.fx,G.fy,G.MS,G.MS);g.clip();g.strokeStyle=TRK211.col;g.globalAlpha=1-p;g.lineWidth=1;g.beginPath();g.arc(X,Y,4+p*8,0,6.283);g.stroke();g.globalAlpha=1;
+   const PX=G.x0+P.x/T*G.mf,PY=G.y0+P.y/T*G.mf;g.setLineDash([3,3]);g.globalAlpha=.8;g.beginPath();g.moveTo(PX,PY);g.lineTo(X,Y);g.stroke();g.setLineDash([]);g.globalAlpha=1;g.restore()}
+  /* hover hint */
+  const t=mfHit211(G);if(t){Q(ms.x+8,ms.y-14,Math.ceil(t.lab.length*4.6)+60,11,'rgba(10,8,6,.85)');txt(t.lab+(TRK211&&Math.hypot(TRK211.x-t.x,TRK211.y-t.y)<4?(h?' · követés le':' · stop'):(h?' · követés':' · follow')),ms.x+12,ms.y-6,t.col)}
+  MF211.chips=mfChips211(G);if(MF211.chips.length){txt(h?'Mutasd:':'Show:',MF211.chips[0].x,G.fy-3,'#cfd8c0')}
+  for(const c of MF211.chips){const on=MF211.on[c.k],hov=ms.x>=c.x&&ms.x<c.x+c.w&&ms.y>=c.y&&ms.y<c.y+c.h;Q(c.x,c.y,c.w,c.h,hov?'rgba(60,50,24,.95)':'rgba(10,8,6,.82)');Q(c.x+2,c.y+3,6,6,'#000');if(on)Q(c.x+3,c.y+4,4,4,'#ffd84a');txt(c.t,c.x+11,c.y+9,on?'#fff2c8':'#8a8070')}
+  if(TRK211){const y=G.fy+MFL211.length*14+6,x=G.fx+G.MS+8,w=Math.min(84,VW-x-4);if(w>=40){Q(x,y,w,22,'rgba(10,8,6,.82)');Q(x,y,w,1,TRK211.col);txt(TRK211.lab.slice(0,14),x+3,y+9,TRK211.col);txt(h?'× ne kövesd':'× stop',x+3,y+19,'#c8b890');MF211.stop={x,y,w,h:22}}}else MF211.stop=null;
+  noTr=false}}catch(e){noTr=false}return r}}
+function mfHit211(G){if(ms.x<G.fx||ms.y<G.fy||ms.x>G.fx+G.MS||ms.y>G.fy+G.MS)return null;let b=null,bd=7;for(const t of mfTargets211()){const X=G.x0+t.x/T*G.mf,Y=G.y0+t.y/T*G.mf,d=Math.hypot(ms.x-X,ms.y-Y);if(d<bd){bd=d;b=t}}return b}
+addEventListener('mousedown',e=>{if(state!='play'||!showMap||inD||e.button!==0)return;try{sc(e)}catch(_){return}const G=mapGeo();
+ for(const c of MF211.chips)if(ms.x>=c.x&&ms.x<c.x+c.w&&ms.y>=c.y&&ms.y<c.y+c.h){e.preventDefault();e.stopImmediatePropagation();MF211.on[c.k]=MF211.on[c.k]?0:1;mfSave211();try{snd('ui')}catch(_){}return}
+ const s=MF211.stop;if(s&&ms.x>=s.x&&ms.x<s.x+s.w&&ms.y>=s.y&&ms.y<s.y+s.h){e.preventDefault();e.stopImmediatePropagation();trkSet211(null);try{snd('ui')}catch(_){}return}
+ if(MAPZ&&MAPZ.z>1&&!MAPZ.pass)return;/* zoomed: wait for the click to come back from the pan handler */
+ try{if(MF211.on.ft&&funMapPts().some(q=>Math.hypot(ms.x-q.X,ms.y-q.Y)<8))return}catch(_){}
+ const t=mfHit211(G);if(!t)return;e.preventDefault();e.stopImmediatePropagation();const h=LANG=='hu';
+ if(TRK211&&Math.hypot(TRK211.x-t.x,TRK211.y-t.y)<4){trkSet211(null);say(h?'Nem követed tovább':'Stopped following')}else{trkSet211(t);say((h?'Követed: ':'Following: ')+t.lab)}try{snd('ui')}catch(_){}},true);
+/* a new mark of your own is followed straight away; removing it stops */
+{const ws211=wpSet;wpSet=function(x,y){const r=ws211.apply(this,arguments);try{const h=LANG=='hu';if(x==null){if(TRK211&&TRK211.k=='w')trkSet211(null)}else trkSet211({x,y,lab:h?'Jelölés':'Mark',col:'#ffd84a',k:'w'})}catch(e){}return r}}
+/* in the world: a dashed line from you, and the arrow with the distance */
+function trkWorld211(){const t=TRK211;if(!t||inD||showMap||book||invOpen||(typeof JN!='undefined'&&JN)||tut||(typeof PHOTO!='undefined'&&PHOTO))return;const d=Math.hypot(t.x-P.x,t.y-P.y);
+ if(d<T*1.6){const h=LANG=='hu';say(h?'Megérkeztél: '+t.lab:'You arrived: '+t.lab);trkSet211(null);return}
+ const px=(P.x-cam.x)*ZM,py=(P.y-cam.y-6)*ZM,tx=(t.x-cam.x)*ZM,ty=(t.y-cam.y)*ZM,a=Math.atan2(ty-py,tx-px),L=Math.min(Math.hypot(tx-px,ty-py)-6,150),off=(performance.now()/60)%8;
+ g.save();g.lineWidth=1.5;g.lineCap='round';for(let s=14+off;s<L;s+=8){const k=1-s/Math.max(150,L);g.globalAlpha=Math.max(0,.75*k);g.strokeStyle=t.col;g.beginPath();g.moveTo(px+Math.cos(a)*s,py+Math.sin(a)*s);g.lineTo(px+Math.cos(a)*(s+4),py+Math.sin(a)*(s+4));g.stroke()}g.restore();g.globalAlpha=1;
+ try{noTr=true;arrow112(t.x,t.y,t.col,t.lab)}catch(e){}noTr=false}
+{const dr211=draw;draw=function(){const r=dr211.apply(this,arguments);try{if(state=='play')trkWorld211()}catch(e){noTr=false;g.globalAlpha=1}return r}}
+/* the minimap: a line towards the target */
+{const mn211=drawMini;drawMini=function(){const r=mn211.apply(this,arguments);try{const t=TRK211;if(t&&!inD){const S=64,X=6,Y=VH-S-10,N=44;let tx=Math.round(P.x/T-N/2),ty=Math.round(P.y/T-N/2);tx=Math.max(0,Math.min(W-N,tx));ty=Math.max(0,Math.min(H-N,ty));const k=S/N;
+  const ax=X+(P.x/T-tx)*k,ay=Y+(P.y/T-ty)*k,bx=X+(t.x/T-tx)*k,by=Y+(t.y/T-ty)*k;g.save();g.beginPath();g.rect(X,Y,S,S);g.clip();g.strokeStyle=t.col;g.lineWidth=1;g.setLineDash([2,2]);g.beginPath();g.moveTo(ax,ay);g.lineTo(bx,by);g.stroke();g.setLineDash([]);g.restore()}}catch(e){}return r}}
+{const in211=init;init=function(){TRK211=null;return in211.apply(this,arguments)}}
+HU.unshift(['Show:','Mutasd:']);
+/* the calendar card, the status lines and the thermometer stay out of the inventory, crafting, skills and the map */
+function uiOpen211(){return invOpen||book||skOpen||showMap||(typeof stOpen!='undefined'&&stOpen)||(typeof JN!='undefined'&&JN)||(typeof TPV!='undefined'&&TPV)||(typeof SETLUI!='undefined'&&SETLUI)||(typeof CKO!='undefined'&&CKO)||(typeof CHP!='undefined'&&CHP)||tut||(typeof PHOTO!='undefined'&&PHOTO)}
+calOn209=function(){return state=='play'&&!uiOpen211()};
+{const th211=thermo210;thermo210=function(){if(uiOpen211())return;return th211.apply(this,arguments)}}
+
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
  if(state=='title')menu();if(state=='opts')optsMenu();if(state=='sndo')sndMenu();if(state=='gfxo')gfxMenu();if(state=='slots')svMenu();if(state=='keys')keysMenu();if(state=='wthr')wthrMenu();if(state=='char')charMenu();if(state=='lobby')drawLobby();if(state=='hb'){Q(0,0,VW,VH,'rgba(6,10,6,.6)');drawHB()}if(0)title('ASHFALL',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Hold the fire. Survive the nights.','','WASD move \u2022 Space chop / fish / attack \u2022 Tab recipes','Press any key']);
