@@ -11703,10 +11703,10 @@ try{const R_=GPAGES.main.rows,row=R_.find(r=>r.k=='shtype');if(row){const N_=()=
 
 /* ===== v189: wardrobes, shelves, fridges, cabinets and potted plants stand against a wall (never in front of a bed or a door);
    a full-screen inventory — your items on the left, your character large on the right with the gear slots beside it. ===== */
-GAMEV=203;
+GAMEV=204;
 const hu189=()=>LANG=='hu';
 /* ---------- furniture against the wall ---------- */
-const WALLF189={wardrobe:1,bshelf:1,fridge:1,cabinet:1,pot:1};
+const WALLF189={wardrobe:1,bshelf:1,fridge:1,cabinet:1,pot:1,nstand:1};
 const WALLT189=/^(sblock|wall|iwall|gwall|twall|cubw|win|wfence|p_cabin)$/;
 function isWall189(i){if(i<0||i>=W*H)return true;const m=map[i];if(m==5||m==11)return true;const o=ob[i];return !!(o&&WALLT189.test(o.t))}
 const N4_189=[1,-1,0,0],M4_189=[0,0,1,-1];
@@ -11722,7 +11722,7 @@ function fixFurn189(all){let moved=0;const sz=W*H;for(let i=0;i<sz;i++){const o=
 const FURNSEEN189=new WeakSet();
 {const up189=update;update=function(dt){up189(dt);try{if(inD&&map&&!FURNSEEN189.has(map)){FURNSEEN189.add(map);fixFurn189(false)}}catch(e){}}}
 /* ---------- the full-screen inventory ---------- */
-const IV2_189={x:12,y:40,cw:36,ch:32,sx:38,sy:34,cols:7,rows:6},CHX189=388,CHY189=214;
+const IV2_189={x:12,y:40,cw:36,ch:32,sx:38,sy:34,cols:7,rows:6},CHX189=388,CHY189=229;
 const SLOT2_189=[['h',306,46],['c',306,96],['l',306,146],['b',306,196],['mk',434,46],['p',434,96]];
 const SLN189={h:['Head','Fej / sisak'],c:['Body','Kabát / páncél'],l:['Legs','Nadrág'],b:['Feet','Cipő'],mk:['Mask','Maszk'],p:['Bag','Táska']};
 const iv2c189=i=>({x:IV2_189.x+(i%IV2_189.cols)*IV2_189.sx,y:IV2_189.y+Math.floor(i/IV2_189.cols)*IV2_189.sy});
@@ -11738,12 +11738,12 @@ drawInv=function(){const L=invList(),h=hu189(),cap=invCap(),used=invUsed();let h
  noTr=true;txt(h?'Katt: kézbe / hotbarra · Kék sarok: felvehető ruha (katt: felvesz)':'Click: hold / to hotbar · Blue corner: wearable (click: wear)',150,258,'#9a8a6a','center');txt(h?'Jobb katt: 1 eldob (Shift: mind) · I / Esc: bezár':'Right-click: drop 1 (Shift: all) · I / Esc: close',150,266,'#9a8a6a','center');noTr=false;
  /* right: the character and the gear */
  Q(300,6,174,262,'#5a4428');Q(302,8,170,258,'#1e1610');drawSearch(300,13,112);
- const gr=g.createRadialGradient(CHX189,CHY189-50,8,CHX189,CHY189-50,90);gr.addColorStop(0,'rgba(255,220,150,.18)');gr.addColorStop(1,'rgba(255,220,150,0)');g.fillStyle=gr;g.fillRect(302,30,170,230);
- Q(CHX189-30,CHY189-2,60,6,'rgba(0,0,0,.35)');
- const f=[[0,1],[1,0],[0,-1],[-1,0]][IVROT189&3];try{chNoSh=true;drawChar(CHX189,CHY189,CH,0,f[0],f[1],4.2,eqOf())}catch(e){}finally{chNoSh=false}
+ const gr=g.createRadialGradient(CHX189,CHY189-90,10,CHX189,CHY189-90,120);gr.addColorStop(0,'rgba(255,220,150,.18)');gr.addColorStop(1,'rgba(255,220,150,0)');g.fillStyle=gr;g.fillRect(302,30,170,230);
+ Q(CHX189-44,CHY189-3,88,8,'rgba(0,0,0,.35)');
+ const f=[[0,1],[1,0],[0,-1],[-1,0]][IVROT189&3];try{chNoSh=true;drawChar(CHX189,CHY189,CH,0,f[0],f[1],9.4,eqOf())}catch(e){}finally{chNoSh=false}
  for(const[q,x,y]of SLOT2_189){const k=EQ[q],on=inR189(x,y,36,34);Q(x-1,y-1,38,36,on?'#ffd84a':'#46503e');Q(x,y,36,34,on?'#4a3722':'#2c2118');if(k){icon(k,x+8,y+2);if(DMAX[k]){Q(x+4,y+30,28,2,'#222');Q(x+4,y+30,Math.max(1,28*(du[k]??DMAX[k])/DMAX[k]),2,'#7dff7d')}if(on)hv=k}else{noTr=true;txt(SLN189[q][h?1:0].split(' / ')[0],x+18,y+21,'#6a6a60','center');noTr=false}}
- const ap=armPts();noTr=true;txt((h?'Védelem ':'Armor ')+ap+' ('+Math.round(Math.min(.75,ap*.03)*100)+'%)',CHX189,236,'#9ab8d0','center');const warm=(EQ.c=='wcoat'?1:0)+(EQ.h=='what'?1:0);txt((h?'Meleg ruha: ':'Warm clothes: ')+['—','●○','●●'][warm],CHX189,246,warm?'#f0c080':'#7a7a70','center');
- txt(h?'Q / E: forgatás':'Q / E: turn',CHX189,258,'#7a6a50','center');
+ const ap=armPts();noTr=true;txt((h?'Védelem ':'Armor ')+ap+' ('+Math.round(Math.min(.75,ap*.03)*100)+'%)',CHX189,242,'#9ab8d0','center');const warm=(EQ.c=='wcoat'?1:0)+(EQ.h=='what'?1:0);txt((h?'Meleg ruha: ':'Warm clothes: ')+['—','●○','●●'][warm],CHX189,251,warm?'#f0c080':'#7a7a70','center');
+ txt(h?'Q / E: forgatás':'Q / E: turn',CHX189,261,'#7a6a50','center');
  const bx=458,by=10,ox=inR189(bx,by,12,12);Q(bx,by,12,12,ox?'#a03a2a':'#5a2a1e');txt('×',bx+6,by+10,'#fff','center');noTr=false;
  if(hv){const t=LBL[hv]||hv;noTr=false;const w=Math.min(280,t.length*5+20);Q(ms.x+8,ms.y-14,w,12,'rgba(10,8,6,.9)');txt(t,ms.x+12,ms.y-5,'#f0e6b8')}
  hotbar();if(held)icon(held,ms.x-10,ms.y-10)};
@@ -11751,6 +11751,11 @@ invClick=function(btn){const L=invList();if(inR189(458,10,12,12)){invOpen=false;
  for(const[q]of SLOT2_189.filter(s=>inR189(s[1],s[2],36,34))){if(EQ[q])unequip(q);else if(held&&ARM[held]&&ARM[held].s==q){equip(held);held=null}return}
  for(let i=0;i<Math.min(L.length,IV2_189.cols*IV2_189.rows);i++){const c=iv2c189(i);if(inR189(c.x,c.y,IV2_189.cw,IV2_189.ch)){const k=L[i];if(ARM[k]&&btn!=2){equip(k);return}if(btn==2){dropItem(k,K.ShiftLeft||K.ShiftRight?9999:1);held=null}else held=held==k?null:k;return}}held=null};
 addEventListener('keydown',e=>{if(!invOpen||state!='play'||SFOC)return;if(e.code=='KeyQ'){IVROT189=(IVROT189+3)&3;e.stopImmediatePropagation()}else if(e.code=='KeyE'){IVROT189=(IVROT189+1)&3;e.stopImmediatePropagation()}},true);
+/* beds that ended up on open ground (outside any house) are cleared away; beds you place yourself stay */
+let BEDT189=0;
+{const up189b=update;update=function(dt){up189b(dt);BEDT189-=dt;if(BEDT189>0||inD||state!='play')return;BEDT189=2;try{const x0=Math.max(1,Math.floor(P.x/T)-45),x1=Math.min(W-2,Math.floor(P.x/T)+45),y0=Math.max(1,Math.floor(P.y/T)-35),y1=Math.min(H-2,Math.floor(P.y/T)+35);
+ for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const i=y*W+x,o=ob[i];if(!o||(o.t!='bed'&&o.t!='nstand')||o.pm!=null||o.wf||o.own)continue;const m=map[i];if(!(m==0||m==2||m==4||m==6))continue;if(BLD.some(b=>x>=b.x&&x<b.x+b.w&&y>=b.y&&y<b.y+b.h))continue;if(typeof rmObj=='function')rmObj(i);else ob[i]=null}}catch(e){}}}
+{const pl189b=place;place=function(){const tx=mtx,ty=mty,r=pl189b.apply(this,arguments);try{const o=ob[ty*W+tx];if(o&&(o.t=='bed'||o.t=='nstand'))o.own=1}catch(e){}return r}}
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
