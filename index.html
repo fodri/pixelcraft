@@ -11597,6 +11597,16 @@ Object.assign(NMX,{jbush:'undergrowth'});HU.unshift(['undergrowth','aljnövényz
   if(bad){W_(ox+1,oy+2,1,1,'#fff');W_(ox+4,oy+1,1,1,'#fff');W_(ox+6,oy+3,1,1,'#fff');W_(ox+3,oy+3,1,1,'#fff')}else W_(ox+5,oy+2,1,1,'rgba(255,255,255,.5)');return}
  return do186(o,x,y)}}
 
+/* ===== v186: smaller people — in the modern look every person (you, survivors, traders, raiders, the infected) is drawn about the size
+   of the retro figures, so they sit better among the detailed jungle; held tools and guns shrink with them. ===== */
+GAMEV=200;
+const PSC186=.74;let PSC186on=true;try{PSC186on=localStorage.getItem('pc_small')!='0'}catch(e){}
+const sm186=s=>PSC186on&&!CLASSIC&&!(s&&s>1.5)&&!inC;
+function scl186(fn,x,y,args){g.save();g.translate(x,y);g.scale(PSC186,PSC186);g.translate(-x,-y);try{return fn.apply(null,args)}finally{g.restore()}}
+{const dc186=drawChar;drawChar=function(x,y,c,w,fx,fy,s,e){if(!sm186(s))return dc186.apply(this,arguments);return scl186(dc186,x,y,arguments)}}
+{const hi186=heldItem;heldItem=function(x,y){if(!sm186())return hi186.apply(this,arguments);return scl186(hi186,x,y,arguments)}}
+{const ad186=armDraw;armDraw=function(x,y){if(!sm186())return ad186.apply(this,arguments);return scl186(ad186,x,y,arguments)}}
+
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
  if(state=='title')menu();if(state=='opts')optsMenu();if(state=='sndo')sndMenu();if(state=='gfxo')gfxMenu();if(state=='slots')svMenu();if(state=='keys')keysMenu();if(state=='wthr')wthrMenu();if(state=='char')charMenu();if(state=='lobby')drawLobby();if(state=='hb'){Q(0,0,VW,VH,'rgba(6,10,6,.6)');drawHB()}if(0)title('ASHFALL',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Hold the fire. Survive the nights.','','WASD move \u2022 Space chop / fish / attack \u2022 Tab recipes','Press any key']);
