@@ -11865,6 +11865,31 @@ const WW191={wall:1,sblock:1,win:1,gwall:1,bwall:1};
   else if(h2>.7){const a=2+Math.floor(h*11);G(a,1,1,10,'rgba(28,22,14,.16)');G(a+1,4,1,5,'rgba(28,22,14,.12)')}
   if(h>.82){let a=3+Math.floor(h2*9),b_=3;for(let k=0;k<6;k++){G(a,b_,1,1,'rgba(20,14,10,.45)');b_++;a+=(aHash(tx,k,200)<.5?1:-1)}}}catch(e){}return r}}
 
+/* ===== v192: the "First steps" card moves into the journal (Quests, first page) so it no longer covers the screen; the journal button
+   at the bottom shows a "!" while you have a task, pulsing when there is something you haven't read yet; a new step pops up for a moment. ===== */
+GAMEV=207;
+/* only the little pointer towards the target stays on screen */
+gsHud=function(){if(!gsOn()||inD||invOpen||book||skOpen||showMap||(typeof JN!='undefined'&&JN)||tut||(typeof PHOTO!='undefined'&&PHOTO))return;
+ if(GSX.tg&&GSX.tg[2]>3){const px=(P.x-cam.x)*ZM,py=(P.y-cam.y-8)*ZM,a=Math.atan2(GSX.tg[1]-P.y,GSX.tg[0]-P.x),r=30,ax=px+Math.cos(a)*r,ay=py+Math.sin(a)*r,p=.6+.4*Math.sin(performance.now()/220);
+  g.save();g.translate(ax,ay);g.rotate(a);g.globalAlpha=p;g.fillStyle='#ffd84a';g.beginPath();g.moveTo(7,0);g.lineTo(-4,-5);g.lineTo(-1,0);g.lineTo(-4,5);g.closePath();g.fill();g.restore();g.globalAlpha=1}};
+/* the card, in the journal */
+{const q192=JNB[0];JNB[0]=function(){const pages=q192.apply(this,arguments);try{if(!gsOn())return pages;const h=LANG=='hu',L=[],st=GSS[GSX.s];if(!st)return pages;
+ jnHead(L,(h?'Első lépések':'First steps')+'  '+(GSX.s+1)+'/'+GSS.length,'#8a5a14');
+ jnText(L,'▸ '+st.t[h?0:1],{b:1,c:'#2a1a10',sz:9});jnText(L,st.d[h?0:1],{c:'#4a3a24',in:10});jnGap(L,8);
+ GSS.forEach((s,i)=>{if(i==GSX.s)return;const d=i<GSX.s;jnText(L,(d?'✓ ':'· ')+s.t[h?0:1],{c:d?'#4a7a3a':'#9a8a70',in:4})});
+ jnGap(L,8);jnText(L,h?'A sárga nyíl a karaktered mellett mutatja, merre menj.':'The yellow arrow beside you points the way.',{c:'#6a5a40',sz:7});
+ return jnFlow(L).concat(pages)}catch(e){return pages}}}
+/* what counts as "something new" for the badge */
+let JNSEEN192=null;
+function jnSig192(){let s='';try{if(gsOn())s+='g'+GSX.s}catch(e){}try{s+='|'+DQ112.L.map(q=>q.done?1:0).join('')}catch(e){}try{if(typeof STORY!='undefined'&&STORY&&STORY.on)s+='|s'+STORY.act+'.'+STORY.step}catch(e){}return s}
+{const jo192=jnOpen;jnOpen=function(ch){JNSEEN192=jnSig192();const r=jo192.apply(this,arguments);return r}}
+{const qd192=qsDraw;qsDraw=function(){const r=qd192.apply(this,arguments);try{if(state!='play'||(typeof JN!='undefined'&&JN))return r;const sig=jnSig192();if(JNSEEN192==null)JNSEEN192='';const fresh=sig!==JNSEEN192,task=gsOn();if(!fresh&&!task)return r;
+  const x=qsBX()[2],y=VH-26,t=performance.now(),bob=fresh?Math.round(Math.sin(t/180)*1.5):0,cx=x+17,cy=y-2+bob;
+  g.fillStyle='rgba(0,0,0,.45)';g.beginPath();g.arc(cx+1,cy+1,5.5,0,6.28);g.fill();g.fillStyle=fresh?'#ffd84a':'#c8a040';g.beginPath();g.arc(cx,cy,5.5,0,6.28);g.fill();g.fillStyle='#3a2208';g.fillRect(cx-1,cy-4,2,5);g.fillRect(cx-1,cy+2,2,2)}catch(e){}return r}}
+/* a new step pops up briefly instead of the card */
+let GSL192=null;
+{const up192=update;update=function(dt){const r=up192.apply(this,arguments);try{if(state=='play'&&gsOn()){if(GSL192!=null&&GSX.s!==GSL192){const st=GSS[GSX.s],h=LANG=='hu';if(st)toast112((h?'Új feladat: ':'New task: ')+st.t[h?0:1],st.d[h?0:1]+(h?'  (Tab: napló)':'  (Tab: journal)'),'#ffd84a')}GSL192=GSX.s}else GSL192=null}catch(e){}return r}}
+
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
  if(state=='title')menu();if(state=='opts')optsMenu();if(state=='sndo')sndMenu();if(state=='gfxo')gfxMenu();if(state=='slots')svMenu();if(state=='keys')keysMenu();if(state=='wthr')wthrMenu();if(state=='char')charMenu();if(state=='lobby')drawLobby();if(state=='hb'){Q(0,0,VW,VH,'rgba(6,10,6,.6)');drawHB()}if(0)title('ASHFALL',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Hold the fire. Survive the nights.','','WASD move \u2022 Space chop / fish / attack \u2022 Tab recipes','Press any key']);
