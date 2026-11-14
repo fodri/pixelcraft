@@ -11780,6 +11780,91 @@ let CABD190=false;
 {const ld190b=load;load=function(){CABD190=false;return ld190b.apply(this,arguments)}}
 {const up190=update;update=function(dt){up190(dt);if(!CABD190&&state=='play'&&!inD&&!inC){CABD190=true;try{dropCabins190()}catch(e){}}}}
 
+/* ===== v191: tidy homes — one-room cabins and small houses laid out like real rooms (bed in a corner with its nightstand, wardrobe and
+   kitchen along the walls, table and sofa in the room, a single bathroom nook in the bigger ones, no bones on the floor); the arcade
+   cabinet is no longer by the spawn — the barkeeper in a pub sells one, dearly; mushrooms are small; music is scheduled further ahead
+   and no longer hops between themes, so it doesn't stutter while you race around in creative; weathered roofs and walls. ===== */
+GAMEV=206;
+/* ---------- house plans (door under column 2 of the bottom row; village huts at the bottom of a village are flipped) ---------- */
+const HOME191=new Set();
+{const S=(A,L)=>{A.length=0;for(const p of L)A.push(p);HOME191.add(A)};
+ /* 4x5 inside: hamlet huts, small town houses */
+ S(HPL,[["mn.a","m..K","RR.f","hT.j","p..k"],["Kfnm","j..m","hT..","a.RR","p..."]]);
+ /* 5x5 inside: village huts */
+ S(HPL5,[["mn.Kf","m...j","aR.hT","NN..k",".v..p"],["fK.nm","j...m","Th.Ra","k.NN.","p..v."]]);
+ /* 7x6 inside: big village houses, villas */
+ S(HPL4,[["Qj#mn.a","J.#m...","#D...hT","K...NN.","f..RRR.","j...v.p"],["a.nm#jQ","...m#.J","Th...D#",".NN...K",".RRR..f","pv....j"]]);
+ /* 8x7 inside: town houses */
+ S(HPL8,[["Qj#mnanm","J.#m...m","#D......","K...NN.h","f..RRR.T","r..RRR.h","j...v..p"],["mnanm#jQ","m...m#.J","Th....D#",".NN....K",".RRR...f",".RRR...r","pv.....j"]]);}
+{const pp191=putPlan;putPlan=function(x0,y0,plan,mir,opt){const home=HOME191.has(plan)||[...HOME191].some(A=>A.includes(plan))||[...HOME191].some(A=>A.some(p=>p.length==plan.length&&p.every((r,i)=>r==plan[plan.length-1-i])));
+ const r=pp191.apply(this,arguments);
+ if(home){try{const rows=plan.length,cols=plan[0].length;let pap=0;for(let yy=y0;yy<y0+rows;yy++)for(let xx=x0;xx<x0+cols;xx++){const i=yy*W+xx,o=ob[i];if(!o)continue;if(o.t=='bones')ob[i]=null;else if(o.t=='papers'&&++pap>1)ob[i]=null;else if(o.t=='rubble'&&!'gbksfox'.includes(plan[yy-y0][mir?cols-1-(xx-x0):xx-x0]))ob[i]=null}}catch(e){}}
+ return r}}
+/* ---------- the arcade cabinet: not by the spawn any more; pubs sell one ---------- */
+try{Object.setPrototypeOf(ARCW,new Proxy({},{get:()=>1}))}catch(e){}
+for(let i=REC.length-1;i>=0;i--)if(REC[i][0]=='arcade')REC.splice(i,1);
+try{for(const L of[TUT.hu,TUT.en]){const e=L.find(r=>/NOT DOOM/.test(r[0]));if(e)e[1]=L===TUT.hu?'Minden kocsmában áll egy NOT DOOM játékgép. A kocsmárostól meg is veheted a sajátodat — drágán: 4 arany, 6 vas, 5 réz. E-vel indítod: négy pálya — bázis, elárasztott csatorna, udvar a vörös ég alatt, aréna hullámokkal és főellenséggel.':'Every pub has a NOT DOOM cabinet. The barkeep will sell you one of your own — at a price: 4 gold, 6 iron, 5 copper. Press E to play: four levels — a base, a flooded sewer, a courtyard under a red sky, an arena with waves and a boss.'}}catch(e){}
+const ARCP191={gold:4,iron:6,copper:5};
+{const to191=talkOpts;talkOpts=function(){const o=to191();try{if(TALK&&TALK.n&&TALK.n.pub&&!JOBQ105[TALK.n.job]&&!o.some(q=>q.k=='job')){const i=o.findIndex(q=>q.k=='bye');o.splice(i<0?o.length:Math.max(1,i),0,{k:'job',l:TALK.joff?both('Megveszem!','I\'ll take it!'):both('Eladnád a játékgépet?','Would you sell me an arcade cabinet?')})}}catch(e){}return o}}
+{const jo191=jobOffer105;jobOffer105=function(n){if(n&&n.pub&&!JOBQ105[n.job]){const h=LANG=='hu',B=(a,b)=>h?a:b;return{txt:B('Ez a gép a kocsma lelke... de van egy másik a hátsó raktárban. 4 arany, 6 vas és 5 réz — ennyi az ára, alku nincs.','That machine is the soul of this pub... but there\'s another one in the back room. 4 gold, 6 iron and 5 copper — that\'s the price, no haggling.'),cost:Object.assign({},ARCP191),run:()=>{inv.arcade=(inv.arcade|0)+1;try{givehb('arcade')}catch(e){}return B('Tessék, a tiéd. Tedd le otthon, és E-vel indul. Vigyázz rá!','There, it\'s yours. Set it down at home and press E to play. Look after it!')}}}return jo191.apply(this,arguments)}}
+function dropSpawnArc191(){if(inD)return 0;let n=0;const sx=SX|0,sy=SY|0;for(let i=0;i<W*H;i++){const o=ob[i];if(!o||o.t!='arcade'||o.own)continue;const x=i%W,y=(i/W)|0;if(Math.hypot(x-sx,y-sy)>18)continue;if(BLD.some(b=>x>=b.x&&x<b.x+b.w&&y>=b.y&&y<b.y+b.h))continue;ob[i]=null;n++}return n}
+let ARCD191=false;
+{const in191=init;init=function(){ARCD191=false;return in191.apply(this,arguments)}}
+{const ld191=load;load=function(){ARCD191=false;return ld191.apply(this,arguments)}}
+{const up191=update;update=function(dt){up191(dt);if(!ARCD191&&state=='play'&&!inD&&!inC){ARCD191=true;try{dropSpawnArc191()}catch(e){}}}}
+{const pl191=place;place=function(){const tx=mtx,ty=mty,r=pl191.apply(this,arguments);try{const o=ob[ty*W+tx];if(o&&o.t=='arcade')o.own=1}catch(e){}return r}}
+/* a nightstand belongs beside the bed: only a door, or standing at the foot or behind the head of a bed, is "in the way" */
+{const nd191=nearDoorBed;nearDoorBed=function(i){const o=ob[i];if(!o||o.t!='nstand')return nd191(i);const x=i%W,y=(i/W)|0;for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++){if(!a&&!b)continue;const xx=x+a,yy=y+b;if(xx<0||yy<0||xx>=W||yy>=H)continue;const q=ob[yy*W+xx];if(!q)continue;if(/door|^odn$|^oup$|stairs|^elev$/.test(q.t))return true;if((q.t=='bed'||q.t=='p_bed'||q.t=='dbed')&&a==0)return true}return false}}
+/* ---------- small mushrooms ---------- */
+const MUSHK191=.5,MUSHR191=.7;
+{const do191=drawObj;drawObj=function(o,x,y){if(o&&o.t=='flower'&&o.pm==null&&!inD&&typeof mushIdx183=='function'&&mushIdx183(o)){
+  if(CLASSIC){const px=x-cam.x+8,py=y-cam.y+15;g.save();g.translate(px,py);g.scale(MUSHR191,MUSHR191);g.translate(-px,-py);try{return do191(o,x,y)}finally{g.restore()}}
+  if(JPL.ok&&JPL.s[o.jp]){const q=JPL.s[o.jp],tx=Math.round(x/T),ty=Math.round(y/T),w=Math.round(q[2]*MUSHK191),h=Math.round(q[3]*MUSHK191),cx=Math.round(x-cam.x+8+(aHash(tx,ty,182)-.5)*6),by=Math.round(y-cam.y+14);
+   g.fillStyle='rgba(10,20,8,.25)';g.beginPath();g.ellipse(cx,by-1,Math.max(2,w*.4),1.5,0,0,6.28);g.fill();g.drawImage(JPL.img,q[0],q[1],q[2],q[3],cx-Math.floor(w/2),by-h,w,h);return}}
+ return do191(o,x,y)}}
+/* ---------- music: scheduled well ahead, and it only changes theme once you have stayed somewhere a while ---------- */
+function musGenTick191(){try{if(!AC||!SXS.ok||SXS.ok<0)return;const want=vol>0&&SVOL.m>0&&musicOn&&state!=='lobby'&&AC.state=='running'&&!(typeof ARC!='undefined'&&ARC.on());mzBus();
+ const duck=(typeof gtOpen!='undefined'&&gtOpen)||(typeof gaOpen!='undefined'&&gaOpen)||(typeof drv!='undefined'&&drv)?.35:1,t=AC.currentTime;
+ MZ.bus.gain.setTargetAtTime(want?vol*SVOL.m*.32*duck:0,t,.8);if(!want){MZ.next=0;return}
+ const th=mzTheme();if(th!==MZ.th){MZ.th=th;MZ.bar=0;if(MZ.next>t+.5)MZ.next=t+.5}const TH=MTH[th],night=state=='play'&&!inD&&typeof dk0=='function'&&dk0()>.4;
+ MZ.lp.frequency.setTargetAtTime(TH.lp*(night?.6:1),t,2);
+ if(MZ.next<t+1.4){if(MZ.next<t)MZ.next=t+.1;const b=MZ.bar++,ch=TH.pr[b%TH.pr.length],T0=MZ.next,L=TH.bl,mf=m=>440*Math.pow(2,(m-69)/12),sh=night&&!inD?-5:0;
+  for(const m of ch){mzNote(mf(m+sh),T0,L,TH.pad,.045,0,0,TH.wob);mzNote(mf(m+sh),T0,L,TH.pad2,.014,7,1200,TH.wob)}
+  if(TH.bass)mzNote(mf(ch[0]-12+sh),T0,L,'sine',.07,0);if(TH.drone)mzNote(mf(TH.drone),T0,L,'sawtooth',.03,0,300,TH.wob);if(TH.wash)mzWash(T0,L);
+  const pn=TH.mel*(night?.6:1),steps=8;for(let k=0;k<steps;k++)if(Math.random()<pn/steps){const n=TH.sc[Math.floor(Math.random()*TH.sc.length)]+sh;mzPluck(mf(n),T0+k*L/steps+Math.random()*.05,.03+Math.random()*.02,TH.pl)}
+  MZ.next=T0+L}}catch(e){}}
+
+setInterval(musGenTick191,200);
+const MZH191={cur:null,want:null,t:0};
+{const mt191=mzTheme;mzTheme=function(){const th=mt191.apply(this,arguments),now=performance.now();if(MZH191.cur==null||state!='play'){MZH191.cur=th;MZH191.want=th;return th}
+ if(th===MZH191.cur){MZH191.want=th;return th}if(th!==MZH191.want){MZH191.want=th;MZH191.t=now}const wait=(inD||MZH191.cur=='mine'||th=='mine'||th=='sewer'||th=='reactor')?1200:(creative?9000:5000);if(now-MZH191.t>=wait)MZH191.cur=th;return MZH191.cur}}
+/* ---------- weathered roofs: grain, moss, lichen, rain streaks, a few slipped shingles, leaf litter ---------- */
+function weatherRoof191(cv,b){const c=cv.getContext('2d'),w=cv.width,h=cv.height,H_=(a,k)=>aHash(b.x*7+a,b.y*13+k,191),city=typeof isCityB=='function'&&isCityB(b),vil=b.rf=='hut',amt=city?1:vil?.55:.8;
+ c.save();c.globalCompositeOperation='source-atop';
+ c.fillStyle='rgba(62,58,34,.16)';c.fillRect(0,0,w,h);
+ for(let y=0;y<h;y+=2)for(let x=0;x<w;x+=2){const v=aHash(b.x*97+x,b.y*89+y,192);if(v<.18){c.fillStyle='rgba(0,0,0,'+(.06+v*.3).toFixed(3)+')';c.fillRect(x,y,2,2)}else if(v>.86){c.fillStyle='rgba(255,246,220,'+((v-.86)*.6).toFixed(3)+')';c.fillRect(x,y,2,2)}}
+ const ns=Math.round(w/9*amt);for(let i=0;i<ns;i++){const x=Math.floor(H_(i,1)*w),y0=Math.floor(H_(i,2)*h*.6),len=6+Math.floor(H_(i,3)*h*.5);c.fillStyle='rgba(20,18,12,'+(.08+H_(i,4)*.1).toFixed(3)+')';c.fillRect(x,y0,1,len);if(H_(i,5)<.4)c.fillRect(x+1,y0+2,1,len-4)}
+ const nm=Math.round((w*h)/900*amt)+2;for(let i=0;i<nm;i++){const edge=H_(i,10)<.55,cx=edge?(H_(i,11)<.5?Math.floor(H_(i,12)*8):w-1-Math.floor(H_(i,12)*8)):Math.floor(H_(i,13)*w),cy=edge?Math.floor(H_(i,14)*h):Math.floor(h*.45+H_(i,15)*h*.55),r=4+H_(i,16)*(city?14:9);
+  for(let y=Math.floor(cy-r);y<cy+r;y+=2)for(let x=Math.floor(cx-r);x<cx+r;x+=2){const d=Math.hypot(x-cx,(y-cy)*1.3)/r,v=aHash(x+b.x*31,y+b.y*17,193);if(d>1||v<d*.9)continue;c.fillStyle=v>.8?'rgba(122,140,62,.75)':v>.5?'rgba(84,104,44,.72)':'rgba(58,74,32,.7)';c.fillRect(x,y,2,2)}}
+ for(let i=0;i<Math.round(w*h/120*amt);i++){const x=Math.floor(H_(i,30)*w),y=Math.floor(H_(i,31)*h);c.fillStyle=H_(i,32)<.5?'rgba(196,200,140,.55)':'rgba(170,176,120,.45)';c.fillRect(x,y,1,1)}
+ const nb=Math.round(w/40*amt)+(city?2:0);for(let i=0;i<nb;i++){const x=4+Math.floor(H_(i,40)*(w-12)),y=3+Math.floor(H_(i,41)*(h-8));c.fillStyle='rgba(16,12,8,.55)';c.fillRect(x,y,5,3);c.fillStyle='rgba(255,240,210,.18)';c.fillRect(x,y+3,5,1);c.fillStyle='rgba(16,12,8,.3)';c.fillRect(x+1,y-1,3,1)}
+ for(let i=0;i<Math.round(w/6*amt);i++){const x=Math.floor(H_(i,50)*w),y=Math.floor(h*.55+H_(i,51)*h*.45);c.fillStyle=['#7a5a2a','#8a6a30','#5a4a24','#9a7a3a'][i%4];c.fillRect(x,y,2,1)}
+ const g1=c.createLinearGradient(0,0,0,h);g1.addColorStop(0,'rgba(0,0,0,0)');g1.addColorStop(.75,'rgba(0,0,0,0)');g1.addColorStop(1,'rgba(20,16,8,.22)');c.fillStyle=g1;c.fillRect(0,0,w,h);
+ c.fillStyle='rgba(10,8,4,.22)';c.fillRect(0,0,2,h);c.fillRect(w-2,0,2,h);
+ c.restore()}
+{const rc191=roofCanvas;roofCanvas=function(b,k){const had=ROOFC.has(k),cv=rc191.apply(this,arguments);try{if(!had&&cv&&!cv._w191&&!CLASSIC&&!(typeof FVB!='undefined'&&FVB)&&b&&b.rf!='ruin'){cv._w191=1;weatherRoof191(cv,b)}}catch(e){console.warn('roof191',e)}return cv}}
+try{ROOFC.clear()}catch(e){}
+/* ---------- weathered walls: grime at the foot, splashes, moss in the corners, stains under the windows ---------- */
+const WW191={wall:1,sblock:1,win:1,gwall:1,bwall:1};
+{const dw191=drawObj;drawObj=function(o,x,y){const r=dw191(o,x,y);if(!o||CLASSIC||inD||!WW191[o.t])return r;try{const tx=Math.round(x/T),ty=Math.round(y/T);if(tx<0||ty<0||tx>=W||ty>=H-1)return r;const dn=ob[(ty+1)*W+tx];if(dn&&(WW191[dn.t]||dn.t=='door'))return r;
+  const h=aHash(tx,ty,194),h2=aHash(tx,ty,195),fx=x-cam.x,fy=y-cam.y,G=(a,b_,ww,hh,c)=>{g.fillStyle=c;g.fillRect(fx+a,fy+b_,ww,hh)};
+  G(0,13,16,3,'rgba(38,30,18,.32)');G(0,11,16,2,'rgba(38,30,18,.14)');
+  for(let k=0;k<6;k++){const a=Math.floor(aHash(tx*7+k,ty,196)*16),hh=1+Math.floor(aHash(tx,ty*7+k,197)*4);G(a,15-hh,1,hh,'rgba(52,40,24,.35)')}
+  if(h<.45){const left=h2<.5,n=4+Math.floor(h*14);for(let k=0;k<n;k++){const a=left?Math.floor(aHash(tx,k,198)*6):15-Math.floor(aHash(tx,k,198)*6),b_=15-Math.floor(aHash(ty,k,199)*(3+h*12));G(a,b_,1,1,k%3?'rgba(78,100,42,.85)':'rgba(110,132,58,.85)')}}
+  if(o.t=='win'&&h2<.6){G(5,9,1,5,'rgba(30,24,16,.22)');G(9,9,1,4,'rgba(30,24,16,.18)')}
+  else if(h2>.7){const a=2+Math.floor(h*11);G(a,1,1,10,'rgba(28,22,14,.16)');G(a+1,4,1,5,'rgba(28,22,14,.12)')}
+  if(h>.82){let a=3+Math.floor(h2*9),b_=3;for(let k=0;k<6;k++){G(a,b_,1,1,'rgba(20,14,10,.45)');b_++;a+=(aHash(tx,k,200)<.5?1:-1)}}}catch(e){}return r}}
+
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
  if(state=='title')menu();if(state=='opts')optsMenu();if(state=='sndo')sndMenu();if(state=='gfxo')gfxMenu();if(state=='slots')svMenu();if(state=='keys')keysMenu();if(state=='wthr')wthrMenu();if(state=='char')charMenu();if(state=='lobby')drawLobby();if(state=='hb'){Q(0,0,VW,VH,'rgba(6,10,6,.6)');drawHB()}if(0)title('ASHFALL',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Hold the fire. Survive the nights.','','WASD move \u2022 Space chop / fish / attack \u2022 Tab recipes','Press any key']);
