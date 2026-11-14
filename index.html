@@ -12855,6 +12855,14 @@ function uiOpen211(){return invOpen||book||skOpen||showMap||(typeof stOpen!='und
 calOn209=function(){return state=='play'&&!uiOpen211()};
 {const th211=thermo210;thermo210=function(){if(uiOpen211())return;return th211.apply(this,arguments)}}
 
+/* ===== v212: armour and clothes protect more. Points per piece (helmet / chest / legs / boots): scrap 2/5/4/2, steel 3/6/5/2,
+   military 3/8/6/2, exo 4/10/7/3 — a full exo suit is 24 points, 72% less damage (the cap is 75%). The winter coat counts 4, the
+   fur hat 2. Military and exo pieces, and the winter clothes, also last a good deal longer. ===== */
+GAMEV=227;
+{const NP={copper:{h:2,c:5,l:4,b:2},iron:{h:3,c:6,l:5,b:2},gold:{h:3,c:8,l:6,b:2},diamond:{h:4,c:10,l:7,b:3}},DM={copper:1,iron:1.1,gold:2.2,diamond:1.6};
+ for(const t of ATIERS)for(const k of AKINDS){const sl=ASL[k],key=t+'_'+k;if(ARM[key]){ARM[key].p=NP[t][sl];AP[t][sl]=NP[t][sl]}if(DMAX[key])DMAX[key]=Math.round(AB[sl]*AM[t]/3*DM[t])}
+ if(ARM.wcoat){ARM.wcoat.p=4;DMAX.wcoat=420}if(ARM.what){ARM.what.p=2;DMAX.what=320}}
+
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
  if(state=='title')menu();if(state=='opts')optsMenu();if(state=='sndo')sndMenu();if(state=='gfxo')gfxMenu();if(state=='slots')svMenu();if(state=='keys')keysMenu();if(state=='wthr')wthrMenu();if(state=='char')charMenu();if(state=='lobby')drawLobby();if(state=='hb'){Q(0,0,VW,VH,'rgba(6,10,6,.6)');drawHB()}if(0)title('ASHFALL',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Hold the fire. Survive the nights.','','WASD move \u2022 Space chop / fish / attack \u2022 Tab recipes','Press any key']);
