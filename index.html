@@ -12433,6 +12433,34 @@ let L202=false;{const ld202=load;load=function(){L202=false;return ld202.apply(t
 {const in202=init;init=function(){L202=false;return in202.apply(this,arguments)}}
 {const up202=update;update=function(dt){up202(dt);if(!L202&&state=='play'&&!inD&&!inC){L202=true;try{fixStairs202()}catch(e){}}}}
 
+/* ===== v203: every door can be walked through. For every door in a building (front doors and inner doors alike) both sides are
+   checked: a stray piece of inner wall in front of it is taken out, and furniture (nightstands, wardrobes, sofas…) standing in the
+   way is moved to a free spot along a wall. Runs on new worlds and on loading old ones. ===== */
+GAMEV=218;
+const WALL203=t=>/^(wall|sblock|win|twall|gwall|wfence)$/.test(t||'');
+const DOORISH203=t=>t=='door'||t=='wgate';
+function reloc203(b,mi,keep){const m=ob[mi];if(!m)return false;const fw=m.fw||1,fh=m.fh||1,inB=(x,y)=>x>b.x&&x<b.x+b.w-1&&y>b.y&&y<b.y+b.h-1;let spot=-1;
+ for(let pass=0;pass<2&&spot<0;pass++)for(let y=b.y+1;y<b.y+b.h-1&&spot<0;y++)for(let x=b.x+1;x<b.x+b.w-1-(fw-1);x++){let ok=true;for(let a=0;a<fw&&ok;a++)for(let c=0;c<fh&&ok;c++){const j=(y+c)*W+x+a;if(ob[j]||!inB(x+a,y+c)||keep.has(j))ok=false}if(!ok)continue;
+  const wl=j=>{const z=ob[j];return z&&WALL203(z.t)};const nearWall=wl(y*W+x-1)||wl(y*W+x+fw)||wl((y-1)*W+x)||wl((y+fh)*W+x);if(pass==0&&!nearWall)continue;
+  let byDoor=false;for(let c=-1;c<=fh;c++)for(let a=-1;a<=fw;a++){const z=ob[(y+c)*W+x+a];if(z&&DOORISH203(z.t))byDoor=true}if(byDoor)continue;spot=y*W+x}
+ try{rmObj(mi)}catch(e){ob[mi]=null}if(spot<0)return true;const o2=Object.assign({},m);delete o2.pm;if(fw>1||fh>1)setFP(o2,spot%W,(spot/W)|0,fw,fh);else ob[spot]=o2;return true}
+function doorFix203(){if(inD)return 0;let n=0;for(const b of BLD){if(b.rf=='ruin')continue;const inB=(x,y)=>x>b.x&&x<b.x+b.w-1&&y>b.y&&y<b.y+b.h-1,outer=(x,y)=>x==b.x||x==b.x+b.w-1||y==b.y||y==b.y+b.h-1;
+ const doors=[];for(let y=b.y;y<b.y+b.h;y++)for(let x=b.x;x<b.x+b.w;x++){const o=ob[y*W+x];if(o&&DOORISH203(o.t))doors.push([x,y])}
+ const keep=new Set();for(const[x,y]of doors){const i=y*W+x,L=ob[i-1],R_=ob[i+1],U=ob[i-W],D=ob[i+W],w=q=>q&&(WALL203(q.t)||DOORISH203(q.t)),hz2=w(L)&&w(R_),vt2=w(U)&&w(D),hz=hz2||!vt2&&((L&&WALL203(L.t))||(R_&&WALL203(R_.t))),vt=!hz2&&(vt2||(U&&WALL203(U.t))||(D&&WALL203(D.t)));
+  const dirs=hz&&!vt?[[0,-1],[0,1]]:vt&&!hz?[[-1,0],[1,0]]:[[0,-1],[0,1],[-1,0],[1,0]];for(const[a,c]of dirs)for(let k=1;k<=2;k++)keep.add((y+c*k)*W+x+a*k)}
+ for(const[x,y]of doors){const i=y*W+x,L=ob[i-1],R_=ob[i+1],U=ob[i-W],D=ob[i+W],w=q=>q&&(WALL203(q.t)||DOORISH203(q.t)),hz2=w(L)&&w(R_),vt2=w(U)&&w(D),hz=hz2||!vt2&&((L&&WALL203(L.t))||(R_&&WALL203(R_.t))),vt=!hz2&&(vt2||(U&&WALL203(U.t))||(D&&WALL203(D.t)));
+  const dirs=hz&&!vt?[[0,-1],[0,1]]:vt&&!hz?[[-1,0],[1,0]]:null;if(!dirs)continue;
+  for(const[a,c]of dirs){for(let k=1;k<=2;k++){const xx=x+a*k,yy=y+c*k;if(!inB(xx,yy))break;const j=yy*W+xx;let q=ob[j];if(!q)continue;const mi=q.pm!=null?q.pm:j,m=ob[mi];if(!m)continue;
+    if(DOORISH203(m.t)||/^(oup|odn|elev|stairs|hatch)$/.test(m.t))break;
+    if(m.t=='twall'){if(k==1&&!outer(xx,yy)){ob[j]=null;n++}break}
+    if(WALL203(m.t))break;
+    if(k==2&&!SOLID[m.t])break;reloc203(b,mi,keep);n++}}}}
+ return n}
+{const g203=genDesertTowers;genDesertTowers=function(){const r=g203.apply(this,arguments);try{doorFix203()}catch(e){console.warn('door203',e)}return r}}
+let L203=false;{const ld203=load;load=function(){L203=false;return ld203.apply(this,arguments)}}
+{const in203=init;init=function(){L203=false;return in203.apply(this,arguments)}}
+{const up203=update;update=function(dt){up203(dt);if(!L203&&state=='play'&&!inD&&!inC){L203=true;try{doorFix203()}catch(e){}}}}
+
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
  if(state=='title')menu();if(state=='opts')optsMenu();if(state=='sndo')sndMenu();if(state=='gfxo')gfxMenu();if(state=='slots')svMenu();if(state=='keys')keysMenu();if(state=='wthr')wthrMenu();if(state=='char')charMenu();if(state=='lobby')drawLobby();if(state=='hb'){Q(0,0,VW,VH,'rgba(6,10,6,.6)');drawHB()}if(0)title('ASHFALL',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Hold the fire. Survive the nights.','','WASD move \u2022 Space chop / fish / attack \u2022 Tab recipes','Press any key']);
