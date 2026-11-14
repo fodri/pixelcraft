@@ -12377,7 +12377,7 @@ function gen201(){if(inD)return;for(const kind of['ice','city']){if(ob.some(o=>o
   if(!best)continue;const[x,y]=best;for(let b=0;b<=4;b++)for(let a=-1;a<=4;a++)ob[(y+b)*W+x+a]=null;setFP({t:'rvshrine2',kind,kn:0,won:0},x,y,4,2)}}
 {const g201=genDesertTowers;genDesertTowers=function(){const r=g201.apply(this,arguments);try{gen201()}catch(e){console.warn('gen201',e)}return r}}
 let L201=false;{const ld201=load;load=function(){L201=false;return ld201.apply(this,arguments)}}
-function sh201(kind){for(let i=0;i<W*H;i++){const o=ob[i];if(o&&o.t=='rvshrine2'&&o.kind==kind)return i}return -1}
+const SHC201={o:null,t:0,v:{}};function sh201(kind){const now=performance.now();if(SHC201.o!==ob||now-SHC201.t>2000){SHC201.o=ob;SHC201.t=now;SHC201.v={ice:-1,city:-1,ash:-1};for(let i=0;i<W*H;i++){const o=ob[i];if(!o)continue;if(o.t=='rvshrine2')SHC201.v[o.kind]=i;else if(o.t=='rvshrine')SHC201.v.ash=i}}const i=SHC201.v[kind];return i>=0&&ob[i]&&(kind=='ash'?ob[i].t=='rvshrine':ob[i].t=='rvshrine2')?i:-1}
 /* ---------- drawing, map, using ---------- */
 {const do201=drawObj;drawObj=function(o,x,y){if(o&&o.t=='p_rvshrine2')return;if(o&&o.t=='rvshrine2'){const B=BOSS201[o.kind]||BOSS201.ice,cx=x-cam.x+32,by=y-cam.y+32;g.fillStyle='rgba(10,8,6,.35)';g.beginPath();g.ellipse(cx,by-2,32,6,0,0,6.28);g.fill();rv2D(B.spr,cx,by);
  if(!o.won){const p=.5+.5*Math.sin(performance.now()/300);g.fillStyle=o.kind=='ice'?'rgba(140,210,255,'+(.08+p*.1).toFixed(3)+')':'rgba(230,140,60,'+(.08+p*.1).toFixed(3)+')';g.fillRect(cx-8,by-30,16,26)}return}return do201(o,x,y)}}
@@ -12403,7 +12403,7 @@ function spawn201(i,kind){const B=BOSS201[kind],sx=(i%W)*T+32,sy=Math.floor(i/W)
 {const up201=update;update=function(dt){up201(dt);if(state!='play'||inD)return;try{
  if(!L201&&!inC){L201=true;if(!ob.some(o=>o&&o.t=='rvshrine2'))gen201();BZ201=zs.find(z=>z&&z.b201)||null}
  /* the chain: Ash → Ice → Rust */
- const ash=typeof shrineIdx194=='function'?shrineIdx194(ob):-1,ia=sh201('ice'),ic=sh201('city');
+ const ash=sh201('ash'),ia=sh201('ice'),ic=sh201('city');
  const rev=(i,kind)=>{const o=ob[i];if(!o||o.kn)return;o.kn=1;try{fogReveal((i%W)*T+32,Math.floor(i/W)*T+16,7)}catch(e){}const B=BOSS201[kind];setTimeout(()=>{try{toast112(B201('Új jel a térképen','A new mark on your map'),B201('A legyőzött szentélyben faragás mutat tovább: '+B.sn[0]+'.','A carving in the fallen shrine points onward: '+B.sn[1]+'.'),B.col)}catch(e){}},2500)};
  if(ia>=0&&ash>=0&&ob[ash].won)rev(ia,'ice');if(ic>=0&&(ia<0&&ash>=0&&ob[ash].won||ia>=0&&ob[ia].won))rev(ic,'city');
  /* approach, spawn, death */
