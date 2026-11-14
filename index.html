@@ -12526,6 +12526,35 @@ function retroDraw205(inner,x,y,c,w,fx,fy,e){let cc=c,ee=e;try{if(typeof NPCCUR!
  if(s&&s>1.5){const k=s*1.15;g.save();g.translate(x,y);g.scale(k,k);g.translate(-x,-y);try{return retroDraw205((a,b,c2,w2,f1,f2,s2,e2)=>dc205.call(this,a,b,c2,w2,f1,f2,1,e2),x,y,c,w,fx,fy,e)}finally{g.restore()}}
  return retroDraw205((a,b,c2,w2,f1,f2,s2,e2)=>dc205.call(this,a,b,c2,w2,f1,f2,s,e2),x,y,c,w,fx,fy,e)}}
 
+/* ===== v206: no stray road stubs out in the wild (asphalt outside the city goes back to grass or sand, with its lamps and signs),
+   village paths look like worn trails with grass growing through instead of hard brown stripes, and in the modern look the biomes
+   bleed into each other along their borders — snow, grass and sand interlock in a ragged, dithered seam like in the retro look. ===== */
+GAMEV=221;
+const GRD206=m=>m==0||m==2||m==4||m==6;
+/* ---------- stray roads ---------- */
+function strayRoads206(){if(inD)return 0;let n=0;const inB=new Uint8Array(W*H);for(const b of BLD)for(let y=b.y-1;y<=b.y+b.h;y++)for(let x=b.x-1;x<=b.x+b.w;x++)if(x>=0&&y>=0&&x<W&&y<H)inB[y*W+x]=1;
+ for(let i=0;i<W*H;i++){if(map[i]!=3||bm[i]==3||inB[i])continue;let city=false;const x=i%W,y=(i/W)|0;for(let b=-2;b<=2&&!city;b++)for(let a=-2;a<=2;a++){const j=(y+b)*W+x+a;if(j>=0&&j<W*H&&bm[j]==3){city=true;break}}if(city)continue;
+  map[i]=bm[i]==2?2:0;n++;for(let b=-3;b<=3;b++)for(let a=-3;a<=3;a++){const j=(y+b)*W+x+a;if(j<0||j>=W*H)continue;const o=ob[j];if(o&&/^(slamp|rsg105|cone|barrier|tlight|bstop)$/.test(o.t)){try{rmObj(j)}catch(e){ob[j]=null}}}}
+ if(n){try{GQC.clear()}catch(e){}try{GROUND.clear()}catch(e){}}return n}
+{const g206=genDesertTowers;genDesertTowers=function(){const r=g206.apply(this,arguments);try{strayRoads206()}catch(e){}return r}}
+let L206=false;{const ld206=load;load=function(){L206=false;return ld206.apply(this,arguments)}}
+{const in206=init;init=function(){L206=false;return in206.apply(this,arguments)}}
+{const up206=update;update=function(dt){up206(dt);if(!L206&&state=='play'&&!inD&&!inC){L206=true;try{strayRoads206()}catch(e){}try{GROUND.clear()}catch(e){}}}}
+/* ---------- soft seams and worn trails in the ground chunks ---------- */
+function trail206(i){const m=map[i],x=i%W,y=(i/W)|0;if(bm[i]==3)return false;if(m==2){if(bm[i]==2)return false;for(let b=-3;b<=3;b++)for(let a=-3;a<=3;a++){const j=(y+b)*W+x+a;if(j>=0&&j<W*H&&(map[j]==1||map[j]==7||map[j]==20))return false}}else if(m!=14&&m!=4)return false;for(const b of BLD)if(x>=b.x-1&&x<=b.x+b.w&&y>=b.y-1&&y<=b.y+b.h)return false;return true}
+{const bg206=buildGround;buildGround=function(cx,cy,base){const cv=bg206.apply(this,arguments);try{if(CLASSIC||inD)return cv;const N=GQS*T,tx0=cx*GQS,ty0=cy*GQS,flag=new Uint8Array(GQS*GQS);let any=0;
+  for(let ty=0;ty<GQS;ty++)for(let tx=0;tx<GQS;tx++){const X=tx0+tx,Y=ty0+ty;if(X>=W||Y>=H)continue;const i=Y*W+X;if(trail206(i)){flag[ty*GQS+tx]=2;any=1;continue}if(!GRD206(map[i])||bm[i]==3)continue;
+   let edge=false;for(let b=-2;b<=2&&!edge;b++)for(let a=-2;a<=2;a++){const xx=X+a,yy=Y+b;if(xx<0||yy<0||xx>=W||yy>=H)continue;const j=yy*W+xx;if(bm[j]!=bm[i]&&bm[j]!=3&&GRD206(map[j])){edge=true;break}}if(edge){flag[ty*GQS+tx]=1;any=1}}
+  if(!any)return cv;const c=cv.getContext('2d'),S=N*2,id=c.getImageData(0,0,S,S),src=new Uint8ClampedArray(id.data),d=id.data;
+  const cp=(px,py,sx,sy)=>{if(sx<0||sy<0||sx>=S-1||sy>=S-1)return;for(let b=0;b<2;b++)for(let a=0;a<2;a++){const o=((py+b)*S+px+a)*4,q=((sy+b)*S+sx+a)*4;d[o]=src[q];d[o+1]=src[q+1];d[o+2]=src[q+2]}};
+  for(let ty=0;ty<GQS;ty++)for(let tx=0;tx<GQS;tx++){const f=flag[ty*GQS+tx];if(!f)continue;const X=tx0+tx,Y=ty0+ty,own=bm[Y*W+X];
+   for(let y=0;y<T;y++)for(let x=0;x<T;x++){const wx=X*T+x,wy=Y*T+y,px=(tx*T+x)*2,py=(ty*T+y)*2;
+    if(f==1){const jx=Math.round((vnz(wx/11,wy/11,231)-.5)*44+(aHash(wx,wy,233)-.5)*6),jy=Math.round((vnz(wx/11,wy/11,232)-.5)*44+(aHash(wx,wy,234)-.5)*6),sx2=wx+jx,sy2=wy+jy,stx=Math.floor(sx2/T),sty=Math.floor(sy2/T);
+     if(stx<0||sty<0||stx>=W||sty>=H)continue;const j=sty*W+stx;if(bm[j]==own||bm[j]==3||!GRD206(map[j]))continue;cp(px,py,px+jx*2,py+jy*2)}
+    else{const n=vnz(wx/5,wy/5,235)*.8+aHash(wx,wy,236)*.35;if(n>.56)continue;for(const[a,b]of[[0,24],[0,-24],[24,0],[-24,0],[0,40],[40,0]]){const stx=Math.floor((wx+a)/T),sty=Math.floor((wy+b)/T);if(stx<0||sty<0||stx>=W||sty>=H)continue;const j=sty*W+stx;if(map[j]==14||map[j]==4||map[j]==2&&bm[j]!=2||!GRD206(map[j]))continue;cp(px,py,px+a*2,py+b*2);break}}}}
+  c.putImageData(id,0,0)}catch(e){console.warn('bg206',e)}return cv}}
+try{GROUND.clear()}catch(e){}
+
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
  if(state=='title')menu();if(state=='opts')optsMenu();if(state=='sndo')sndMenu();if(state=='gfxo')gfxMenu();if(state=='slots')svMenu();if(state=='keys')keysMenu();if(state=='wthr')wthrMenu();if(state=='char')charMenu();if(state=='lobby')drawLobby();if(state=='hb'){Q(0,0,VW,VH,'rgba(6,10,6,.6)');drawHB()}if(0)title('ASHFALL',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Hold the fire. Survive the nights.','','WASD move \u2022 Space chop / fish / attack \u2022 Tab recipes','Press any key']);
