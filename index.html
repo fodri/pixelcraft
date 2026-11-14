@@ -12693,6 +12693,105 @@ seaHud=function(){try{calDraw209()}catch(e){noTr=false}};
 /* the goal box keeps clear of the card */
 {const sp209=spHud;spHud=function(){const dy=calOn209()?Math.max(0,Math.max(calBottom209(),CALMP209+3)+4-74):0;if(!dy)return sp209.apply(this,arguments);g.save();g.translate(0,dy);try{return sp209.apply(this,arguments)}finally{g.restore()}}}
 
+/* ===== v210: the HUD can be laid out — hold Ctrl and drag the panels (status + calendar, XP bar, minimap, goal box, co-op partners)
+   wherever you like; a pin button locks the layout, another puts everything back. Co-op partners show up in the top-right corner
+   with their health and level/XP. In co-op only the host places market stalls, so they no longer blink in and out. ===== */
+GAMEV=225;
+/* ---------- stalls: the host decides ---------- */
+{const es210=ensureStalls;ensureStalls=function(){if(typeof net!='undefined'&&net&&!net.isHost)return;return es210.apply(this,arguments)}}
+/* ---------- co-op: health and XP travel with the presence ---------- */
+{const up210=update;update=function(dt){up210(dt);try{if(net&&net.r&&!net.r._p210){const r=net.r,p0=r.presence;r._p210=1;r.presence=function(d){try{if(d&&typeof d=='object'){d.hp=Math.round(P.hp);d.lv=XS.lv|0;d.xf=+(Math.min(1,XS.xp/Math.max(1,xpNeed(XS.lv)))).toFixed(2);d.cr=creative?1:0}}catch(e){}return p0.call(r,d)}}}catch(e){}}}
+function coopRows210(){if(typeof net=='undefined'||!net||!net.peers||!net.peers.length)return[];return net.peers.filter(p=>p&&p.presence)}
+function chRect210(){try{if(!DQ112.L.length||skOpen||book||invOpen||tut||(typeof jnChalShow=='function'&&!jnChalShow()))return null;return[VW-116,1,116,11+DQ112.L.length*8+9+4]}catch(e){return null}}
+function coopY210(){const c=chRect210();return c&&!(HUD210.o.ch&&(HUD210.o.ch[0]||HUD210.o.ch[1]))?c[1]+c[3]+3:5}
+function coopDraw210(ox,oy){const L=coopRows210();if(!L.length)return;const h=LANG=='hu',w=112,x=VW-w-5+(ox|0),y=coopY210()+(oy|0);noTr=true;
+ const hh=6+L.length*20;Q(x,y,w,hh,'rgba(12,11,9,.5)');Q(x,y,w,1,'#9ab8d0');
+ L.forEach((p,i)=>{const q=p.presence,yy=y+4+i*20,hp=q.hp==null?null:Math.max(0,Math.min(100,q.hp)),dead=hp!=null&&hp<=0;
+  txt(String(q.n||'?').slice(0,12),x+4,yy+7,dead?'#a08080':'#e8e4d8');if(q.lv!=null&&!q.cr)txt('LV '+q.lv,x+w-4,yy+7,'#c8f0a0','right');
+  Q(x+4,yy+10,w-8,4,'#000');Q(x+5,yy+11,w-10,2,'#2a1414');if(hp!=null)Q(x+5,yy+11,Math.round((w-10)*hp/100),2,hp<30?'#ff5a4a':'#c83a2a');
+  Q(x+4,yy+15,w-8,2,'#000');if(q.xf!=null&&!q.cr)Q(x+5,yy+15,Math.round((w-10)*q.xf),1,'#7aff5a');
+  if(dead){txt(h?'elesett':'down',x+w/2,yy+7,'#ff7a6a','center')}});noTr=false}
+/* ---------- layout ---------- */
+const HUD210={o:{},pin:false,drag:null};
+try{const d=JSON.parse(localStorage.getItem('pc_hud210')||'null');if(d){HUD210.o=d.o||{};HUD210.pin=!!d.pin}}catch(e){}
+function hudSave210(){try{localStorage.setItem('pc_hud210',JSON.stringify({o:HUD210.o,pin:HUD210.pin}))}catch(e){}}
+function hudWidgets210(){const W_=[];const h=LANG=='hu';
+ let sb=46;try{if(typeof calBottom209=='function'&&calOn209())sb=Math.max(sb,calBottom209()+2,(CALMP209||0)+3)}catch(e){}
+ W_.push({id:'st',n:h?'Állapot':'Status',r:[[0,0,139,sb]],ex:[[112,0,52,24]]});
+ if(!creative)W_.push({id:'xp',n:'XP',r:[[139,0,236,10.5],[139,10.5,210,12]]});
+ {const c=chRect210();if(c)W_.push({id:'ch',n:h?'Kihívások':'Challenges',r:[c]})}
+ W_.push({id:'mm',n:h?'Térkép':'Map',r:[[2,VH-78,72,74]]});
+ {let dy=0;try{dy=Math.max(0,Math.max(calBottom209(),(CALMP209||0)+3)+4-74)}catch(e){}W_.push({id:'gl',n:h?'Feladat':'Goal',r:[[3,72+dy,200,36]]})}
+ const n=coopRows210().length;if(n){const y=coopY210();W_.push({id:'cp',n:h?'Társak':'Partners',r:[[VW-119,y-2,116,10+n*20]],dir:1})}
+ for(const w of W_){const o=HUD210.o[w.id]||[0,0];w.dx=o[0];w.dy=o[1];let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;for(const r of w.r.concat(w.ex||[])){x0=Math.min(x0,r[0]);y0=Math.min(y0,r[1]);x1=Math.max(x1,r[0]+r[2]);y1=Math.max(y1,r[1]+r[3])}w.bb=[x0,y0,x1-x0,y1-y0]}
+ return W_}
+function hudFree210(){return state=='play'&&!book&&!showMap&&!skOpen&&!invOpen&&!(typeof JN!='undefined'&&JN)&&!(typeof TPV!='undefined'&&TPV)&&!(typeof SETLUI!='undefined'&&SETLUI)&&!tut&&!(typeof PHOTO!='undefined'&&PHOTO)&&!view}
+function hudEdit210(){return CTRLH&&hudFree210()}
+function hudMoved210(){for(const k in HUD210.o){const o=HUD210.o[k];if(o&&(o[0]||o[1]))return true}return false}
+/* capture everything the HUD paints (after the weather layer) into a layer, then cut the panels out and paste them where they belong */
+const HL210={cv:null,cx:null,on:false,g0:null,m:null,inh:false};
+{const hd210=hud;hud=function(){HL210.inh=true;try{return hd210.apply(this,arguments)}finally{HL210.inh=false}}}
+let SKT210=false;{let sv=TEMP198.shown;Object.defineProperty(TEMP198,'shown',{get(){if(SKT210)throw 0;return sv},set(v){sv=v},configurable:true})}
+{const we210=weather;weather=function(){SKT210=true;let r;try{r=we210.apply(this,arguments)}finally{SKT210=false}try{if(HL210.inh&&!HL210.on&&hudFree210()&&(hudMoved210()||hudEdit210()))hudCap210()}catch(e){}
+ if(!HL210.on)try{thermo210(0,0)}catch(e){noTr=false}return r}}
+function thermo210(ox,oy){if(state!='play'||typeof tut!='undefined'&&tut)return;const v=Math.round(TEMP198.shown),x=118+ox,y=5+oy,c=v<=-10?'#8ac8ff':v<=0?'#b8dcff':v>=34?'#ff8a4a':v>=26?'#ffc070':'#e8e0c8';
+ Q(x,y,4,14,'rgba(10,14,10,.8)');Q(x+1,y+1,2,12,'#2a2e30');const f=Math.max(1,Math.min(11,Math.round((v+20)/55*11)));Q(x+1,y+13-f,2,f,c);Q(x-1,y+12,6,5,'rgba(10,14,10,.8)');Q(x,y+13,4,3,c);
+ noTr=true;txt((v>0?'+':'')+v+'°C',x+8,y+12,c);noTr=false}
+function hudCap210(){const c0=g.canvas;if(!HL210.cv||HL210.cv.width!==c0.width||HL210.cv.height!==c0.height){HL210.cv=document.createElement('canvas');HL210.cv.width=c0.width;HL210.cv.height=c0.height;HL210.cx=HL210.cv.getContext('2d')}
+ const c=HL210.cx;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,HL210.cv.width,HL210.cv.height);const m=g.getTransform();c.setTransform(m);c.imageSmoothingEnabled=g.imageSmoothingEnabled;c.font=g.font;
+ HL210.g0=g;HL210.m=m;HL210.on=true;g=c}
+const SC210=[];
+function hudFlush210(){if(!HL210.on)return;HL210.on=false;HL210.fl=1;const L=HL210.cv,c=HL210.cx,g0=HL210.g0,m=HL210.m;g=g0;
+ const s=m.a,W_=hudWidgets210(),cut=[];
+ c.setTransform(1,0,0,1,0,0);
+ for(const w of W_){if((!w.dx&&!w.dy)||w.dir)continue;for(const r of w.r){const px=Math.max(0,Math.floor(r[0]*s+m.e)),py=Math.max(0,Math.floor(r[1]*s+m.f)),pw=Math.min(L.width-px,Math.ceil(r[2]*s)),ph=Math.min(L.height-py,Math.ceil(r[3]*s));if(pw<=0||ph<=0)continue;
+  let k=cut.length;if(!SC210[k])SC210[k]=document.createElement('canvas');const sc=SC210[k];if(sc.width<pw||sc.height<ph){sc.width=Math.max(sc.width,pw);sc.height=Math.max(sc.height,ph)}const sx=sc.getContext('2d');sx.clearRect(0,0,sc.width,sc.height);sx.drawImage(L,px,py,pw,ph,0,0,pw,ph);c.clearRect(px,py,pw,ph);cut.push([sc,pw,ph,px+Math.round(w.dx*s),py+Math.round(w.dy*s)])}}
+ g.save();g.setTransform(1,0,0,1,0,0);g.globalAlpha=1;g.globalCompositeOperation='source-over';g.filter='none';
+ DI0.call(g,L,0,0);for(const[sc,pw,ph,x,y]of cut)DI0.call(g,sc,0,0,pw,ph,x,y,pw,ph);g.restore()}
+{const dr210=draw;draw=function(){let r;try{r=dr210.apply(this,arguments)}finally{try{hudFlush210()}catch(e){g=HL210.g0||g;HL210.on=false}}try{if(state=='play'){if(HL210.fl){HL210.fl=0;const o=HUD210.o.st||[0,0];thermo210(o[0],o[1])}if(hudFree210()){const o=HUD210.o.cp||[0,0];coopDraw210(o[0],o[1])}if(hudEdit210()||HUD210.drag)hudOverlay210()}}catch(e){noTr=false}return r}}
+/* the partner panel is painted inside the captured layer so it moves like the rest */
+/* ---------- editing overlay: frames, labels, pin and reset ---------- */
+function hudBtns210(){const h=LANG=='hu',y=26,pw=HUD210.pin?118:70,rw=78,gap=6,tw=HUD210.pin?pw:pw+gap+rw,x=Math.round((VW-tw)/2);
+ const b=[{k:'pin',x,y,w:pw,h:13,t:HUD210.pin?(h?'Rögzítve — feloldás':'Locked — unlock'):(h?'Rögzítés':'Lock')}];if(!HUD210.pin)b.push({k:'rst',x:x+pw+gap,y,w:rw,h:13,t:h?'Alaphelyzet':'Reset'});return b}
+function pinIcon210(x,y,c){Q(x+2,y,4,1,c);Q(x+1,y+1,6,3,c);Q(x+2,y+4,4,1,c);Q(x+3,y+5,2,1,c);Q(x+3,y+6,1,3,c)}
+function hudOverlay210(){const h=LANG=='hu';noTr=true;g.save();
+ if(!HUD210.pin){const t=performance.now();for(const w of hudWidgets210()){const[x,y,ww,hh]=w.bb,X=Math.round(x+w.dx),Y=Math.round(y+w.dy),dr=HUD210.drag&&HUD210.drag.id==w.id,hov=ms.x>=X&&ms.x<X+ww&&ms.y>=Y&&ms.y<Y+hh,c=dr?'#ffd84a':hov?'#f0e0a0':'rgba(240,224,160,.55)';
+   g.fillStyle=dr?'rgba(255,216,74,.10)':'rgba(255,255,255,.04)';g.fillRect(X,Y,ww,hh);
+   const ph=Math.floor(t/120)%6;for(let i=-ph;i<ww;i+=6){Q(X+Math.max(0,i),Y,Math.min(3,ww-Math.max(0,i)),1,c);Q(X+Math.max(0,i),Y+hh-1,Math.min(3,ww-Math.max(0,i)),1,c)}for(let i=-ph;i<hh;i+=6){Q(X,Y+Math.max(0,i),1,Math.min(3,hh-Math.max(0,i)),c);Q(X+ww-1,Y+Math.max(0,i),1,Math.min(3,hh-Math.max(0,i)),c)}
+   const lw=Math.ceil(w.n.length*4.6)+8,ly=Y+hh+1>VH-12?Y-11:Y+hh+1;Q(X,ly,lw,10,'rgba(20,16,10,.85)');txt(w.n,X+4,ly+8,c)}}
+ for(const b of hudBtns210()){const hov=ms.x>=b.x&&ms.x<b.x+b.w&&ms.y>=b.y&&ms.y<b.y+b.h,on=b.k=='pin'&&HUD210.pin;Q(b.x,b.y,b.w,b.h,hov?'rgba(70,56,24,.95)':'rgba(20,16,10,.88)');Q(b.x,b.y,b.w,1,on?'#ffd84a':'#c8a050');Q(b.x,b.y+b.h-1,b.w,1,'rgba(200,160,80,.5)');
+  if(b.k=='pin'){pinIcon210(b.x+4,b.y+2,on?'#ffd84a':'#e8d8a8');txt(b.t,b.x+14,b.y+10,on?'#ffd84a':'#fff2c8')}else txt('↺ '+b.t,b.x+5,b.y+10,'#fff2c8')}
+ if(!HUD210.pin)txt(h?'Ctrl + húzd a paneleket':'Ctrl + drag the panels',VW/2,52,'rgba(255,242,200,.8)','center');
+ g.restore();noTr=false}
+function hudClamp210(w,dx,dy){const[x,y,ww,hh]=w.bb;return[Math.round(Math.max(-x,Math.min(VW-ww-x,dx))),Math.round(Math.max(-y,Math.min(VH-hh-y,dy)))]}
+addEventListener('mousedown',e=>{if(e.button!==0||!(e.ctrlKey||CTRLH)||!hudFree210())return;try{sc(e)}catch(_){return}
+ for(const b of hudBtns210())if(ms.x>=b.x&&ms.x<b.x+b.w&&ms.y>=b.y&&ms.y<b.y+b.h){e.preventDefault();e.stopImmediatePropagation();if(b.k=='pin')HUD210.pin=!HUD210.pin;else{HUD210.o={}}hudSave210();try{snd('ui')}catch(_){}return}
+ if(HUD210.pin)return;const L=hudWidgets210();for(let i=L.length-1;i>=0;i--){const w=L[i],[x,y,ww,hh]=w.bb,X=x+w.dx,Y=y+w.dy;if(ms.x>=X&&ms.x<X+ww&&ms.y>=Y&&ms.y<Y+hh){e.preventDefault();e.stopImmediatePropagation();HUD210.drag={id:w.id,mx:ms.x,my:ms.y,dx:w.dx,dy:w.dy};return}}},true);
+addEventListener('mousemove',e=>{const d=HUD210.drag;if(!d)return;try{sc(e)}catch(_){return}const w=hudWidgets210().find(q=>q.id==d.id);if(!w)return;HUD210.o[d.id]=hudClamp210(w,d.dx+ms.x-d.mx,d.dy+ms.y-d.my);e.stopImmediatePropagation()},true);
+addEventListener('mouseup',e=>{if(!HUD210.drag)return;HUD210.drag=null;hudSave210();e.preventDefault();e.stopImmediatePropagation()},true);
+addEventListener('click',e=>{if((e.ctrlKey||CTRLH)&&hudFree210()&&!HUD210.pin){try{sc(e)}catch(_){return}for(const w of hudWidgets210()){const[x,y,ww,hh]=w.bb;if(ms.x>=x+w.dx&&ms.x<x+w.dx+ww&&ms.y>=y+w.dy&&ms.y<y+w.dy+hh){e.stopImmediatePropagation();return}}}},true);
+HU.unshift(['Ctrl + drag the panels','Ctrl + húzd a paneleket']);
+/* ---------- a fire that goes out stays where it was (the dark sprite is a 2x canvas; it was placed by its doubled size) ---------- */
+dU184=function(k,cx,by){const c=UNLIT184[k];if(!c)return dS184(k,cx,by);const q=DEC184.s[k],w=q?q[2]:c.width/(c._hd||1),h=q?q[3]:c.height/(c._hd||1);DI0.call(g,c,0,0,c.width,c.height,Math.round(cx-w/2),Math.round(by-h),w,h);return true};
+/* ---------- flax sways smoothly (one cached picture, bent by the wind) instead of hopping between frames ---------- */
+{const FX210=new Map(),dfx0=(()=>{try{return DRAWX.flax}catch(e){return null}})();
+ if(dfx0)DRAWX.flax=function(o,x,y,t){if(CLASSIC)return dfx0.apply(this,arguments);const tx=Math.round(x/T),ty=Math.round(y/T),k=tx+','+ty+','+(o.g|0)+(o.r|0);let cv=FX210.get(k);
+  if(!cv){cv=document.createElement('canvas');cv.width=32*2;cv.height=40*2;cv._hd=2;const c=cv.getContext('2d');c.setTransform(2,0,0,2,0,0);const sg=g,sc=cam,pn=performance.now;g=c;cam={x:x-8,y:y-20};performance.now=()=>(-x*.4*700);
+   try{FX204.clear();dfx0.apply(this,[o,x,y,t])}catch(e){}finally{g=sg;cam=sc;performance.now=pn}FX210.set(k,cv);if(FX210.size>3000)FX210.clear()}
+  const sk=Math.sin(performance.now()/700+x*.4)*.055+Math.sin(performance.now()/1900+y*.3)*.02,bx=Math.round(x-8-cam.x),by=Math.round(y+16-cam.y);
+  g.save();g.translate(bx,by);g.transform(1,0,-sk,1,0,0);g.drawImage(cv,0,-36);g.restore()}}
+/* ---------- Ctrl + click on something next to you uses it, like E (doors, chests, stairs, beds, stalls…) ---------- */
+let CLK210=null;
+{const ni210=nearInt;nearInt=function(){if(CLK210)return CLK210;return ni210.apply(this,arguments)}}
+addEventListener('mousedown',e=>{if(e.button!==0||!(e.ctrlKey||CTRLH)||state!='play'||!hudFree210()||drv||P.boat||(typeof chatOpen!='undefined'&&chatOpen)||(typeof TALK!='undefined'&&TALK))return;try{sc(e)}catch(_){return}if(ms.y>VH-34)return;
+ const wx=ms.x/ZM+cam.x,wy=ms.y/ZM+cam.y;let tx=Math.floor(wx/T),ty=Math.floor(wy/T);
+ /* a tall sprite is clicked above its tile: try the tile, then the one below it */
+ let hit=null;for(const[a,b]of[[0,0],[0,1],[0,2]]){const x=tx+a,y=ty+b;if(x<0||y<0||x>=W||y>=H)continue;let q=ob[y*W+x];if(!q)continue;let ox=x,oy=y;if(q.pm!=null){const m=ob[q.pm];if(!m)continue;ox=q.pm%W;oy=Math.floor(q.pm/W);q=m}if(INT[q.t]){hit={o:q,tx:ox,ty:oy};break}}
+ if(!hit)return;const fw=hit.o.fw||1,fh=hit.o.fh||1,cx=Math.max(hit.tx*T,Math.min((hit.tx+fw)*T,P.x)),cy=Math.max(hit.ty*T,Math.min((hit.ty+fh)*T,P.y));
+ if(Math.hypot(cx-P.x,cy-P.y)>40){try{say(LANG=='hu'?'Túl messze van — menj közelebb':'Too far — get closer')}catch(_){}e.preventDefault();e.stopImmediatePropagation();return}
+ e.preventDefault();e.stopImmediatePropagation();CLK210=hit;try{const code=(typeof KB!='undefined'&&KB.use)||'KeyE';dispatchEvent(new KeyboardEvent('keydown',{code,key:'e',bubbles:true}));dispatchEvent(new KeyboardEvent('keyup',{code,key:'e',bubbles:true}))}finally{CLK210=null}},true);
+HU.unshift(['Too far — get closer','Túl messze van — menj közelebb']);
+
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
  if(state=='title')menu();if(state=='opts')optsMenu();if(state=='sndo')sndMenu();if(state=='gfxo')gfxMenu();if(state=='slots')svMenu();if(state=='keys')keysMenu();if(state=='wthr')wthrMenu();if(state=='char')charMenu();if(state=='lobby')drawLobby();if(state=='hb'){Q(0,0,VW,VH,'rgba(6,10,6,.6)');drawHB()}if(0)title('ASHFALL',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Hold the fire. Survive the nights.','','WASD move \u2022 Space chop / fish / attack \u2022 Tab recipes','Press any key']);
