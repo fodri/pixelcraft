@@ -12555,6 +12555,89 @@ function trail206(i){const m=map[i],x=i%W,y=(i/W)|0;if(bm[i]==3)return false;if(
   c.putImageData(id,0,0)}catch(e){console.warn('bg206',e)}return cv}}
 try{GROUND.clear()}catch(e){}
 
+/* ===== v207: calmer bedrooms — every home gets two beds and a wardrobe instead of a room crammed full; the clutter pass leaves at most
+   one trinket; the loft upstairs is two beds, a wardrobe and a rug. Beds indoors are real beds now — wooden frame, pillow and a
+   blanket in one of many colours — and hospital beds are white metal ward beds with rails, wheels and sometimes a drip stand. The
+   log-frame camp bed is only for beds out in the open. ===== */
+GAMEV=222;
+/* ---------- plans: door under column 2 of the bottom row, nothing solid in front of it ---------- */
+{const S=(A,L)=>{A.length=0;for(const p of L)A.push(p);try{HOME191.add(A)}catch(e){}};
+ S(HPL,[["m.ma","m.m.","....","hT.K","...f"],["am.m",".m.m","....","Th.K","f..."]]);
+ S(HPL5,[["m..am","m...m",".....","K...T","fj..h"],["ma..m","m...m",".....","T...K","h..jf"]]);
+ S(HPL4,[["jQ#m.ma","J.#m.m.","#D#....","K......","f...NN.","j..hT.v"],["am.m#Qj",".m.m#.J","....#D#","......K","NN....f","v..Th.j"]]);
+ S(HPL8,[["jQ#m.a.m","J.#m...m","#D#.....","K.......","f...NN..","r.....hT","j...v..."],["m.a.m#Qj","m...m#.J",".....#D#","K.......","f...NN..","r....hT.","j..v...."]]);}
+/* the clutter pass: one trinket at most, often none */
+{const lp207=lifePass;lifePass=function(x0,y0,w,h,n){return lp207(x0,y0,w,h,R()<.5?1:0)}}
+/* furniture moved away from a door stays in its own room; if the room has no room for it, it stays put unless it blocks the doorway */
+{const rl207=reloc203;reloc203=function(b,mi,keep){const m=ob[mi];if(!m)return false;const fw=m.fw||1,fh=m.fh||1,inB=(x,y)=>x>b.x&&x<b.x+b.w-1&&y>b.y&&y<b.y+b.h-1;
+ const room=new Set(),st=[mi];room.add(mi);const own=new Set([mi]);for(let a=0;a<fw;a++)for(let c=0;c<fh;c++)own.add(mi+c*W+a);
+ while(st.length&&room.size<200){const j=st.pop();for(const d of[1,-1,W,-W]){const k=j+d,x=k%W,y=(k/W)|0;if(room.has(k)||!inB(x,y))continue;const z=ob[k];if(z&&(WALL203(z.t)||DOORISH203(z.t)))continue;room.add(k);st.push(k)}}
+ let spot=-1;for(let pass=0;pass<2&&spot<0;pass++)for(const j of room){const x=j%W,y=(j/W)|0;let ok=true;for(let a=0;a<fw&&ok;a++)for(let c=0;c<fh&&ok;c++){const q=(y+c)*W+x+a;if((ob[q]&&!own.has(q))||!room.has(q)||keep.has(q))ok=false}if(!ok)continue;
+  const wl=q=>{const z=ob[q];return z&&WALL203(z.t)};if(pass==0&&!(wl(y*W+x-1)||wl(y*W+x+fw)||wl((y-1)*W+x)||wl((y+fh)*W+x)))continue;
+  let byDoor=false;for(let c=-1;c<=fh;c++)for(let a=-1;a<=fw;a++){const z=ob[(y+c)*W+x+a];if(z&&DOORISH203(z.t))byDoor=true}if(byDoor)continue;spot=j;break}
+ if(spot<0){let adj=false;for(const j of own)for(const d of[1,-1,W,-W]){const z=ob[j+d];if(z&&DOORISH203(z.t))adj=true}return adj?rl207(b,mi,keep):false}
+ const o2=Object.assign({},m);delete o2.pm;try{rmObj(mi)}catch(e){ob[mi]=null}if(fw>1||fh>1)setFP(o2,spot%W,(spot/W)|0,fw,fh);else ob[spot]=o2;return true}}
+/* the loft: two beds against the top wall, a wardrobe, a rug */
+{const go207=genOF;genOF=function(rec,f){const r=go207.apply(this,arguments);try{if(rec&&rec.k=='vhut'&&f<=(rec.n||1)){const x0=40,y0=40,w=rec.bw||7,h=rec.bh||6;let sx=-9,sy=-9;
+  for(let y=y0+1;y<y0+h-1;y++)for(let x=x0+1;x<x0+w-1;x++){const i=y*W+x,o=ob[i];if(!o)continue;if(o.t=='odn'){sx=x;sy=y;continue}if(/^(bed|p_bed|wardrobe|fcrate|lamp|achair|rug|deco)$/.test(o.t))ob[i]=null}
+  const free=(x,y)=>x>x0&&x<x0+w-1&&y>y0&&y<y0+h-1&&!ob[y*W+x]&&!(Math.abs(x-sx)<=1&&Math.abs(y-sy)<=1);let nb=0,last=-9;
+  for(const yb of[y0+1,y0+h-3]){last=-9;for(let x=x0+1;x<x0+w-1&&nb<2;x++)if(x-last>1&&free(x,yb)&&free(x,yb+1)&&!(yb>y0+1&&ob[(yb-1)*W+x]&&ob[(yb-1)*W+x].t=='p_bed')){setFP({t:'bed',hp:10,r:0,on:true},x,yb,1,2);nb++;last=x}}
+  let wd=0;for(let x=x0+w-2;x>x0&&!wd;x--)if(free(x,y0+1)){ob[(y0+1)*W+x]={t:'wardrobe'};wd=1}
+  if(!wd)for(let y=y0+1;y<y0+h-1&&!wd;y++)for(const x of[x0+1,x0+w-2])if(!wd&&free(x,y)){ob[y*W+x]={t:'wardrobe'};wd=1}
+  const ry=y0+h-3,rx=x0+(w>>1);if(free(rx,ry))ob[ry*W+rx]={t:'rug'}}}catch(e){console.warn('loft207',e)}return r}}
+
+/* ---------- beds ---------- */
+const BED207=new Map(),BIN207=new Map();
+const BEDC207=['#b5483c','#3f6c9e','#5a8a4e','#c9973a','#7a5596','#d27f98','#3a8c8a','#c8693a','#2f4170','#868b94','#9a3a5a','#6a8a3a'];
+const BEDW207=[['#8a5a36','#6a4228','#a87448'],['#6e4a32','#523424','#8c6446'],['#b08a5e','#8a6a44','#c8a476'],['#4a3a32','#342822','#6a5446']];
+function mix207(c,k){const n=parseInt(c.slice(1),16),r=n>>16,g_=n>>8&255,b=n&255,f=v=>Math.max(0,Math.min(255,Math.round(k<0?v*(1+k):v+(255-v)*k))).toString(16).padStart(2,'0');return '#'+f(r)+f(g_)+f(b)}
+function bedSprite207(kind,v,bl){const key=kind+'|'+v+'|'+(bl?1:0);let cv=BED207.get(key);if(cv)return cv;
+ cv=document.createElement('canvas');cv.width=24*2;cv.height=44*2;cv._hd=2;const c=cv.getContext('2d');c.setTransform(2,0,0,2,4*2,9*2);c.imageSmoothingEnabled=false;
+ const F=(x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(x,y,w,h)};
+ if(kind=='h'){/* hospital ward bed */
+  const met='#c3c9cf',mtd='#8e979f',mtl='#e4e8eb',bk=v&1?'#a9c7d9':'#b7d5c6',iv=v&2;
+  F(1,31,15,2.5,'rgba(0,0,0,.28)');F(15.5,1,1.5,30,'rgba(0,0,0,.14)');
+  /* head: tube frame with a pale panel */
+  F(0,-6,16,1.5,met);F(0,-6,16,.5,mtl);F(0,-6,1.5,9,met);F(14.5,-6,1.5,9,met);F(1.5,-4.5,13,5,'#d9e1e6');F(1.5,-4.5,13,.6,'#f2f5f7');F(1.5,0,13,.8,mtd);
+  /* frame + sheets */
+  F(1,2,14,29,mtd);F(1.5,2,13,28.5,met);F(2,2.5,12,27,'#f5f7f7');F(2,2.5,.6,27,'#e2e7e8');
+  F(3,3.5,10,5.5,'#ffffff');F(3,8.5,10,.8,'#d9e0e2');F(3.5,3.5,9,.5,'#fdfdfd');
+  F(2,12,12,17,bk);F(2,12,12,2.5,mix207(bk,.35));F(2,14.5,12,.6,mix207(bk,-.25));F(2,12,.8,17,mix207(bk,-.18));F(13.2,12,.8,17,mix207(bk,-.25));
+  if(bl){F(5,17,6,4.5,'rgba(120,20,16,.55)');F(9,22,3,2,'rgba(120,20,16,.45)');F(4,5,3,2,'rgba(120,20,16,.35)')}
+  /* side rails */
+  for(const x of[-.6,15.1]){F(x,10,1.5,14,mtd);F(x,10,1.5,.6,mtl);F(x,13.5,1.5,.5,mtl);F(x,17,1.5,.5,mtl);F(x,20.5,1.5,.5,mtl)}
+  /* foot with a chart, wheels */
+  F(1,29,14,2.5,met);F(1,29,14,.5,mtl);F(6,29.3,4,2,'#e8e0c8');F(6.5,29.8,3,.4,'#8a8a8a');F(6.5,30.6,2,.4,'#8a8a8a');
+  for(const x of[1,13])for(const y of[-.5,31.5]){F(x,y+1.5,2,2,'#33383c');F(x+.5,y+1.5,1,.5,'#6a7076')}
+  if(iv){F(17.5,-8,1,29,'#9aa2aa');F(16,20.5,4,1,'#6a7076');F(16.5,-8,3,4.5,'rgba(210,235,245,.92)');F(16.5,-6,3,2.5,'rgba(170,215,235,.9)');F(18,-3.5,.5,9,'rgba(200,220,230,.8)')}
+ }else{/* home bed: wooden frame, pillow, coloured blanket */
+  const col=BEDC207[v%BEDC207.length],wd=BEDW207[(v>>4)%BEDW207.length],pat=(v>>6)%4,acc=pat==1?'#efe8d8':pat==2?mix207(col,-.3):mix207(col,.3);
+  F(1,31,15,3,'rgba(0,0,0,.28)');F(15.5,1,1.5,31,'rgba(0,0,0,.15)');
+  /* headboard */
+  F(0,-6,16,9,wd[0]);F(0,-7,16,1.5,wd[2]);F(0,-7,16,.5,mix207(wd[2],.3));F(2,-4.5,5.5,5,wd[1]);F(8.5,-4.5,5.5,5,wd[1]);F(2,-4.5,5.5,.5,mix207(wd[1],-.25));F(8.5,-4.5,5.5,.5,mix207(wd[1],-.25));F(0,2,16,1,mix207(wd[1],-.3));
+  /* frame, mattress, pillow */
+  F(1,2.5,14,28.5,wd[1]);F(2,2.5,12,27,'#efe9dc');F(2,2.5,.6,27,'#ddd5c4');
+  F(3,3.5,10,6,'#fbf8f1');F(3,9,10,.8,'#d8d0bf');F(3.5,3.5,9,.5,'#ffffff');F(7.7,4,.6,4.5,'#ece5d6');
+  /* blanket */
+  F(1.5,11,13,19,col);
+  if(pat==1)for(let y=17;y<29;y+=3.5)F(1.5,y,13,1.2,acc);
+  else if(pat==2)for(let y=15;y<30;y+=3)for(let x=1.5+((y/3|0)%2)*3;x<14.5;x+=6)F(x,y,Math.min(3,14.5-x),Math.min(3,30-y),acc);
+  else if(pat==3){F(1.5,24,13,1.5,acc);F(1.5,26.5,13,.7,acc)}
+  F(1.5,11,13,3,mix207(col,.28));F(1.5,11,13,.5,mix207(col,.45));F(1.5,14,13,.7,mix207(col,-.3));F(1.5,11,1,19,mix207(col,-.2));F(13.5,11,1,19,mix207(col,-.3));F(1.5,29.3,13,.7,mix207(col,-.35));
+  /* footboard, legs */
+  F(1,29.5,14,2.5,wd[0]);F(1,29.5,14,.6,wd[2]);F(1,32,2,1.2,wd[1]);F(13,32,2,1.2,wd[1]);F(0,2.5,1,29,wd[0]);F(15,2.5,1,29,mix207(wd[0],-.2))}
+ BED207.set(key,cv);if(BED207.size>200)BED207.delete(BED207.keys().next().value);return cv}
+function bedIn207(o,tx,ty){if(inD||inC)return true;if(o.hs)return true;const i=ty*W+tx;let v=BIN207.get(i);if(v==null){v=false;for(const b of BLD){if(b.rf=='ruin')continue;if(tx>=b.x&&tx<b.x+b.w&&ty>=b.y&&ty<b.y+b.h){v=true;break}}
+ if(!v)try{v=!!inOwnHouse(tx,ty)}catch(e){}BIN207.set(i,v)}return v}
+{const dob207=drawObj;drawObj=function(o,x,y){if(!o||o.t!='bed'||CLASSIC||o.pm!=null)return dob207(o,x,y);const tx=Math.round(x/T),ty=Math.round(y/T);if(!bedIn207(o,tx,ty))return dob207(o,x,y);
+ let kind='w',v=0;if(o.hs||(curOf&&inD&&typeof OW!='undefined'&&OW&&OW.ob[curOf.b]&&OW.ob[curOf.b].k=='hosp'))kind='h';const hh=Math.floor(aHash(tx,ty,207)*4096);v=kind=='h'?(hh&1)|((hh>>3)%3==0?2:0):hh;
+ const cv=bedSprite207(kind,v,kind=='h'&&o.bl),r=((o.r|0)&3);
+ g.save();g.translate(Math.round(x-cam.x),Math.round(y-cam.y));if(r==1){g.translate(2*T,0);g.rotate(Math.PI/2)}else if(r==2){g.translate(T,2*T);g.rotate(Math.PI)}else if(r==3){g.translate(0,T);g.rotate(-Math.PI/2)}
+ g.drawImage(cv,-4,-9);g.restore()}}
+{const in207=init;init=function(){BIN207.clear();return in207.apply(this,arguments)}}
+{const ld207=load;load=function(){BIN207.clear();return ld207.apply(this,arguments)}}
+{const up207=update;let t207=0,l207=null;update=function(dt){up207(dt);t207-=dt;if(t207<=0||l207!==ob){t207=4;l207=ob;BIN207.clear()}}}
+
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
  if(state=='title')menu();if(state=='opts')optsMenu();if(state=='sndo')sndMenu();if(state=='gfxo')gfxMenu();if(state=='slots')svMenu();if(state=='keys')keysMenu();if(state=='wthr')wthrMenu();if(state=='char')charMenu();if(state=='lobby')drawLobby();if(state=='hb'){Q(0,0,VW,VH,'rgba(6,10,6,.6)');drawHB()}if(0)title('ASHFALL',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Hold the fire. Survive the nights.','','WASD move \u2022 Space chop / fish / attack \u2022 Tab recipes','Press any key']);
