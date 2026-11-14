@@ -12072,6 +12072,30 @@ addEventListener('mousedown',e=>{if(state!='play'||e.button!==2||!(e.ctrlKey||CT
  if(slotSwap195(1)){e.preventDefault();e.stopPropagation()}},true);
 try{for(const L of[TUT.hu,TUT.en])for(const r of L)for(let k=1;k<r.length;k++)if(typeof r[k]=='string')r[k]=r[k].replace(/Ctrl\s*\+\s*görgő(vel)?(?=[^.]*(slot|hely|eszköz|étel))/gi,'Ctrl + jobb klikk$1'.replace('$1','')).replace(/Ctrl\s*\+\s*wheel(?=[^.]*(slot|tool|food))/gi,'Ctrl + right click')}catch(e){}
 
+/* ===== v196: little things — name tags sit closer to the (smaller) heads; ruin walls can be broken up with a pickaxe for stone (now and
+   then an old relic falls out); every "Searched the …" message reads in Hungarian; city walls get exposed brick, soot and climbing ivy. ===== */
+GAMEV=211;
+/* name tags a little lower */
+{const no196=npcOverlay;npcOverlay=function(){const L=OVQ.slice(),dy=CLASSIC?2:6;for(const n of L)n.y+=dy;try{return no196.apply(this,arguments)}finally{for(const n of L)n.y-=dy}}}
+/* Hungarian for any search message (specific names first, then the generic prefix) */
+HU.push(['Searched the ','Átkutattad: '],[' (E again: repair & drive)',' (E újra: javítás és vezetés)'],['ruins','rom']);
+/* ruin walls: chip them away with a pickaxe */
+{const ac196=act;act=function(){try{const tl=tool();if(state=='play'&&!inD&&P.cd<=0&&tl&&/pickaxe/.test(tl.k||'')&&mtx>=0&&mty>=0&&mtx<W&&mty<H){const i=mty*W+mtx,o=ob[i];
+  if(o&&(o.t=='ancw'||o.t=='ancd')&&Math.hypot(mtx*T+8-P.x,mty*T+8-P.y)<=46){if(!edge&&o.t=='ancd')return;P.cd=.38;o.hp=(o.hp==null?(o.t=='ancw'?4:2):o.hp)-1;try{snd('mine')}catch(e){try{snd('hit')}catch(_){}}
+   for(let k=0;k<5;k++)parts.push({x:mtx*T+8,y:mty*T+6,vx:(Math.random()-.5)*70,vy:-25-Math.random()*40,l:.45,c:k%2?'#9a947c':'#6a6654'});
+   if(o.hp<=0){ob[i]=null;const n=o.t=='ancw'?2+(Math.random()<.4?1:0):1;inv.stone=(inv.stone|0)+n;let ex='';const r=Math.random();
+    if(r<.06){inv.fossil=(inv.fossil|0)+1;ex=LANG=='hu'?', +1 kövület!':', +1 fossil!'}else if(r<.1){inv.artf=(inv.artf|0)+1;ex=LANG=='hu'?', +1 ereklye!':', +1 relic!'}
+    say((LANG=='hu'?'+'+n+' kő a romból':'+'+n+' stone from the ruin')+ex)}return}}}catch(e){}return ac196.apply(this,arguments)}}
+/* city walls: exposed brick, soot, ivy */
+{const dw196=drawObj;drawObj=function(o,x,y){const r=dw196(o,x,y);if(!o||CLASSIC||inD||!(o.t=='wall'||o.t=='sblock'||o.t=='win'))return r;try{const tx=Math.round(x/T),ty=Math.round(y/T);if(!bm||bm[ty*W+tx]!=3)return r;const dn=ob[(ty+1)*W+tx];if(dn&&(dn.t=='wall'||dn.t=='sblock'||dn.t=='win'||dn.t=='door'))return r;
+  const h=aHash(tx,ty,301),h2=aHash(tx,ty,302),fx=x-cam.x,fy=y-cam.y,G=(a,b,w,hh,c)=>{g.fillStyle=c;g.fillRect(fx+a,fy+b,w,hh)};
+  if(h<.38&&o.t!='win'){const bx=1+Math.floor(h2*7),by=2+Math.floor(h*14)%5,bw=5+Math.floor(h2*4);G(bx-1,by-1,bw+2,7,'rgba(40,30,24,.35)');for(let rr=0;rr<3;rr++)for(let c=0;c<3;c++){const ox=(rr%2)*2;if(c*3+ox+2>bw)continue;G(bx+c*3+ox,by+rr*2,2,1,['#8a4a34','#7a3e2c','#9a5640'][(rr+c)%3])}}
+  if(h2>.55){const a=2+Math.floor(h*12);G(a,0,2,9,'rgba(18,16,14,.2)');G(a+1,0,1,13,'rgba(18,16,14,.14)')}
+  if(h>.6){const sx=Math.floor(h2*14),len=6+Math.floor(h*10);let xx=sx;for(let k=0;k<len;k++){G(xx,15-k,1,1,'#3e5a26');if(k%3==1){G(xx+1,15-k,2,1,'#5a7a30');G(xx-1,14-k,1,1,'#4a6a2a')}if(aHash(tx+k,ty,303)<.3)xx+=aHash(tx,k,304)<.5?1:-1;xx=Math.max(0,Math.min(15,xx))}}
+  if(h<.2){G(Math.floor(h2*13),11,3,1,'rgba(20,16,12,.5)');G(Math.floor(h2*13)+1,12,1,1,'rgba(20,16,12,.5)')}}catch(e){}return r}}
+/* no round blob shrubs in the undergrowth either */
+{const dj196=drawObj;const SW196=['u0','u2','u3','u6','u7','u1','u5','u8'];drawObj=function(o,x,y){if(o&&o.t=='jbush'&&(o.k=='u9'||o.k=='u10'||o.k=='u4'))o.k=SW196[Math.floor(aHash(Math.round(x/T),Math.round(y/T),305)*SW196.length)];return dj196(o,x,y)}}
+
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
  if(state=='title')menu();if(state=='opts')optsMenu();if(state=='sndo')sndMenu();if(state=='gfxo')gfxMenu();if(state=='slots')svMenu();if(state=='keys')keysMenu();if(state=='wthr')wthrMenu();if(state=='char')charMenu();if(state=='lobby')drawLobby();if(state=='hb'){Q(0,0,VW,VH,'rgba(6,10,6,.6)');drawHB()}if(0)title('ASHFALL',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Hold the fire. Survive the nights.','','WASD move \u2022 Space chop / fish / attack \u2022 Tab recipes','Press any key']);
