@@ -12058,6 +12058,20 @@ function ashSpawn194(si){const sx=(si%W)*T+32,sy=Math.floor(si/W)*T+52;const z={
    else if(d>34){const k=zs.indexOf(ASH194);if(k>=0)zs.splice(k,1);ASH194=null}}
   if(!o.won&&d<9&&!ASH194)ashSpawn194(C.s);}}}catch(e){console.warn('rv194 tick',e)}}}
 
+/* ===== v195: Ctrl + right click on a slot swaps in the next thing of the same kind (another tool on the hotbar, another food or medicine
+   on a quick slot); Ctrl + Shift + right click empties a quick slot. Ctrl + wheel is only for zooming now. ===== */
+GAMEV=210;
+addEventListener('wheel',e=>{if(state=='play'&&(e.ctrlKey||CTRLH)&&!book&&!JN&&!showMap)e.stopPropagation()},{capture:true,passive:false});
+function slotSwap195(dir){const y=VH-26,h=LANG=='hu',X=qsX();
+ for(let i=0;i<4;i++)if(qsHit(X[i],y)){const others=QS.filter((k,j)=>j!==i&&k),L=Object.keys(inv).filter(k=>inv[k]>0&&qsSide(k)==(i<2?0:1)&&!others.includes(k)).sort();if(!L.length){snd('click');say(h?'Nincs másik ilyen nálad':'You have nothing else for this slot');return true}
+  let j=L.indexOf(QS[i]);j=j<0?0:(j+dir+L.length)%L.length;QS[i]=L[j];snd('ui');say(tr(LBL[QS[i]]||QS[i]));return true}
+ for(let i=0;i<HB.length;i++){const x=HX+i*22;if(ms.x>=x&&ms.x<x+20&&ms.y>=y&&ms.y<y+20){if(slotCycle(HB,i,dir)){snd('ui');say(tr(LBL[HB[i]]||HB[i]))}else{snd('click');if(HB[i]&&famOf(HB[i]))say(h?'Nincs másik ilyen fajta nálad':'You have nothing else of this kind')}return true}}
+ return false}
+addEventListener('mousedown',e=>{if(state!='play'||e.button!==2||!(e.ctrlKey||CTRLH)||book||JN||invOpen||skOpen||tut)return;try{sc(e)}catch(_){}
+ if(e.shiftKey){const X=qsX();for(let i=0;i<4;i++)if(qsHit(X[i],VH-26)){e.preventDefault();e.stopPropagation();QS[i]=null;snd('ui');return}}
+ if(slotSwap195(1)){e.preventDefault();e.stopPropagation()}},true);
+try{for(const L of[TUT.hu,TUT.en])for(const r of L)for(let k=1;k<r.length;k++)if(typeof r[k]=='string')r[k]=r[k].replace(/Ctrl\s*\+\s*görgő(vel)?(?=[^.]*(slot|hely|eszköz|étel))/gi,'Ctrl + jobb klikk$1'.replace('$1','')).replace(/Ctrl\s*\+\s*wheel(?=[^.]*(slot|tool|food))/gi,'Ctrl + right click')}catch(e){}
+
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
  if(state=='title')menu();if(state=='opts')optsMenu();if(state=='sndo')sndMenu();if(state=='gfxo')gfxMenu();if(state=='slots')svMenu();if(state=='keys')keysMenu();if(state=='wthr')wthrMenu();if(state=='char')charMenu();if(state=='lobby')drawLobby();if(state=='hb'){Q(0,0,VW,VH,'rgba(6,10,6,.6)');drawHB()}if(0)title('ASHFALL',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Hold the fire. Survive the nights.','','WASD move \u2022 Space chop / fish / attack \u2022 Tab recipes','Press any key']);
