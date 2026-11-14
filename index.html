@@ -11793,9 +11793,9 @@ const HOME191=new Set();
  /* 5x5 inside: village huts */
  S(HPL5,[["mn.Kf","m...j",".R.hT","NN..k","av..p"],["fK.nm","j...m","Th.R.","k..NN","p..va"]]);
  /* 7x6 inside: big village houses, villas */
- S(HPL4,[["Qj#mn.a","J.#m...","#D...hT","K...NN.","f..RRR.","j...v.p"],["a.nm#jQ","...m#.J","Th...D#","NN....K","RRR...f","pv....j"]]);
+ S(HPL4,[["jQ#mn.a","J.#m...","#D#..hT","K...NN.","f..RRR.","j...v.p"],["a.nm#Qj","...m#.J","Th..#D#","NN....K","RRR...f","pv....j"]]);
  /* 8x7 inside: town houses */
- S(HPL8,[["Qj#mnanm","J.#m...m","#D......","K...NN.h","f..RRR.T","r..RRR.h","j...v..p"],["mnanm#jQ","m...m#.J","......D#","NN..hT.K","RRR....f","RRR....r","pv.....j"]]);}
+ S(HPL8,[["jQ#mnanm","J.#m...m","#D#.....","K...NN.h","f..RRR.T","r..RRR.h","j...v..p"],["mnanm#Qj","m...m#.J",".....#D#","NN..hT.K","RRR....f","RRR....r","pv.....j"]]);}
 {const pp191=putPlan;putPlan=function(x0,y0,plan,mir,opt){const home=HOME191.has(plan)||[...HOME191].some(A=>A.includes(plan))||[...HOME191].some(A=>A.some(p=>p.length==plan.length&&p.every((r,i)=>r==plan[plan.length-1-i])));
  const r=pp191.apply(this,arguments);
  if(home){try{const rows=plan.length,cols=plan[0].length;let pap=0;for(let yy=y0;yy<y0+rows;yy++)for(let xx=x0;xx<x0+cols;xx++){const i=yy*W+xx,o=ob[i];if(!o)continue;if(o.t=='bones')ob[i]=null;else if(o.t=='papers'&&++pap>1)ob[i]=null;else if(o.t=='rubble'&&!'gbksfox'.includes(plan[yy-y0][mir?cols-1-(xx-x0):xx-x0]))ob[i]=null}}catch(e){}}
@@ -12415,6 +12415,23 @@ function spawn201(i,kind){const B=BOSS201[kind],sx=(i%W)*T+32,sy=Math.floor(i/W)
  }catch(e){console.warn('201',e)}}}
 /* Kőhalmi pays for the trophies */
 {const jo201=jobOffer105;jobOffer105=function(n){if(n&&n.kh194){for(const[k,dm,gd,a,b]of[['icecore',4,6,'Egy jégmag! Sosem olvad el… Négy gyémánt és hat arany érte.','An ice core! It never melts… Four diamonds and six gold for it.'],['rustclaw',5,6,'Ez a karom félig fém, félig csont. Öt gyémánt és hat arany.','This claw is half metal, half bone. Five diamonds and six gold.']])if(inv[k]>0)return{txt:B201(a,b),cost:{[k]:1},run:()=>{inv.diamond=(inv.diamond|0)+dm;inv.gold=(inv.gold|0)+gd;snd('pick');return B201('Ezt a múzeumnak tartogatom.','I\'m saving this for the museum.')}}}return jo201.apply(this,arguments)}}
+
+/* ===== v202: bathrooms are closed boxes with their door in the middle of the partition (no gap at the corner), and the loft stairs
+   of a two-storey hut never take the place of a bathroom wall — they go into a corner of the main room instead. ===== */
+GAMEV=217;
+const BATH202=t=>t=='wc'||t=='tub'||t=='sink';
+function bathNear202(x,y){for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++){const o=ob[(y+b)*W+x+a];if(o&&BATH202(o.t))return true}return false}
+function fixStair202(b){for(let y=b.y;y<b.y+b.h;y++)for(let x=b.x;x<b.x+b.w;x++){const i=y*W+x,o=ob[i];if(!o||o.t!='oup'||o.k!='vhut')continue;const nd=[i-1,i+1,i-W,i+W].some(j=>ob[j]&&ob[j].t=='door');let fx=false;for(let bb=-2;bb<=2;bb++)for(let aa=-2;aa<=2;aa++){const q=ob[(y+bb)*W+x+aa];if(q&&BATH202(q.t))fx=true}if(!nd&&!fx)return;
+  const dr=[];for(let xx=b.x;xx<b.x+b.w;xx++)for(const yy of[b.y,b.y+b.h-1]){const q=ob[yy*W+xx];if(q&&q.t=='door')dr.push([xx,yy])}
+  const wl=j=>{const q=ob[j];return q&&/^(wall|sblock|win|twall|gwall)$/.test(q.t)};let spot=-1;
+  for(let pass=0;pass<2&&spot<0;pass++)for(let yy=b.y+1;yy<b.y+b.h-1&&spot<0;yy++)for(let xx=b.x+1;xx<b.x+b.w-1;xx++){const j=yy*W+xx;if(ob[j]||bathNear202(xx,yy))continue;if(dr.some(([dx,dy])=>Math.abs(dx-xx)<=1&&Math.abs(dy-yy)<=2))continue;
+   const n=[j-1,j+1,j-W,j+W].filter(wl).length;if(n<(pass?1:2))continue;let bed=false;for(const k of[j-W,j+W,j-1,j+1]){const q=ob[k];if(q&&(q.t=='bed'||q.t=='p_bed'))bed=true}if(bed)continue;spot=j}
+  if(spot<0){ob[i]={t:'twall'};b.st2=0;return}ob[spot]=Object.assign({},o,{sx:spot%W-b.x,sy:Math.floor(spot/W)-b.y});ob[i]={t:'twall'};return}}
+function fixStairs202(){for(const b of BLD)if(b.rf=='hut')try{fixStair202(b)}catch(e){}}
+{const g202=genDesertTowers;genDesertTowers=function(){const r=g202.apply(this,arguments);try{fixStairs202()}catch(e){}return r}}
+let L202=false;{const ld202=load;load=function(){L202=false;return ld202.apply(this,arguments)}}
+{const in202=init;init=function(){L202=false;return in202.apply(this,arguments)}}
+{const up202=update;update=function(dt){up202(dt);if(!L202&&state=='play'&&!inD&&!inC){L202=true;try{fixStairs202()}catch(e){}}}}
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
