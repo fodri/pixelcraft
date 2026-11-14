@@ -12638,6 +12638,24 @@ function bedIn207(o,tx,ty){if(inD||inC)return true;if(o.hs)return true;const i=t
 {const ld207=load;load=function(){BIN207.clear();return ld207.apply(this,arguments)}}
 {const up207=update;let t207=0,l207=null;update=function(dt){up207(dt);t207-=dt;if(t207<=0||l207!==ob){t207=4;l207=ob;BIN207.clear()}}}
 
+/* ===== v208: homes in worlds made before the tidy-up are thinned out too — a home keeps two beds, one wardrobe, one table with a couple
+   of chairs, its kitchen and bathroom; nightstands, cabinets, pots, bookshelves, crates and floor junk go. Homes you have claimed or
+   built in are never touched. ===== */
+GAMEV=223;
+const LIM208={bed:2,wardrobe:1,nstand:0,cabinet:0,pot:0,deco:1,papers:0,bones:0,lamp:0,bshelf:0,achair:0,fcrate:0,gshelf:0,counter:1,chair:2,ochair:0,mtab:1,sofa:1,tv:1,stove:1,fridge:1,sink:2,wc:1,tub:1,trash:0,desk:0};
+function thin208(x0,y0,w,h){const cnt={};let n=0;for(let y=y0;y<y0+h;y++)for(let x=x0;x<x0+w;x++){const i=y*W+x,o=ob[i];if(!o||o.pm!=null)continue;const L=LIM208[o.t];if(L==null)continue;cnt[o.t]=(cnt[o.t]||0)+1;
+ if(cnt[o.t]>L){try{rmObj(i)}catch(e){ob[i]=null}n++}}return n}
+function declutter208(){if(inD||inC)return 0;let n=0;for(const b of BLD){if(b.rf!='hut'&&b.rf!='house'&&b.rf!='apt')continue;let mine=false;
+ try{mine=!!inOwnHouse(b.x+(b.w>>1),b.y+(b.h>>1))}catch(e){}
+ if(!mine)for(let y=b.y;y<b.y+b.h&&!mine;y++)for(let x=b.x;x<b.x+b.w;x++){const o=ob[y*W+x];if(o&&(o.own||o.pl)){mine=true;break}}
+ if(mine)continue;n+=thin208(b.x+1,b.y+1,b.w-2,b.h-2)}return n}
+{const g208=genDesertTowers;genDesertTowers=function(){const r=g208.apply(this,arguments);try{declutter208()}catch(e){console.warn('thin208',e)}return r}}
+let L208=false;{const ld208=load;load=function(){L208=false;return ld208.apply(this,arguments)}}
+{const in208=init;init=function(){L208=false;return in208.apply(this,arguments)}}
+{const up208=update;update=function(dt){up208(dt);if(!L208&&state=='play'&&!inD&&!inC){L208=true;try{declutter208()}catch(e){}}}}
+/* apartment floors upstairs too */
+{const go208=genOF;genOF=function(rec,f){const r=go208.apply(this,arguments);try{if(rec&&(rec.k=='apt'||rec.k=='vhut')&&f<=(rec.n||1))thin208(41,41,(rec.bw||10)-2,(rec.bh||9)-2)}catch(e){}return r}}
+
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
  if(state=='title')menu();if(state=='opts')optsMenu();if(state=='sndo')sndMenu();if(state=='gfxo')gfxMenu();if(state=='slots')svMenu();if(state=='keys')keysMenu();if(state=='wthr')wthrMenu();if(state=='char')charMenu();if(state=='lobby')drawLobby();if(state=='hb'){Q(0,0,VW,VH,'rgba(6,10,6,.6)');drawHB()}if(0)title('ASHFALL',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Hold the fire. Survive the nights.','','WASD move \u2022 Space chop / fish / attack \u2022 Tab recipes','Press any key']);
