@@ -11985,7 +11985,7 @@ function genRV194(){if(inD)return 0;const ach=[];for(let i=0;i<W*H;i++){const o=
    if(sp){setFP({t:'rvshrine',kn:0,won:0},sp[0],sp[1],4,2);for(let k=0;k<3;k++){const s=spot194(sp[0]+2,sp[1]+1,3,6,1,1);if(s)ob[s[1]*W+s[0]]={t:'dstat',k:[0,6,8][k]}}}}}catch(e){console.warn('shrine194',e)}
  /* Professor Kőhalmi's camp by the nearest ruin */
  try{if(g0&&!NPCS.some(q=>SCINM194.includes(q.nm))){const c=spot194(g0[0]+1,g0[1]+3,4,12,3,2);if(c){setFP({t:'ctent',c:1,fw:2,fh:1},c[0],c[1],2,1);ob[(c[1])*W+c[0]+2]={t:'fcrate'};
-   const like=NPCS.find(q=>!q.zr&&q.c)||{},bx=(c[0]+1)*T+8,by=(c[1]+1)*T+12;NPCS.push({x:bx,y:by,hx:bx,hy:by,wr:1,c:like.c||'134302',nm:SCINM194[h194()?0:1],sx:'m',tr:0,g:0,kn:1,fr:0,sci:1,job:'tudos'})}}}catch(e){console.warn('sci194',e)}
+   const like=NPCS.find(q=>!q.zr&&q.c)||{},bx=(c[0]+1)*T+8,by=(c[1]+1)*T+12;NPCS.push({x:bx,y:by,hx:bx,hy:by,wr:1,c:like.c||'134302',nm:SCINM194[h194()?0:1],sx:'m',tr:0,g:0,kn:1,fr:0,kh194:1,job:'tudos'})}}}catch(e){console.warn('sci194',e)}
  return n}
 JOB105.tudos=['Tudós','Scientist',null];
 {const g194=genDesertTowers;genDesertTowers=function(){const r=g194.apply(this,arguments);try{genRV194()}catch(e){console.warn('rv194',e)}return r}}
@@ -12024,8 +12024,8 @@ const LORE194=[['Egy kőbe faragott óriásgyík. A talapzaton kopott írás: �
    if(o.hp<=0){ob[i]=null;inv.fossil=(inv.fossil|0)+1;try{snd('pick')}catch(e){}say(B194('Kibontottad: +1 kövület. Kőhalmi professzor jó árat ad érte.','Chipped out: +1 fossil. Professor Kőhalmi pays well for these.'))}else say(B194('Óvatosan bontod… ('+(3-o.hp)+'/3)','Carefully chipping… ('+(3-o.hp)+'/3)'));return}}}catch(e){console.warn('use194',e)}
  return uo194.apply(this,arguments)}}
 /* ---------- Professor Kőhalmi ---------- */
-{const to194=talkOpts;talkOpts=function(){const o=to194();try{const n=TALK&&TALK.n;if(n&&n.sci&&!o.some(q=>q.k=='job')){const i=o.findIndex(q=>q.k=='bye');o.splice(i<0?o.length:Math.max(1,i),0,{k:'job',l:TALK.joff?B194('Rendben','All right'):B194('Kövületek és romok…','Fossils and ruins…')})}}catch(e){}return o}}
-{const jo194=jobOffer105;jobOffer105=function(n){if(n&&n.sci){const hh=h194(),B=B194;
+{const to194=talkOpts;talkOpts=function(){const o=to194();try{const n=TALK&&TALK.n;if(n&&n.kh194&&!o.some(q=>q.k=='job')){const i=o.findIndex(q=>q.k=='bye');o.splice(i<0?o.length:Math.max(1,i),0,{k:'job',l:TALK.joff?B194('Rendben','All right'):B194('Kövületek és romok…','Fossils and ruins…')})}}catch(e){}return o}}
+{const jo194=jobOffer105;jobOffer105=function(n){if(n&&n.kh194){const hh=h194(),B=B194;
  if(inv.dskull>0)return{txt:B('Egy ősi koponya! Ép, a fogak is megvannak… Ezért három gyémántot és négy aranyat adok. Áll az alku?','An ancient skull! Intact, teeth and all… I\'ll give you three diamonds and four gold for it. Deal?'),cost:{dskull:1},run:()=>{inv.diamond=(inv.diamond|0)+3;inv.gold=(inv.gold|0)+4;snd('pick');return B('Csodálatos. Ezt a tudomány nem felejti el.','Wonderful. Science won\'t forget this.')}};
  if(inv.fossil>0){const c=inv.fossil|0,t=Math.floor(c/3);return{txt:B(c+' kövület! Darabjáért egy aranyat adok'+(t?', és minden harmadikért egy gyógyitalt is':'')+'.',c+' fossils! One gold apiece'+(t?', and a tonic for every third':'')+'.'),cost:{fossil:c},run:()=>{inv.gold=(inv.gold|0)+c;if(t)inv.tonic=(inv.tonic|0)+t;snd('pick');return B('Köszönöm! Hozz még — a templomok alatt is vannak.','Thank you! Bring more — there are more under the temples.')}}}
  const nx=(()=>{const L=gateList194(ob);for(const i of L)if(!ob[i].kn)return i;return -1})();
@@ -12049,7 +12049,7 @@ function ashSpawn194(si){const sx=(si%W)*T+32,sy=Math.floor(si/W)*T+52;const z={
 {const up194=update;update=function(dt){up194(dt);if(state!='play')return;try{
  if(!RVL194&&!inD&&!inC){RVL194=true;if(!ob.some(o=>o&&o.t=='rvgate')&&ob.some(o=>o&&o.t=='achest'))genRV194();ASH194=zs.find(z=>z&&z.ash)||null}
  RVT194-=dt;if(RVT194>0)return;RVT194=.4;
- for(const n of NPCS){if(SCINM194.includes(n.nm)){n.sci=1;n.job='tudos'}if(/kocsmáros|barkeep/i.test(n.nm||'')&&!n.pub)n.pub=1}
+ for(const n of NPCS){if(SCINM194.includes(n.nm)){n.kh194=1;n.job='tudos'}if(/kocsmáros|barkeep/i.test(n.nm||'')&&!n.pub)n.pub=1}
  if(inD)return;const px=Math.floor(P.x/T),py=Math.floor(P.y/T),C=rvMarks194();
  for(const i of C.L){const o=ob[i];if(o&&!o.kn&&Math.abs(i%W+1-px)<9&&Math.abs(((i/W)|0)-py)<9&&rvReveal194(ob,i))toast112(B194('Ősi templom','Ancient temple'),B194('Kapu vezet le a romok alá. E-vel lépsz be.','A gate leads down beneath the ruins. Press E to enter.'),'#e0c880')}
  if(C.s>=0){const o=ob[C.s],sx=C.s%W+2,sy=((C.s/W)|0)+1,d=Math.hypot(sx-px,sy-py);if(o){if(!o.kn&&d<10){rvReveal194(ob,C.s);toast112(B194('Hamuszentély','Ash Shrine'),B194('Forróság és mély morgás a lávából…','Heat, and a deep growl from the lava…'),'#ff7a3a')}
@@ -12251,6 +12251,110 @@ let LCH199=0,FRG199=3;
  }catch(e){}}}
 {const ek199=eatK;eatK=function(k){if((k=='bandage'||k=='medkit')&&P.leech>0){const r=ek199.apply(this,arguments);P.leech=0;say(B199('Bekötözted a lábad — a piócáknak vége.','You bandaged your leg — the leeches are gone.'));return r}return ek199.apply(this,arguments)}}
 {const we199=weather;weather=function(){const r=we199.apply(this,arguments);try{if(state=='play'&&P.leech>0){noTr=true;txt(B199('Piócák: ','Leeches: ')+P.leech,6,76,'#e08080');noTr=false}}catch(e){noTr=false}return r}}
+
+/* ===== v200: factions and jungle outposts. Three groups live out here, each behind its own palisade:
+   the Scavengers (Guberálók) trade salvage in the jungle, the Green Circle (Zöld Kör) farm the forest edge and the swamps,
+   and the Children of Ash (Hamu Gyermekei) guard the lava fields and worship the Ash Lizard. Each has a leader with errands,
+   a trader whose prices follow your standing, and guards. Help them and you climb from Hostile to Neutral to Friendly to Ally;
+   the cult's sentries shoot on sight until you leave offerings at their altar — and killing the Ash Lizard enrages them. ===== */
+GAMEV=215;
+HU.unshift(['Anti-rad pills','Sugárűző tab\u200bletta'],['anti-rad pills','sugárűző tab\u200bletta']);
+const hu200=()=>LANG=='hu',B200=(a,b)=>hu200()?a:b;
+const FAC200={sc:{n:['Guberálók','Scavengers'],c:'#e0b040',start:0},gc:{n:['Zöld Kör','Green Circle'],c:'#7ac060',start:5},ac:{n:['Hamu Gyermekei','Children of Ash'],c:'#ff6a3a',start:-25}};
+const RKEY200=()=>'pc_rep_'+(typeof wseed!='undefined'?wseed:0);
+let REP200=null;
+function repLoad200(){try{REP200=JSON.parse(localStorage.getItem(RKEY200())||'null')}catch(e){REP200=null}if(!REP200||typeof REP200!='object')REP200={};for(const k in FAC200)if(typeof REP200[k]!='number')REP200[k]=FAC200[k].start;REP200._q=REP200._q||{};REP200._d=REP200._d||{}}
+function repSave200(){try{localStorage.setItem(RKEY200(),JSON.stringify(REP200))}catch(e){}}
+function rep200(f){if(!REP200)repLoad200();return REP200[f]|0}
+function repAdd200(f,d,why){if(!REP200)repLoad200();const a=rankOf200(f);REP200[f]=Math.max(-100,Math.min(100,(REP200[f]|0)+d));repSave200();const b=rankOf200(f);
+ try{toast112(FAC200[f].n[hu200()?0:1]+' '+(d>0?'+':'')+d,(why?why+' — ':'')+B200('megítélés: ','standing: ')+rankName200(f),FAC200[f].c)}catch(e){}if(a!==b)try{snd(d>0?'pick':'hurt')}catch(e){}}
+function rankOf200(f){const r=rep200(f);return r<0?0:r<25?1:r<60?2:3}
+function rankName200(f){return[['Ellenséges','Hostile'],['Semleges','Neutral'],['Barátságos','Friendly'],['Szövetséges','Ally']][rankOf200(f)][hu200()?0:1]}
+/* ---------- looks ---------- */
+OUTFITS.f_sc=[{h:'beanie',c:'leatherj',l:'cargo',b:'dboot',sh:'#8a6a2a',bp:1},{h:'boonie',c:'vestb',l:'jeans',b:'dboot',sh:'#6a5a3a',m:1,bp:1},{c:'leatherj',l:'cargo',b:'fboot',sh:'#a07a30'}];
+OUTFITS.f_gc=[{h:'boonie',c:'camo',l:'cargo',b:'fboot',sh:'#4a7a3a'},{c:'vestg',l:'cargo',b:'fboot',sh:'#5a8a40'},{h:'beanr',c:'camo',l:'jeans',b:'fboot',sh:'#3a6a3a',bp:1}];
+OUTFITS.f_ac=[{h:'beanie',c:'vestb',l:'cargo',b:'dboot',sh:'#3a3634',m:1},{c:'leatherj',l:'cargo',b:'dboot',sh:'#5a2a22',m:1},{h:'beanie',c:'vestb',l:'jeans',b:'dboot',sh:'#2a2624',m:1}];
+{const nt200=npcTheme;npcTheme=function(n){if(n&&n.fac){n._th='f_'+n.fac;return n._th}return nt200(n)}}
+const NAMES200={sc:['Rozsdás Feri','Csavar Juci','Bádog Laci','Vasas Teri','Zsák Bence'],gc:['Nádas Anna','Kertész Miklós','Mohás Eszter','Füzes Peti','Sás Ilona'],ac:['Hamvas Ábel','Parázs Hédi','Szürke Dömötör','Korom Lenke','Üszök Gáspár']};
+const ROLE200=[['vezető','leader'],['kereskedő','trader'],['őr','guard'],['őr','guard']];
+/* ---------- building the outposts ---------- */
+function opOk200(cx,cy,R,want){for(let y=cy-R;y<=cy+R;y++)for(let x=cx-R;x<=cx+R;x++){if(x<3||y<3||x>=W-3||y>=H-3)return false;const i=y*W+x,m=map[i];if(!(m==0||m==2||m==4))return false;if(want!=null&&bm[i]!=want)return false;const o=ob[i];if(o&&!/^(tree|bush|shrub|tgrass|flower|jbush|rock|reed|sdrift|stick)$/.test(o.t))return false;try{if(swAt199(x,y)==1)return false}catch(e){}}
+ for(const b of BLD)if(cx+R>=b.x-3&&cx-R<=b.x+b.w+3&&cy+R>=b.y-3&&cy-R<=b.y+b.h+3)return false;if(Math.hypot(cx-(SX|0),cy-(SY|0))<26)return false;return true}
+function buildOp200(cx,cy,fac){const R=4;for(let y=cy-R;y<=cy+R;y++)for(let x=cx-R;x<=cx+R;x++){const i=y*W+x;ob[i]=null;if(map[i]==2&&fac!='ac')map[i]=4}
+ for(let y=cy-R;y<=cy+R;y++)for(let x=cx-R;x<=cx+R;x++){const e=y==cy-R||y==cy+R||x==cx-R||x==cx+R;if(!e)continue;if(y==cy+R&&x==cx)ob[y*W+x]={t:'wgate',hp:80};else if(!(y==cy+R&&Math.abs(x-cx)==1&&fac!='ac'))ob[y*W+x]={t:'wfence',hp:80}}
+ ob[cy*W+cx]={t:'opost',fac};ob[(cy+1)*W+cx]={t:'fire',on:true,fl:600};
+ setFP({t:'ctent',c:fac=='gc'?2:fac=='ac'?3:1,fw:2,fh:1},cx-3,cy-3,2,1);setFP({t:'ctent',c:fac=='gc'?2:fac=='ac'?3:0,fw:2,fh:1},cx+1,cy-3,2,1);
+ ob[(cy-1)*W+cx-3]={t:'fcrate'};ob[(cy)*W+cx-3]={t:'fcrate'};ob[(cy+2)*W+cx+3]={t:'flag'};
+ if(fac=='ac'){ob[(cy-1)*W+cx+3]={t:'brz'};ob[(cy+2)*W+cx-3]={t:'brz'};ob[(cy-2)*W+cx]={t:'dstat',k:0};ob[(cy+R+2)*W+cx+2]={t:'ashalt'}}
+ if(fac=='gc'){for(const[a,b]of[[-2,1],[-2,2],[2,1],[2,2]])ob[(cy+b)*W+cx+a]={t:'crop',k:0,g:3}}
+ const nm=NAMES200[fac].slice();for(let k=0;k<4;k++){const px=[cx,cx+2,cx-2,cx+1][k],py=[cy-1,cy+1,cy+2,cy+3][k],like=NPCS.length?NPCS[Math.floor(Math.random()*NPCS.length)]:null;
+  NPCS.push({x:px*T+8,y:py*T+8,hx:px*T+8,hy:py*T+8,wr:k<2?0:2,c:typeof lookRnd=='function'?lookRnd():(like?like.c:'1'),nm:nm.splice(Math.floor(Math.random()*nm.length),1)[0],tr:0,g:0,kn:0,fr:0,fac,role:k})}}
+function genOps200(){if(inD)return 0;if(ob.some(o=>o&&o.t=='opost'))return 0;let n=0;const want={sc:2,gc:2,ac:2},placed=[];
+ const okP=(x,y)=>placed.every(([a,b])=>Math.hypot(a-x,b-y)>=30);
+ const lava=[];for(let i=0;i<W*H;i+=3)if(map[i]==9)lava.push(i);const si=typeof shrineIdx194=='function'?shrineIdx194(ob):-1;
+ for(const f of['ac','sc','gc']){let c=0;for(let k=0;k<30000&&c<want[f];k++){let x,y;
+   if(f=='ac'){if(!lava.length)break;const base=si>=0&&k%2==0?si:lava[Math.floor(Math.random()*lava.length)],a=Math.random()*6.283,r=7+Math.random()*14;x=Math.round(base%W+Math.cos(a)*r);y=Math.round(((base/W)|0)+Math.sin(a)*r)}
+   else{x=8+Math.floor(Math.random()*(W-16));y=8+Math.floor(Math.random()*(H-16))}
+   if(x<8||y<8||x>=W-8||y>=H-8)continue;const i=y*W+x,b=bm[i];
+   if(f=='sc'&&!(b==0&&typeof jzone=='function'&&jzone(x,y)>.52))continue;if(f=='gc'&&!(b==0&&(typeof jzone!='function'||jzone(x,y)<.52)))continue;
+   if(!okP(x,y)||!opOk200(x,y,5,f=='ac'?null:0))continue;buildOp200(x,y,f);placed.push([x,y]);c++;n++}}return n}
+{const g200=genDesertTowers;genDesertTowers=function(){const r=g200.apply(this,arguments);try{genOps200()}catch(e){console.warn('op200',e)}return r}}
+let OPL200=false;{const ld200=load;load=function(){OPL200=false;REP200=null;return ld200.apply(this,arguments)}}
+{const in200=init;init=function(){REP200=null;return in200.apply(this,arguments)}}
+/* the cult altar outside their gate */
+Object.assign(LBL,{opost:'Outpost',ashalt:'Ash altar'});Object.assign(LBLX,{opost:'Outpost',ashalt:'Ash altar'});try{Object.assign(NMX,{ashalt:'ash altar'})}catch(e){}HU.unshift(['Ash altar','Hamuoltár'],['ash altar','hamuoltár'],['Outpost','Előőrs']);
+Object.assign(SOLID,{ashalt:1});Object.assign(INT,{ashalt:1});
+{const do200=drawObj;drawObj=function(o,x,y){if(o&&o.t=='opost')return;if(o&&o.t=='ashalt'){const fx=x-cam.x,fy=y-cam.y,t=performance.now();W_(x+2,y+12,12,4,'rgba(0,0,0,.3)');Q(fx+3,fy+6,10,9,'#5a5650');Q(fx+3,fy+6,10,2,'#7a766e');Q(fx+2,fy+4,12,3,'#6a665e');Q(fx+5,fy+2,6,3,'#3a2a22');const p=.5+.5*Math.sin(t/180);Q(fx+6,fy+1-Math.round(p*2),4,3,'rgba(255,'+(110+Math.round(p*60))+',40,.9)');return}return do200(o,x,y)}}
+/* ---------- tagging people after a load, name tags ---------- */
+function tagNpcs200(){const ops=[];for(let i=0;i<W*H;i++){const o=ob[i];if(o&&o.t=='opost')ops.push([i%W,(i/W)|0,o.fac])}for(const n of NPCS){if(n.fac)continue;for(const[x,y,f]of ops){if(Math.abs(n.hx/T-x)<=4.6&&Math.abs(n.hy/T-y)<=4.6){n.fac=f;break}}}
+ for(const[x,y,f]of ops){const L=NPCS.filter(n=>n.fac==f&&Math.abs(n.hx/T-x)<=4.6&&Math.abs(n.hy/T-y)<=4.6);L.sort((a,b)=>Math.hypot(a.hx/T-x-.5,a.hy/T-y+.5)-Math.hypot(b.hx/T-x-.5,b.hy/T-y+.5));L.forEach((n,k)=>{if(n.role==null)n.role=Math.min(3,k)})}}
+{const no200=npcOverlay;npcOverlay=function(){const sv=[];try{for(const n of OVQ)if(n.fac){sv.push([n,n.nm,n.kn]);const r=ROLE200[n.role|0][hu200()?0:1];n.nm=(n.kn?n.nm+' · ':'')+FAC200[n.fac].n[hu200()?0:1]+' '+r;n.kn=1}}catch(e){}try{return no200.apply(this,arguments)}finally{for(const[n,nm,kn]of sv){n.nm=nm;n.kn=kn}}}}
+/* ---------- talking ---------- */
+const QUEST200={sc:[['iron',6,8,'Vasat keresünk: hozz 6 vasat.','We need iron: bring 6 iron.'],['cloth',6,6,'Ruhaanyag kell a sátrakhoz: 6 vászon.','Cloth for the tents: 6 cloth.'],['fossil',2,10,'Egy gyűjtő fizet a kövületekért: hozz kettőt.','A collector pays for fossils: bring two.']],
+ gc:[['fiber',10,7,'Kosarakat fonunk: hozz 10 rostot.','We weave baskets: bring 10 fibre.'],['berry',8,6,'Ínséges idők: 8 bogyó jól jönne.','Lean times: 8 berries would help.'],['fish',4,8,'A gyerekeknek: 4 hal.','For the children: 4 fish.']],
+ ac:[['fossil',3,10,'A Hamu emlékszik a régiekre. Hozz 3 kövületet.','The Ash remembers the old ones. Bring 3 fossils.'],['coal',8,8,'Táplálni kell a parazsat: 8 szén.','The embers must be fed: 8 coal.'],['dskull',1,25,'Egy ősi koponya — a legszentebb ereklye.','An ancient skull — the holiest relic.']]};
+const SHOP200={sc:[['a9',12,2],['a762',6,3],['pistol',1,8],['medkit',1,3],['iron',5,2]],gc:[['canned',3,1],['tonic',1,2],['sd_potato',4,1],['sd_tomato',4,1],['bandage',3,1]],ac:[['diamond',1,4],['coal',10,1],['tonic',2,2],['fossil',1,2]]};
+function qOf200(n){const f=n.fac,L=QUEST200[f],k=(REP200._q[f]|0)%L.length;return L[k]}
+{const to200=talkOpts;talkOpts=function(){const o=to200();try{const n=TALK&&TALK.n;if(n&&n.fac&&!o.some(q=>q.k=='job')){if(n.fac=='ac'&&rankOf200('ac')==0)return o;const i=o.findIndex(q=>q.k=='bye');const l=TALK.joff?B200('Rendben','All right'):n.role==0?B200('Van munka?','Any work?'):n.role==1?B200('Mit árulsz?','What are you selling?'):B200('Mi újság?','What\'s new?');o.splice(i<0?o.length:Math.max(1,i),0,{k:'job',l})}}catch(e){}return o}}
+{const jo200=jobOffer105;jobOffer105=function(n){if(n&&n.fac){const f=n.fac,B=B200,fn=FAC200[f].n[hu200()?0:1],rk=rankOf200(f);
+ if(n.role==0){const q=qOf200(n),have=inv[q[0]]|0,nm=(typeof nm105=='function'?nm105(q[0]):q[0]);return{txt:B(fn+' · megítélésed: '+rankName200(f)+'. ','The '+fn+' · your standing: '+rankName200(f)+'. ')+B(q[3],q[4])+B(' (nálad: '+have+' '+nm+') — jutalom: '+(q[2]*2)+' arany és jó hírnév.',' (you have '+have+' '+nm+') — reward: '+(q[2]*2)+' gold and goodwill.'),cost:{[q[0]]:q[1]},
+   run:()=>{inv.gold=(inv.gold|0)+q[2]*2;REP200._q[f]=(REP200._q[f]|0)+1;repAdd200(f,q[2],B('Elvégezted a megbízást','Errand done'));
+    if(f=='sc'&&rankOf200('sc')>=2&&!REP200._d.scmap){REP200._d.scmap=1;repSave200();try{const nx=rvNext194();if(nx)return B('Köszönjük! Ajándékba: megjelöltem egy ősi templomot a térképeden.','Thanks! A gift: I\'ve marked an ancient temple on your map.')}catch(e){}}
+    return B('Köszönjük. Ezt nem felejtjük el.','Thank you. We won\'t forget this.')}}}
+ if(n.role==1){const L=SHOP200[f],d=String(day|0),k=((day|0)+(n.hx|0))%L.length,it=L[k],disc=[1.25,1,.85,.7][rk],price=Math.max(1,Math.round(it[2]*disc*(it[1]>1?1:1)));
+  return{txt:B('Ma ezt tudom adni: '+it[1]+' '+(typeof nm105=='function'?nm105(it[0]):it[0])+' — '+price+' aranyért.','Today I can offer '+it[1]+' '+(typeof nm105=='function'?nm105(it[0]):it[0])+' — for '+price+' gold.')+(rk>=2?B(' (Barátnak olcsóbb.)',' (Cheaper for a friend.)'):''),cost:{gold:price},run:()=>{inv[it[0]]=(inv[it[0]]|0)+it[1];try{givehb(it[0])}catch(e){}snd('pick');return B('Jó vásár volt.','Pleasure doing business.')}}}
+ const L=f=='ac'?[['A Hamu mindent megtisztít.','The Ash cleanses all.'],['A nagy gyík alszik a láva alatt. Ne ébreszd fel.','The great lizard sleeps beneath the lava. Do not wake it.']]:f=='gc'?[['A mocsár ad, ha kíméled.','The swamp gives, if you spare it.'],['Ha piócát szedsz össze, gyere a tűzhöz.','If you pick up leeches, come to the fire.']]:[['Minden rozsdás vasnak ára van.','Every rusty bolt has a price.'],['A dzsungel mélyén romok vannak. Ott van a pénz.','Deep in the jungle are ruins. That\'s where the money is.']];
+ const ln=L[Math.floor(Math.random()*L.length)];return{txt:B(ln[0],ln[1]),cost:{},run:()=>B('Vigyázz magadra.','Take care.')}}
+ return jo200.apply(this,arguments)}}
+/* altar offerings for the cult */
+{const uo200=useObj;useObj=function(n){try{const o=n&&n.o;if(o&&o.t=='ashalt'){const B=B200;if(inv.dskull>0){inv.dskull--;repAdd200('ac',30,B('Ősi koponyát áldoztál','You offered an ancient skull'));return}if(inv.fossil>0){const k=Math.min(3,inv.fossil|0);inv.fossil-=k;repAdd200('ac',k*6,B(k+' kövületet áldoztál',k+' fossils offered'));return}if(inv.coal>=3){inv.coal-=3;repAdd200('ac',4,B('Szenet áldoztál a parázsnak','Coal for the embers'));return}
+  say(B('Hamuoltár. Kövületet, szenet vagy ősi koponyát hagyhatsz itt — a Hamu Gyermekei figyelik.','An ash altar. Leave fossils, coal or an ancient skull here — the Children of Ash are watching.'));return}}catch(e){}return uo200.apply(this,arguments)}}
+/* ---------- the cult's sentries ---------- */
+function sentrySpawn200(cx,cy){const fr=[];for(let r=5;r<=9&&fr.length<3;r++)for(let a=0;a<16&&fr.length<3;a++){const an=Math.PI/2+(a%2?1:-1)*Math.floor((a+1)/2)*.35,px=(cx+.5+Math.cos(an)*r)*T,py=(cy+.5+Math.sin(an)*r)*T;if(!solid(px,py)&&!solid(px,py-8)&&fr.every(q=>Math.hypot(q[0]-px,q[1]-py)>20))fr.push([px,py])}
+ for(let k=0;k<fr.length;k++){const[x,y]=fr[k];zs.push({id:nid(),x,y,hp:30,mx:30,mu:'c',cult:1,z:1,a:0,t:0,vx:0,vy:0,v:0,hx:fr[k][0],hy:fr[k][1],c1:1+k*.5,lk:typeof lookRnd=='function'?lookRnd():'1'})}}
+{const mt200=muTick;muTick=function(z,dt,pls){if(!z||!z.cult)return mt200.apply(this,arguments);const q=nearP(z.x,z.y,pls),dx=q.x-z.x,dy=q.y-z.y,d=Math.hypot(dx,dy)||1;z.a-=dt;z.c1-=dt;
+ if(rankOf200('ac')>0){const hd=Math.hypot(z.hx-z.x,z.hy-z.y);if(hd>6)mv(z,(z.hx-z.x)/hd*40*dt,(z.hy-z.y)/hd*40*dt,5);return}
+ if(d>260){const hd=Math.hypot(z.hx-z.x,z.hy-z.y);if(hd>8)mv(z,(z.hx-z.x)/hd*40*dt,(z.hy-z.y)/hd*40*dt,5);return}
+ const want=80,sp=46;if(d<want-30)mv(z,-dx/d*sp*dt,-dy/d*sp*dt,5);else if(d>want+25)mv(z,dx/d*sp*dt,dy/d*sp*dt,5);else mv(z,-dy/d*sp*.5*dt*(z.id%2?1:-1),dx/d*sp*.5*dt*(z.id%2?1:-1),5);
+ if(z.c1<=0&&d<220){z.c1=1.7+Math.random()*.8;{const an=Math.atan2(q.y-6-(z.y-8),dx)+(Math.random()-.5)*.12;ebShoot(z.x+Math.cos(an)*8,z.y-8+Math.sin(an)*8,an,150,7,2)};try{snd('shoot')}catch(e){}}}}
+{const dm200=drawMut;drawMut=function(z){if(!z||!z.cult)return dm200.apply(this,arguments);const x=z.x-cam.x,y=z.y-cam.y,fx=(P.x-z.x)/(Math.hypot(P.x-z.x,P.y-z.y)||1),fy=(P.y-z.y)/(Math.hypot(P.x-z.x,P.y-z.y)||1);
+ const prev=NPCCUR;try{NPCCUR={fac:'ac',_th:'f_ac',nm:'x',hx:z.hx,hy:z.hy};drawChar(x,y,chOf(z.lk),Math.floor(performance.now()/160)%4+1,fx,fy,1,{})}catch(e){}finally{NPCCUR=prev}
+ if(z.hp<z.mx){Q(x-8,y-26,16,3,'#000');Q(x-7,y-25,14*z.hp/z.mx,1,'#ff6a3a')}}}
+let ST200=0;
+{const up200=update;update=function(dt){up200(dt);if(state!='play')return;try{if(!REP200)repLoad200();
+ if(!OPL200&&!inD&&!inC){OPL200=true;if(!ob.some(o=>o&&o.t=='opost'))genOps200();tagNpcs200()}
+ ST200-=dt;if(ST200>0||inD)return;ST200=1;tagNpcs200();
+ if(rankOf200('ac')==0)for(let i=0;i<W*H;i++){const o=ob[i];if(!o||o.t!='opost'||o.fac!='ac')continue;const x=i%W,y=(i/W)|0,d=Math.hypot(P.x/T-x,P.y/T-y);
+  if(d<14&&!zs.some(z=>z.cult&&Math.hypot(z.hx/T-x,z.hy/T-y)<11)&&(!o.st||gtime()-o.st>.5)){o.st=gtime();sentrySpawn200(x,y);say(B200('A Hamu Gyermekei őrszemei észrevettek!','The sentries of the Children of Ash have spotted you!'))}}
+ }catch(e){}}}
+/* killing a sentry or the Ash Lizard angers the cult */
+{const md200=mutDeath;mutDeath=function(z){const r=md200.apply(this,arguments);try{if(z&&z.cult)repAdd200('ac',-4);if(z&&z.ash)repAdd200('ac',-40,B200('Megölted az istenüket','You killed their god'))}catch(e){}return r}}
+/* journal: standing with each faction */
+{const q200=JNB[0];JNB[0]=function(){const pages=q200.apply(this,arguments);try{const L=[];jnHead(L,B200('Frakciók','Factions'),'#5a3a14');for(const f of['sc','gc','ac']){const r=rep200(f);jnText(L,FAC200[f].n[hu200()?0:1]+': '+rankName200(f)+' ('+(r>0?'+':'')+r+')',{b:1,c:'#2a1a10'})}
+  jnText(L,B200('Megbízások a vezetőknél, napi ajánlat a kereskedőknél. A Hamu Gyermekeinél az oltáron át vezet az út.','Errands from the leaders, a daily deal from the traders. With the Children of Ash, the way in is through their altar.'),{c:'#6a5a40',sz:7});return pages.concat(jnFlow(L))}catch(e){return pages}}}
+/* faction people keep their own roles: the camp job system leaves them alone */
+{const cp200=camps105;camps105=function(){const G=cp200();try{for(const[k,ids]of G){const f=ids.filter(i=>NPCS[i]&&!NPCS[i].fac);if(f.length)G.set(k,f);else G.delete(k)}}catch(e){}return G}}
+{const ups200=update;let JT200=0;update=function(dt){ups200(dt);try{JT200-=dt;if(JT200<=0){JT200=2;for(const n of NPCS)if(n.fac&&n.job){n.job=null}}}catch(e){}}}
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
