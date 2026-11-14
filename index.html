@@ -12656,6 +12656,43 @@ let L208=false;{const ld208=load;load=function(){L208=false;return ld208.apply(t
 /* apartment floors upstairs too */
 {const go208=genOF;genOF=function(rec,f){const r=go208.apply(this,arguments);try{if(rec&&(rec.k=='apt'||rec.k=='vhut')&&f<=(rec.n||1))thin208(41,41,(rec.bw||10)-2,(rec.bh||9)-2)}catch(e){}return r}}
 
+/* ===== v209: a small calendar card in the top-left corner instead of loose lines of text — the season with its little icon and the
+   day count on top, the seven days of the season as pips (today lit) and the clock below, the danger level as a small badge beside
+   it. It sits a little lower, clear of the bars, and the goal box moves down to make room. ===== */
+GAMEV=224;
+let CAL209=null;
+/* the old "Day N  hh:mm" line under the bars is replaced by the card */
+let CALM209=0,CALMP209=0,CALS209=[];
+{const tx209=txt;txt=function(s,x,y,c,al){if(CAL209===1&&x===6){if(y===46&&typeof s=='string'&&/^Day \d/.test(s))return;
+  /* status lines that used to sit under the clock (weather, blood moon, wet clothes, leeches…) stack under the card */
+  if(y>=50&&y<=90){let k=CALS209.indexOf(y);if(k<0){CALS209.push(y);k=CALS209.length-1}const ny=calBottom209()+9+k*10;CALM209=Math.max(CALM209,ny);return tx209.call(this,s,x,ny,c,al)}}return tx209.apply(this,arguments)}}
+{const hd209=hud;hud=function(){CAL209=calOn209()?1:0;CALMP209=CALM209;CALM209=0;CALS209.length=0;return hd209.apply(this,arguments)}}
+function calOn209(){return state=='play'&&!showMap&&!(typeof JN!='undefined'&&JN)&&!(typeof TPV!='undefined'&&TPV)&&!(typeof SETLUI!='undefined'&&SETLUI)&&!tut&&!(typeof PHOTO!='undefined'&&PHOTO)}
+function calY209(){return((P.inf||0)>1||(P.rate||0)>.3)?47:38}
+function calIcon209(s,x,y){const q=(a,b,w,h,c)=>Q(x+a,y+b,w,h,c);
+ if(s==0){q(3,3,1,4,'#5a9a40');q(1,2,2,2,'#8ad070');q(4,1,2,2,'#8ad070');q(2,1,1,1,'#b0e890');q(5,0,1,1,'#b0e890')}
+ else if(s==1){q(2,2,3,3,'#f0d050');q(3,3,1,1,'#fff0a0');q(3,0,1,1,'#f0d050');q(3,6,1,1,'#f0d050');q(0,3,1,1,'#f0d050');q(6,3,1,1,'#f0d050');q(1,1,1,1,'#d8b040');q(5,1,1,1,'#d8b040');q(1,5,1,1,'#d8b040');q(5,5,1,1,'#d8b040')}
+ else if(s==2){q(2,1,3,4,'#e8904a');q(1,2,5,2,'#e8904a');q(3,2,1,4,'#9a4a20');q(3,5,1,2,'#7a4a2a');q(2,1,1,1,'#f4b070')}
+ else{q(3,0,1,7,'#bcdcf0');q(0,3,7,1,'#bcdcf0');q(1,1,1,1,'#e8f4ff');q(5,1,1,1,'#e8f4ff');q(1,5,1,1,'#e8f4ff');q(5,5,1,1,'#e8f4ff');q(3,3,1,1,'#ffffff')}}
+function calDraw209(){if(!calOn209())return;const h=LANG=='hu',sea=seaOn(),s=seasonIdx(),sd=seasonDay(),L=threatLv(),x=5,y=calY209();
+ const hr=Math.floor(((time*24)+6)%24),mn=Math.floor(((time*24*60)%60)/5)*5,clk=String(hr).padStart(2,'0')+':'+String(mn).padStart(2,'0');
+ const sc=sea?SEAN[s][2]:'#c8b890',nm=sea?SEAN[s][h?0:1]:(h?'Nap':'Day'),dl=h?day+'. nap':'Day '+day;noTr=true;
+ const w=104,hh=sea?23:13;
+ Q(x,y,w,hh,'rgba(12,11,9,.5)');Q(x,y,w,1,sc);g.globalAlpha=.35;Q(x,y+hh-1,w,1,sc);Q(x,y,1,hh,sc);Q(x+w-1,y,1,hh,sc);g.globalAlpha=1;
+ if(sea){calIcon209(s,x+3,y+3);txt(nm,x+13,y+10,sc);txt(dl,x+w-4,y+10,'#d8d0bc','right');
+  for(let i=0;i<7;i++){const px=x+4+i*8,py=y+14;if(i+1<sd){g.globalAlpha=.55;Q(px,py,6,5,sc);g.globalAlpha=1}else if(i+1==sd){Q(px-1,py-1,8,7,'rgba(255,255,255,.25)');Q(px,py,6,5,sc);Q(px,py,6,1,'#fff6d8')}else{Q(px,py,6,5,'rgba(150,140,120,.45)');Q(px+1,py+1,4,3,'rgba(20,18,14,.6)')}}
+  txt(clk,x+w-4,y+20,'#fff2c8','right');
+  /* danger badge */
+  const bx=x+w+3,by=y,bc=L>=4?'#ff7a5a':L>=2?'#e8b070':'#a8a090';Q(bx,by,17,12,'rgba(12,11,9,.5)');Q(bx,by,17,1,bc);
+  Q(bx+3,by+3,5,4,bc);Q(bx+4,by+7,3,2,bc);Q(bx+4,by+4,1,1,'#1a1612');Q(bx+6,by+4,1,1,'#1a1612');txt(String(L),bx+14,by+10,bc,'right');
+  if(HRD.d===day&&HRD.warn&&!HRD.sp){const a=.5+.5*Math.sin(performance.now()/250);g.globalAlpha=.6+.4*a;txt(h?'⚠ horda ma éjjel':'⚠ horde tonight',x+2,y+hh+9,'#ff6a5a');g.globalAlpha=1}}
+ else{txt(dl,x+4,y+10,'#d8d0bc');txt(clk,x+w-4,y+10,'#fff2c8','right')}
+ noTr=false}
+function calBottom209(){const y=calY209(),sea=seaOn();let b=y+(sea?23:13);if(sea&&HRD.d===day&&HRD.warn&&!HRD.sp)b+=11;return b}
+seaHud=function(){try{calDraw209()}catch(e){noTr=false}};
+/* the goal box keeps clear of the card */
+{const sp209=spHud;spHud=function(){const dy=calOn209()?Math.max(0,Math.max(calBottom209(),CALMP209+3)+4-74):0;if(!dy)return sp209.apply(this,arguments);g.save();g.translate(0,dy);try{return sp209.apply(this,arguments)}finally{g.restore()}}}
+
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
  if(state=='title')menu();if(state=='opts')optsMenu();if(state=='sndo')sndMenu();if(state=='gfxo')gfxMenu();if(state=='slots')svMenu();if(state=='keys')keysMenu();if(state=='wthr')wthrMenu();if(state=='char')charMenu();if(state=='lobby')drawLobby();if(state=='hb'){Q(0,0,VW,VH,'rgba(6,10,6,.6)');drawHB()}if(0)title('ASHFALL',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Hold the fire. Survive the nights.','','WASD move \u2022 Space chop / fish / attack \u2022 Tab recipes','Press any key']);
