@@ -12381,7 +12381,7 @@ const SHC201={o:null,t:0,v:{}};function sh201(kind){const now=performance.now();
 /* ---------- drawing, map, using ---------- */
 {const do201=drawObj;drawObj=function(o,x,y){if(o&&o.t=='p_rvshrine2')return;if(o&&o.t=='rvshrine2'){const B=BOSS201[o.kind]||BOSS201.ice,cx=x-cam.x+32,by=y-cam.y+32;g.fillStyle='rgba(10,8,6,.35)';g.beginPath();g.ellipse(cx,by-2,32,6,0,0,6.28);g.fill();rv2D(B.spr,cx,by);
  if(!o.won){const p=.5+.5*Math.sin(performance.now()/300);g.fillStyle=o.kind=='ice'?'rgba(140,210,255,'+(.08+p*.1).toFixed(3)+')':'rgba(230,140,60,'+(.08+p*.1).toFixed(3)+')';g.fillRect(cx-8,by-30,16,26)}return}return do201(o,x,y)}}
-{const mm201=mapMarks;mapMarks=function(){const r=mm201.apply(this,arguments);try{const O=inD&&OW?OW.ob:ob;for(let i=0;i<O.length;i++){const o=O[i];if(o&&o.t=='rvshrine2'&&o.kn)r.unshift({k:'r2',x:(i%W)*T+32,y:Math.floor(i/W)*T+16,done:!!o.won,kind:o.kind})}}catch(e){}return r}}
+{const mm201=mapMarks;mapMarks=function(){const r=mm201.apply(this,arguments);try{if(inD)return r;for(const kind of['ice','city']){const i=sh201(kind);if(i<0)continue;const o=ob[i];if(o&&o.kn)r.unshift({k:'r2',x:(i%W)*T+32,y:Math.floor(i/W)*T+16,done:!!o.won,kind})}}catch(e){}return r}}
 {const mi201=markIcon;markIcon=function(m,X,Y,now,big){if(m.k=='r2'){const c=m.done?'#8a8a78':BOSS201[m.kind].col;const p=m.done?0:(now/300)%4;if(!m.done){g.beginPath();g.arc(X,Y,3+p,0,6.3);g.strokeStyle=c;g.globalAlpha=1-p/4;g.lineWidth=1;g.stroke();g.globalAlpha=1}Q(X-4,Y-4,9,8,'#000');Q(X-3,Y-3,7,5,c);Q(X-2,Y-2,2,2,'#200a04');Q(X+1,Y-2,2,2,'#200a04');Q(X-2,Y+1,5,1,'#200a04');return}return mi201.apply(this,arguments)}}
 {const uo201=useObj;useObj=function(n){try{const o0=n&&n.o;if(o0){let o=o0;if(o.pm!=null)o=ob[o.pm];if(o&&o.t=='rvshrine2'){const B=BOSS201[o.kind];say(o.won?B201(B.sn[0]+' — csend és dér.',B.sn[1]+' — silence and frost.').replace('dér',o.kind=='city'?'rozsda':'dér').replace('frost',o.kind=='city'?'rust':'frost'):B201(B.sn[0]+'. Valami figyel a kövek mögül.',B.sn[1]+'. Something watches from behind the stones.'));return}}}catch(e){}return uo201.apply(this,arguments)}}
 /* ---------- the bosses ---------- */
@@ -12460,6 +12460,71 @@ function doorFix203(){if(inD)return 0;let n=0;for(const b of BLD){if(b.rf=='ruin
 let L203=false;{const ld203=load;load=function(){L203=false;return ld203.apply(this,arguments)}}
 {const in203=init;init=function(){L203=false;return in203.apply(this,arguments)}}
 {const up203=update;update=function(dt){up203(dt);if(!L203&&state=='play'&&!inD&&!inC){L203=true;try{doorFix203()}catch(e){}}}}
+
+/* ===== v204: speed — water and shore tiles are painted into a layer about eight times a second instead of every frame, and walls,
+   fences and palisades are drawn once into little cached pictures (with their weathering) and reused. Fewer market stalls: only real
+   camps (three or more people) and wandering traders get one. Fog is rarer and lighter. ===== */
+GAMEV=219;
+/* ---------- the water layer ---------- */
+const WL204={cv:null,lx:0,ly:0,w:0,h:0,t:0,map:null,key:'',drawn:-1,frame:0};
+let FR204=0;
+{const df204=draw;draw=function(){FR204++;return df204.apply(this,arguments)}}
+{const gt204=gTile;gTile=function(tx,ty,now){if(!now||CLASSIC||inD||!GQA.has(map[ty*W+tx])||g.canvas!==document.getElementById('c'))return gt204.apply(this,arguments);
+ if(WL204.drawn===FR204)return;WL204.drawn=FR204;
+ const x0=Math.floor(cam.x/T),y0=Math.floor(cam.y/T),vw=Math.ceil(VW/ZM/T)+2,vh=Math.ceil(VH/ZM/T)+2,k=(typeof gqKey=='function'?gqKey():0)+'|'+ZM;
+ const need=!WL204.cv||WL204.map!==map||WL204.key!==k||x0<WL204.lx||y0<WL204.ly||x0+vw>WL204.lx+WL204.w||y0+vh>WL204.ly+WL204.h||now-WL204.t>160;
+ if(need){const lx=x0-3,ly=y0-3,w=vw+6,h=vh+6;if(!WL204.cv||WL204.w!==w||WL204.h!==h){WL204.cv=document.createElement('canvas');WL204.cv.width=w*T*2;WL204.cv.height=h*T*2;WL204.cv._hd=2}
+  const c=WL204.cv.getContext('2d'),sg=g,sc=cam;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,WL204.cv.width,WL204.cv.height);c.setTransform(2,0,0,2,0,0);c.imageSmoothingEnabled=false;g=c;cam={x:lx*T,y:ly*T};
+  try{for(let y=Math.max(0,ly);y<Math.min(H,ly+h);y++)for(let x=Math.max(0,lx);x<Math.min(W,lx+w);x++)if(GQA.has(map[y*W+x]))gt204(x,y,now)}catch(e){}finally{g=sg;cam=sc}
+  Object.assign(WL204,{lx,ly,w,h,t:now,map,key:k})}
+ g.drawImage(WL204.cv,Math.round(WL204.lx*T-cam.x),Math.round(WL204.ly*T-cam.y))}}
+/* ---------- cached walls ---------- */
+const WC204=new Map(),WCT204={wall:1,sblock:1,twall:1,gwall:1,wfence:1,fence:1,win:1,wgate:1};
+function wcKey204(o,tx,ty){const n=(a,b)=>{const q=ob[(ty+b)*W+tx+a];return q?(q.pm!=null?'p':q.t.slice(0,3)):'-'};return o.t+tx+','+ty+'|'+n(-1,0)+n(1,0)+n(0,-1)+n(0,1)+'|'+(o.hp|0)+'|'+(o.v|0)+(o.bd?1:0)+(o.c|0)+'|'+(bm?bm[ty*W+tx]:0)+(typeof isRes=='function'&&isRes(tx,ty)?'r':'')}
+{const dw204=drawObj;drawObj=function(o,x,y){if(!o||CLASSIC||inD||inC||!WCT204[o.t]||o.pm!=null)return dw204(o,x,y);
+ if(o.t=='win'&&typeof dark=='function'&&dark()>.25)return dw204(o,x,y);
+ if(Math.abs(P.x-(x+8))<40&&Math.abs(P.y-(y+8))<48)return dw204(o,x,y);
+ const tx=Math.round(x/T),ty=Math.round(y/T),k=wcKey204(o,tx,ty);let cv=WC204.get(k);
+ if(!cv){cv=document.createElement('canvas');cv.width=40*2;cv.height=64*2;cv._hd=2;const c=cv.getContext('2d');c.setTransform(2,0,0,2,0,0);c.imageSmoothingEnabled=false;const sg=g,sc=cam;g=c;cam={x:x-12,y:y-40};
+  try{dw204(o,x,y)}catch(e){}finally{g=sg;cam=sc}WC204.set(k,cv);if(WC204.size>2600){const it=WC204.keys();for(let i=0;i<400;i++)WC204.delete(it.next().value)}}
+ g.drawImage(cv,Math.round(x-12-cam.x),Math.round(y-40-cam.y))}}
+{const in204=init;init=function(){WC204.clear();WL204.cv=null;return in204.apply(this,arguments)}}
+{const ld204=load;load=function(){WC204.clear();WL204.cv=null;return ld204.apply(this,arguments)}}
+/* keep the cache honest when walls change around a tile */
+{const up204=update;let T204=0,SIG204=0;update=function(dt){up204(dt);T204-=dt;if(T204<=0){T204=1;try{let s=0;for(let i=0;i<ob.length;i+=1){const o=ob[i];if(o&&WCT204[o.t])s=(s*31+i+(o.hp|0))|0}if(s!==SIG204){SIG204=s;WC204.clear()}}catch(e){}}}}
+/* ---------- fewer market stalls ---------- */
+{const es204=ensureStalls;ensureStalls=function(){if(inD||!NPCS.length)return;const cnt=new Map(),wd=new Set();for(const n of NPCS){const k=campKey(n);if(n.fac||n.res||n.kh194||n.zr)continue;if(n.wd)wd.add(k);cnt.set(k,(cnt.get(k)||0)+1)}
+ const ok=new Set();for(const[k,c]of cnt)if(c>=3||wd.has(k))ok.add(k);
+ let rm=0;for(let i=0;i<W*H;i++){const o=ob[i];if(o&&o.t=='mstall'&&o.ck&&!ok.has(o.ck)){ob[i]=null;rm++}}if(rm)STALLS=null;
+ const sv=NPCS.slice();const keep=NPCS.filter(n=>ok.has(campKey(n)));NPCS.length=0;for(const n of keep)NPCS.push(n);try{es204()}finally{NPCS.length=0;for(const n of sv)NPCS.push(n)}}}
+/* ---------- rarer, lighter fog ---------- */
+{const up204f=update;update=function(dt){const was=FOG197.lastDay;up204f(dt);try{if(FOG197.lastDay!==was&&FOG197.tg>0){if(Math.random()<.6){FOG197.tg=0;FOG197.until=-1}else FOG197.tg=Math.min(FOG197.tg,.3+Math.random()*.2)}if(FOG197.until>.5&&FOG197.tg>.3)FOG197.tg=.3}catch(e){}}}
+/* flax: the blades are cached for each sway step */
+const FX204=new Map();
+{const dfx=DRAWX.flax;if(dfx)DRAWX.flax=function(o,x,y,t){if(CLASSIC)return dfx.apply(this,arguments);const st=Math.round(Math.sin(performance.now()/700+x*.4)*2),tx=Math.round(x/T),ty=Math.round(y/T),k=tx+','+ty+','+st+','+(o.g|0)+(o.r|0);let cv=FX204.get(k);
+ if(!cv){cv=document.createElement('canvas');cv.width=32*2;cv.height=40*2;cv._hd=2;const c=cv.getContext('2d');c.setTransform(2,0,0,2,0,0);const sg=g,sc=cam,pn=performance.now;g=c;cam={x:x-8,y:y-20};const ph=Math.asin(Math.max(-1,Math.min(1,st/2)));performance.now=()=>((ph-x*.4)*700);
+  try{dfx.apply(this,[o,x,y,t])}catch(e){}finally{g=sg;cam=sc;performance.now=pn}FX204.set(k,cv);if(FX204.size>3000)FX204.clear()}
+ g.drawImage(cv,Math.round(x-8-cam.x),Math.round(y-20-cam.y))}}
+
+/* ===== v205: the retro look shows what you wear — helmets and hats, armour and coats, leg armour, boots, the gas mask and the
+   backpack are painted onto the little retro figure (for you and for everyone else), in their own colours. ===== */
+GAMEV=220;
+const ATIER205={copper:1,iron:1,gold:1,diamond:1};
+function retroGear205(x,y,fx,fy,e){if(!e)return;const C=k=>TP[k]||null,bk=(fy||0)<-.45&&Math.abs(fy||0)>=Math.abs(fx||0),side=!bk&&Math.abs(fx||0)>.55;
+ if(e.bp&&bk){Q(x-3,y-10,6,6,'#6a4a2a');Q(x-3,y-10,6,1,'#8a6a3a');Q(x-2,y-7,4,1,'#4a3018')}
+ const L=C(e.l);if(L){Q(x-3,y-4,2,3,L[0]);Q(x+1,y-4,2,3,L[0]);Q(x-3,y-4,2,1,L[1]);Q(x+1,y-4,2,1,L[1])}
+ const Bt=C(e.b);if(Bt){Q(x-3,y-1,2,2,Bt[2]);Q(x+1,y-1,2,2,Bt[2]);Q(x-3,y-1,2,1,Bt[0]);Q(x+1,y-1,2,1,Bt[0])}
+ const Cc=C(e.c);if(Cc){const arm=ATIER205[e.c],long=!arm&&/park|coat|robe/.test(e.c);Q(x-4,y-10,8,long?8:5,Cc[0]);Q(x-4,y-10,8,1,Cc[1]);Q(x-4,y-6+(long?2:0),8,1,Cc[2]);
+  if(arm){Q(x-5,y-10,1,3,Cc[2]);Q(x+4,y-10,1,3,Cc[2]);Q(x-1,y-9,2,3,Cc[1])}else{Q(x-1,y-10,1,4,Cc[2])}}
+ if(e.bp&&!bk){Q(side?(fx>0?x-5:x+4):x-5,y-10,1,4,'#4a3018')}
+ if(e.m){Q(x-3,y-12,6,2,'#3a3e3a');if(!bk&&!side)Q(x-1,y-11,2,2,'#1a1c1a');else if(side)Q(fx>0?x+2:x-4,y-11,2,2,'#1a1c1a')}
+ const Hh=C(e.h);if(Hh){const arm=ATIER205[e.h];Q(x-4,y-17,8,3,Hh[0]);Q(x-4,y-17,8,1,Hh[1]);if(arm){Q(x-4,y-14,1,2,Hh[2]);Q(x+3,y-14,1,2,Hh[2])}else if(/ush/.test(e.h)){Q(x-4,y-15,1,3,Hh[0]);Q(x+3,y-15,1,3,Hh[0])}else if(/boon/.test(e.h)){Q(x-5,y-15,10,1,Hh[2])}}}
+function retroDraw205(inner,x,y,c,w,fx,fy,e){let cc=c,ee=e;try{if(typeof NPCCUR!='undefined'&&NPCCUR&&c&&c!==CH){const o=npcOutfit(NPCCUR,c);cc=o.c;ee=Object.assign({},o.e,e||{})}else if(c===CH&&(!e||!Object.keys(e).length)&&typeof eqOf=='function')ee=eqOf();
+  if(c===CH&&typeof EQ!='undefined'){ee=Object.assign({},ee||{});if(EQ.c=='wcoat'&&!ee.c)ee.c='parka';if(EQ.h=='what'&&!ee.h)ee.h='ush'}}catch(x_){}
+ const r=inner(x,y,cc,w,fx,fy,1,e);try{retroGear205(Math.round(x),Math.round(y),fx,fy,ee)}catch(x_){}return r}
+{const dc205=drawChar;drawChar=function(x,y,c,w,fx,fy,s,e){if(!CLASSIC||!c||c.bk==1)return dc205.apply(this,arguments);
+ if(s&&s>1.5){const k=s*1.15;g.save();g.translate(x,y);g.scale(k,k);g.translate(-x,-y);try{return retroDraw205((a,b,c2,w2,f1,f2,s2,e2)=>dc205.call(this,a,b,c2,w2,f1,f2,1,e2),x,y,c,w,fx,fy,e)}finally{g.restore()}}
+ return retroDraw205((a,b,c2,w2,f1,f2,s2,e2)=>dc205.call(this,a,b,c2,w2,f1,f2,s,e2),x,y,c,w,fx,fy,e)}}
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
