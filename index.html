@@ -12702,7 +12702,7 @@ GAMEV=225;
 /* ---------- co-op: health and XP travel with the presence ---------- */
 {const up210=update;update=function(dt){up210(dt);try{if(net&&net.r&&!net.r._p210){const r=net.r,p0=r.presence;r._p210=1;r.presence=function(d){try{if(d&&typeof d=='object'){d.hp=Math.round(P.hp);d.lv=XS.lv|0;d.xf=+(Math.min(1,XS.xp/Math.max(1,xpNeed(XS.lv)))).toFixed(2);d.cr=creative?1:0}}catch(e){}return p0.call(r,d)}}}catch(e){}}}
 function coopRows210(){if(typeof net=='undefined'||!net||!net.peers||!net.peers.length)return[];return net.peers.filter(p=>p&&p.presence)}
-function chRect210(){try{if(!DQ112.L.length||skOpen||book||invOpen||tut||(typeof jnChalShow=='function'&&!jnChalShow()))return null;return[VW-116,1,116,11+DQ112.L.length*8+9+4]}catch(e){return null}}
+function chRect210(){try{if(!DQ112.L.length||skOpen||book||invOpen||tut||(typeof jnChalShow=='function'&&!jnChalShow()))return null;return[VW-118,1,118,11+DQ112.L.length*8+9+16]}catch(e){return null}}
 function coopY210(){const c=chRect210();return c&&!(HUD210.o.ch&&(HUD210.o.ch[0]||HUD210.o.ch[1]))?c[1]+c[3]+3:5}
 function coopDraw210(ox,oy){const L=coopRows210();if(!L.length)return;const h=LANG=='hu',w=112,x=VW-w-5+(ox|0),y=coopY210()+(oy|0);noTr=true;
  const hh=6+L.length*20;Q(x,y,w,hh,'rgba(12,11,9,.5)');Q(x,y,w,1,'#9ab8d0');
@@ -12862,6 +12862,45 @@ GAMEV=227;
 {const NP={copper:{h:2,c:5,l:4,b:2},iron:{h:3,c:6,l:5,b:2},gold:{h:3,c:8,l:6,b:2},diamond:{h:4,c:10,l:7,b:3}},DM={copper:1,iron:1.1,gold:2.2,diamond:1.6};
  for(const t of ATIERS)for(const k of AKINDS){const sl=ASL[k],key=t+'_'+k;if(ARM[key]){ARM[key].p=NP[t][sl];AP[t][sl]=NP[t][sl]}if(DMAX[key])DMAX[key]=Math.round(AB[sl]*AM[t]/3*DM[t])}
  if(ARM.wcoat){ARM.wcoat.p=4;DMAX.wcoat=420}if(ARM.what){ARM.what.p=2;DMAX.what=320}}
+
+/* ===== v213: the HUD panels can be resized — hold Ctrl and use the − / + buttons next to the lock (60%–130%); by default they are a
+   bit smaller (80%). Every panel shrinks towards its own corner of the screen, so nothing drifts into the middle. ===== */
+GAMEV=228;
+let HUDS213=.8;try{const v=parseFloat(localStorage.getItem('pc_huds'));if(v>=.6&&v<=1.3)HUDS213=v}catch(e){}
+function hudsSave213(){try{localStorage.setItem('pc_huds',String(HUDS213))}catch(e){}}
+function anc213(bb){const cx=bb[0]+bb[2]/2,cy=bb[1]+bb[3]/2;return[cx<VW/3?bb[0]:cx>VW*2/3?bb[0]+bb[2]:cx,cy<VH/2?bb[1]:bb[1]+bb[3]]}
+{const hw213=hudWidgets210;hudWidgets210=function(){const L=hw213.apply(this,arguments),s=HUDS213;const st=L.find(w=>w.id=='st'),ch=L.find(w=>w.id=='ch');
+ for(const w of L){w.ob=w.bb.slice();const a=anc213(w.ob);w.ax=a[0];w.ay=a[1];w.sx=0;w.sy=0;
+  /* the goal box follows the shrunken status panel, the partner panel the shrunken challenge list */
+  if(w.id=='gl'&&st&&!(st.dx||st.dy)){w.ay=w.ob[1];w.sy=(st.ob[1]+st.ob[3]*s+4)-w.ob[1]}
+  if(w.id=='cp'&&ch&&!(ch.dx||ch.dy)){w.ay=w.ob[1];w.sy=(ch.ob[1]+ch.ob[3]*s+3)-w.ob[1]}
+  if(w.id=='cp'&&!ch){w.ay=w.ob[1]}
+  w.bb=[w.ax+(w.ob[0]-w.ax)*s+w.sx,w.ay+(w.ob[1]-w.ay)*s+w.sy,w.ob[2]*s,w.ob[3]*s]}
+ return L}}
+{const hm213=hudMoved210;hudMoved210=function(){return Math.abs(HUDS213-1)>.001||hm213.apply(this,arguments)}}
+const SC213=[];
+hudFlush210=function(){if(!HL210.on)return;HL210.on=false;HL210.fl=1;const L=HL210.cv,c=HL210.cx,g0=HL210.g0,m=HL210.m;g=g0;
+ const k=m.a,s=HUDS213,W_=hudWidgets210(),cut=[];c.setTransform(1,0,0,1,0,0);
+ for(const w of W_){if(w.dir)continue;const moved=w.dx||w.dy||w.sx||w.sy||Math.abs(s-1)>.001;if(!moved)continue;
+  for(const r of w.r){const px=Math.max(0,Math.floor(r[0]*k+m.e)),py=Math.max(0,Math.floor(r[1]*k+m.f)),pw=Math.min(L.width-px,Math.ceil(r[2]*k)),ph=Math.min(L.height-py,Math.ceil(r[3]*k));if(pw<=0||ph<=0)continue;
+   const i=cut.length;if(!SC213[i])SC213[i]=document.createElement('canvas');const sc=SC213[i];if(sc.width<pw||sc.height<ph){sc.width=Math.max(sc.width,pw);sc.height=Math.max(sc.height,ph)}const sx=sc.getContext('2d');sx.clearRect(0,0,sc.width,sc.height);sx.drawImage(L,px,py,pw,ph,0,0,pw,ph);c.clearRect(px,py,pw,ph);
+   /* where this piece lands, in logical units */
+   const lx=(px-m.e)/k,ly=(py-m.f)/k,X=w.ax+(lx-w.ax)*s+w.sx+w.dx,Y=w.ay+(ly-w.ay)*s+w.sy+w.dy;cut.push([sc,pw,ph,X*k+m.e,Y*k+m.f,pw*s,ph*s])}}
+ g.save();g.setTransform(1,0,0,1,0,0);g.globalAlpha=1;g.globalCompositeOperation='source-over';g.filter='none';
+ DI0.call(g,L,0,0);g.imageSmoothingEnabled=Math.abs(s-1)>.001;try{g.imageSmoothingQuality='high'}catch(e){}
+ for(const[sc,pw,ph,x,y,dw,dh]of cut)DI0.call(g,sc,0,0,pw,ph,Math.round(x),Math.round(y),Math.round(dw),Math.round(dh));g.restore()};
+/* the thermometer and the partner panel are painted after the cut-and-paste, with the same scale */
+{const th213=thermo210;thermo210=function(ox,oy){const s=HUDS213;if(Math.abs(s-1)<.001)return th213.apply(this,arguments);g.save();g.translate(ox|0,oy|0);g.scale(s,s);try{return th213.call(this,0,0)}finally{g.restore()}}}
+{const cd213=coopDraw210;coopDraw210=function(ox,oy){const s=HUDS213;if(Math.abs(s-1)<.001)return cd213.apply(this,arguments);let w=null;try{w=hudWidgets210().find(q=>q.id=='cp')}catch(e){}if(!w)return cd213.apply(this,arguments);
+ g.save();g.translate(w.ax+w.sx+(ox|0),w.ay+w.sy+(oy|0));g.scale(s,s);g.translate(-w.ax,-w.ay);try{return cd213.call(this,0,0)}finally{g.restore()}}}
+/* − / + next to the lock */
+function hudSz213(){if(HUD210.pin)return[];const b=hudBtns210(),last=b[b.length-1],x=last.x+last.w+6,y=last.y;return[{k:'-',x,y,w:13,h:13},{k:'%',x:x+15,y,w:30,h:13},{k:'+',x:x+47,y,w:13,h:13}]}
+{const ho213=hudOverlay210;hudOverlay210=function(){const r=ho213.apply(this,arguments);try{noTr=true;for(const b of hudSz213()){const hov=b.k!='%'&&ms.x>=b.x&&ms.x<b.x+b.w&&ms.y>=b.y&&ms.y<b.y+b.h;Q(b.x,b.y,b.w,b.h,hov?'rgba(70,56,24,.95)':'rgba(20,16,10,.88)');Q(b.x,b.y,b.w,1,'#c8a050');
+  txt(b.k=='%'?Math.round(HUDS213*100)+'%':b.k=='-'?'−':'+',b.x+b.w/2,b.y+10,'#fff2c8','center')}noTr=false}catch(e){noTr=false}return r}}
+addEventListener('mousedown',e=>{if(e.button!==0||!(e.ctrlKey||CTRLH)||!hudFree210()||HUD210.pin)return;try{sc(e)}catch(_){return}
+ for(const b of hudSz213()){if(b.k=='%')continue;if(ms.x>=b.x&&ms.x<b.x+b.w&&ms.y>=b.y&&ms.y<b.y+b.h){e.preventDefault();e.stopImmediatePropagation();HUDS213=Math.round(Math.max(.6,Math.min(1.3,HUDS213+(b.k=='+'?.1:-.1)))*10)/10;hudsSave213();try{snd('ui')}catch(_){}return}}},true);
+/* "reset" also brings the size back to the default */
+{const hs213=hudSave210;hudSave210=function(){try{const b=hudBtns210().find(q=>q.k=='rst');if(b&&ms.x>=b.x&&ms.x<b.x+b.w&&ms.y>=b.y&&ms.y<b.y+b.h){HUDS213=.8;hudsSave213()}}catch(e){}return hs213.apply(this,arguments)}}
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
