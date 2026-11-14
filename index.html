@@ -11757,6 +11757,29 @@ let BEDT189=0;
  for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const i=y*W+x,o=ob[i];if(!o||(o.t!='bed'&&o.t!='nstand')||o.pm!=null||o.wf||o.own)continue;const m=map[i];if(!(m==0||m==2||m==4||m==6))continue;if(BLD.some(b=>x>=b.x&&x<b.x+b.w&&y>=b.y&&y<b.y+b.h))continue;if(typeof rmObj=='function')rmObj(i);else ob[i]=null}}catch(e){}}}
 {const pl189b=place;place=function(){const tx=mtx,ty=mty,r=pl189b.apply(this,arguments);try{const o=ob[ty*W+tx];if(o&&(o.t=='bed'||o.t=='nstand'))o.own=1}catch(e){}return r}}
 
+/* ===== v190: steady pixels — the canvas resolution follows the zoom so every art pixel lands on whole screen pixels and the camera moves
+   in whole world pixels (the detailed sprites no longer shimmer or "swim" as you walk); the small log cabins are gone (abandoned ones in the
+   world, the cabin recipe and the builder's cabin kit — you build your own house now); retro look for the big character in the inventory
+   and for the portraits in conversations. ===== */
+GAMEV=205;
+/* ---------- pixel-steady rendering ---------- */
+let RSB190=RS;
+{const srs190=setRS;setRS=function(v){const r=srs190.apply(this,arguments);RSB190=RS;return r}}
+function rsFit190(){const z=ZM||1,want=Math.max(2,2*Math.ceil(z*RSB190/2-1e-6)),rs=want/z;if(Math.abs(rs-RS)>1e-4){RS=rs;const w=Math.round(VW*RS),h=Math.round(VH*RS);if(C.width!==w||C.height!==h){C.width=w;C.height=h}}}
+{const dr190=draw;draw=function(){try{if(!view&&state!='title')rsFit190()}catch(e){}const cx=cam.x,cy=cam.y;cam.x=Math.round(cx);cam.y=Math.round(cy);try{return dr190.apply(this,arguments)}finally{cam.x=cx;cam.y=cy}}}
+/* ---------- no more little log cabins ---------- */
+for(let i=REC.length-1;i>=0;i--)if(REC[i][0]=='cabin')REC.splice(i,1);
+{const jo190=jobOffer105;jobOffer105=function(n){if(n&&n.job=='epitesz'){const h=LANG=='hu',B=(a,b)=>h?a:b;return{txt:B('Összerakok neked egy építőcsomagot a saját házadhoz: 8 fal és egy ajtó, 18 fa és 3 kő.','I\'ll put a building kit together for your own house: 8 walls and a door, for 18 wood and 3 stone.'),cost:{wood:18,stone:3},run:()=>{inv.wall=(inv.wall||0)+8;inv.door=(inv.door||0)+1;givehb('wall');return B('Tessék. Rakd körbe, tegyél rá ajtót — és máris otthon vagy.','There. Wall it in, hang the door — and you\'re home.')}}}return jo190.apply(this,arguments)}}
+function dropCabins190(){if(inD)return 0;let n=0;for(let i=0;i<W*H;i++){const o=ob[i];if(o&&o.t=='cabin'&&o.pm==null&&o.ab){if(typeof rmObj=='function')rmObj(i);else ob[i]=null;n++}}return n}
+{const gdt190=genDesertTowers;genDesertTowers=function(){const r=gdt190.apply(this,arguments);try{dropCabins190()}catch(e){}return r}}
+{const ld190=load;load=function(){const r=ld190.apply(this,arguments);try{if(r&&!inD&&!inC)dropCabins190()}catch(e){}return r}}
+/* ---------- retro big character (inventory, conversation portraits) ---------- */
+{const dc190=drawChar;drawChar=function(x,y,c,w,fx,fy,s,e){if(CLASSIC&&s&&s>1.5){const k=s*1.15;g.save();g.translate(x,y);g.scale(k,k);g.translate(-x,-y);try{return dc190.call(this,x,y,c,w,fx,fy,1,e)}finally{g.restore()}}return dc190.apply(this,arguments)}}
+let CABD190=false;
+{const in190=init;init=function(){CABD190=false;return in190.apply(this,arguments)}}
+{const ld190b=load;load=function(){CABD190=false;return ld190b.apply(this,arguments)}}
+{const up190=update;update=function(dt){up190(dt);if(!CABD190&&state=='play'&&!inD&&!inC){CABD190=true;try{dropCabins190()}catch(e){}}}}
+
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
  if(state=='title')menu();if(state=='opts')optsMenu();if(state=='sndo')sndMenu();if(state=='gfxo')gfxMenu();if(state=='slots')svMenu();if(state=='keys')keysMenu();if(state=='wthr')wthrMenu();if(state=='char')charMenu();if(state=='lobby')drawLobby();if(state=='hb'){Q(0,0,VW,VH,'rgba(6,10,6,.6)');drawHB()}if(0)title('ASHFALL',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Hold the fire. Survive the nights.','','WASD move \u2022 Space chop / fish / attack \u2022 Tab recipes','Press any key']);
