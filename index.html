@@ -13376,7 +13376,7 @@ function hrsCost219(){const r=CMP218?CMP218.rep|0:0;return r>=30?{iron:3,canned:
 GAMEV=235;
 let RDS220=null,CVS220=[],CVCLK220=0;
 const RNAT220={tree:1,rock:1,bush:1,flax:1,cactus:1,tgrass:1,shrub:1,flower:1,jbush:1,sdrift:1,reed:1,fosl:1,tires:1,chopblk:1,palm:1};
-function opsList220(){const L=[];for(let i=0;i<W*H;i++){const o=ob[i];if(o&&o.t=='opost')L.push({x:i%W,y:(i/W)|0,fac:o.fac})}return L}
+function opsList220(){const L=[];for(let i=0;i<W*H;i++){const o=ob[i];if(o&&(o.t=='opost'||o.t=='rpost'))L.push({x:i%W,y:(i/W)|0,fac:o.t=='rpost'?'rd':o.fac})}return L}
 /* A* over the tile grid: grass is cheap, trees cost a little (they get felled), old road is cheapest; water, lava, walls and buildings are out */
 function astar220(sx,sy,tx,ty,blk){const N=W*H,gs=new Float32Array(N).fill(1e9),from=new Int32Array(N).fill(-1),closed=new Uint8Array(N),hp=[],hv=[];
  const cost=i=>{const m=map[i];if(!WALKM(m)||blk[i])return 1e9;const o=ob[i];if(o){if(!RNAT220[o.t]||o.pm!=null)return 1e9;return 5}return m==2?.5:1};
@@ -13416,7 +13416,7 @@ function waysGen220(){if(!RDS220)return;let n=0;const taken=[];
   let site=null;for(let d=3;d<=5&&!site;d++)for(const[ax,ay]of[[d,0],[-d,0],[0,d],[0,-d],[d,d],[-d,-d]]){const xx=x+ax,yy=y+ay;let ok=true;for(let dy=-1;dy<=2&&ok;dy++)for(let dx=-2;dx<=2;dx++){const i=(yy+dy)*W+xx+dx,m=map[i],o=ob[i];if(!(m==0||m==4)||(o&&(!RNAT220[o.t]||o.pm!=null))||BLD.some(q=>xx+dx>=q.x-1&&xx+dx<=q.x+q.w&&yy+dy>=q.y-1&&yy+dy<=q.y+q.h)){ok=false;break}}if(ok){site=[xx,yy];break}}
   if(!site)continue;const[sx,sy]=site;for(let dy=-2;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){const i=(sy+dy)*W+sx+dx,o=ob[i];if(o&&RNAT220[o.t]){try{rmObj(i)}catch(e){}ob[i]=null}}ob[sy*W+sx]={t:'fire',on:true,fl:600};ob[(sy-1)*W+sx+1]={t:'fbarrel'};ob[(sy+1)*W+sx-1]={t:'fcrate'};ob[(sy-1)*W+sx-2]={t:'flag'};
   const px=sx*T+8,py=(sy+2)*T+8,nm=(typeof NMM!='undefined'&&NMM.length?NMM:['Ottó'])[Math.floor(R()*(typeof NMM!='undefined'&&NMM.length?NMM.length:1))];
-  NPCS.push({x:px,y:py,hx:px,hy:py,wr:1.5,c:typeof lookRnd=='function'?lookRnd():'1',nm:nm+' ('+WNM220[n%WNM220.length]+')',tr:Math.floor(R()*TRD.length),g:Math.floor(R()*3),kn:0,fr:0,ws220:1});
+  NPCS.push({x:px,y:py,hx:px,hy:py,wr:1.5,c:lookFor('m'),sx:'m',nm:nm+' ('+WNM220[n%WNM220.length]+')',tr:Math.floor(R()*TRD.length),g:Math.floor(R()*3),kn:0,fr:0,ws220:1});
   taken.push([x,y]);n++}}
  RDS220.ways=n}
 /* --- the caravans --- */
@@ -13425,7 +13425,7 @@ function cvBuild220(){for(const c of CVS220)for(const n of c.m)if(n.k=='npc'){co
  if(!RDS220)return;let idx=0;
  for(const r of RDS220.routes){const P=r.pts.map(q=>({x:q[0]*T+8,y:q[1]*T+8}));const cl=[0];for(let i=1;i<P.length;i++)cl.push(cl[i-1]+Math.hypot(P[i].x-P[i-1].x,P[i].y-P[i-1].y));
   const len=cl[cl.length-1];if(len<200)continue;
-  const mk=(role)=>{const sx=Math.random()<.5?'f':'m',o={x:P[0].x,y:P[0].y,hx:P[0].x,hy:P[0].y,wr:.01,c:typeof lookRnd=='function'?lookRnd():'1',nm:(sx=='f'?NMF:NMM)[Math.floor(Math.random()*(sx=='f'?NMF:NMM).length)]+(role=='guard'?' (őr)':' (kereskedő)'),sx,tr:Math.floor(Math.random()*TRD.length),g:Math.floor(Math.random()*3),kn:0,fr:0,cv220:1};NPCS.push(o);return{k:'npc',o,role}};
+  const mk=(role)=>{const sx=Math.random()<.5?'f':'m',o={x:P[0].x,y:P[0].y,hx:P[0].x,hy:P[0].y,wr:.01,c:typeof lookRnd=='function'?lookRnd():'1',nm:(sx=='f'?NMF:NMM)[Math.floor(Math.random()*(sx=='f'?NMF:NMM).length)]+(role=='guard'?' (őr)':' (kereskedő)'),sx,tr:Math.floor(Math.random()*TRD.length),g:Math.floor(Math.random()*3),kn:1,fr:0,cv220:1};NPCS.push(o);return{k:'npc',o,role}};
   const hz=hrsNew219(P[0].x,P[0].y,1,1,{col:Math.floor(Math.random()*5),cv:1});hz.nm=null;
   const cv={r,P,cl,len,lag:0,off:(idx*997)%Math.round(len*2),dw:440,m:[mk('trader'),mk('guard'),{k:'horse',o:hz}],fr:0};CVS220.push(cv);idx++}}
 function cvAt220(cv,u){const L=cv.len,per=2*(L+cv.dw);let s=((u%per)+per)%per,dir=1,mvg=1;if(s<L){}else if(s<L+cv.dw){s=L;mvg=0}else if(s<2*L+cv.dw){s=L-(s-L-cv.dw);dir=-1}else{s=0;mvg=0;dir=-1}
@@ -13452,6 +13452,116 @@ const hold220=(f)=>function(){if(inD||!CVS220.length)return f.apply(this,argumen
 /* greeting for the caravan folk */
 HU.unshift(['Caravan','Karaván']);
 {const ng=npcGreet;npcGreet=function(n){if(n&&n.cv220)return both('Úton vagyunk a táborok között. Cserélj velünk, ha van mid.','We travel between the camps. Trade with us if you have goods.');if(n&&(n.ws220||/\((Vándor|Utazó|Postás|Csavargó)\)$/.test(n.nm||'')))return both('Foglalj helyet a tűznél. Hosszú az út.','Sit by the fire. The road is long.');return ng.apply(this,arguments)}}
+
+/* ===== v221: the radio station. Out in the wild stands a dead station — an antenna, a generator and a console behind a fence. Bring scrap, coal,
+   wire, wood and electronics, repair all three, and it goes on air as the Free Radio (Szabad Rádió) — ours. Menedék sends an operator; the
+   station warns of nightfall and of infected closing in, puts every camp on your map, reports on the camps, and calls the caravan to its door. ===== */
+GAMEV=236;
+SOLID.rmast=SOLID.rcons=SOLID.rgen=1;
+Object.assign(NMX,{rmast:'radio mast',rcons:'radio console',rgen:'generator',rpost:'station'});
+HU.unshift(['radio mast','rádióantenna'],['radio console','rádiókonzol'],['generator','áramfejlesztő'],['Free Radio','Szabad Rádió'],['station','állomás']);
+/* --- sprites --- */
+DRAWX.rpost=function(){};
+DRAWX.rmast=function(o,x,y){const t=performance.now(),ok=!!o.a,bl=Math.floor(t/700)%2,cx=x+8;
+ W_(x+1,y+12,14,5,'rgba(0,0,0,.3)');W_(x+3,y+10,10,5,'#6a6e72');W_(x+3,y+10,10,1,'#8a8e92');W_(x+5,y+9,6,1,'#7a7e82');
+ const H=ok?60:34;for(let k=0;k<H;k+=4){const w=Math.max(2,6-Math.floor(k/12));W_(cx-w,y+9-k,1,5,'#a0a6ac');W_(cx+w-1,y+9-k,1,5,'#a0a6ac');W_(cx-w,y+9-k+(k%8?1:3),w*2,1,k%8?'#808690':'#9aa0a6')}
+ if(ok){W_(cx-1,y+4-H,2,8,'#c8ced4');W_(cx-3,y+7-H,6,1,'#9aa0a6');W_(cx-4,y+16-H,8,1,'#9aa0a6');if(bl){W_(cx-1,y+2-H,2,2,'#ff3a2a');if(typeof dark=='function'&&dark()>.2){g.save();g.globalCompositeOperation='lighter';const gx=cx-cam.x,gy=y+3-H-cam.y,gr=g.createRadialGradient(gx,gy,1,gx,gy,22);gr.addColorStop(0,'rgba(255,60,40,.55)');gr.addColorStop(1,'rgba(255,60,40,0)');g.fillStyle=gr;g.fillRect(gx-24,gy-24,48,48);g.restore()}}
+  for(const sx of[-1,1])for(let k=0;k<7;k++)W_(cx+sx*(5+k*2),y+8-k*3,1,1,'#60666c')}
+ else{W_(cx-1,y+9-H,2,6,'#8a9096');W_(cx+1,y+7-H,6,1,'#7a8086');W_(cx+6,y+7-H,1,3,'#7a8086');const sw=Math.round(Math.sin(t/500)*2);for(let k=0;k<12;k++)W_(cx+6+((k>6)?sw:0),y+10-H+k,1,1,'#2a2e32')}};
+DRAWX.rcons=function(o,x,y){const t=performance.now(),on=!!o.on,rp=!!o.c;W_(x,y+12,16,4,'rgba(0,0,0,.3)');W_(x+1,y+6,14,8,'#4a4e54');W_(x+1,y+6,14,1,'#7a8086');W_(x+1,y+13,14,1,'#2a2e32');
+ W_(x+3,y-2,10,9,'#22262a');W_(x+4,y-1,8,7,on?'#78d868':rp?'#1a3a2a':'#0e1418');
+ if(on){const l=Math.floor(t/180)%5;W_(x+5,y+l,6,1,'#c8f8b8');W_(x+5,y+3,3,1,'#a8e898');W_(x+9,y+1,2,1,'#a8e898')}else if(!rp){W_(x+6,y-1,1,5,'#3a4a50');W_(x+7,y+3,4,1,'#3a4a50');W_(x+9,y+1,1,3,'#3a4a50')}
+ W_(x+3,y+8,2,2,on?'#e8c02a':'#3a3e44');W_(x+7,y+8,2,2,on?'#3ad86a':'#a83a2a');W_(x+11,y+8,2,2,'#3a3e44');W_(x+4,y+11,8,1,'#2a2e32')};
+DRAWX.rgen=function(o,x,y){const t=performance.now(),on=!!o.g,j=on?Math.round(Math.sin(t/38)*.6):0;W_(x,y+12,16,4,'rgba(0,0,0,.3)');
+ W_(x+1+j,y+3,14,10,on?'#d8782a':'#7a6a5a');W_(x+1+j,y+3,14,2,on?'#f09040':'#9a8a7a');W_(x+3+j,y+6,6,5,'#2a2a2e');for(let i=0;i<3;i++)W_(x+4+j,y+7+i*2,4,1,'#4a4a50');
+ W_(x+11+j,y+6,3,3,on?'#7ad86a':'#a83a2a');W_(x+12,y-4,2,8,'#4a4a4e');W_(x+11,y-5,4,2,'#3a3a3e');
+ if(on)for(let k=0;k<3;k++){const ph=((t/260+k*.33)%1);W_(x+12+Math.round(Math.sin(ph*6+k)*2),y-6-Math.round(ph*14),2+Math.round(ph*2),2+Math.round(ph*2),'rgba(150,150,150,'+(.55*(1-ph)).toFixed(2)+')')}
+ else W_(x+5,y+9,6,1,'#5a3a2a')};
+/* --- the site --- */
+function stBuild221(cx,cy){const Rr=4;for(let y=cy-Rr;y<=cy+Rr;y++)for(let x=cx-Rr;x<=cx+Rr;x++){const i=y*W+x;if(ob[i]){try{rmObj(ob[i].pm!=null?ob[i].pm:i)}catch(e){}}ob[i]=null;if(map[i]==4)map[i]=0}
+ for(let y=cy-Rr;y<=cy+Rr;y++)for(let x=cx-Rr;x<=cx+Rr;x++){const e=y==cy-Rr||y==cy+Rr||x==cx-Rr||x==cx+Rr;if(!e)continue;if(y==cy+Rr&&Math.abs(x-cx)<=1)continue;ob[y*W+x]={t:'wfence',hp:80}}
+ ob[cy*W+cx]={t:'rpost'};ob[(cy+1)*W+cx]={t:'fire',on:true,fl:600};
+ ob[(cy-2)*W+cx]={t:'rmast',a:0};ob[cy*W+cx-2]={t:'rcons',on:0,c:0,kn:0};ob[cy*W+cx+2]={t:'rgen',g:0};
+ ob[(cy+2)*W+cx-3]={t:'fcrate'};ob[(cy+2)*W+cx+3]={t:'flag'};ob[(cy-1)*W+cx+3]={t:'fbarrel'};ob[(cy+1)*W+cx-3]={t:'fcrate'}}
+function stationGen221(){if(inD||ob.some(o=>o&&o.t=='rpost'))return;const c=CMP218,ops=opsList220(),cc=c?[c.X+27,c.Y+27]:[SX,SY];let best=null,bs=1e9;
+ for(let k=0;k<20000;k++){const x=14+Math.floor(R()*(W-28)),y=14+Math.floor(R()*(H-28));const b=bm[y*W+x];if(b!=0&&b!=1)continue;
+  const d=Math.hypot(x-cc[0],y-cc[1]);if(d<40||d>230)continue;if(Math.hypot(x-SX,y-SY)<34)continue;if(RIC&&Math.hypot(x-RIC[0],y-RIC[1])<RIC[2]+22)continue;if(ops.some(o=>Math.hypot(o.x-x,o.y-y)<26))continue;
+  if(!opOk200(x,y,5,null))continue;const sc=Math.abs(d-100);if(sc<bs){bs=sc;best=[x,y];if(sc<14)break}}
+ if(best)stBuild221(best[0],best[1])}
+{const rg=roadsGen220;roadsGen220=function(){try{stationGen221()}catch(e){console.warn('station',e)}return rg.apply(this,arguments)}}
+/* --- where things are (cached) --- */
+const RSC221={o:null,t:0,v:null};
+function rsFind221(){const now=performance.now();if(RSC221.o===ob&&now-RSC221.t<3000)return RSC221.v;RSC221.o=ob;RSC221.t=now;let v=null;if(!inD){let m=-1,c=-1,g=-1,p=-1;for(let i=0;i<W*H;i++){const o=ob[i];if(!o)continue;const t=o.t;if(t=='rmast')m=i;else if(t=='rcons')c=i;else if(t=='rgen')g=i;else if(t=='rpost')p=i}if(p>=0)v={m,c,g,p,cx:p%W,cy:(p/W)|0}}RSC221.v=v;return v}
+const rsOn221=S=>!!(S&&S.c>=0&&ob[S.c]&&ob[S.c].on);
+function rsDir221(S){const dx=(S.cx+.5)*T-P.x,dy=(S.cy+.5)*T-P.y,a=Math.atan2(dy,dx),n=['K','DK','D','DNy','Ny','ÉNy','É','ÉK'],e=['E','SE','S','SW','W','NW','N','NE'],i=((Math.round(a/(Math.PI/4))%8)+8)%8;return{t:LANG=='hu'?n[i]:e[i],d:Math.round(Math.hypot(dx,dy)/T)}}
+/* --- repairs --- */
+const RSCOST221={g:{iron:6,coal:4},a:{copper:5,iron:4,wood:6},c:{gold:3,copper:2,cloth:1}};
+function rsCostTxt221(c){return Object.entries(c).map(([k,v])=>v+' '+tr(LBL[k]||k).toLowerCase()).join(', ')}
+function rsTry221(part,o,what){const need=RSCOST221[part];const miss=Object.entries(need).filter(([k,v])=>(inv[k]|0)<v&&!creative);
+ if(miss.length){say(both(what[0]+' javításához kell: '+rsCostTxt221(need)+'.',what[1]+' needs: '+rsCostTxt221(need)+'.'));return false}
+ if(!creative)for(const[k,v]of Object.entries(need))inv[k]-=v;try{snd('craft')}catch(e){}for(let i=0;i<8;i++)parts.push({x:P.x+(Math.random()-.5)*14,y:P.y-6,vx:(Math.random()-.5)*50,vy:-20-Math.random()*30,l:.6,c:'#ffd84a',sz:1});return true}
+function rsCheck221(){return}
+function rsActivate221(S){const co=ob[S.c];if(co.act)return;co.act=1;co.kn=1;
+ const nm=['Tóth Anna','Kiss Vera','Szalai Mária','Fehér Judit'][Math.floor(Math.random()*4)]+' (rádiós)';
+ if(!NPCS.some(n=>/\(rádiós\)$/.test(n.nm||''))){const px=(S.cx-1)*T+8,py=(S.cy+1)*T+8;NPCS.push({x:px,y:py,hx:px,hy:py,wr:1.2,c:lookFor('f'),nm,sx:'f',tr:0,g:0,kn:1,fr:0,cj:'radio'})}
+ try{if(CMP218)CMP218.rep=Math.min(100,(CMP218.rep|0)+12)}catch(e){}try{repAdd200('sc',4);repAdd200('gc',4)}catch(e){}try{gainXp(60)}catch(e){}
+ rdBox221('…itt a Szabad Rádió. Hallotok minket? Az adó él — Menedék rádiósa foglalja el az állomást. Aki jár a vidéken, ne maradjon egyedül: a táborok kapui nyitva, az utakon karavánok járnak.','…this is Free Radio. Can you hear us? The transmitter lives — Haven has sent an operator. Whoever walks these lands, do not be alone: the camps are open, and caravans walk the roads.')}
+function rsE221(){const S=rsFind221();if(!S)return false;const near=i=>i>=0&&Math.hypot((i%W+.5)*T-P.x,(((i/W)|0)+.5)*T-P.y)<30;
+ const mo=S.m>=0?ob[S.m]:null,co=S.c>=0?ob[S.c]:null,go=S.g>=0?ob[S.g]:null;
+ if(near(S.g)&&go){if(go.g){say(both('Az áramfejlesztő zúg.','The generator hums.'));return true}if(rsTry221('g',go,['Az áramfejlesztő','The generator'])){go.g=1;say(both('Az áramfejlesztő felmordul — van áram.','The generator coughs to life — there is power.'));rsUpdate221(S)}return true}
+ if(near(S.m)&&mo){if(mo.a){say(both('Az antenna rendben. A vörös fény villog.','The antenna is sound. The red light blinks.'));return true}if(rsTry221('a',mo,['Az antenna','The antenna'])){mo.a=1;say(both('Felállítottad az antennát.','You raise the antenna.'));rsUpdate221(S)}return true}
+ if(near(S.c)&&co){if(!co.c){if(rsTry221('c',co,['A konzol','The console'])){co.c=1;say(both('A konzol képernyője felvillan.','The console screen flickers.'));rsUpdate221(S)}return true}
+  if(!co.on){const ck=(b)=>b?'✔':'✘';say(both('Az adó még nem működik: áramfejlesztő '+ck(go&&go.g)+', antenna '+ck(mo&&mo.a)+'.','The transmitter is not on air yet: generator '+ck(go&&go.g)+', antenna '+ck(mo&&mo.a)+'.'));return true}
+  say(both('A Szabad Rádió adásban van. Beszélj a rádióssal.','Free Radio is on air. Talk to the operator.'));return true}
+ return false}
+function rsUpdate221(S){const co=ob[S.c],go=ob[S.g],mo=ob[S.m];const on=!!(co&&co.c&&go&&go.g&&mo&&mo.a);if(co)co.on=on?1:0;if(on&&co&&!co.act)rsActivate221(S)}
+{const ce=carE;carE=function(){if(state!='play'||drv||rid||P.boat||TALK||inD||MNT219)return ce.apply(this,arguments);try{if(uiOpen211())return ce.apply(this,arguments)}catch(e){}if(rsE221())return true;return ce.apply(this,arguments)}}
+/* --- the broadcasts --- */
+const RTX221=new Set();
+function rdBox221(hu,en){RTX221.add(hu);RTX221.add(en);RADIO.push({k:'radio',t:[hu,en]})}
+{const ds=dlSay;dlSay=function(kind,name,text,src,hint){if(kind=='radio'&&RTX221.has(String(text)))name=both('Szabad Rádió','Free Radio');return ds.call(this,kind,name,text,src,hint)}}
+const RDT221={n:120,dd:-1,hz:0};
+const RDM221=[['Tipp: a fertőzöttek a tűztől félnek. Éjszaka ne maradj tűz nélkül.','Tip: the infected fear fire. Never spend a night without one.'],['A kattogó hangot figyeld — a vak fertőzött csak a futásra figyel. Sétálj el mellette.','Mind the clicking — the blind ones only notice running. Walk past them.'],['Lovat szelídíteni lassan kell. Futva elszalad.','Gentle a horse slowly. Run at it and it bolts.'],['A karavánok nappal járják az utakat, éjjel megpihennek.','Caravans walk the roads by day and rest at night.'],['Menedék őrsége két műszakban dolgozik. Ha munka kell, kérdezz egy őrt.','Haven’s guard works two shifts. Ask a guard if you need work.'],['Az elhagyott laborok körül sűrűsödik a fertőzés. Védőmaszk nélkül ne menj be.','Contamination thickens around the abandoned labs. Do not go in without a mask.']];
+function rdTick221(dt){if(state!='play'||inD)return;const S=rsFind221();if(!rsOn221(S))return;const busy=RAD||RADIO.length||SCARD||TALK;
+ RDT221.hz-=dt;
+ /* nightfall, once a day */
+ if(time>=.5&&time<.56&&RDT221.dd!==day&&!busy){RDT221.dd=day;rdBox221('Szabad Rádió: közeleg az este. Gyújtsatok tüzet, zárjátok a kapukat — éjjel a fertőzöttek sokkal aktívabbak.','Free Radio: evening is coming. Light your fires, close your gates — the infected are far more active at night.');return}
+ /* a pack of infected closing in */
+ if(dk0()>.5&&RDT221.hz<=0&&!busy){let n=0,sx=0,sy=0;for(const z of zs){if(z.hp<=0||z.early)continue;const d=Math.hypot(z.x-P.x,z.y-P.y);if(d<620){n++;sx+=z.x;sy+=z.y}}
+  if(n>=12){RDT221.hz=170;const a=Math.atan2(sy/n-P.y,sx/n-P.x),h=['K','DK','D','DNy','Ny','ÉNy','É','ÉK'],e=['E','SE','S','SW','W','NW','N','NE'],i=((Math.round(a/(Math.PI/4))%8)+8)%8;rdBox221('Figyelem! Fertőzöttek nagy csoportja közelít '+h[i]+' felől. Húzódjatok fedezékbe!','Warning! A large pack of infected is closing in from the '+e[i]+'. Take cover!')}}
+ /* routine chatter */
+ RDT221.n-=dt;if(RDT221.n<=0&&!busy){RDT221.n=200+Math.random()*160;const k=Math.floor(Math.random()*(RDM221.length+1));
+  if(k<RDM221.length)say(both('📻 '+RDM221[k][0],'📻 '+RDM221[k][1]));else{const cv=CVS220[Math.floor(Math.random()*Math.max(1,CVS220.length))];if(cv)say(both('📻 A karaván úton van a(z) '+facName221(cv.r.fa,0)+' és a(z) '+facName221(cv.r.fb,0)+' között.','📻 A caravan is on the road between '+facName221(cv.r.fa,1)+' and '+facName221(cv.r.fb,1)+'.'))}}}
+function facName221(f,h){if(f=='camp')return h?'Menedék':'Haven';if(f=='rd')return h?'Szabad Rádió':'Free Radio';const F=typeof FAC200!='undefined'&&FAC200[f];return F?F.n[h?1:0]:'?'}
+{const u=update;update=function(dt){const r=u.apply(this,arguments);try{rdTick221(dt)}catch(e){}return r}}
+/* --- the operator --- */
+GRT218.radio=['Szabad Rádió — hallgatjuk a vidéket. Mit szeretnél?','Free Radio — we listen to the whole country. What would you like?'];
+HU.unshift(['Free Radio — we listen','Szabad Rádió — hallgatjuk']);
+{const ld=load;load=function(){const r=ld.apply(this,arguments);try{if(r)for(const n of NPCS)if(/\(rádiós\)$/.test(n.nm||''))n.cj='radio'}catch(e){}return r}}
+{const to=talkOpts;talkOpts=function(){let o=to.apply(this,arguments);const n=TALK&&TALK.n;if(!n)return o;
+ if(n.cj=='radio')return[{k:'r_rep',l:both('Jelentés a táborokról','Report on the camps')},{k:'r_cv',l:both('Hívd ide a karavánt','Call the caravan here')},{k:'r_news',l:both('Mi hír?','Any news?')},{k:'bye',l:both('Viszlát','Goodbye')}];
+ if(n.cj=='leader'&&!TALK.sub){const i=o.findIndex(q=>q.k=='bye');o.splice(i<0?o.length:i,0,{k:'r_where',l:both('Hallottál valami rádióról?','Heard anything about a radio?')})}return o}}
+{const tp=talkPick;talkPick=function(i){const n=TALK&&TALK.n;if(!n||(n.cj!='radio'&&n.cj!='leader'))return tp.apply(this,arguments);const o=talkOpts()[i];if(!o)return tp.apply(this,arguments);const k=o.k,h=LANG=='hu';
+ if(k=='r_where'){snd('ui');const S=rsFind221();if(!S){talkSay(both('Rádió? Nem hallottam semmit.','A radio? Not that I know of.'));return}const co=ob[S.c];if(co){co.kn=1}const d=rsDir221(S);
+  talkSay(rsOn221(S)?both('A Szabad Rádió már adásban van — a te érdemed. Köszönjük.','Free Radio is on air — thanks to you.'):both('Van egy elhagyott rádióállomás '+d.t+' felé, vagy '+d.d+' lépésre innen. Ha megjavítod, a miénk lehet. Felkerült a térképre.','There is a derelict radio station to the '+d.t+', about '+d.d+' tiles away. Fix it and it could be ours. It is on your map now.'));return}
+ if(k=='r_rep'){snd('ui');const c=CMP218,R=c?cmpRank218(c.rep|0)[h?0:1]:'—',f=x=>{try{return rankName200(x)}catch(e){return'?'}};
+  talkSay(both('Menedék: '+R+'. Guberálók: '+f('sc')+', Zöld Kör: '+f('gc')+', Hamu: '+f('ac')+'. '+CVS220.length+' karaván úton.','Haven: '+R+'. Scavengers: '+f('sc')+', Green Circle: '+f('gc')+', Ash: '+f('ac')+'. '+CVS220.length+' caravans on the roads.'));return}
+ if(k=='r_news'){snd('ui');const m=RDM221[Math.floor(Math.random()*RDM221.length)];talkSay(both(m[0],m[1]));return}
+ if(k=='r_cv'){snd('ui');const S=rsFind221(),cv=CVS220.find(q=>q.r.fa=='rd'||q.r.fb=='rd');
+  if(!cv){talkSay(both('Ide nem vezet karavánút.','No caravan road leads here.'));return}if(RDT221.call===day){talkSay(both('Ma már hívtunk karavánt. Holnap újra.','We already called one today. Try again tomorrow.'));return}
+  if(dk0()>.3){talkSay(both('Éjjel a karaván nem indul. Hívjuk holnap reggel.','Caravans do not travel at night. Ask again in the morning.'));return}
+  const L=cv.len,per=2*(L+cv.dw),tgt=(cv.r.fb=='rd')?L-22*25:2*L+cv.dw-22*25,secs=CVCLK220;cv.off=((tgt-(secs-cv.lag)*22)%per+per)%per;RDT221.call=day;
+  talkSay(both('Rádiójelet adtunk. A karaván fél percen belül ideér.','We sent the signal. The caravan will be here within half a minute.'));return}
+ return tp.apply(this,arguments)}}
+/* --- the map --- */
+mfCat211.__r=1;{const mc=mfCat211;mfCat211=function(k){return(k=='rs'||k=='op2')?'cmp':mc(k)}}
+{const mm=mapMarks;mapMarks=function(){const r=mm.apply(this,arguments);try{if(inD)return r;const S=rsFind221();if(S){const co=S.c>=0?ob[S.c]:null,on=rsOn221(S);
+  if(co&&!co.kn&&Math.hypot((S.cx+.5)*T-P.x,(S.cy+.5)*T-P.y)<70*T){co.kn=1;say(both('Egy rádióárboc a távolban — elhagyott állomás. Felkerült a térképre (M).','A radio mast in the distance — a derelict station. It is on your map (M).'))}
+  if(co&&(co.kn||on))r.push({k:'rs',x:(S.cx+.5)*T,y:(S.cy+.5)*T,n:both('Szabad Rádió','Free Radio'),on});
+  if(on){try{if(CMP218)CMP218.known=1}catch(e){}for(const o of opsList220())if(o.fac!='rd')r.push({k:'op2',x:(o.x+.5)*T,y:(o.y+.5)*T,n:facName221(o.fac,LANG=='hu'?1:0),fac:o.fac})}}}catch(e){}return r}}
+{const mi=markIcon;markIcon=function(m,X,Y,now,big){if(m.k=='rs'){Q(X-3,Y+3,7,1,'#000');Q(X,Y-6,1,9,'#c8ced4');Q(X-2,Y-3,5,1,'#9aa0a6');Q(X-3,Y,7,1,'#9aa0a6');if(m.on&&Math.floor(now/600)%2)Q(X-1,Y-8,3,2,'#ff3a2a');else Q(X-1,Y-8,3,2,m.on?'#7a2a2a':'#4a4e54');return}
+ if(m.k=='op2'){const c=(typeof FAC200!='undefined'&&FAC200[m.fac])?FAC200[m.fac].c:'#ccc';Q(X-3,Y-5,1,9,'#222');Q(X-2,Y-5,5,4,c);Q(X-2,Y-5,5,1,'#fff');return}
+ return mi.apply(this,arguments)}}
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
