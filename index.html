@@ -13563,6 +13563,120 @@ mfCat211.__r=1;{const mc=mfCat211;mfCat211=function(k){return(k=='rs'||k=='op2')
  if(m.k=='op2'){const c=(typeof FAC200!='undefined'&&FAC200[m.fac])?FAC200[m.fac].c:'#ccc';Q(X-3,Y-5,1,9,'#222');Q(X-2,Y-5,5,4,c);Q(X-2,Y-5,5,1,'#fff');return}
  return mi.apply(this,arguments)}}
 
+/* ===== v222: running Menedék. The leader's council table: see how the camp stands (food, wood, stone, scrap, morale, people), hand in goods,
+   decide how the residents work (farmers, builders, gatherers, medics) and what to build next (well, farm, houses, storehouse, a bigger guard,
+   infirmary, reinforced palisade). Every dawn the camp lives a day: it eats, gathers, builds, grows or shrinks — and things happen. ===== */
+GAMEV=237;
+const MGN222={food:['Élelem','Food'],wood:['Fa','Wood'],stone:['Kő','Stone'],scrap:['Fém','Scrap']};
+const MGJ222={farm:['Gazda','Farmer'],build:['Építő','Builder'],scav:['Gyűjtögető','Gatherer'],med:['Ápoló','Medic']};
+const PRJ222={well:{n:['Kút','Well'],c:{wood:20,stone:30},d:2,max:1,i:['morál +8','morale +8']},farm:{n:['Gazdaság bővítése','Farm expansion'],c:{wood:30,stone:10},d:3,max:3,i:['több élelem','more food']},
+ house:{n:['Új házak (+4 lakó)','Houses (+4 people)'],c:{wood:40,stone:20},d:3,max:3,i:['+4 férőhely','+4 beds']},store:{n:['Raktár','Storehouse'],c:{wood:30,stone:40},d:3,max:1,i:['több anyag','more material']},
+ tower:{n:['Őrség bővítése','Bigger guard'],c:{scrap:30,stone:30},d:4,max:1,i:['+4 őr','+4 guards']},infirm:{n:['Gyengélkedő','Infirmary'],c:{wood:30,scrap:20},d:3,max:1,i:['ingyen gyógyítás','free healing']},
+ wall:{n:['Fal erősítése','Reinforced palisade'],c:{wood:60,stone:50},d:5,max:1,i:['kevesebb kár','less raid damage']}};
+const FD222={canned:3,cooked:3,bread:3,soup:4,meat:1,fish:1,berry:1,carrot:1,potato:1,wheat:1,corn:1};
+let MG222=null;
+function mgNew222(){return{food:80,wood:30,stone:25,scrap:20,morale:60,day:day,jobs:{farm:3,build:2,scav:3,med:1},lv:{well:0,farm:0,house:0,store:0,tower:0,infirm:0,wall:0},proj:null,fields:[],last:null}}
+const mgRes222=()=>CMP218?CMP218.pop.filter(n=>n.cj=='res'):[];
+const mgCap222=()=>14+4*(MG222?MG222.lv.house:0);
+function mgJobs222(){const m=MG222,r=mgRes222().length;let t=0;for(const k in MGJ222)t+=m.jobs[k]|0;while(t>r){let b=null;for(const k in MGJ222)if((m.jobs[k]|0)>0&&(!b||m.jobs[k]>m.jobs[b]))b=k;if(!b)break;m.jobs[b]--;t--}return{free:r-t,total:r}}
+const mgCost222=(k)=>{const p=PRJ222[k],f=1+(MG222.lv[k]|0)*.5,o={};for(const x in p.c)o[x]=Math.round(p.c[x]*f);return o};
+const mgTxt222=(o)=>Object.entries(o).map(([k,v])=>v+' '+MGN222[k][LANG=='hu'?0:1].toLowerCase()).join(', ');
+function mgEnsure222(){if(CMP218&&!MG222)MG222=mgNew222();return !!(CMP218&&MG222)}
+/* --- save / load / new world --- */
+function mgSave222(){try{if(MG222)localStorage.setItem(SKEY()+'_mgt',JSON.stringify(MG222));else localStorage.removeItem(SKEY()+'_mgt')}catch(e){}}
+{const sv=save;save=function(){const r=sv.apply(this,arguments);mgSave222();return r}}
+{const ld=load;load=function(){MG222=null;const r=ld.apply(this,arguments);try{if(r&&CMP218){const s=localStorage.getItem(SKEY()+'_mgt');MG222=s?JSON.parse(s):mgNew222();if(MG222.day==null)MG222.day=day}}catch(e){MG222=null}return r}}
+{const in_=init;init=function(...a){MG222=null;const r=in_.apply(this,a);try{if(CMP218)MG222=mgNew222()}catch(e){}return r}}
+/* --- a day in the camp --- */
+function mgSay222(t,s,c){try{toast112(t,s||'',c)}catch(e){}}
+function mgDawn222(){const c=CMP218,m=MG222,h=LANG=='hu';if(!c||!m)return;const J=mgJobs222(),res=J.total,popT=c.pop.length;const lv=m.lv;
+ const farm=Math.min(m.jobs.farm|0,res),scav=m.jobs.scav|0,bld=m.jobs.build|0,med=m.jobs.med|0;
+ const prod=farm*(4+2*lv.farm),cons=Math.ceil(popT*.25);m.food+=prod-cons;let starve=false;if(m.food<0){m.food=0;starve=true}
+ const gw=scav*(3+(lv.store?1:0)),gs=scav*(2+(lv.store?1:0)),gc=scav*(1+(lv.store?1:0));m.wood+=gw;m.stone+=gs;m.scrap+=gc;
+ let msg=[],mor=0;
+ if(scav>0&&Math.random()<.1){mor-=3;msg.push(h?'Egy gyűjtögető megsérülve tért vissza':'A gatherer came back hurt')}
+ if(m.proj){m.proj.left-=1+bld*.5;if(m.proj.left<=0)mgComplete222(m.proj.k)}
+ /* events */
+ if(Math.random()<.3){const e=Math.floor(Math.random()*5);
+  if(e==0){if(lv.wall){msg.push(h?'Fertőzöttek támadták a falat — a palánk kitartott':'Infected hit the wall — the palisade held')}else{mor-=8;m.food=Math.max(0,m.food-10);msg.push(h?'Fertőzöttek törtek be a raktárhoz: -10 élelem':'Infected raided the stores: -10 food')}}
+  else if(e==1){m.wood+=10;m.stone+=10;m.scrap+=5;msg.push(h?'Vándor kereskedő járt itt: +10 fa, +10 kő, +5 fém':'A wandering trader visited: +10 wood, +10 stone, +5 scrap')}
+  else if(e==2){if(!lv.infirm&&med<1){mor-=5;msg.push(h?'Láz terjed a táborban':'A fever spreads in camp')}else msg.push(h?'Az ápolók megfékezték a lázat':'The medics stopped a fever')}
+  else if(e==3){if(farm>=2){m.food+=15;msg.push(h?'Jó termés: +15 élelem':'Good harvest: +15 food')}}
+  else if(e==4){if(m.morale<55){mor-=3;msg.push(h?'Civakodás a lakók között':'Quarrelling among the residents')}}}
+ /* morale drifts towards what the camp deserves */
+ const gd=cmpGuards218().length,cap=mgCap222();let tg=40+(m.food>=popT?15:m.food>0?0:-25)+(lv.well?8:0)+(lv.infirm?5:0)+(res<=cap?5:-10)+(gd>=21?5:0)+(gd>=25?5:0)+Math.round((c.rep|0)/10)+(lv.wall?3:0)+(med>0?3:0);
+ m.morale=Math.max(0,Math.min(100,Math.round(m.morale+(tg-m.morale)*.3+mor)));
+ /* people come, people leave */
+ if(m.morale>=70&&m.food>=popT*4&&res<cap&&Math.random()<.4){mgArrive222();msg.push(h?'Új lakó érkezett a táborba':'A new resident arrived at camp')}
+ else if(starve||m.morale<20){if(res>6&&Math.random()<.4){const n=mgRes222().pop();if(n){const i=NPCS.indexOf(n);if(i>=0)NPCS.splice(i,1);c.pop.splice(c.pop.indexOf(n),1);msg.push(h?'Egy lakó elhagyta a tábort':'A resident left the camp');m.morale=Math.max(0,m.morale-4)}}}
+ mgJobs222();m.last={d:day,prod,cons,gw,gs,gc,msg};
+ if(msg.length)mgSay222(h?'Menedék — '+day+'. nap':'Haven — day '+day,msg[0],m.morale<30?'#e08080':'#d8b070')}
+function mgArrive222(){const c=CMP218,g=c.gates[Math.floor(Math.random()*c.gates.length)],sx=Math.random()<.5?'f':'m';const n=cmpNpc218('res',sx,g.x,g.y,6,{});n.hx=(c.X+27)*T+(Math.random()-.5)*160;n.hy=(c.Y+27)*T+(Math.random()-.5)*160;n.wr=6;return n}
+{const u=update;update=function(dt){const r=u.apply(this,arguments);try{if(state=='play'&&!inD&&mgEnsure222()){let k=0;while(MG222.day<day&&k<5){MG222.day++;k++;mgDawn222()}if(MG222.day<day)MG222.day=day}}catch(e){}return r}}
+/* --- building --- */
+function mgFree222(i){return !ob[i]&&WALKM(map[i])}
+function mgPlaceFP222(t,x,y,w,h){const c=CMP218;for(let yy=0;yy<h;yy++)for(let xx=0;xx<w;xx++)if(!mgFree222((c.Y+y+yy)*W+c.X+x+xx))return false;try{setFP(t,c.X+x,c.Y+y,w,h);return true}catch(e){return false}}
+function mgFields222(){const c=CMP218,X=c.X,Y=c.Y,C=[],mk=(x,y,w,h,v)=>C.push({x,y,w,h,v});
+ for(let o=-4;o<=48;o+=6){mk(X+o,Y-9,8,5,0);mk(X+o,Y+58,8,5,0);mk(X-10,Y+o,5,8,1);mk(X+59,Y+o,5,8,1)}
+ const cor=[[X+15,Y-9,X+22,Y],[X+31,Y+53,X+38,Y+64],[X-9,Y+15,X,Y+22],[X+53,Y+31,X+64,Y+38]];
+ const ok=C.filter(r=>!cor.some(q=>r.x<q[2]&&r.x+r.w>q[0]&&r.y<q[3]&&r.y+r.h>q[1])).map(r=>{let bad=0;for(let yy=r.y;yy<r.y+r.h;yy++)for(let xx=r.x;xx<r.x+r.w;xx++){if(xx<3||yy<3||xx>=W-3||yy>=H-3){bad+=99;continue}const i=yy*W+xx,m=map[i],o=ob[i];if(!(m==0||m==2||m==4))bad++;else if(o&&!RNAT220[o.t])bad++}r.bad=bad;return r}).filter(r=>r.bad<=6).sort((a,b)=>a.bad-b.bad),out=[];
+ for(const r of ok){if(out.length>=3)break;if(!out.some(q=>r.x<q.x+q.w+1&&r.x+r.w+1>q.x&&r.y<q.y+q.h+1&&r.y+r.h+1>q.y))out.push(r)}return out}
+const CK222=['wheat','carrot','potato','corn'];
+function mgPlant222(r){const cks=CK222.filter(k=>CROPS[k]);for(let yy=r.y;yy<r.y+r.h;yy++)for(let xx=r.x;xx<r.x+r.w;xx++){const i=yy*W+xx,m=map[i];if(!(m==0||m==2||m==4))continue;const o=ob[i];if(o){if(!RNAT220[o.t])continue;try{rmObj(o.pm!=null?o.pm:i)}catch(e){}ob[i]=null}map[i]=4;
+  const lane=r.v?(xx-r.x):(yy-r.y);if(lane%2==0)ob[i]={t:'crop',k:cks[(r.x+r.y>>2)%cks.length],pt:gtime()-60,cmp222:1}}}
+/* the camp's own fields: picking them is theft, and they grow back */
+{const hv=harvest;harvest=function(o,bed,i){const camp=!bed&&o&&o.cmp222&&!o.dead&&MG222;const k=o&&o.k;const r=hv.apply(this,arguments);if(camp){try{ob[i]={t:'crop',k,pt:gtime(),cmp222:1};MG222.food=Math.max(0,MG222.food-1);if(CMP218)CMP218.rep=Math.max(0,(CMP218.rep|0)-1)}catch(e){}}return r}}
+function mgBuild222(k,l){const c=CMP218,m=MG222;
+ if(k=='well'){for(const[tx,ty]of[[17,25],[17,27],[20,24],[17,23]]){const i=(c.Y+ty)*W+c.X+tx;if(mgFree222(i)){ob[i]={t:'well'};break}}}
+ else if(k=='house'){const P_=[[7,2],[10,2],[13,2],[28,2],[31,2],[34,2]];for(let q=0;q<2;q++){const p=P_[(l-1)*2+q];if(p)mgPlaceFP222({t:'ctent',c:(l+q)%3,fw:2,fh:1},p[0],p[1],2,1)}}
+ else if(k=='store'){for(const[tx,ty]of[[33,22],[33,23],[34,22],[34,23]]){const i=(c.Y+ty)*W+c.X+tx;if(mgFree222(i))ob[i]={t:'fcrate'}}}
+ else if(k=='farm'){const F=m.fields.length?m.fields:(m.fields=mgFields222());const r=F[l-1];if(r){r.done=1;mgPlant222(r)}}
+ else if(k=='tower'){const rs={x:c.rest.x,y:c.rest.y};for(let sh=0;sh<2;sh++)for(const pi of[2,6]){const pp=c.pat[pi];cmpNpc218('guard',Math.random()<.3?'f':'m',pp.x,pp.y,.01,{sh218:sh,pat218:1,pi218:pi,rs218:rs,c:cmpUni218(lookFor('m'),0,3,2)})}}}
+function mgComplete222(k){const m=MG222,p=PRJ222[k],h=LANG=='hu';m.lv[k]=(m.lv[k]|0)+1;m.proj=null;try{mgBuild222(k,m.lv[k])}catch(e){console.warn('mgBuild',e)}
+ mgSay222(h?'Elkészült: '+p.n[0]:'Finished: '+p.n[1],p.i[h?0:1],'#9be07d');try{snd('craft')}catch(e){}try{gainXp(30)}catch(e){}}
+/* --- the camp line, painted after the movable panels have been put down (so it never gets carried off with one) --- */
+function mgHud222(){if(!(MG222&&CMP218&&cmpIn218(P.x,P.y,0)&&!uiOpen211()&&!inD))return;const m=MG222,h=LANG=='hu',J=mgJobs222();noTr=true;g.font=fnt(0,8);
+ const s=MGN222.food[h?0:1]+' '+m.food+'   '+MGN222.wood[h?0:1]+' '+m.wood+'   '+MGN222.stone[h?0:1]+' '+m.stone+'   '+MGN222.scrap[h?0:1]+' '+m.scrap+'   '+(h?'Morál ':'Morale ')+m.morale+'%   '+(h?'Lakó ':'Pop ')+J.total+'/'+mgCap222();
+ const w=Math.min(250,Math.round(s.length*4.3+14)),x=Math.round(VW/2-w/2),y=CMP218.job?32:17;Q(x,y,w,11,'rgba(12,11,9,.62)');Q(x,y,w,1,'#c8a050');txt(s,x+w/2,y+9,m.morale<30?'#f0a0a0':'#f0e6b8','center');
+ if(m.proj){const t=(h?'Épül: ':'Building: ')+PRJ222[m.proj.k].n[h?0:1]+' — '+Math.max(0,Math.ceil(m.proj.left))+(h?' nap':' d'),w2=Math.round(t.length*4.3+14);Q(Math.round(VW/2-w2/2),y+12,w2,10,'rgba(12,11,9,.55)');txt(t,VW/2,y+20,'#c8e0a0','center')}noTr=false}
+{const dr=draw;draw=function(){const r=dr.apply(this,arguments);try{if(state=='play')mgHud222()}catch(e){noTr=false}return r}}
+/* --- the council table: leader's talk --- */
+{const to=talkOpts;talkOpts=function(){const n=TALK&&TALK.n,sub=TALK&&TALK.sub;
+ if(n&&n.cj=='leader'&&sub&&String(sub).startsWith('mg')&&mgEnsure222()){const m=MG222,h=LANG=='hu',bk={k:'mg_back',l:both('Vissza','Back')};
+  if(sub=='mg')return[{k:'mg_stat',l:both('Hogy állunk?','How do we stand?')},{k:'mg_proj',l:both('Fejlesztések','Projects')},{k:'mg_job',l:both('Munkaerő beosztása','Assign the workforce')},{k:'mg_don',l:both('Adomány a tábornak','Donate to the camp')},{k:'mg_x',l:both('Mégsem','Never mind')}];
+  if(sub=='mgp'){const L=Object.keys(PRJ222).map(k=>{const p=PRJ222[k],lv=m.lv[k]|0,done=lv>=p.max;return{k:'mgp_'+k,l:p.n[h?0:1]+(p.max>1?' '+lv+'/'+p.max:'')+(done?(h?' ✔':' ✔'):' — '+mgTxt222(mgCost222(k)))}});L.push(bk);return L}
+  if(sub=='mgj'){const L=Object.keys(MGJ222).map(k=>({k:'mgj_'+k,l:MGJ222[k][h?0:1]+': '+(m.jobs[k]|0)+'  (+1)'}));L.push({k:'mgj_reset',l:both('Alaphelyzet','Reset')});L.push(bk);return L}
+  if(sub=='mgd'){const L=Object.keys(MGN222).map(k=>({k:'mgd_'+k,l:both(MGN222[k][0]+' — 10 egység átadása',MGN222[k][1]+' — hand over 10')}));L.push(bk);return L}}
+ let o=to.apply(this,arguments);if(n&&n.cj=='leader'&&!sub){const i=o.findIndex(q=>q.k=='bye');o.splice(i<0?o.length:i,0,{k:'mg',l:both('Tanács: fejlesztés, beosztás','Council: build, assign')})}return o}}
+function mgGive222(k,n){let got=0;const m=MG222;
+ if(k=='food'){const ks=Object.keys(FD222).sort((a,b)=>FD222[b]-FD222[a]);for(const it of ks){while(got<n&&(inv[it]|0)>0&&got+FD222[it]<=n+2){inv[it]--;got+=FD222[it]}if(got>=n)break}}
+ else{const it=k=='scrap'?'iron':k;const q=Math.min(n,inv[it]|0);inv[it]-=q;got=q}
+ if(got>0){m[k]+=got;try{CMP218.rep=Math.min(100,(CMP218.rep|0)+Math.max(1,Math.round(got/10)))}catch(e){}}return got}
+{const tp=talkPick;talkPick=function(i){const n=TALK&&TALK.n;if(!n||n.cj!='leader'||!mgEnsure222())return tp.apply(this,arguments);const o=talkOpts()[i];if(!o)return tp.apply(this,arguments);const k=o.k,m=MG222,h=LANG=='hu',sub=n&&TALK.sub;
+ const to_=(s,say_)=>{TALK.sub=s;TALK.sel=0;try{snd('ui')}catch(e){}if(say_)talkSay(say_)};
+ if(k=='mg'){to_('mg',both('A tanács asztalánál ülünk. Mit szeretnél megbeszélni?','We are at the council table. What shall we discuss?'));return}
+ if(k=='mg_x'){TALK.sub=null;TALK.sel=0;talkSay(both('Ahogy gondolod.','As you like.'));return}
+ if(k=='mg_back'){to_(sub=='mg'?null:'mg',both('Rendben.','All right.'));return}
+ if(k=='mg_stat'){const J=mgJobs222(),L=m.last,bal=L?(L.prod-L.cons):0;try{snd('ui')}catch(e){}
+  talkSay(both('Lakók '+J.total+'/'+mgCap222()+', őr '+cmpGuards218().length+'. Élelem '+m.food+' ('+(bal>=0?'+':'')+bal+'/nap), morál '+m.morale+'%. Szabad munkaerő: '+J.free+'.'+(m.proj?' Építés: '+PRJ222[m.proj.k].n[0]+' ('+Math.max(0,Math.ceil(m.proj.left))+' nap).':''),'People '+J.total+'/'+mgCap222()+', guards '+cmpGuards218().length+'. Food '+m.food+' ('+(bal>=0?'+':'')+bal+'/day), morale '+m.morale+'%. Free workers: '+J.free+'.'+(m.proj?' Building: '+PRJ222[m.proj.k].n[1]+' ('+Math.max(0,Math.ceil(m.proj.left))+' days).':'')));return}
+ if(k=='mg_proj'){to_('mgp',both('Mit építsünk? A költséget a tábor raktárából fizetjük.','What shall we build? We pay from the camp stores.'));return}
+ if(k=='mg_job'){to_('mgj',both('A lakók közül hány ki dolgozzon hol? A gazdák élelmet, a gyűjtögetők anyagot hoznak, az építők gyorsítják a munkát.','How should the residents work? Farmers bring food, gatherers bring material, builders speed up construction.'));return}
+ if(k=='mg_don'){to_('mgd',both('Minden adomány segít. A hírneved is nő tőle.','Every gift helps. Your standing grows too.'));return}
+ if(k.startsWith('mgp_')){const pk=k.slice(4),p=PRJ222[pk];if(!p)return;const lv=m.lv[pk]|0;try{snd('ui')}catch(e){}
+  if(lv>=p.max){talkSay(both('Ez már kész.','That is already finished.'));return}if(m.proj){talkSay(both('Már épül valami: '+PRJ222[m.proj.k].n[0]+'.','Something is already under construction: '+PRJ222[m.proj.k].n[1]+'.'));return}
+  const c=mgCost222(pk),miss=Object.entries(c).filter(([x,v])=>m[x]<v);if(miss.length){talkSay(both('Nincs elég a raktárban. Kell: '+mgTxt222(c)+'. Hozz adományt vagy küldj gyűjtögetőt.','Not enough in stores. Needs: '+mgTxt222(c)+'. Donate or send gatherers.'));return}
+  if(pk=='farm'&&!(m.fields.length?m.fields:(m.fields=mgFields222())).filter(r=>!r.done).length){talkSay(both('Nincs több szabad föld a falakon kívül.','No more open land outside the walls.'));return}
+  for(const x in c)m[x]-=c[x];m.proj={k:pk,left:p.d};const bld=m.jobs.build|0;talkSay(both('Megkezdtük: '+p.n[0]+'. Kb. '+Math.ceil(p.d/(1+bld*.5))+' nap.','We have begun: '+p.n[1]+'. About '+Math.ceil(p.d/(1+bld*.5))+' days.'));return}
+ if(k.startsWith('mgj_')){const jk=k.slice(4);try{snd('ui')}catch(e){}if(jk=='reset'){m.jobs={farm:3,build:2,scav:3,med:1};mgJobs222();talkSay(both('Visszaállítottam az alapbeosztást.','Back to the default roster.'));return}
+  const J=mgJobs222();if(J.free>0)m.jobs[jk]=(m.jobs[jk]|0)+1;else{let b=null;for(const q in MGJ222)if(q!=jk&&(m.jobs[q]|0)>0&&(!b||m.jobs[q]>m.jobs[b]))b=q;if(b){m.jobs[b]--;m.jobs[jk]=(m.jobs[jk]|0)+1}}
+  talkSay(both(MGJ222[jk][0]+': '+m.jobs[jk]+'. Szabad: '+mgJobs222().free+'.',MGJ222[jk][1]+': '+m.jobs[jk]+'. Free: '+mgJobs222().free+'.'));return}
+ if(k.startsWith('mgd_')){const dk=k.slice(4);const got=mgGive222(dk,10);try{snd(got?'pick':'ui')}catch(e){}talkSay(got?both('Köszönjük! +'+got+' '+MGN222[dk][0].toLowerCase()+' a raktárban.','Thank you! +'+got+' '+MGN222[dk][1].toLowerCase()+' in the stores.'):both('Nincs nálad ilyesmi.','You have none of that.'));return}
+ /* the infirmary heals for free */
+ if(k=='heal'&&m.lv.infirm){}
+ return tp.apply(this,arguments)}}
+/* the infirmary: free healing at the nurse */
+{const tp=talkPick;talkPick=function(i){const n=TALK&&TALK.n;if(n&&n.cj=='nurse'&&MG222&&MG222.lv.infirm){const o=talkOpts()[i];if(o&&o.k=='heal'){try{snd('ui')}catch(e){}if(P.hp>=99&&!(P.inf>0)){talkSay(both('Jól nézel ki, nincs mit gyógyítani.','You look fine — nothing to heal.'));return}P.hp=100;if(P.inf>0)P.inf=0;try{snd('pick')}catch(e){}talkSay(both('A gyengélkedő ingyen ápol. Kész.','The infirmary treats you free of charge. Done.'));return}}return tp.apply(this,arguments)}}
+
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
  if(state=='title')menu();if(state=='opts')optsMenu();if(state=='sndo')sndMenu();if(state=='gfxo')gfxMenu();if(state=='slots')svMenu();if(state=='keys')keysMenu();if(state=='wthr')wthrMenu();if(state=='char')charMenu();if(state=='lobby')drawLobby();if(state=='hb'){Q(0,0,VW,VH,'rgba(6,10,6,.6)');drawHB()}if(0)title('ASHFALL',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Hold the fire. Survive the nights.','','WASD move \u2022 Space chop / fish / attack \u2022 Tab recipes','Press any key']);
