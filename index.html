@@ -13088,6 +13088,175 @@ function frmDraw217(z){const f=z.f217,x=z.x-cam.x,y=z.y-cam.y,t=performance.now(
 {const d217=drawZ;drawZ=function(z){if(z.f217){let ok=1;try{frmDraw217(z)}catch(e){ok=0}if(ok)return}return d217.apply(this,arguments)}}
 HU.unshift(['Crawler','Kúszó'],['Tentacled','Csápos'],['Turned-out','Kifordult'],['Blind one','Vak']);
 
+/* ===== v218: HAVEN (Menedék) — the big walled camp in the forest. A palisade with four gates and four watchtowers, streets, a market,
+   a hospital, a barracks with a fire for the off-duty guards, a workshop, a hall, houses. Two guard shifts (day / night) change over at
+   dusk and dawn, the guards shoot the infected that come near the walls, and no infected spawn inside. Talk to a guard for work:
+   gate watch, patrol, clearing — paid in goods and standing. ===== */
+GAMEV=233;
+let CMP218=null;
+const SUR218=['Kovács','Nagy','Szabó','Tóth','Varga','Kiss','Horváth','Molnár','Németh','Farkas','Balogh','Papp','Takács','Juhász','Lakatos','Mészáros','Oláh','Simon','Rácz','Fehér','Gál','Bodnár','Pál','Szalai'];
+SOLID.cwall=SOLID.cpost=SOLID.ctow=SOLID.p_ctow=1;
+Object.assign(NMX,{cwall:'palisade',cpost:'gate post',ctow:'watchtower'});HU.unshift(['palisade','cölöpfal'],['gate post','kapuoszlop'],['watchtower','őrtorony']);
+/* --- sprites --- */
+DRAWX.cwall=function(o,x,y){const tx=Math.round(x/T),ty=Math.round(y/T);W_(x,y+13,16,4,'rgba(0,0,0,.32)');
+ for(let i=0;i<4;i++){const hh=21-((tx*3+ty*5+i*7)%3)*2,lx=x+i*4,y0=y+16-hh;W_(lx,y0+2,4,hh-2,'#7a5636');W_(lx,y0+2,1,hh-2,'#93703f');W_(lx+3,y0+2,1,hh-2,'#563a22');W_(lx+1,y0,2,2,'#93703f');W_(lx+1,y0+1,2,1,'#b08850')}
+ W_(x,y+6,16,2,'#3a2a1a');W_(x,y+6,16,1,'#5a4630');W_(x,y+12,16,1,'#3a2a1a')};
+DRAWX.cpost=function(o,x,y){const t=performance.now(),f=Math.floor(t/110+x)%3,dk=Math.min(1,Math.max(0,typeof dark=='function'?dark():0));
+ if(dk>.05){g.save();g.globalCompositeOperation='lighter';const gx=x-cam.x+13,gy=y-cam.y-8,gr=g.createRadialGradient(gx,gy,2,gx,gy,52);gr.addColorStop(0,'rgba(255,150,50,'+(.5*dk).toFixed(2)+')');gr.addColorStop(1,'rgba(255,150,50,0)');g.fillStyle=gr;g.fillRect(gx-56,gy-56,112,112);g.restore()}
+ W_(x+2,y+13,12,4,'rgba(0,0,0,.35)');W_(x+5,y-12,6,28,'#6a4a2a');W_(x+5,y-12,1,28,'#8a6a3c');W_(x+10,y-12,1,28,'#4a3018');W_(x+4,y-14,8,3,'#563a22');W_(x+6,y-16,4,2,'#7a5636');
+ W_(x+10,y-5,4,2,'#3a2a1a');W_(x+11,y-9,3,5,'#3a2a1a');W_(x+11,y-13-f,3,5+f,'#e86a1a');W_(x+12,y-12-f,1,3+f,'#ffd04a')};
+BIG.ctow=function(o,x,y){W_(x+1,y+26,32,8,'rgba(0,0,0,.3)');
+ for(const lx of[x+3,x+25]){W_(lx,y+8,4,24,'#5a3d24');W_(lx,y+8,1,24,'#7a5636')}W_(x+7,y+20,18,2,'#4a3018');W_(x+9,y+14,2,6,'#4a3018');W_(x+21,y+14,2,6,'#4a3018');
+ W_(x,y+3,32,6,'#8a6a3c');W_(x,y+3,32,1,'#b08850');W_(x,y+8,32,1,'#4a3018');for(let i=0;i<8;i++)W_(x+1+i*4,y+4,1,4,'#6a4a2a');
+ W_(x+3,y-10,2,14,'#5a3d24');W_(x+27,y-10,2,14,'#5a3d24');W_(x+4,y-4,24,1,'#6a4a2a');W_(x+4,y-1,24,1,'#6a4a2a');
+ W_(x-1,y-14,34,3,'#6a3a2a');W_(x+3,y-18,26,4,'#7a4634');W_(x+8,y-21,16,3,'#8a5240');W_(x-1,y-14,34,1,'#8a5240');
+ W_(x+8,y+24,16,6,'#8a7a50');W_(x+8,y+24,16,1,'#a8986a');W_(x+12,y+9,3,3,'#e86a1a');W_(x+13,y+8,1,2,'#ffd04a')};
+/* --- the camp --- */
+function cmpName218(sx){const used=new Set((CMP218&&CMP218.names)||[]);let nm='';for(let k=0;k<80;k++){const fn=(sx=='f'?NMF:NMM)[Math.floor(R()*NMF.length)];nm=SUR218[Math.floor(R()*SUR218.length)]+' '+fn;if(!used.has(nm))break}used.add(nm);CMP218.names=[...used];return nm}
+function cmpUni218(code,sh,pn,ac){const a=String(code).split('');a[3]=String(sh);a[4]=String(pn);a[5]=String(ac);return a.join('')}
+function cmpNpc218(cj,sx,px,py,wr,extra){const n=Object.assign({x:px,y:py,hx:px,hy:py,wr,c:lookFor(sx),nm:cmpName218(sx),sx,tr:Math.floor(R()*TRD.length),g:Math.floor(R()*NPCL.en.length),kn:0,fr:0,cj},extra||{});NPCS.push(n);CMP218.pop.push(n);return n}
+/* a site for the camp: land of the biome with the fewest things in the way (ruins, huts and loose walls are cleared away, whole buildings
+   included; mines, hatches, shrines and the like are never touched), near-ish the start but not on it */
+const CKEEP218={hatch:1,adit:1,kzstair:1,rvgate:1,rvshrine:1,dstat:1,opost:1,reactor:1,ctower:1,stack:1,tower:1,wtower:1},CWALK218={0:1,2:1,3:1,4:1,6:1,12:1,14:1,15:1,16:1,17:1,18:1,20:1,24:1};
+function cmpSpot218(b,TW,TH){const cand=[];for(let y=12;y<H-TH-14;y+=3)for(let x=12;x<W-TW-14;x+=3){const c=(y+(TH>>1))*W+x+(TW>>1);if(bm[c]!=b)continue;const d=Math.hypot(x+TW/2-SX,y+TH/2-SY);if(d<40)continue;if(RIC&&Math.hypot(x+TW/2-RIC[0],y+TH/2-RIC[1])<RIC[2]+22)continue;cand.push([x,y,d])}
+ for(let k=cand.length-1;k>0;k--){const j=Math.floor(R()*(k+1));[cand[k],cand[j]]=[cand[j],cand[k]]}const N=(TW+4)*(TH+4),NAT={tree:1,rock:1,bush:1,flax:1,cactus:1,tgrass:1,shrub:1,flower:1,jbush:1,sdrift:1,reed:1,fosl:1,tires:1,chopblk:1};let best=null,bs=1e9;
+ for(const[x,y,d]of cand.slice(0,1400)){let sc=0,ok=true,own=0,bad=0;for(let yy=y-2;yy<y+TH+2&&ok;yy++)for(let xx=x-2;xx<x+TW+2&&ok;xx++){const i=yy*W+xx,m=map[i],o=ob[i];if(o){const t=o.pm!=null&&ob[o.pm]?ob[o.pm].t:o.t;if(CKEEP218[t])ok=false;else if(!NAT[t]&&!SOFT105[t])sc++}
+   if(m==9||m==10||m==11)ok=false;if(!CWALK218[m])if(++bad>N*.14)ok=false;if(bm[i]==b)own++}
+  if(!ok||own<N*.7)continue;if(NPCS.some(n=>Math.abs(n.hx/T-x-TW/2)<TW/2+8&&Math.abs(n.hy/T-y-TH/2)<TH/2+8))continue;if(TOWNS105.some(t=>Math.hypot(t.x-x,t.y-y)<45))continue;
+  const bl=BLD.filter(q=>q.x<x+TW+3&&q.x+q.w>x-3&&q.y<y+TH+3&&q.y+q.h>y-3);if(bl.some(q=>q.rf=='police'||q.rf=='lab'||q.sd))continue;sc+=bl.length*40+Math.abs(d-90)*.4;if(sc<bs){bs=sc;best=[x,y,bl];if(sc<25)break}}
+ return best}
+function cmpDiag218(b){const TW=54,TH=54,N=(TW+4)*(TH+4),rej={},NAT={tree:1,rock:1,bush:1,flax:1,cactus:1,tgrass:1,shrub:1,flower:1,jbush:1,sdrift:1,reed:1,fosl:1,tires:1,chopblk:1};let cands=0;
+ for(let y=12;y<H-TH-14;y+=3)for(let x=12;x<W-TW-14;x+=3){const c=(y+(TH>>1))*W+x+(TW>>1);if(bm[c]!=b){rej.bm=(rej.bm||0)+1;continue}cands++;let why='',own=0,bad=0;
+  for(let yy=y-2;yy<y+TH+2&&!why;yy++)for(let xx=x-2;xx<x+TW+2&&!why;xx++){const i=yy*W+xx,m=map[i],o=ob[i];if(o){const t=o.pm!=null&&ob[o.pm]?ob[o.pm].t:o.t;if(CKEEP218[t])why='keep:'+t}if(!why&&(m==9||m==10||m==11))why='water';if(!why&&!CWALK218[m])if(++bad>N*.06)why='bad';if(bm[i]==b)own++}
+  if(!why&&own<N*.7)why='own';const k=(why||'OK').split(':')[0];rej[k]=(rej[k]||0)+1}return {b,cands,rej,SX,SY,RIC,biome}}
+function cmpGen218(){let s=null,b2=0;const bb=biome==4?0:biome;for(const b of[bb,1,2,0]){if(b==3||b==null)continue;s=cmpSpot218(b,54,54);if(s){b2=b;break}}if(!s){try{window.CMPDIAG218=cmpDiag218(bb)}catch(e){}return}
+ const X=s[0],Y=s[1],e0=el?el[(Y+27)*W+X+27]:0;for(const q of s[2]||[]){for(let yy=q.y-1;yy<=q.y+q.h;yy++)for(let xx=q.x-1;xx<=q.x+q.w;xx++){if(xx<1||yy<1||xx>=W-1||yy>=H-1)continue;const i=yy*W+xx,o=ob[i];if(o){const ai=o.pm!=null?o.pm:i;try{rmObj(ai)}catch(e){}ob[i]=null}if(map[i]!=0&&map[i]!=2&&map[i]!=3&&map[i]!=14)map[i]=0;else map[i]=0}const k=BLD.indexOf(q);if(k>=0)BLD.splice(k,1)}
+ CMP218={X,Y,b:b2,pop:[],names:[],rep:0,job:null,jd:{},seen:0,known:0};
+ for(let yy=Y;yy<Y+54;yy++)for(let xx=X;xx<X+54;xx++){const i=yy*W+xx,o=ob[i];if(o){const ai=o.pm!=null?o.pm:i;try{rmObj(ai)}catch(e){}}ob[i]=null;map[i]=0;bm[i]=b2;if(el)el[i]=e0}
+ /* streets: everything inside the walls that is not a lot */
+ const LX=[X+5,X+21,X+37],LY=[Y+5,Y+21,Y+37],inLot=(xx,yy)=>LX.some(l=>xx>=l&&xx<l+12)&&LY.some(l=>yy>=l&&yy<l+12);
+ for(let yy=Y+2;yy<=Y+51;yy++)for(let xx=X+2;xx<=X+51;xx++)if(!inLot(xx,yy))map[yy*W+xx]=2;
+ /* approach paths outside the gates */
+ const G=[{k:'N',x:X+18,y:Y+1,w:2,h:1},{k:'S',x:X+34,y:Y+52,w:2,h:1},{k:'W',x:X+1,y:Y+18,w:1,h:2},{k:'E',x:X+52,y:Y+34,w:1,h:2}];
+ for(const q of G){for(let k=1;k<=7;k++)for(let a=0;a<(q.w>1?q.w:q.h);a++){const xx=q.k=='N'?q.x+a:q.k=='S'?q.x+a:q.k=='W'?q.x-k:q.x+k,yy=q.k=='W'||q.k=='E'?q.y+a:q.k=='N'?q.y-k:q.y+k;if(xx>0&&yy>0&&xx<W-1&&yy<H-1){const i=yy*W+xx;if(map[i]==0||map[i]==2){map[i]=2;ob[i]=null}}}}
+ /* lots */
+ const F={houses:bHouses,shop:bShop,police:bPolice,plaza:bPlaza,hospital:bHospital,fire:bFire,church:bChurch},K=[['houses','shop','houses'],['police','plaza','hospital'],['fire','church','houses']];
+ for(let j=0;j<3;j++)for(let i=0;i<3;i++){try{F[K[j][i]](LX[i],LY[j])}catch(e){console.warn('camp lot',K[j][i],e)}}
+ for(const[r,c,k]of[[LY[1]+10,LX[0]+6,20],[LY[2]+10,LX[0]+9,21],[LY[2]+9,LX[1]+6,22],[LY[0]+10,LX[1]+6,23]]){const d=ob[r*W+c];if(d&&d.t=='door')d.sh=k}
+ /* clear the streets: stalls and carts the lots put out in front */
+ for(let yy=Y+2;yy<=Y+51;yy++)for(let xx=X+2;xx<=X+51;xx++){if(inLot(xx,yy))continue;const i=yy*W+xx,o=ob[i];if(!o)continue;const ai=o.pm!=null&&ob[o.pm]?o.pm:i;if(ob[ai]&&ob[ai].t=='door')continue;try{rmObj(ai)}catch(e){}ob[i]=null}
+ /* the palisade, with gaps for the gates */
+ const x0=X+1,x1=X+52,y0=Y+1,y1=Y+52,isG=(xx,yy)=>(yy==y0&&(xx==X+18||xx==X+19))||(yy==y1&&(xx==X+34||xx==X+35))||(xx==x0&&(yy==Y+18||yy==Y+19))||(xx==x1&&(yy==Y+34||yy==Y+35));
+ const wall=(xx,yy)=>{if(!isG(xx,yy))ob[yy*W+xx]={t:'cwall',hp:9999,nb:1}};
+ for(let xx=x0;xx<=x1;xx++){wall(xx,y0);wall(xx,y1)}for(let yy=y0+1;yy<y1;yy++){wall(x0,yy);wall(x1,yy)}
+ for(const[xx,yy]of[[X+17,y0],[X+20,y0],[X+33,y1],[X+36,y1],[x0,Y+17],[x0,Y+20],[x1,Y+33],[x1,Y+36]])ob[yy*W+xx]={t:'cpost',hp:9999,nb:1};
+ const TW=[[x0,y0],[x1-1,y0],[x0,y1-1],[x1-1,y1-1]];
+ for(const[ax,ay]of TW){for(let a=0;a<2;a++)for(let c=0;c<2;c++)ob[(ay+a)*W+ax+c]=null;setFP({t:'ctow',hp:9999,nb:1},ax,ay,2,2)}
+ /* the rest fire for the off-duty guards, beside the barracks */
+ const rx=X+20,ry=LY[1]+6;ob[ry*W+rx]={t:'fire',on:true,fl:600};ob[(ry+1)*W+rx]={t:'fbarrel'};
+ for(const[lx,ly]of[[X+17,Y+17],[X+36,Y+17],[X+17,Y+36],[X+36,Y+36]])if(!ob[ly*W+lx])ob[ly*W+lx]={t:'slamp',b:1,fk:1};
+ /* where people stand */
+ const P=(tx,ty)=>({x:tx*T+8,y:ty*T+8});
+ CMP218.gates=G.map(q=>({k:q.k,x:(q.k=='N'||q.k=='S'?q.x+1:q.k=='W'?q.x:q.x)*T+(q.k=='N'||q.k=='S'?0:8),y:(q.k=='W'||q.k=='E'?q.y+1:q.y)*T+(q.k=='W'||q.k=='E'?0:8)}));
+ CMP218.gposts=[P(X+18.5,Y+3),P(X+34.5,Y+50),P(X+3,Y+18.5),P(X+50,Y+34.5)].map((p,i)=>({x:p.x,y:p.y}));
+ CMP218.tposts=[P(X+3,Y+3),P(X+49,Y+3),P(X+49,Y+49),P(X+3,Y+49)];
+ CMP218.rest=P(X+18.5,ry+.5);
+ const pt=[[9,3],[44,3],[49,9],[49,44],[44,49],[9,49],[3,44],[3,9]].map(q=>P(X+q[0],Y+q[1]));CMP218.pat=pt;
+ /* guards: two shifts of ten, plus the captain */
+ for(let sh=0;sh<2;sh++){for(let i=0;i<4;i++){const gp=CMP218.gposts[i];cmpNpc218('guard',R()<.3?'f':'m',gp.x,gp.y,.01,{sh218:sh,gp218:{x:gp.x,y:gp.y},rs218:{x:CMP218.rest.x,y:CMP218.rest.y},c:cmpUni218(lookFor('m'),0,3,2)})}
+  for(let i=0;i<4;i++){const tp=CMP218.tposts[i];cmpNpc218('guard',R()<.3?'f':'m',tp.x,tp.y,.01,{sh218:sh,gp218:{x:tp.x,y:tp.y},rs218:{x:CMP218.rest.x,y:CMP218.rest.y},c:cmpUni218(lookFor('m'),0,3,2)})}
+  for(let i=0;i<2;i++){const pi=i*4,pp=pt[pi];cmpNpc218('guard',R()<.3?'f':'m',pp.x,pp.y,.01,{sh218:sh,pat218:1,pi218:pi,rs218:{x:CMP218.rest.x,y:CMP218.rest.y},c:cmpUni218(lookFor('m'),0,3,2)})}}
+ const cap=P(LX[0]+7,LY[1]+11.5);cmpNpc218('guard','m',cap.x,cap.y,1.5,{cap218:1,c:cmpUni218(lookFor('m'),5,3,2)});
+ /* the people with a trade */
+ const hall=P(LX[1]+6.5,LY[2]+11.5),mkt=P(LX[1]+7.5,LY[0]+11.5),hos=P(LX[2]+6.5,LY[1]+11.5),wk=P(LX[0]+8.5,LY[2]+11.5);
+ cmpNpc218('leader','m',hall.x,hall.y,2,{c:cmpUni218(lookFor('m'),4,0,0)});cmpNpc218('trader',R()<.5?'f':'m',mkt.x,mkt.y,2,{});cmpNpc218('nurse','f',hos.x,hos.y,2,{c:cmpUni218(lookFor('f'),4,0,0)});cmpNpc218('smith','m',wk.x,wk.y,2,{});
+ const mid=P(X+27,Y+27);for(let k=0;k<14;k++){const a=R()*6.28,r=3+R()*7;cmpNpc218('res',R()<.5?'f':'m',mid.x+Math.cos(a)*r*T,mid.y+Math.sin(a)*r*T,6,{})}
+ try{ROOFC.clear()}catch(e){}}
+{const gr218=genReactor;genReactor=function(...a){const r=gr218.apply(this,a);if(seeding&&!inD&&biome!=3)try{cmpGen218()}catch(e){console.warn('camp',e);CMP218=null}return r}}
+{const in218=init;init=function(...a){CMP218=null;return in218.apply(this,a)}}
+function cmpIn218(x,y,m){m=m||0;const c=CMP218;return !!c&&x>=(c.X-m)*T&&x<(c.X+54+m)*T&&y>=(c.Y-m)*T&&y<(c.Y+54+m)*T}
+/* --- who stands where: shifts, patrols, the rest fire --- */
+function cmpShift218(){return time<.5?0:1}
+function cmpGuards218(){return CMP218?CMP218.pop.filter(n=>n.cj=='guard'):[]}
+const CVL218=[3.5,19,35,50.5];
+/* the people of the camp walk along the streets (never straight through a house) and keep their own hours */
+function cmpRoute218(n,gx,gy){const c=CMP218,L=CVL218.map(v=>v*T+c.X*T),LH=CVL218.map(v=>v*T+c.Y*T),mn=(A,v)=>{let b=0,bd=1e9;A.forEach((q,i)=>{const d=Math.abs(q-v);if(d<bd){bd=d;b=i}});return[b,bd]};
+ const pr=(x,y)=>{const[i,dx]=mn(L,x),[j,dy]=mn(LH,y);return dx<=dy?{v:1,i,x:L[i],y}:{v:0,i:j,x,y:LH[j]}};
+ const a=pr(n.x,n.y),b=pr(gx,gy),w=[{x:a.x,y:a.y}];
+ if(!(a.v==b.v&&a.i==b.i)){if(a.v&&b.v){const j=mn(LH,a.y)[0];w.push({x:a.x,y:LH[j]},{x:b.x,y:LH[j]})}else if(!a.v&&!b.v){const j=mn(L,a.x)[0];w.push({x:L[j],y:a.y},{x:L[j],y:b.y})}else if(a.v)w.push({x:a.x,y:b.y});else w.push({x:b.x,y:a.y})}
+ w.push({x:b.x,y:b.y},{x:gx,y:gy});return w}
+function cmpWalk218(n,dt){const dp=Math.hypot(P.x-n.x,P.y-n.y);n.st=(n.st||0)-dt;
+ if(dp<26||n.st>0){n.mv=0;if(dp<60){const ax=P.x-n.x,ay=P.y-n.y;if(Math.abs(ax)>Math.abs(ay)){n.fx=Math.sign(ax);n.fy=0}else{n.fx=0;n.fy=Math.sign(ay)}}return}
+ const wp=n.wp218&&n.wp218.length?n.wp218:null;let tx,ty;
+ if(wp){tx=wp[0].x;ty=wp[0].y}else{n.t=(n.t||0)-dt;if(n.t<=0||n.tx==null){n.t=2+Math.random()*4;if(Math.random()<.35||!(n.wr>.05)){n.tx=null;n.mv=0;return}const a=Math.random()*6.28,r=Math.random()*n.wr*T;n.tx=n.hx+Math.cos(a)*r;n.ty=n.hy+Math.sin(a)*r}if(n.tx==null){n.mv=0;return}tx=n.tx;ty=n.ty}
+ const dx=tx-n.x,dy=ty-n.y,d=Math.hypot(dx,dy);if(d<(wp?5:4)){if(wp)wp.shift();else n.tx=null;n.mv=0;n.sk218=0;return}
+ const ox=n.x,oy=n.y,s=22*dt;mv(n,dx/d*s,dy/d*s,4);
+ if(Math.hypot(n.x-ox,n.y-oy)<s*.35){n.sk218=(n.sk218||0)+dt;n.mv=0;if(n.sk218>(wp?3:1.4)){n.sk218=0;if(wp){n.x=tx;n.y=ty;wp.shift()}else n.tx=null}return}
+ n.sk218=0;n.mv=1;n.an=(n.an||0)+dt*7;if(Math.abs(dx)>Math.abs(dy)){n.fx=Math.sign(dx);n.fy=0}else{n.fx=0;n.fy=Math.sign(dy)}}
+{const nt218=npcTick;npcTick=function(dt){const c=CMP218;if(!c||inD||!c.pop.length)return nt218.apply(this,arguments);const all=NPCS,set=new Set(c.pop);NPCS=all.filter(q=>!set.has(q));try{return nt218.apply(this,arguments)}finally{NPCS=all}}}
+{const jt218=jobTick105;jobTick105=function(dt){const c=CMP218;if(!c||inD||!c.pop.length)return jt218.apply(this,arguments);const all=NPCS,set=new Set(c.pop);NPCS=all.filter(q=>!set.has(q));try{return jt218.apply(this,arguments)}finally{NPCS=all}}}
+function cmpTick218(dt){const c=CMP218;if(!c)return;const sh=cmpShift218(),night=npcNight();
+ for(const n of c.pop){if(n.h0x===undefined){n.h0x=n.hx;n.h0y=n.hy;n.h0r=n.wr}
+  if(night&&(n.cj=='res'||n.cj=='trader'||n.cj=='smith')){n.sl=1;n.mv=0;continue}if(n.sl)n.sl=0;
+  let gx=n.h0x,gy=n.h0y,wr=n.h0r;
+  if(n.cj=='guard'&&!n.cap218){const duty=n.sh218==sh;
+   if(duty){if(n.pat218){let p=c.pat[n.pi218%c.pat.length];if(Math.hypot(n.x-p.x,n.y-p.y)<14||(n.pt218=(n.pt218||0)+dt)>40){n.pi218=(n.pi218+1)%c.pat.length;n.pt218=0;p=c.pat[n.pi218%c.pat.length]}gx=p.x;gy=p.y;wr=.01}else{gx=n.gp218.x;gy=n.gp218.y;wr=.01}}
+   else{gx=n.rs218.x;gy=n.rs218.y;wr=2.2}
+   const key=Math.round(gx)+','+Math.round(gy);
+   if(n.k218!==key){n.k218=key;n.hx=gx;n.hy=gy;n.wr=wr;n.tx=null;if(!simNear216(n.x,n.y,560)&&!simNear216(gx,gy,360)){n.x=gx;n.y=gy;n.wp218=null}else n.wp218=cmpRoute218(n,gx,gy)}}
+  if(simNear216(n.x,n.y,700))cmpWalk218(n,dt)}
+ /* the guards shoot the infected near them */
+ if(!net||net.isHost){const now=performance.now();for(const n of c.pop){if(n.cj!='guard')continue;if(!simNear216(n.x,n.y,720))continue;if((n.cd218||0)>now)continue;let best=null,bd=130;for(const z of zs){if(z.hp<=0)continue;const d=Math.hypot(z.x-n.x,z.y-n.y);if(d<bd){bd=d;best=z}}
+  if(best){n.cd218=now+1400+Math.random()*600;best.hp-=2.5;hit(best.x,best.y-6,'#8a1c1c');const dx=best.x-n.x,dy=best.y-6-(n.y-8),L=Math.hypot(dx,dy)||1;parts.push({x:n.x,y:n.y-8,vx:dx/L*300,vy:dy/L*300,l:L/300,c:'#ffe9a0',sz:1});n.fx=Math.sign(dx)||0;n.fy=Math.abs(dx)>Math.abs(dy)?0:Math.sign(dy);n.st=.6;if(Math.hypot(P.x-n.x,P.y-n.y)<260)try{snd('hit')}catch(e){}}}}
+ /* no infected are born inside the walls */
+ for(let i=zs.length-1;i>=0;i--){const z=zs[i];if(z.o218===undefined)z.o218=cmpIn218(z.x,z.y)?2:1;if(z.o218==2&&!z.allow218&&cmpIn218(z.x,z.y))zs.splice(i,1)}}
+{const u218=update;update=function(dt){const r=u218.apply(this,arguments);try{if(state=='play'&&!inD&&CMP218){cmpTick218(dt);cmpJobTick218(dt);if(!CMP218.known&&Math.hypot(P.x-(CMP218.X+27)*T,P.y-(CMP218.Y+27)*T)<75*T){CMP218.known=1;say(LANG=='hu'?'Fáklyafény és füst a távolban — egy fallal körbevett tábor. Felkerült a térképre (M).':'Torchlight and smoke in the distance — a walled camp. It is on your map (M).')}if(!CMP218.seen&&cmpIn218(P.x,P.y,-2)){CMP218.seen=1;CMP218.known=1;say(LANG=='hu'?'Menedék — fallal védett tábor':'Haven — a walled camp')}}}catch(e){}return r}}
+/* --- the talk: greetings, and the extra options --- */
+const GRT218={guard:['Állj meg egy szóra. Őrségben vagyok — ha munka kell, szólj.','Hold on. I am on watch — ask me if you need work.'],leader:['Üdv a Menedékben. Én vezetem a tanácsot.','Welcome to Haven. I lead the council.'],trader:['Friss áru! Cserélj velem.','Fresh goods! Trade with me.'],nurse:['Sérültél? Nálunk ápolnak.','Hurt? We treat patients here.'],smith:['Tűz, vas, kalapács — ez a műhely.','Fire, iron, hammer — this is the workshop.']};
+{const ng=npcGreet;npcGreet=function(n){if(n&&n.cj&&GRT218[n.cj])return both(GRT218[n.cj][0],GRT218[n.cj][1]);return ng.apply(this,arguments)}}
+{const to=talkOpts;talkOpts=function(){let o=to.apply(this,arguments);const n=TALK&&TALK.n;if(!n||!n.cj)return o;
+  if(TALK.sub=='job')return[{k:'j_gate',l:both('Kapuőrség (egy műszak)','Gate watch (one shift)')},{k:'j_patrol',l:both('Járőr a tornyok között','Patrol the towers')},{k:'j_clean',l:both('Fertőzöttek irtása (5)','Clear 5 infected')},{k:'j_back',l:both('Mégsem','Never mind')}];
+  const ex=[];if(n.cj=='guard')ex.push({k:'job',l:both('Munkát keresek','I am looking for work')});if(n.cj=='leader')ex.push({k:'status',l:both('Hogy áll a tábor?','How is the camp?')});if(n.cj=='nurse')ex.push({k:'heal',l:both('Gyógyíts meg','Heal me')});
+  o=o.filter(q=>q.k!='tip'&&(q.k!='trade'||n.cj=='trader'||n.cj=='smith'));const i=o.findIndex(q=>q.k=='bye');o.splice(i<0?o.length:i,0,...ex);return o}}
+{const tp=talkPick;talkPick=function(i){const n=TALK&&TALK.n;if(!n||!n.cj)return tp.apply(this,arguments);const o=talkOpts()[i];if(!o)return;const k=o.k;
+  if(k=='job'){TALK.sub='job';TALK.sel=0;snd('ui');talkSay(both('Mire van erőd? A falakon belül mindig akad dolog.','What are you up for? There is always work behind the walls.'));return}
+  if(k=='j_back'){TALK.sub=null;TALK.sel=0;snd('ui');talkSay(both('Ahogy gondolod.','As you like.'));return}
+  if(k&&k.startsWith('j_')){const m=cmpJobStart218(k.slice(2),n);TALK.sub=null;talkClose(m);return}
+  if(k=='status'){snd('ui');const c=CMP218,gd=cmpGuards218().length,pp=c?c.pop.length:0;talkSay(both('Menedék: '+pp+' lakos, ebből '+gd+' őr. A hírneved nálunk: '+(c?c.rep:0)+'/100.','Haven: '+pp+' souls, '+gd+' of them guards. Your standing here: '+(c?c.rep:0)+'/100.'));return}
+  if(k=='heal'){snd('ui');if(P.hp>=99&&!(P.inf>0)){talkSay(both('Jól nézel ki, nincs mit gyógyítani.','You look fine — nothing to heal.'));return}
+   const free=CMP218&&CMP218.rep>=20;if(!free&&!creative&&(inv.cloth|0)<1){talkSay(both('Hozz egy vég kendőt kötszernek, és rendbe teszlek.','Bring me some cloth for bandages and I will patch you up.'));return}
+   if(!free&&!creative)inv.cloth--;P.hp=100;if(P.inf>0)P.inf=0;snd('pick');talkSay(both(free?'A tábor vendége vagy — ingyen. Kész.':'Kész. Vigyázz magadra.',free?'You are a friend of Haven — free of charge. Done.':'Done. Take care.'));return}
+  return tp.apply(this,arguments)}}
+/* --- the work --- */
+function cmpRank218(r){return r<10?['Idegen','Stranger']:r<30?['Ismerős','Acquaintance']:r<60?['Megbízható','Trusted']:['Menedék barátja','Friend of Haven']}
+function cmpJobStart218(k,n){const c=CMP218,h=LANG=='hu';if(!c)return '';if(c.job)return h?'Már van egy munkád — előbb azt fejezd be.':'You already have a job — finish it first.';
+ if(c.jd[k]===day)return h?'Ma már megcsináltad. Gyere vissza holnap.':'You already did that today. Come back tomorrow.';
+ if(k=='gate'){let bi=0,bd=1e9;c.gposts.forEach((p,i)=>{const d=Math.hypot(p.x-n.x,p.y-n.y);if(d<bd){bd=d;bi=i}});c.job={k,t:0,max:45,gi:bi};return h?'Állj a kapunál '+45+' másodpercig. Jelöltem a helyet.':'Stand at the gate for '+45+' seconds. I marked the spot.'}
+ if(k=='patrol'){c.job={k,i:0};return h?'Érintsd meg mind a négy tornyot: északnyugattól az óra járásával.':'Touch all four towers, clockwise from the north-west.'}
+ if(k=='clean'){c.job={k,n:0,need:5};return h?'Öt fertőzöttet kell leterítened a falak közelében.':'Put down five infected near the walls.'}
+ return ''}
+function cmpJobDone218(){const c=CMP218,j=c.job,h=LANG=='hu';c.jd[j.k]=day;const R_={gate:{canned:2,a9:4,rep:8},patrol:{tonic:1,canned:1,rep:10},clean:{iron:3,a9:6,rep:15}}[j.k];
+ for(const k in R_)if(k!='rep')addLoot({x:P.x,y:P.y,k,n:R_[k]});c.rep=Math.min(100,c.rep+R_.rep);c.job=null;try{gainXp(25)}catch(e){}try{snd('pick')}catch(e){}
+ say(h?'Munka kész! Jutalmad a lábadnál, hírnév +'+R_.rep:'Job done! Your pay is at your feet, standing +'+R_.rep)}
+function cmpJobTick218(dt){const c=CMP218;if(!c||!c.job)return;const j=c.job;if(j.k=='gate'){const p=c.gposts[j.gi];if(Math.hypot(P.x-p.x,P.y-p.y)<48){j.t+=dt;if(j.t>=j.max)cmpJobDone218()}}
+ else if(j.k=='patrol'){const p=c.tposts[j.i];if(Math.hypot(P.x-p.x,P.y-p.y)<40){j.i++;try{snd('ui')}catch(e){}if(j.i>=4)cmpJobDone218();else say((LANG=='hu'?'Torony ':'Tower ')+j.i+'/4')}}}
+{const xk218=xpKill;xpKill=function(z){try{const c=CMP218;if(c&&c.job&&c.job.k=='clean'&&Math.hypot(z.x-(c.X+27)*T,z.y-(c.Y+27)*T)<60*T){c.job.n++;if(c.job.n>=c.job.need)cmpJobDone218();else say((LANG=='hu'?'Irtás ':'Cleared ')+c.job.n+'/'+c.job.need)}}catch(e){}return xk218.apply(this,arguments)}}
+{const hd218=hud;hud=function(){const r=hd218.apply(this,arguments);try{const c=CMP218;if(c&&c.job&&state=='play'&&!uiOpen211()){const j=c.job,h=LANG=='hu';let s,fr;if(j.k=='gate'){s=(h?'Kapuőrség ':'Gate watch ')+Math.floor(j.t)+'/'+j.max+' s';fr=j.t/j.max;const p=c.gposts[j.gi];if(Math.hypot(P.x-p.x,P.y-p.y)>=48)s+=h?' — menj a kapuhoz':' — go to the gate'}else if(j.k=='patrol'){s=(h?'Járőr ':'Patrol ')+j.i+'/4';fr=j.i/4}else{s=(h?'Irtás ':'Clearing ')+j.n+'/'+j.need;fr=j.n/j.need}
+  noTr=true;const w=150,x=Math.round(VW/2-w/2),y=15;Q(x,y,w,13,'rgba(12,11,9,.6)');Q(x,y,w,1,'#c8a050');Q(x+2,y+10,w-4,2,'rgba(255,255,255,.15)');Q(x+2,y+10,Math.round((w-4)*Math.max(0,Math.min(1,fr))),2,'#9be07d');g.font=fnt(0,8);txt(s,x+w/2,y+8,'#f0e6b8','center');noTr=false}}catch(e){noTr=false}return r}}
+/* --- the camp travels with the save --- */
+function cmpSave218(){try{const c=CMP218;if(!c){localStorage.removeItem(SKEY()+'_cmp');return}localStorage.setItem(SKEY()+'_cmp',JSON.stringify({X:c.X,Y:c.Y,b:c.b,rep:c.rep,job:c.job,jd:c.jd,seen:c.seen,known:c.known,names:c.names,gates:c.gates,gposts:c.gposts,tposts:c.tposts,rest:c.rest,pat:c.pat,
+  pop:c.pop.map(n=>({nm:n.nm,cj:n.cj,sh:n.sh218,gp:n.gp218,rs:n.rs218,pat:n.pat218,pi:n.pi218,cap:n.cap218}))}))}catch(e){}}
+{const sv218=save;save=function(){const r=sv218.apply(this,arguments);cmpSave218();return r}}
+{const ld218=load;load=function(){CMP218=null;const r=ld218.apply(this,arguments);try{if(r){const d=JSON.parse(localStorage.getItem(SKEY()+'_cmp')||'null');if(d){CMP218={X:d.X,Y:d.Y,b:d.b,rep:d.rep|0,job:d.job||null,jd:d.jd||{},seen:d.seen|0,known:d.known|0,names:d.names||[],gates:d.gates,gposts:d.gposts,tposts:d.tposts,rest:d.rest,pat:d.pat,pop:[]};
+  for(const q of d.pop||[]){const n=NPCS.find(m=>m.nm==q.nm);if(!n)continue;n.cj=q.cj;if(q.sh!=null)n.sh218=q.sh;if(q.gp)n.gp218=q.gp;if(q.rs)n.rs218=q.rs;if(q.pat)n.pat218=q.pat;if(q.pi!=null)n.pi218=q.pi;if(q.cap)n.cap218=q.cap;CMP218.pop.push(n)}}}}catch(e){CMP218=null}return r}}
+
+/* --- the signs over the doors, and Haven on the big map --- */
+{const ss218=shopSign;shopSign=function(x,y,k){k=k|0;if(k<20||k>23)return ss218.apply(this,arguments);const N={20:['ŐRSÉG','GUARD HOUSE'],21:['MŰHELY','WORKSHOP'],22:['TANÁCSHÁZ','HALL'],23:['PIAC','MARKET']}[k],C=[['#3a6a3a','#e8f4e8'],['#6a5a3a','#f0e8d8'],['#3a4a6a','#e8eef8'],['#c88a3a','#f8ecd0']][k-20];
+  for(let i=0;i<16;i+=4)W_(x+i,y-7,4,5,(i/4)%2?C[1]:C[0]);W_(x,y-2,16,1,'rgba(0,0,0,.3)');lbl(LANG=='hu'?N[0]:N[1],x+8-cam.x,y-10-cam.y)}}
+{const mc218=mfCat211;mfCat211=function(k){return k=='hv'?'cmp':mc218(k)}}
+{const mm218=mapMarks;mapMarks=function(){const r=mm218.apply(this,arguments);try{const c=CMP218;if(c&&c.known&&!inD)r.push({k:'hv',x:(c.X+27)*T,y:(c.Y+27)*T,n:LANG=='hu'?'Menedék':'Haven'})}catch(e){}return r}}
+{const mi218=markIcon;markIcon=function(m,X,Y,now,big){if(m.k!='hv')return mi218.apply(this,arguments);Q(X-4,Y-3,9,7,'#000');Q(X-3,Y-2,7,5,'#8a6a3c');for(let i=0;i<4;i++)Q(X-3+i*2,Y-3,1,2,'#c8a050');Q(X,Y-1,1,3,'#3a2a1a');Q(X-1,Y-6,3,3,'#e86a1a');Q(X,Y-7,1,2,'#ffd04a')}}
+
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
  if(state=='title')menu();if(state=='opts')optsMenu();if(state=='sndo')sndMenu();if(state=='gfxo')gfxMenu();if(state=='slots')svMenu();if(state=='keys')keysMenu();if(state=='wthr')wthrMenu();if(state=='char')charMenu();if(state=='lobby')drawLobby();if(state=='hb'){Q(0,0,VW,VH,'rgba(6,10,6,.6)');drawHB()}if(0)title('ASHFALL',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Hold the fire. Survive the nights.','','WASD move \u2022 Space chop / fish / attack \u2022 Tab recipes','Press any key']);
