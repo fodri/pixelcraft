@@ -13017,12 +13017,12 @@ BIG.ctower=function(o,x,y){const t=performance.now(),p=.5+.5*Math.sin(t/420+x),b
 DRAWX.reactor=function(o,x,y){const p=.5+.5*Math.sin(performance.now()/260);{g.save();g.globalCompositeOperation='lighter';const gx=x-cam.x+8,gy=y-cam.y+9,gr=g.createRadialGradient(gx,gy,4,gx,gy,76+10*p);gr.addColorStop(0,'rgba(60,230,255,'+(.34+.14*p)+')');gr.addColorStop(1,'rgba(60,230,255,0)');g.fillStyle=gr;g.fillRect(gx-90,gy-90,180,180);g.restore()}
  W_(x-1,y+14,18,3,'rgba(0,0,0,.35)');W_(x,y+3,16,13,'#c9d2d8');W_(x,y+3,16,2,'#eef3f5');W_(x+2,y+5,12,10,'#1c2a30');W_(x+3,y+6,10,8,'rgba(90,240,255,'+(.4+.4*p)+')');W_(x+6,y+8,4,4,'rgba(230,255,255,'+(.5+.5*p)+')');W_(x+1,y+14,14,2,'#d9b020');W_(x+4,y+14,2,2,'#222');W_(x+10,y+14,2,2,'#222')};
 /* --- the infected: villagers, only sicker — pale and grey-green, torn clothes, dark eyes, a stoop --- */
-SKIN.push('#b4bfa4','#97ab8a','#7f9690','#c9c4b0');
+const SK216=SKIN.length;SKIN.push('#b4bfa4','#97ab8a','#7f9690','#c9c4b0');
 function hs216(v){let h=2166136261;const s=String(v);for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
-const INFLOOK216=[{s:1,sk:5,lean:.16,sp:1},{s:1.16,sk:6,lean:.07,sp:.8},{s:.94,sk:5,lean:.34,sp:2.1},{s:1.24,sk:7,lean:.1,sp:.7}];
+const INFLOOK216=[{s:1,sk:SK216,lean:.16,sp:1},{s:1.16,sk:SK216+1,lean:.07,sp:.8},{s:.94,sk:SK216,lean:.34,sp:2.1},{s:1.24,sk:SK216+2,lean:.1,sp:.7}];
 function infKind216(v){return v==1?1:v==2?2:v==7?3:0}
 function infLook216(z){const h=hs216(z.id!=null?z.id:Math.round(z.x*7+z.y)),k=INFLOOK216[infKind216(z.v|0)],early=!!z.early;
- const c={sk:early?h%5:(k.sk==5&&(h>>4)%3==0?8:k.sk),hs:(h>>3)%6,hc:[0,1,5,2,0,1,5][(h>>6)%7],sh:early?(h>>9)%8:[0,7,1,3,0,2][(h>>9)%6],pn:(h>>12)%6,ac:[0,0,0,0,2,3,5][(h>>15)%7]};
+ const c={sk:early?h%5:(k.sk==SK216&&(h>>>4)%3==0?SK216+3:k.sk),hs:(h>>>3)%6,hc:[0,1,5,2,0,1,5][(h>>>6)%7],sh:early?(h>>>9)%8:[0,7,1,3,0,2][(h>>>9)%6],pn:(h>>>12)%6,ac:[0,0,0,0,2,3,5][(h>>>15)%7]};
  return{c,k,early,h}}
 function infDraw216(z){const x=z.x-cam.x,y=z.y-cam.y,t=performance.now();if(!z.l216)z.l216=infLook216(z);const L=z.l216,k=L.k,h=L.h;
  const dx=z.x-(z.px216===undefined?z.x:z.px216),dy=z.y-(z.py216===undefined?z.y:z.py216);z.px216=z.x;z.py216=z.y;
@@ -13038,6 +13038,55 @@ function infDraw216(z){const x=z.x-cam.x,y=z.y-cam.y,t=performance.now();if(!z.l
  if(front){Q(X-2,Y-11*s,1,1,'#14080a');Q(X+1,Y-11*s,1,1,'#14080a');Q(X-1,Y-9*s,2,1,'#3a0e0e')}else if(fx)Q(fx>0?X+1:X-2,Y-11*s,1,1,'#14080a');
  if(z.v==1){Q(X-3*s,Y-6*s,1,1,'#9ab050');Q(X+2*s,Y-4*s,1,1,'#a8bc5a')}}
 {const dz216=drawZ;drawZ=function(z){if(z.mu||z.boss||z.sp||z.b||z.w||(z.v|0)==8||!z.z)return dz216.apply(this,arguments);let ok=1;try{infDraw216(z)}catch(e){ok=0}if(!ok)return dz216.apply(this,arguments)}}
+
+/* ===== v217: the infected come in worse shapes — a crawler dragging its ruined legs, one with tentacles tearing out of its back and jaw (it
+   lashes from a distance), one turned inside-out, and a blind one with a split head that finds you by sound. All of them bleed, leave
+   smears, and make a dry, wet CLICKING you hear before you see them. Sneak past the blind ones — running wakes them. ===== */
+GAMEV=232;
+const FRMV217={cr:5,te:1,ko:7,vk:3},FRMN217={cr:['Kúszó','Crawler'],te:['Csápos','Tentacled'],ko:['Kifordult','Turned-out'],vk:['Vak','Blind one']};
+function frmPick217(){const r=Math.random();return r<.34?'cr':r<.56?'te':r<.78?'ko':'vk'}
+function frmAssign217(){const night=(typeof dark=='function'?dark():0)>.5,p=Math.min(.5,.08+day*.025+(night?.12:0)+(curRx?.25:0));
+ for(const z of zs){if(z.f217!==undefined)continue;if(z.mu||z.boss||z.sp||z.b||z.w||!z.z||(z.v|0)==8||z.early||Math.hypot(z.x-P.x,z.y-P.y)<110){z.f217=0;continue}
+  if(Math.random()<p){const f=frmPick217();z.f217=f;z.v=FRMV217[f];z.hp=VHP[z.v]}else z.f217=0}}
+/* --- the sound: dry bone-clicks, now and then a wet gurgle --- */
+const CK217={t:1};
+function click217(k){try{if(!(SXS&&SXS.ok>0)||vol<=0)return;k=Math.max(.12,Math.min(1,k));sxN(.014,'bandpass',2500+Math.random()*900,1800,7,.95*k);sxT('square',1500+Math.random()*500,700,.02,.16*k);if(Math.random()<.5)sxN(.01,'highpass',4200,3600,1,.45*k,.045)}catch(e){}}
+function gurgle217(k){try{if(!(SXS&&SXS.ok>0)||vol<=0)return;sxN(.22,'lowpass',520,180,1,.55*Math.min(1,k));sxT('sawtooth',95,55,.24,.1*Math.min(1,k))}catch(e){}}
+/* --- the blind ones only notice you when you run (or when they are hurt or alerted) --- */
+{const za217=zAgro;zAgro=function(z,d){const r=za217.apply(this,arguments);if(z.f217=='vk'&&r>0&&r<=200){const run=K.ShiftLeft&&(K.KeyW||K.KeyA||K.KeyS||K.KeyD||K.ArrowUp||K.ArrowDown||K.ArrowLeft||K.ArrowRight);return run?r:Math.min(r,80)}return r}}
+function frmTick217(dt){const now=performance.now();frmAssign217();const pls=players();let best=null,bd=1e9;
+ for(const z of zs){const f=z.f217;if(!f||z.hp<=0)continue;const q=nearP(z.x,z.y,pls),d=Math.hypot(q.x-z.x,q.y-z.y);if(d<bd){bd=d;best=z}
+  if(f=='te'&&(!net||net.isHost)&&d<38&&d>8&&(z.lash217||0)<now&&!(z.stn>0)){z.lash217=now+1800;z.lashV217=now+260;z.lx217=q.x;z.ly217=q.y;if(q.me)hurtP(6);else if(net)net.r.emit('hurt',6,q.id);try{snd('hit')}catch(e){}}
+  if(d<320&&(z.dr217||0)<now){z.dr217=now+380+Math.random()*500;parts.push({x:z.x+(Math.random()-.5)*5,y:z.y-5,vx:(Math.random()-.5)*8,vy:6,l:.5,c:'#6a0e12',ds:1,sz:1})}}
+ CK217.t-=dt;if(CK217.t<=0){if(best&&bd<280){const f=best.f217,near=1-bd/280;CK217.t=f=='vk'?.3+Math.random()*.45:1+Math.random()*1.5;click217(near*(f=='vk'?1:.65));if(f=='vk'&&Math.random()<.55)setTimeout(()=>click217(near*.7),95);else if(f=='te'&&Math.random()<.3)gurgle217(near);best.ck217=now+120}else CK217.t=.5}}
+{const u217=update;update=function(dt){const r=u217.apply(this,arguments);try{if(state=='play')frmTick217(dt)}catch(e){}return r}}
+/* --- the pictures --- */
+function trail217(z,t,mv,big){const tr=z.tr217||(z.tr217=[]);if(mv){const l=tr[tr.length-1];if(!l||Math.hypot(l.x-z.x,l.y-z.y)>(big?4:7)){tr.push({x:z.x,y:z.y,t});if(tr.length>(big?22:12))tr.shift()}}
+ for(const p of tr){const a=Math.max(0,1-(t-p.t)/10000);if(a<=0)continue;Q(Math.round(p.x-cam.x)-(big?3:2),Math.round(p.y-cam.y)-1,big?6:4,big?3:2,'rgba(90,14,18,'+(.6*a).toFixed(2)+')')}}
+function tent217(X,Y,t,h,n,len){for(let i=0;i<n;i++){const side=i%2?1:-1;let px=X+side*(1+(i>>1)),py=Y-9;for(let k=0;k<len;k++){px+=side*(i>>1?.7:1.5)*(1+Math.abs(Math.sin(t/210+h+i*1.7+k*.8))*.5);py+=(i>>1?-1.8:-.9)+Math.cos(t/260+h+i*1.3+k*.7)*1;const sz=k<3?3:2;Q(Math.round(px)-(sz>2?1:0),Math.round(py),sz,sz,k==len-1?'#ff8a94':k%2?'#b01f2e':'#d83a4a')}}}
+function crDraw217(z,x,y,t,s,mv){const X0=Math.round(x),Y=Math.round(y),X=(a,w)=>s>0?X0+a:X0-a-w,h=z.h217||(z.h217=hs216(z.id)),w=mv?Math.floor(t/240+h)%2:0,tw=Math.sin(t/90+h)>.8?1:0;
+ Q(X(-7,15),Y-1,15,2,'rgba(0,0,0,.35)');
+ Q(X(-12,6),Y-3+w,6,2,'#6a746a');Q(X(-13,2),Y-2,2,2,'#5a0e12');Q(X(-10,2),Y-4,2,1,'#d8d0b8');Q(X(-8,3),Y-2,3,1,'#8a1c22');
+ Q(X(-6,10),Y-6,10,4,'#8a9486');Q(X(-6,10),Y-7,10,1,'#6a746a');Q(X(-5,4),Y-5,4,2,'#a8323a');Q(X(0,3),Y-4,2,2,'#5a0e12');
+ for(let i=0;i<4;i++)Q(X(-5+i*2,1),Y-8,1,1,'#d8d0b8');
+ Q(X(4,5),Y-3+w,5,2,'#8a9486');Q(X(8,2),Y-4+w,2,1,'#d8d0b8');Q(X(8,3),Y-2+w,3,1,'#d8d0b8');
+ Q(X(2,4),Y-2-w,4,2,'#7a8478');Q(X(5,2),Y-1-w,2,1,'#d8d0b8');
+ Q(X(4,5),Y-9+tw,5,5,'#9aa496');Q(X(4,5),Y-9+tw,5,1,'#b4bcaa');Q(X(7,1),Y-7+tw,1,1,'#14080a');Q(X(5,4),Y-5+tw,4,2,'#5a0e12');Q(X(6,1),Y-5+tw,1,1,'#e8e0c8');Q(X(8,1),Y-5+tw,1,1,'#e8e0c8');
+ Q(X(7,1),Y-3,1,2,'#8a1c22')}
+function frmDraw217(z){const f=z.f217,x=z.x-cam.x,y=z.y-cam.y,t=performance.now(),h=z.h217||(z.h217=hs216(z.id));
+ if(f=='cr'){const dx=z.x-(z.px217===undefined?z.x:z.px217);z.px217=z.x;const py=z.py217===undefined?z.y:z.py217;z.py217=z.y;const mvv=Math.abs(dx)+Math.abs(z.y-py)>.03;if(mvv){z.mt217=t;if(Math.abs(dx)>.02)z.s217=dx>0?1:-1}
+  const mv=t-(z.mt217||0)<250;trail217(z,t,mv,true);crDraw217(z,x,y,t,z.s217||1,mv);return}
+ infDraw216(z);const mv=t-(z.mt216||0)<200,X=Math.round(x),Y=Math.round(y),fx=z.fx216||0,fy=z.fy216===undefined?1:z.fy216;trail217(z,t,mv,false);
+ if(f=='te'){tent217(X,Y,t,h,4,7);Q(X-1,Y-9,3,2,'#5a0e12');for(let i=0;i<2;i++)Q(X-1+i*2,Y-8+((t/120+i*3|0)%3),1,3,'#e8707a');
+  if((z.lashV217||0)>t){const dx=z.lx217-z.x,dy=z.ly217-z.y,L=Math.min(38,Math.hypot(dx,dy)),n=Math.ceil(L/2.5);for(let k=1;k<=n;k++){const u=k/n;Q(Math.round(X+dx/Math.hypot(dx,dy)*L*u+Math.sin(k+t/40)*.8),Math.round(Y-8+(dy/Math.hypot(dx,dy)*L*u)),2,2,k==n?'#ff9aa0':'#a8323e')}}}
+ else if(f=='ko'){Q(X-3,Y-9,6,5,'#8a1c22');Q(X-3,Y-8,6,1,'#d8d0b8');Q(X-3,Y-6,6,1,'#d8d0b8');Q(X-2,Y-7,2,2,'#c8505a');Q(X+1,Y-7,1,2,'#6a1018');
+  Q(X,Y-4,1,3+((t/220+h|0)%2),'#d68a8a');Q(X-1,Y-5,1,2,'#c8505a');Q(X+4*(fx<0?-1:1),Y-6,1,3,'#a8323a');Q(X-1,Y-9,3,2,'#6a1018')}
+ else if(f=='vk'){const j=(Math.floor(t/130+h)%3)-1;Q(X-3+j,Y-13,6,5,'#c8bca0');Q(X-3+j,Y-13,6,1,'#e0d6bc');Q(X-1+j,Y-13,2,5,'#7a1018');Q(X-1+j,Y-12,2,1,'#e8e0c8');Q(X-1+j,Y-10,2,1,'#e8e0c8');Q(X-3+j,Y-10,1,1,'#7a1018');Q(X+2+j,Y-11,1,1,'#7a1018');
+  if((z.ck217||0)>t){g.save();g.strokeStyle='rgba(255,255,255,.35)';g.lineWidth=.6;g.beginPath();g.arc(X+j,Y-10,7+((z.ck217-t)/12),0,6.283);g.stroke();g.restore()}}
+ /* extra blood on all of them */
+ Q(X-4,Y-6,2,2,'rgba(120,16,20,.9)');Q(X+2,Y-4,2,1,'rgba(120,16,20,.9)')}
+{const d217=drawZ;drawZ=function(z){if(z.f217){let ok=1;try{frmDraw217(z)}catch(e){ok=0}if(ok)return}return d217.apply(this,arguments)}}
+HU.unshift(['Crawler','Kúszó'],['Tentacled','Csápos'],['Turned-out','Kifordult'],['Blind one','Vak']);
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
