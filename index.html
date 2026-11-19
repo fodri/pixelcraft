@@ -13257,6 +13257,119 @@ function cmpSave218(){try{const c=CMP218;if(!c){localStorage.removeItem(SKEY()+'
 {const mm218=mapMarks;mapMarks=function(){const r=mm218.apply(this,arguments);try{const c=CMP218;if(c&&c.known&&!inD)r.push({k:'hv',x:(c.X+27)*T,y:(c.Y+27)*T,n:LANG=='hu'?'Menedék':'Haven'})}catch(e){}return r}}
 {const mi218=markIcon;markIcon=function(m,X,Y,now,big){if(m.k!='hv')return mi218.apply(this,arguments);Q(X-4,Y-3,9,7,'#000');Q(X-3,Y-2,7,5,'#8a6a3c');for(let i=0;i<4;i++)Q(X-3+i*2,Y-3,1,2,'#c8a050');Q(X,Y-1,1,3,'#3a2a1a');Q(X-1,Y-6,3,3,'#e86a1a');Q(X,Y-7,1,2,'#ffd04a')}}
 
+/* ===== v219: horses. Wild herds roam the grass of the forest and the desert; feed one (carrot, wheat, corn or berries) three times to gentle it,
+   make a saddle (3 cloth + 2 wool + 2 scrap), and ride: almost twice the walking pace, saddlebags (+10 slots) while you sit on it.
+   A tamed horse follows you. Menedék has a stable hand who sells a saddled horse for scrap and tins. Cars are rare now. ===== */
+GAMEV=234;
+const HNM219=['Villám','Csillag','Kormos','Pej','Szellő','Bogár','Hamu','Tündér','Sába','Vihar','Mazsola','Ködös'];
+/* coat colours: body, light, dark, mane */
+const HCOL219=[['#8a5a32','#a87444','#5a381c','#2a1a10'],['#a8602a','#c47c3c','#74401a','#6a3a18'],['#2e2c30','#46444a','#1a181c','#0e0e10'],['#b8bcc0','#d4d8dc','#8a8e94','#6a6e74'],['#d8b070','#ecc890','#a8844c','#f0e0b0']];
+const HFOOD219=['carrot','wheat','corn','berry'];
+let HRS219=[],MNT219=null,HID219=1,HDAY219=-1,HDT219={sold:0};
+function hrsNew219(x,y,st,sd,extra){const h=Object.assign({id:HID219++,x,y,vx:0,vy:0,t:0,st:st|0,sd:sd|0,col:Math.floor(R()*5),tm:0,fx:R()<.5?1:-1,mv:0,an:0,fl:0,own:0,nm:null,tf:0},extra||{});h.hx=h.x;h.hy=h.y;HRS219.push(h);return h}
+function hrsGen219(){HRS219=[];HID219=1;MNT219=null;let n=0,tries=0;
+ while(n<18&&tries++<5000){const x=14+Math.floor(R()*(W-28)),y=14+Math.floor(R()*(H-28)),i=y*W+x;if(map[i]!=0||ob[i]||(bm[i]!=0&&bm[i]!=2))continue;
+  if(Math.hypot(x-SX,y-SY)<26)continue;if(CMP218&&cmpIn218(x*T,y*T,10))continue;if(RIC&&Math.hypot(x-RIC[0],y-RIC[1])<RIC[2]+10)continue;
+  let ok=true,cnt=0;for(let dy=-3;dy<=3&&ok;dy++)for(let dx=-3;dx<=3;dx++){const j=(y+dy)*W+x+dx,m=map[j];if(m==9||m==10||m==11||m==5||m==2){ok=false;break}if(ob[j]&&ob[j].t!='tgrass'&&ob[j].t!='flower')cnt++}
+  if(!ok||cnt>8)continue;
+  const k=2+Math.floor(R()*3),col=Math.floor(R()*5);for(let q=0;q<k;q++){let px=x*T+8+(R()-.5)*64,py=y*T+8+(R()-.5)*64;if(blocked(px,py,5)){px=x*T+8;py=y*T+8}hrsNew219(px,py,0,0,{col:R()<.6?col:Math.floor(R()*5)})}n++}}
+/* --- the stable in Menedék --- */
+const STP219=()=>{const c=CMP218;return c?[{x:(c.X+34)*T+8,y:(c.Y+43)*T+8},{x:(c.X+37)*T+8,y:(c.Y+43)*T+8},{x:(c.X+35.5)*T+8,y:(c.Y+41)*T+8}]:[]};
+function stockNew219(i){const s=STP219();if(!s.length)return;const cols=[0,2,1,4,3],h=hrsNew219(s[i%2].x,s[i%2].y,1,1,{col:cols[(HID219+i)%5],stk:1,tm:3});h.nm=HNM219[(h.id*5+3)%HNM219.length]}
+function stableGen219(){const c=CMP218,s=STP219();if(!c||!s.length)return;cmpNpc218('stable','m',s[2].x,s[2].y,1.2,{});stockNew219(0);stockNew219(1);HDAY219=day}
+/* --- save / load --- */
+function hrsSave219(){try{localStorage.setItem(SKEY()+'_hrs',JSON.stringify({id:HID219,hd:HDAY219,dt:HDT219,h:HRS219.map(h=>({id:h.id,x:Math.round(h.x),y:Math.round(h.y),st:h.st,sd:h.sd,col:h.col,tm:h.tm,nm:h.nm,own:h.own,stk:h.stk,hx:Math.round(h.hx),hy:Math.round(h.hy)}))}))}catch(e){}}
+{const sv=save;save=function(){const r=sv.apply(this,arguments);hrsSave219();return r}}
+{const ld=load;load=function(){HRS219=[];MNT219=null;const r=ld.apply(this,arguments);try{if(r){const s=localStorage.getItem(SKEY()+'_hrs');if(s){const d=JSON.parse(s);HID219=d.id|1;HDAY219=d.hd==null?-1:d.hd;HDT219=d.dt||{sold:0};HRS219=(d.h||[]).map(q=>Object.assign({vx:0,vy:0,t:0,mv:0,an:0,fl:0,fx:1,tf:0},q))}else{const R0=R;R=mb(((wseed|0)^0x219a)>>>0);try{hrsGen219()}finally{R=R0}}}}catch(e){console.warn('horses',e)}return r}}
+{const in_=init;init=function(...a){HRS219=[];MNT219=null;HDT219={sold:0};const r=in_.apply(this,a);try{hrsGen219();if(CMP218)stableGen219();thinCars219()}catch(e){console.warn('horses init',e)}return r}}
+/* cars are rare now: only one wreck in four is left standing (none inside Menedék) */
+function thinCars219(){let k=0;for(let i=0;i<W*H;i++){const o=ob[i];if(!o||o.t!='car')continue;const inC=CMP218&&cmpIn218((i%W)*T,Math.floor(i/W)*T,1);if(inC||(k++)%4!=0)try{rmObj(i)}catch(e){}}}
+/* --- sounds --- */
+function neigh219(k){try{if(!(SXS&&SXS.ok>0)||vol<=0)return;k=k||1;sxT('sawtooth',620,900,.16,.1*k);setTimeout(()=>{try{sxT('sawtooth',900,380,.3,.09*k)}catch(e){}},160)}catch(e){}}
+function clop219(k){try{if(!(SXS&&SXS.ok>0)||vol<=0)return;sxN(.035,'lowpass',520,240,1.2,.32*k);setTimeout(()=>{try{sxN(.03,'lowpass',460,200,1.2,.24*k)}catch(e){}},70)}catch(e){}}
+/* --- mounting --- */
+function hrsNear219(r){let b=null,bd=r;for(const h of HRS219){const d=Math.hypot(h.x-P.x,h.y-P.y);if(d<bd){bd=d;b=h}}return b}
+function mount219(h){MNT219=h;P.boat=false;try{sit=null}catch(e){}neigh219(.8);say(both('Felültél a lóra. E: leszállás.','You mount the horse. E: get off.'))}
+function dismount219(q){const h=MNT219;MNT219=null;if(!h)return;for(const[ax,ay]of[[h.fx>0?-18:18,0],[0,18],[0,-18],[h.fx>0?18:-18,0]])if(!blocked(P.x+ax,P.y+ay,5)){h.x=P.x+ax;h.y=P.y+ay;break}h.hx=h.x;h.hy=h.y;if(!q)say(both('Leszálltál.','You get off.'))}
+{const ce=carE;carE=function(){
+ if(state!='play'||drv||rid||P.boat||TALK||inD)return ce.apply(this,arguments);
+ try{if(uiOpen211())return ce.apply(this,arguments)}catch(e){}
+ if(MNT219){dismount219();return true}
+ const h=hrsNear219(30);if(!h)return ce.apply(this,arguments);
+ if(!h.st){const f=HFOOD219.find(k=>(inv[k]|0)>0);
+  if(!f&&!creative){say(both('A ló gyanakvón méreget. Hozz neki murkot, búzát, kukoricát vagy bogyót.','The horse eyes you warily. Bring it a carrot, wheat, corn or berries.'));h.fl=0;return true}
+  if(!creative)inv[f]--;h.tm++;h.tf=performance.now();h.fl=0;try{snd('pick')}catch(e){}
+  if(h.tm>=3){h.st=1;h.own=1;h.nm=HNM219[(h.id*7+h.col)%HNM219.length];neigh219(1);say(both('Megszelídült a ló — '+h.nm+'. Nyereg kell hozzá (kézműves menü).','The horse is gentle now — '+h.nm+'. It needs a saddle (craft menu).'))}
+  else say(both('A ló megnyugszik ('+h.tm+'/3).','The horse calms down ('+h.tm+'/3).'));
+  return true}
+ if(!h.own){say(both('Ez az istálló lova — kérdezd a lovászt.','This is the stable’s horse — ask the stable hand.'));return true}
+ if(!h.sd){if((inv.saddle|0)>0||creative){if(!creative)inv.saddle--;h.sd=1;try{snd('craft')}catch(e){}say(both('Felnyergelted '+(h.nm||'a lovat')+'. E: felülés.','You saddle '+(h.nm||'the horse')+'. E: mount.'))}
+  else say(both('Nyereg kell hozzá: 3 kendő + 2 gyapjú + 2 fém (kézműves menü).','It needs a saddle: 3 cloth + 2 wool + 2 scrap (craft menu).'));return true}
+ mount219(h);return true}}
+/* a saddle to craft */
+LBL.saddle='Saddle';RC.saddle=['#7a4a2a','#c8a060'];REC.push(['saddle','Saddle',{cloth:3,wool:2,iron:2}]);
+HU.unshift(['Saddle','Nyereg'],['saddle','nyereg'],['Horse','Ló']);
+/* --- on the move: +85% pace, saddlebags --- */
+{const m=mv;mv=function(e,dx,dy,r){if(e===P&&MNT219&&!inD){dx*=1.85;dy*=1.85}return m.call(this,e,dx,dy,r)}}
+{const ic=invCap;invCap=function(){let n=ic.apply(this,arguments);if(creative)return n;if(MNT219)n+=10;else for(const h of HRS219)if(h.own&&h.sd&&Math.hypot(h.x-P.x,h.y-P.y)<100){n+=10;break}return n}}
+/* --- the horses live: wild herds graze and bolt, tame ones follow --- */
+let HCL219=0;
+function hrsTick219(dt){const now=performance.now(),pls=players(),mvk=K.KeyW||K.KeyA||K.KeyS||K.KeyD||K.ArrowUp||K.ArrowDown||K.ArrowLeft||K.ArrowRight,run=!!(K.ShiftLeft&&mvk);
+ if(MNT219&&(P.hp<=0||inD||P.boat||drv||rid||state!='play'||Math.hypot(P.x-MNT219.x,P.y-MNT219.y)>50)){dismount219(true)}
+ for(const h of HRS219){
+  if(h===MNT219){h.x=P.x;h.y=P.y;if(Math.abs(P.fx)>.1)h.fx=Math.sign(P.fx);h.mv=mvk?1:0;h.an+=dt*(run?15:9);if(mvk){HCL219-=dt;if(HCL219<=0){HCL219=run?.2:.3;clop219(run?1:.7)}}continue}
+  if(!h.own&&!simNear216(h.x,h.y,640))continue;
+  const q=nearP(h.x,h.y,pls),dx=h.x-q.x,dy=h.y-q.y,d=Math.hypot(dx,dy)||1;let vx=0,vy=0,sp=0;h.t-=dt;
+  if(!h.st){ /* wild */
+   if(h.tm>0&&now-h.tf>120000)h.tm=0;
+   if(d<14||(run&&q.me&&d<120)){h.fl=2.6}
+   if(h.fl>0){h.fl-=dt;vx=dx/d*88;vy=dy/d*88;sp=88}
+   else{if(h.t<=0){h.t=2+R()*4;if(R()<.55){h.vx=h.vy=0}else{const a=R()*6.28;h.vx=Math.cos(a)*16;h.vy=Math.sin(a)*16}}vx=h.vx;vy=h.vy;sp=Math.hypot(vx,vy)}}
+  else if(h.own){ /* tame: follows */
+   const dp=Math.hypot(P.x-h.x,P.y-h.y);
+   if(dp>720&&!inD){for(const[ax,ay]of[[-40,30],[40,30],[0,40],[0,-40]])if(!blocked(P.x+ax,P.y+ay,5)){h.x=P.x+ax;h.y=P.y+ay;break}continue}
+   if(dp>58){const s=dp>170?86:46;vx=(P.x-h.x)/dp*s;vy=(P.y-h.y)/dp*s;sp=s}
+   else{if(h.t<=0){h.t=2+R()*4;if(R()<.6){h.vx=h.vy=0}else{const a=R()*6.28;h.vx=Math.cos(a)*10;h.vy=Math.sin(a)*10}}vx=h.vx;vy=h.vy;sp=Math.hypot(vx,vy)}}
+  else{ /* stable horse: stays near its post */
+   if(h.t<=0){h.t=2+R()*4;if(R()<.7){h.vx=h.vy=0}else{const a=R()*6.28;h.vx=Math.cos(a)*9;h.vy=Math.sin(a)*9}}vx=h.vx;vy=h.vy;if(Math.hypot(h.x-h.hx,h.y-h.hy)>38){vx=(h.hx-h.x)*.4;vy=(h.hy-h.y)*.4}sp=Math.hypot(vx,vy)}
+  if(sp>1){const ox=h.x,oy=h.y;mv(h,vx*dt,vy*dt,5);if(Math.hypot(h.x-ox,h.y-oy)<sp*dt*.3){h.t=0;h.vx=-h.vx;h.vy=-h.vy;if(h.fl>0)h.fl-=dt*3}if(Math.abs(vx)>2)h.fx=Math.sign(vx);h.mv=1;h.an+=dt*(sp>50?15:8)}else h.mv=0}
+ /* the stable hand restocks: one new horse a day, never more than two on the rack */
+ const c=CMP218;if(c&&HDAY219!==day){HDAY219=day;const stock=HRS219.filter(h=>h.stk&&!h.own);if(stock.length<2)stockNew219(stock.length&&Math.abs(stock[0].hx-STP219()[0].x)<8?1:0)}}
+{const u=update;update=function(dt){const r=u.apply(this,arguments);try{if(state=='play'&&!inD)hrsTick219(dt);else if(MNT219)dismount219(true)}catch(e){}return r}}
+/* --- the pictures --- */
+function hrsDraw219(h){const x=Math.round(h.x-cam.x),y=Math.round(h.y-cam.y),t=performance.now(),C=HCOL219[h.col%5],f=h.fx<0?-1:1,X=(a,w)=>f>0?x+a:x-a-w,mvg=h.mv,ph=Math.floor(h.an)%4,rid_=h===MNT219,fl=h.fl>0;
+ Q(X(-11,22),y-1,22,3,'rgba(0,0,0,.28)');
+ const lg=(a,lift)=>{Q(X(a,2),y-8-(lift?1:0),2,7+(lift?-1:0),lift?C[2]:C[0]);Q(X(a,2),y-2-(lift?2:0),2,1,'#1a1410')},lf=mvg?[ph==0||ph==1,ph==2||ph==3,ph==2||ph==3,ph==0||ph==1]:[0,0,0,0];
+ /* far legs, tail */
+ lg(-8,lf[0]);lg(5,lf[2]);const tw=Math.round(Math.sin(t/260+h.id)*1.5);Q(X(-13,3),y-15+tw,3,3,C[3]);Q(X(-14,3),y-12+tw,3,5,C[3]);Q(X(-14,2),y-8+tw,2,2,C[3]);
+ /* the rider, behind the barrel so the legs vanish into the horse */
+ if(rid_){try{const o=P.y;g.save();drawChar(x,y-11,CH,0,f,0,1,eqOf());g.restore()}catch(e){}}
+ /* barrel, neck, head */
+ Q(X(-10,20),y-16,20,9,C[0]);Q(X(-9,18),y-16,18,1,C[1]);Q(X(-10,20),y-8,20,1,C[2]);Q(X(-6,6),y-14,6,3,C[1]);
+ Q(X(6,6),y-22,5,9,C[0]);Q(X(5,2),y-22,2,10,C[3]);Q(X(6,5),y-22,5,1,C[1]);
+ const hb=fl?-1:Math.round(Math.sin(t/900+h.id)*1);Q(X(9,7),y-23+hb,7,5,C[0]);Q(X(9,7),y-23+hb,7,1,C[1]);Q(X(14,3),y-20+hb,3,3,C[2]);Q(X(15,1),y-20+hb,1,1,'#14080a');Q(X(11,1),y-22+hb,1,1,'#111');Q(X(9,2),y-25+hb,2,3,C[0]);Q(X(9,1),y-25+hb,1,1,C[3]);
+ if(h.st){Q(X(10,5),y-20+hb,5,1,'#8a2a2a');Q(X(13,1),y-19+hb,1,3,'#8a2a2a')}
+ if(h.sd){Q(X(-4,9),y-18,9,3,'#7a4a2a');Q(X(-4,9),y-15,9,2,'#a83a3a');Q(X(2,1),y-12,1,4,'#c8a060');Q(X(-4,1),y-18,1,5,'#5a3418')}
+ /* near legs */
+ lg(-6,lf[1]);lg(7,lf[3]);
+ if(h.stk&&!h.own){Q(X(-2,1),y-24,1,0,'#000')}}
+{const dr=draw;draw=function(){if(inD||view||(typeof V3!='undefined'&&V3&&V3.on)||!HRS219.length)return dr.apply(this,arguments);const vis=HRS219.filter(h=>Math.abs(h.x-P.x)<340&&Math.abs(h.y-P.y)<260);if(!vis.length)return dr.apply(this,arguments);const d0=deer;deer=d0.concat(vis.map(h=>(h.k='horse',h.hp=h.hp||9,h)));try{return dr.apply(this,arguments)}finally{deer=d0}}}
+{const dd=drawDeer;drawDeer=function(e){if(e.k=='horse'){hrsDraw219(e);return}return dd.apply(this,arguments)}}
+{const dp=drawP;drawP=function(){if(MNT219&&!inD)return;return dp.apply(this,arguments)}}
+/* names over the tame ones, close by */
+{const dn=drawDmgN;drawDmgN=function(...a){const r=dn.apply(this,a);try{if(!inD&&state=='play')for(const h of HRS219){if(!h.st||h===MNT219)continue;if(Math.hypot(h.x-P.x,h.y-P.y)<44&&h.nm){noTr=true;lbl(h.nm,h.x-cam.x,h.y-cam.y-28);noTr=false}}}catch(e){noTr=false}return r}}
+/* --- the stable hand in Menedék --- */
+GRT218.stable=['Lovat keresel? Két szelíd van az istállóban.','Looking for a horse? Two gentle ones in the stable.'];
+HU.unshift(['Stable hand','Lovász']);
+function hrsCost219(){const r=CMP218?CMP218.rep|0:0;return r>=30?{iron:3,canned:2}:{iron:6,canned:3}}
+{const to=talkOpts;talkOpts=function(){let o=to.apply(this,arguments);const n=TALK&&TALK.n;if(!n||n.cj!='stable'||TALK.sub)return o;const i=o.findIndex(q=>q.k=='bye');o.splice(i<0?o.length:i,0,{k:'h_buy',l:both('Lovat vennék','I would like a horse')},{k:'h_info',l:both('Hogy kell lovat szelídíteni?','How do I tame a horse?')});return o}}
+{const tp=talkPick;talkPick=function(i){const n=TALK&&TALK.n;if(!n||n.cj!='stable')return tp.apply(this,arguments);const o=talkOpts()[i];if(!o)return tp.apply(this,arguments);
+ if(o.k=='h_info'){snd('ui');talkSay(both('Vadlovakat találsz a réteken. Lassan menj hozzájuk (ne fuss!), és etesd őket murokkal, búzával, kukoricával vagy bogyóval — háromszor. Aztán nyereg kell.','You find wild horses on the meadows. Walk up slowly (do not run!) and feed them a carrot, wheat, corn or berries — three times. Then you need a saddle.'));return}
+ if(o.k=='h_buy'){snd('ui');const st=HRS219.filter(h=>h.stk&&!h.own);if(!st.length){talkSay(both('Most nincs eladó lovam. Holnapra lesz új.','No horses for sale right now. A new one tomorrow.'));return}
+  const cost=hrsCost219(),ok=creative||Object.entries(cost).every(([k,v])=>(inv[k]|0)>=v);if(!ok){talkSay(both('Egy nyergelt ló '+cost.iron+' fémet és '+cost.canned+' konzervet kér.','A saddled horse costs '+cost.iron+' scrap and '+cost.canned+' tins.'));return}
+  if(!creative)for(const[k,v]of Object.entries(cost))inv[k]-=v;const h=st[0];h.stk=0;h.own=1;h.st=1;h.sd=1;h.tm=3;HDT219.sold=(HDT219.sold|0)+1;try{snd('craft')}catch(e){}neigh219(1);talkClose(both('Jó üzlet. '+(h.nm||'A ló')+' a tiéd — E: felülés.','Fair trade. '+(h.nm||'The horse')+' is yours — E: mount.'));return}
+ return tp.apply(this,arguments)}}
+
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
  if(state=='title')menu();if(state=='opts')optsMenu();if(state=='sndo')sndMenu();if(state=='gfxo')gfxMenu();if(state=='slots')svMenu();if(state=='keys')keysMenu();if(state=='wthr')wthrMenu();if(state=='char')charMenu();if(state=='lobby')drawLobby();if(state=='hb'){Q(0,0,VW,VH,'rgba(6,10,6,.6)');drawHB()}if(0)title('ASHFALL',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Hold the fire. Survive the nights.','','WASD move \u2022 Space chop / fish / attack \u2022 Tab recipes','Press any key']);
