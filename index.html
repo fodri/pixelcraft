@@ -13288,7 +13288,7 @@ function thinCars219(){let k=0;for(let i=0;i<W*H;i++){const o=ob[i];if(!o||o.t!=
 function neigh219(k){try{if(!(SXS&&SXS.ok>0)||vol<=0)return;k=k||1;sxT('sawtooth',620,900,.16,.1*k);setTimeout(()=>{try{sxT('sawtooth',900,380,.3,.09*k)}catch(e){}},160)}catch(e){}}
 function clop219(k){try{if(!(SXS&&SXS.ok>0)||vol<=0)return;sxN(.035,'lowpass',520,240,1.2,.32*k);setTimeout(()=>{try{sxN(.03,'lowpass',460,200,1.2,.24*k)}catch(e){}},70)}catch(e){}}
 /* --- mounting --- */
-function hrsNear219(r){let b=null,bd=r;for(const h of HRS219){const d=Math.hypot(h.x-P.x,h.y-P.y);if(d<bd){bd=d;b=h}}return b}
+function hrsNear219(r){let b=null,bd=r;for(const h of HRS219){if(h.cv)continue;const d=Math.hypot(h.x-P.x,h.y-P.y);if(d<bd){bd=d;b=h}}return b}
 function mount219(h){MNT219=h;P.boat=false;try{sit=null}catch(e){}neigh219(.8);say(both('Felültél a lóra. E: leszállás.','You mount the horse. E: get off.'))}
 function dismount219(q){const h=MNT219;MNT219=null;if(!h)return;for(const[ax,ay]of[[h.fx>0?-18:18,0],[0,18],[0,-18],[h.fx>0?18:-18,0]])if(!blocked(P.x+ax,P.y+ay,5)){h.x=P.x+ax;h.y=P.y+ay;break}h.hx=h.x;h.hy=h.y;if(!q)say(both('Leszálltál.','You get off.'))}
 {const ce=carE;carE=function(){
@@ -13369,6 +13369,89 @@ function hrsCost219(){const r=CMP218?CMP218.rep|0:0;return r>=30?{iron:3,canned:
   const cost=hrsCost219(),ok=creative||Object.entries(cost).every(([k,v])=>(inv[k]|0)>=v);if(!ok){talkSay(both('Egy nyergelt ló '+cost.iron+' fémet és '+cost.canned+' konzervet kér.','A saddled horse costs '+cost.iron+' scrap and '+cost.canned+' tins.'));return}
   if(!creative)for(const[k,v]of Object.entries(cost))inv[k]-=v;const h=st[0];h.stk=0;h.own=1;h.st=1;h.sd=1;h.tm=3;HDT219.sold=(HDT219.sold|0)+1;try{snd('craft')}catch(e){}neigh219(1);talkClose(both('Jó üzlet. '+(h.nm||'A ló')+' a tiéd — E: felülés.','Fair trade. '+(h.nm||'The horse')+' is yours — E: mount.'));return}
  return tp.apply(this,arguments)}}
+
+/* ===== v220: the roads. Dirt roads link Menedék with the faction outposts (a minimum spanning tree plus one loop), roadside waystations
+   (a fire, a barrel, a wanderer to trade with) stand along them, and a caravan — a trader, a guard and a pack horse — walks every road
+   from camp to camp by day and rests where it stands at night. Their position is a function of the clock, so nothing needs saving. ===== */
+GAMEV=235;
+let RDS220=null,CVS220=[],CVCLK220=0;
+const RNAT220={tree:1,rock:1,bush:1,flax:1,cactus:1,tgrass:1,shrub:1,flower:1,jbush:1,sdrift:1,reed:1,fosl:1,tires:1,chopblk:1,palm:1};
+function opsList220(){const L=[];for(let i=0;i<W*H;i++){const o=ob[i];if(o&&o.t=='opost')L.push({x:i%W,y:(i/W)|0,fac:o.fac})}return L}
+/* A* over the tile grid: grass is cheap, trees cost a little (they get felled), old road is cheapest; water, lava, walls and buildings are out */
+function astar220(sx,sy,tx,ty,blk){const N=W*H,gs=new Float32Array(N).fill(1e9),from=new Int32Array(N).fill(-1),closed=new Uint8Array(N),hp=[],hv=[];
+ const cost=i=>{const m=map[i];if(!WALKM(m)||blk[i])return 1e9;const o=ob[i];if(o){if(!RNAT220[o.t]||o.pm!=null)return 1e9;return 5}return m==2?.5:1};
+ const push=(i,f)=>{hp.push([f,i]);let k=hp.length-1;while(k>0){const p=(k-1)>>1;if(hp[p][0]<=hp[k][0])break;[hp[p],hp[k]]=[hp[k],hp[p]];k=p}};
+ const pop=()=>{const r=hp[0],l=hp.pop();if(hp.length){hp[0]=l;let k=0;for(;;){let a=k*2+1,b=a+1,m=k;if(a<hp.length&&hp[a][0]<hp[m][0])m=a;if(b<hp.length&&hp[b][0]<hp[m][0])m=b;if(m==k)break;[hp[m],hp[k]]=[hp[k],hp[m]];k=m}}return r};
+ const s=sy*W+sx,t=ty*W+tx;gs[s]=0;push(s,0);let it=0;
+ while(hp.length&&it++<260000){const[f,i]=pop();if(closed[i])continue;closed[i]=1;if(i==t){const P=[];for(let k=t;k>=0;k=from[k])P.push([k%W,(k/W)|0]);return P.reverse()}
+  const x=i%W,y=(i/W)|0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const nx=x+dx,ny=y+dy;if(nx<3||ny<3||nx>=W-3||ny>=H-3)continue;const j=ny*W+nx;if(closed[j])continue;
+   if(dx&&dy&&(cost(y*W+nx)>=1e9||cost(ny*W+x)>=1e9))continue;const c=cost(j);if(c>=1e9&&j!=t)continue;const ng=gs[i]+(c>=1e9?1:c)*(dx&&dy?1.414:1);if(ng<gs[j]){gs[j]=ng;from[j]=i;push(j,ng+Math.hypot(tx-nx,ty-ny)*.9)}}}
+ return null}
+function roadPaint220(P){let n=0;for(const[x,y]of P)for(const[ax,ay]of[[0,0],[1,0],[0,1]]){const xx=x+ax,yy=y+ay;if(xx<2||yy<2||xx>=W-2||yy>=H-2)continue;const i=yy*W+xx,m=map[i];if(!(m==0||m==4))continue;const o=ob[i];if(o){if(!RNAT220[o.t])continue;try{rmObj(o.pm!=null?o.pm:i)}catch(e){}ob[i]=null}map[i]=2;n++}return n}
+function roadsGen220(){RDS220=null;CVS220=[];const ops=opsList220(),c=CMP218;if(!c||!ops.length)return;
+ const blk=new Uint8Array(W*H);for(const b of BLD)for(let y=b.y-1;y<=b.y+b.h;y++)for(let x=b.x-1;x<=b.x+b.w;x++)if(x>=0&&y>=0&&x<W&&y<H)blk[y*W+x]=1;
+ /* keep the camp walls out of the way, but leave the gate approaches open */
+ for(let y=c.Y-1;y<=c.Y+55;y++)for(let x=c.X-1;x<=c.X+55;x++)if(x>=0&&y>=0&&x<W&&y<H)blk[y*W+x]=1;
+ const cr=BLD.length;if(RIC)for(let y=Math.max(0,RIC[1]-RIC[2]-5);y<Math.min(H,RIC[1]+RIC[2]+5);y++)for(let x=Math.max(0,RIC[0]-RIC[2]-5);x<Math.min(W,RIC[0]+RIC[2]+5);x++)if(Math.hypot(x-RIC[0],y-RIC[1])<RIC[2]+5)blk[y*W+x]=1;
+ for(const o of ops)for(let y=o.y-5;y<=o.y+5;y++)for(let x=o.x-5;x<=o.x+4+1;x++)if(!(y>o.y+4))blk[y*W+x]=1;
+ const gates=[{x:c.X+18,y:c.Y-6},{x:c.X+34,y:c.Y+59},{x:c.X-6,y:c.Y+18},{x:c.X+59,y:c.Y+34}];
+ const nodes=[{k:'camp',x:c.X+27,y:c.Y+27},...ops.map((o,i)=>({k:'op'+i,x:o.x,y:o.y,fac:o.fac,gx:o.x,gy:o.y+5}))];
+ /* edges: Prim from the camp, then the shortest missing link */
+ const E=[],inT=new Set([0]);while(inT.size<nodes.length){let bd=1e9,be=null;for(const a of inT)for(let b=0;b<nodes.length;b++){if(inT.has(b))continue;const d=Math.hypot(nodes[a].x-nodes[b].x,nodes[a].y-nodes[b].y);if(d<bd){bd=d;be=[a,b]}}inT.add(be[1]);E.push(be)}
+ {let bd=1e9,be=null;for(let a=1;a<nodes.length;a++)for(let b=a+1;b<nodes.length;b++){if(E.some(e=>(e[0]==a&&e[1]==b)||(e[0]==b&&e[1]==a)))continue;const d=Math.hypot(nodes[a].x-nodes[b].x,nodes[a].y-nodes[b].y);if(d<bd&&d<130){bd=d;be=[a,b]}}if(be)E.push(be)}
+ const routes=[];
+ for(const[a,b]of E){const A=nodes[a],B=nodes[b];let s,t;
+  const endOf=(N,other)=>{if(N.k=='camp'){let bg=gates[0],bd=1e9;for(const g of gates){const d=Math.hypot(g.x-other.x,g.y-other.y);if(d<bd){bd=d;bg=g}}return bg}return{x:N.gx,y:N.gy}};
+  s=endOf(A,B);t=endOf(B,A);
+  /* the start and end tiles must be open */
+  for(const q of[s,t])blk[q.y*W+q.x]=0;
+  const P=astar220(s.x,s.y,t.x,t.y,blk);if(!P||P.length<8)continue;
+  roadPaint220(P);routes.push({a:A.k,b:B.k,pts:P.map(q=>[q[0],q[1]]),fa:A.fac||'camp',fb:B.fac||'camp'})}
+ RDS220={routes};
+ try{waysGen220()}catch(e){console.warn('ways',e)}}
+/* --- waystations along the road --- */
+const WNM220=['Vándor','Utazó','Postás','Csavargó'];
+function waysGen220(){if(!RDS220)return;let n=0;const taken=[];
+ for(const r of RDS220.routes){const P=r.pts;for(let k=36;k<P.length-24&&n<9;k+=46){const[x,y]=P[k];if(taken.some(q=>Math.hypot(q[0]-x,q[1]-y)<30))continue;
+  let site=null;for(let d=3;d<=5&&!site;d++)for(const[ax,ay]of[[d,0],[-d,0],[0,d],[0,-d],[d,d],[-d,-d]]){const xx=x+ax,yy=y+ay;let ok=true;for(let dy=-1;dy<=2&&ok;dy++)for(let dx=-2;dx<=2;dx++){const i=(yy+dy)*W+xx+dx,m=map[i],o=ob[i];if(!(m==0||m==4)||(o&&(!RNAT220[o.t]||o.pm!=null))||BLD.some(q=>xx+dx>=q.x-1&&xx+dx<=q.x+q.w&&yy+dy>=q.y-1&&yy+dy<=q.y+q.h)){ok=false;break}}if(ok){site=[xx,yy];break}}
+  if(!site)continue;const[sx,sy]=site;for(let dy=-2;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){const i=(sy+dy)*W+sx+dx,o=ob[i];if(o&&RNAT220[o.t]){try{rmObj(i)}catch(e){}ob[i]=null}}ob[sy*W+sx]={t:'fire',on:true,fl:600};ob[(sy-1)*W+sx+1]={t:'fbarrel'};ob[(sy+1)*W+sx-1]={t:'fcrate'};ob[(sy-1)*W+sx-2]={t:'flag'};
+  const px=sx*T+8,py=(sy+2)*T+8,nm=(typeof NMM!='undefined'&&NMM.length?NMM:['Ottó'])[Math.floor(R()*(typeof NMM!='undefined'&&NMM.length?NMM.length:1))];
+  NPCS.push({x:px,y:py,hx:px,hy:py,wr:1.5,c:typeof lookRnd=='function'?lookRnd():'1',nm:nm+' ('+WNM220[n%WNM220.length]+')',tr:Math.floor(R()*TRD.length),g:Math.floor(R()*3),kn:0,fr:0,ws220:1});
+  taken.push([x,y]);n++}}
+ RDS220.ways=n}
+/* --- the caravans --- */
+const CVN220=[['Karaván','Caravan']];
+function cvBuild220(){for(const c of CVS220)for(const n of c.m)if(n.k=='npc'){const i=NPCS.indexOf(n.o);if(i>=0)NPCS.splice(i,1)}else if(n.k=='horse'){const i=HRS219.indexOf(n.o);if(i>=0)HRS219.splice(i,1)}CVS220=[];
+ if(!RDS220)return;let idx=0;
+ for(const r of RDS220.routes){const P=r.pts.map(q=>({x:q[0]*T+8,y:q[1]*T+8}));const cl=[0];for(let i=1;i<P.length;i++)cl.push(cl[i-1]+Math.hypot(P[i].x-P[i-1].x,P[i].y-P[i-1].y));
+  const len=cl[cl.length-1];if(len<200)continue;
+  const mk=(role)=>{const sx=Math.random()<.5?'f':'m',o={x:P[0].x,y:P[0].y,hx:P[0].x,hy:P[0].y,wr:.01,c:typeof lookRnd=='function'?lookRnd():'1',nm:(sx=='f'?NMF:NMM)[Math.floor(Math.random()*(sx=='f'?NMF:NMM).length)]+(role=='guard'?' (őr)':' (kereskedő)'),sx,tr:Math.floor(Math.random()*TRD.length),g:Math.floor(Math.random()*3),kn:0,fr:0,cv220:1};NPCS.push(o);return{k:'npc',o,role}};
+  const hz=hrsNew219(P[0].x,P[0].y,1,1,{col:Math.floor(Math.random()*5),cv:1});hz.nm=null;
+  const cv={r,P,cl,len,lag:0,off:(idx*997)%Math.round(len*2),dw:440,m:[mk('trader'),mk('guard'),{k:'horse',o:hz}],fr:0};CVS220.push(cv);idx++}}
+function cvAt220(cv,u){const L=cv.len,per=2*(L+cv.dw);let s=((u%per)+per)%per,dir=1,mvg=1;if(s<L){}else if(s<L+cv.dw){s=L;mvg=0}else if(s<2*L+cv.dw){s=L-(s-L-cv.dw);dir=-1}else{s=0;mvg=0;dir=-1}
+ let lo=0,hi=cv.cl.length-1;while(lo<hi-1){const m=(lo+hi)>>1;if(cv.cl[m]<=s)lo=m;else hi=m}const a=cv.P[lo],b=cv.P[Math.min(lo+1,cv.P.length-1)],t=(s-cv.cl[lo])/Math.max(1,cv.cl[Math.min(lo+1,cv.cl.length-1)]-cv.cl[lo]);
+ return{x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,dir,mv:mvg,fx:Math.sign(b.x-a.x)*dir||0,fy:Math.sign(b.y-a.y)*dir||0}}
+function cvTick220(dt){if(!CVS220.length||inD)return;CVCLK220+=dt;const secs=CVCLK220,night=npcNight(),pls=players();
+ for(const cv of CVS220){let frozen=night;if(!frozen)for(const m of cv.m){const o=m.o;if(Math.hypot(P.x-o.x,P.y-o.y)<46||(TALK&&TALK.n===o)){frozen=true;break}}
+  if(frozen)cv.lag+=dt;const u=(secs-cv.lag)*22+cv.off;
+  const pos=[cvAt220(cv,u),cvAt220(cv,u-16),cvAt220(cv,u-34)];
+  cv.m.forEach((m,i)=>{const p=pos[i],o=m.o;o.x=p.x;o.y=p.y;if(m.k=='horse'){o.fx=p.fx>=0?1:-1;o.mv=(p.mv&&!frozen)?1:0;o.an=(o.an||0)+dt*(o.mv?8:0);o.hx=o.x;o.hy=o.y}else{o.hx=o.x;o.hy=o.y;o.mv=(p.mv&&!frozen&&!(o.st>0))?1:0;o.an=(o.an||0)+dt*7;if(o.mv){if(Math.abs(p.fx)>=Math.abs(p.fy)&&p.fx){o.fx=p.fx;o.fy=0}else if(p.fy){o.fx=0;o.fy=p.fy}}o.st=Math.max(0,(o.st||0)-dt)}});
+  /* the guard shoots the infected that come close */
+  const g=cv.m[1].o;if((!net||net.isHost)&&simNear216(g.x,g.y,700)){const now=performance.now();if((g.cd220||0)<now){let best=null,bd=120;for(const z of zs){if(z.hp<=0)continue;const d=Math.hypot(z.x-g.x,z.y-g.y);if(d<bd){bd=d;best=z}}
+   if(best){g.cd220=now+1500+Math.random()*600;best.hp-=2.5;hit(best.x,best.y-6,'#8a1c1c');const dx=best.x-g.x,dy=best.y-6-(g.y-8),L=Math.hypot(dx,dy)||1;parts.push({x:g.x,y:g.y-8,vx:dx/L*300,vy:dy/L*300,l:L/300,c:'#ffe9a0',sz:1});g.fx=Math.sign(dx)||0;g.fy=0;g.st=.6}}}}}
+{const u=update;update=function(dt){const r=u.apply(this,arguments);try{if(state=='play'&&!inD)cvTick220(dt)}catch(e){}return r}}
+/* the caravan people are not the base game's: they are held out of its wandering and its save */
+const hold220=(f)=>function(){if(inD||!CVS220.length)return f.apply(this,arguments);const all=NPCS;NPCS=all.filter(q=>!q.cv220);try{return f.apply(this,arguments)}finally{NPCS=all}};
+{const nt=npcTick;npcTick=hold220(nt)}{const jt=jobTick105;jobTick105=hold220(jt)}
+/* horse AI must leave the caravan pack horses alone */
+{const hz=hrsTick219;hrsTick219=function(dt){const keep=[];for(const h of HRS219)if(h.cv)keep.push(h);if(!keep.length)return hz.apply(this,arguments);const all=HRS219,sub=all.filter(h=>!h.cv);HRS219=sub;const n0=sub.length;try{return hz.apply(this,arguments)}finally{const made=HRS219.slice(n0);HRS219=all;for(const h of made)if(!all.includes(h))all.push(h)}}}
+/* save: roads in their own key, caravan people and horses are not stored */
+{const sv=save;save=function(){const hold=NPCS,hh=HRS219;NPCS=hold.filter(n=>!n.cv220);HRS219=hh.filter(h=>!h.cv);let r;try{r=sv.apply(this,arguments)}finally{NPCS=hold;HRS219=hh}try{if(RDS220)localStorage.setItem(SKEY()+'_rds',JSON.stringify(RDS220));else localStorage.removeItem(SKEY()+'_rds')}catch(e){}return r}}
+{const ld=load;load=function(){CVS220=[];RDS220=null;const r=ld.apply(this,arguments);try{if(r){const s=localStorage.getItem(SKEY()+'_rds');if(s){RDS220=JSON.parse(s);cvBuild220()}}}catch(e){RDS220=null}return r}}
+{const in_=init;init=function(...a){CVS220=[];RDS220=null;const r=in_.apply(this,a);try{roadsGen220();cvBuild220()}catch(e){console.warn('roads',e);RDS220=null;CVS220=[]}return r}}
+/* greeting for the caravan folk */
+HU.unshift(['Caravan','Karaván']);
+{const ng=npcGreet;npcGreet=function(n){if(n&&n.cv220)return both('Úton vagyunk a táborok között. Cserélj velünk, ha van mid.','We travel between the camps. Trade with us if you have goods.');if(n&&(n.ws220||/\((Vándor|Utazó|Postás|Csavargó)\)$/.test(n.nm||'')))return both('Foglalj helyet a tűznél. Hosszú az út.','Sit by the fire. The road is long.');return ng.apply(this,arguments)}}
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
