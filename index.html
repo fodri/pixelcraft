@@ -12958,6 +12958,28 @@ addEventListener('mousedown',e=>{if(!invOpen||state!='play'||e.button!==2)return
 addEventListener('contextmenu',e=>{if(invOpen&&state=='play')e.preventDefault()},true);
 HU.unshift(['Upgraded: ','Fejlesztve: '],['Missing: ','Hiányzik: ']);
 
+/* ===== v215: at night you can sleep on a sofa too — the character stretches out on it and the night passes, but the sofa is not a
+   bed: your respawn point stays where it was, and you rest a little less (+20 health instead of +30). By day the sofa is for sitting. ===== */
+GAMEV=230;
+function sofaSleepEnd215(){zs=[];P.hp=Math.min(100,P.hp+20);try{if(STORY)STORY.t.slept=1}catch(e){}const h=LANG=='hu';say(h?'Kialudtad magad a kanapén. '+day+'. nap — a kezdőpontod nem változott':'You slept on the sofa. Day '+day+' — your respawn point stays the same')}
+{const uo215=useObj;useObj=function(n){const o=n&&n.o;if(o&&(o.t=='sofa'||o.t=='p_sofa')&&state=='play'){let a=n.tx,b=n.ty,q=o;if(o.pm!=null){a=o.pm%W;b=Math.floor(o.pm/W);q=ob[o.pm]||o}
+ if(q&&(q.t=='sofa'||q.t=='p_sofa')&&sleepDark()>.4){const h=LANG=='hu';
+  if(zs.some(z=>Math.hypot(z.x-P.x,z.y-P.y)<140)){say(h?'Nem tudsz aludni — fertőzött van a közelben':'Can’t sleep — infected nearby');return}
+  if(TL||SLP)return;const fw=q.fw||2,fh=q.fh||1,hor=fw>=fh;
+  /* lying along the seat, head towards the left end (or the top, if the sofa stands upright) */
+  sit={x:a*T+(hor?16:8),y:b*T+(hor?8:16)+2,lie:1,bx:a,by:b,r:hor?3:0,ox:P.x,oy:P.y,sofa:1};
+  if(net&&!net.dead&&net.peers.length){SLP={t:performance.now(),sofa:1};say(h?'Lefeküdtél a kanapéra — várjuk, hogy a többiek is aludjanak':'You lie down on the sofa — waiting for everyone to sleep')}
+  else sleepLapse(sofaSleepEnd215);return}}
+ return uo215.apply(this,arguments)}}
+/* co-op: waking up from the sofa does not move your respawn point (lying down on a sofa never set it) */
+{const wu215=wakeUp;wakeUp=function(...a){if(SLP&&SLP.sofa){SLP=null;P.hp=Math.min(100,P.hp+20);try{if(STORY)STORY.t.slept=1}catch(e){}const h=LANG=='hu';say(h?'Kialudtad magad a kanapén. '+day+'. nap — a kezdőpontod nem változott':'You slept on the sofa. Day '+day+' — your respawn point stays the same');return}return wu215.apply(this,a)}}
+/* the lying pose on a sofa: no blanket, a cushion under the head */
+{const dl215=drawLie;drawLie=function(p,c,s,e){if(!(sit&&sit.sofa&&p&&p.bx===sit.bx&&p.by===sit.by))return dl215.apply(this,arguments);
+ g.save();g.translate(Math.round(p.bx*T-cam.x),Math.round(p.by*T-cam.y));const r=p.r&3;if(r==1){g.translate(2*T,0);g.rotate(Math.PI/2)}else if(r==2){g.translate(T,2*T);g.rotate(Math.PI)}else if(r==3){g.translate(0,T);g.rotate(-Math.PI/2)}
+ Q(3,1,10,5,'#d8ccb0');Q(3,1,10,1,'#efe4c8');const ns=chNoSh;chNoSh=true;dcP(8,27,c,0,0,1,1,e);chNoSh=ns;Q(3,17,10,10,'rgba(120,100,80,.55)');g.restore()}}
+/* the prompt over a sofa says what E does */
+HU.unshift(['You slept on the sofa. Day ','Kialudtad magad a kanapén. ']);
+
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
  if(state=='title')menu();if(state=='opts')optsMenu();if(state=='sndo')sndMenu();if(state=='gfxo')gfxMenu();if(state=='slots')svMenu();if(state=='keys')keysMenu();if(state=='wthr')wthrMenu();if(state=='char')charMenu();if(state=='lobby')drawLobby();if(state=='hb'){Q(0,0,VW,VH,'rgba(6,10,6,.6)');drawHB()}if(0)title('ASHFALL',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Hold the fire. Survive the nights.','','WASD move \u2022 Space chop / fish / attack \u2022 Tab recipes','Press any key']);
