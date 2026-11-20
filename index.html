@@ -13677,6 +13677,186 @@ function mgGive222(k,n){let got=0;const m=MG222;
 /* the infirmary: free healing at the nurse */
 {const tp=talkPick;talkPick=function(i){const n=TALK&&TALK.n;if(n&&n.cj=='nurse'&&MG222&&MG222.lv.infirm){const o=talkOpts()[i];if(o&&o.k=='heal'){try{snd('ui')}catch(e){}if(P.hp>=99&&!(P.inf>0)){talkSay(both('Jól nézel ki, nincs mit gyógyítani.','You look fine — nothing to heal.'));return}P.hp=100;if(P.inf>0)P.inf=0;try{snd('pick')}catch(e){}talkSay(both('A gyengélkedő ingyen ápol. Kész.','The infirmary treats you free of charge. Done.'));return}}return tp.apply(this,arguments)}}
 
+/* ===== v223: law and order in Menedék. Every week the camp elects its leader — the incumbent, two residents, and you, if the camp trusts you
+   enough to let you stand. Each leader has a way of ruling (farmer-minded, popular, trade-minded, strict). The council hall tells you who
+   stands where in the hierarchy. Crime happens: thefts, brawls, vandalism. The guards catch some of the culprits; for the others the captain
+   opens an investigation and you can help — talk to the suspects, search one of them. The guilty go to the new jail (the north-east block),
+   serve their days behind bars and walk free again. ===== */
+GAMEV=238;
+/* --- the conversation menu is back: since the smaller dialogue box (build 126) nothing painted the options, kept the person's line on screen
+   while you talk, or made the person stand still. The old behaviour returns, and the menu grows to fit its longest line. --- */
+{const dd=dlDraw;dlDraw=function(){const e=DLG;
+ if(e&&!e.done&&e.cps&&e.cps!==42){const dt=(performance.now()-(e.lt96||e.t0))/1000;e.lt96=performance.now();
+  if(!e.wait96||performance.now()>e.wait96){e.acc96=(e.acc96||0)+dt*e.cps;while(e.acc96>=1&&e.n<e.text.length){e.acc96--;const c=e.text[Math.floor(e.n)];e.n++;try{dlBlip(e,c)}catch(er){}if(/[.!?…,;:—]/.test(c)){e.wait96=performance.now()+(/[.!?…]/.test(c)?260:110);e.acc96=0;break}}}
+  e.t0=performance.now()-e.n/42*1000;if(e.n>=e.text.length){e.done=true;e.td=performance.now()}}
+ if(TALK&&e&&e.src===TALK.n&&e.done)e.td=performance.now();
+ if(TALK){const n=TALK.n;n.st=6;n.sayT=0;if(Math.hypot(n.x-P.x,n.y-P.y)>70||state!='play'||inD&&!inC)TALK=null}
+ dd.apply(this,arguments);
+ try{if(TALK&&DLG&&DLG.src===TALK.n)talkMenu();talkFace()}catch(er){noTr=false}}}
+{const tr=talkRect;talkRect=function(){const q=tr.apply(this,arguments);try{const o=talkOpts();let mx=0;const sv=g.font;g.font=fnt(0,8);for(let i=0;i<o.length;i++){const w=g.measureText((i+1)+'.  '+o[i].l).width;if(w>mx)mx=w}g.font=sv;const r=dlRect(),w=Math.max(150,Math.min(Math.round(VW-24),Math.ceil(mx)+16));return{x:Math.max(2,r.x+r.w-w),y:q.y,w,h:q.h}}catch(e){return q}}}
+const TRL223=['gazda','nepszeru','kereskedo','szigoru'];
+const TRN223={gazda:['Gazdálkodó','Farmer-minded'],nepszeru:['Népszerű','Popular'],kereskedo:['Kereskedő-barát','Trade-minded'],szigoru:['Szigorú','Strict']};
+const TRD223={gazda:['+4 élelem naponta','+4 food a day'],nepszeru:['+2 morál naponta','+2 morale a day'],kereskedo:['+3 fa, +2 kő, +2 fém naponta','+3 wood, +2 stone, +2 scrap a day'],szigoru:['több elfogott bűnöző, kevesebb bűn, de -1 morál','more criminals caught, less crime, but -1 morale']};
+const trOf223=(nm)=>TRL223[hs216(String(nm))%4];
+const chOf223=(nm)=>(hs216('c'+nm)%100)/100;
+const npcBy223=(nm)=>NPCS.find(n=>n.nm==nm);
+const trN223=(k)=>TRN223[k][LANG=='hu'?0:1];
+const trD223=(k)=>TRD223[k][LANG=='hu'?0:1];
+const lead223=()=>CMP218?CMP218.pop.find(n=>n.cj=='leader'):null;
+function trait223(){const m=MG222;if(!m)return null;if(m.pl)return m.ptr||'nepszeru';const L=lead223();return L?trOf223(L.nm):null}
+/* --- the jail: a stone block with three cells behind bars, in the north-east lot --- */
+const PL_JAIL223=["#m.#m.#m.#","#m.#m.#m.#","#..#..#..#","#..#..#..#","..........","..........","....dd....","k.......p.","..L......."];
+SOLID.jbar=1;NMX.jbar='cell bars';
+DRAWX.jbar=function(o,x,y){W_(x,y+13,16,3,'rgba(0,0,0,.3)');W_(x,y+2,16,2,'#44484e');W_(x,y+12,16,2,'#44484e');for(let i=0;i<4;i++){W_(x+1+i*4,y+3,2,9,'#868e98');W_(x+1+i*4,y+3,1,9,'#b6bcc6')}W_(x,y+2,16,1,'#6a6e76')};
+{const ss=shopSign;shopSign=function(x,y,k){k=k|0;if(k!=24)return ss.apply(this,arguments);for(let i=0;i<16;i+=4)W_(x+i,y-7,4,5,(i/4)%2?'#d8d8d8':'#3a3e44');W_(x,y-2,16,1,'rgba(0,0,0,.3)');lbl(LANG=='hu'?'BÖRTÖN':'JAIL',x+8-cam.x,y-10-cam.y)}}
+function jailGen223(){const c=CMP218;if(!c)return false;const X=c.X,Y=c.Y,lx=X+37,ly=Y+5,w=12,h=11;
+ for(let i=BLD.length-1;i>=0;i--){const q=BLD[i];if(q.x>=lx-1&&q.x<lx+12&&q.y>=ly-1&&q.y<ly+12)BLD.splice(i,1)}
+ for(let yy=ly;yy<ly+12;yy++)for(let xx=lx;xx<lx+12;xx++){const i=yy*W+xx,o=ob[i];if(o){const ai=o.pm!=null&&ob[o.pm]?o.pm:i;try{rmObj(ai)}catch(e){}ob[i]=null}map[i]=0}
+ shell(lx,ly,w,h,'sblock',16,{});putPlan(lx+1,ly+1,PL_JAIL223,false,{});
+ ob[(ly+8)*W+lx+5]={t:'ochair',r:0};
+ for(const ix of[1,2,4,5,7,8])ob[(ly+4)*W+lx+1+ix]={t:'jbar',hp:9999,nb:1};
+ ob[(ly+h-1)*W+lx+6]={t:'door',open:false,sh:24};for(let xx=lx;xx<lx+w;xx++)map[(ly+h)*W+xx]=14;
+ BLD.push({x:lx,y:ly,w,h,rf:'jail'});try{ROOFC.clear()}catch(e){}return true}
+{const cg=cmpGen218;cmpGen218=function(){const r=cg.apply(this,arguments);try{if(CMP218)CMP218.jail223=jailGen223()?1:0}catch(e){console.warn('jail',e);if(CMP218)CMP218.jail223=0}return r}}
+function jailCell223(i){const c=CMP218;return{x:(c.X+37+1+[2,5,8][i])*T+8,y:(c.Y+5+2)*T+8}}
+function jailDoor223(){const c=CMP218;return{x:(c.X+43)*T+8,y:(c.Y+17)*T+8}}
+/* --- state --- */
+function lwEns223(){const m=MG222;if(!m)return null;if(!m.el)m.el={next:day+6,cand:[],pv:null,camp:{},bias:{},reg:0,last:null};if(!m.jl)m.jl={};if(m.pl==null)m.pl=0;if(m.ration==null)m.ration=0;return m.el}
+{const in_=init;init=function(...a){const r=in_.apply(this,a);try{if(MG222){MG222.jail=CMP218&&CMP218.jail223?1:0;lwEns223()}}catch(e){}return r}}
+function jailFix223(){const m=MG222;if(!m||!CMP218||!m.jl)return;for(const nm in m.jl){const q=m.jl[nm],n=npcBy223(nm);if(!n){delete m.jl[nm];continue}const p=jailCell223(q.cell);n.cj='pris';if(Math.hypot(n.x-p.x,n.y-p.y)>40){n.x=p.x;n.y=p.y}n.hx=n.h0x=p.x;n.hy=n.h0y=p.y;n.wr=n.h0r=.8;n.wp218=null;n.tx=null;if(!CMP218.pop.includes(n))CMP218.pop.push(n)}}
+{const ld=load;load=function(){const r=ld.apply(this,arguments);try{if(r&&MG222){lwEns223();if(MG222.jail==null)MG222.jail=0;jailFix223()}}catch(e){}return r}}
+/* --- arrests --- */
+function arrest223(n,d){const c=CMP218,m=MG222;if(!c||!m||!m.jail)return false;const used=Object.values(m.jl).map(v=>v.cell),cell=[0,1,2].find(i=>!used.includes(i));if(cell==null)return false;
+ m.jl[n.nm]={rel:day+d,cell};const p=jailCell223(cell);n.cj='pris';n.x=p.x;n.y=p.y;n.hx=n.h0x=p.x;n.hy=n.h0y=p.y;n.wr=n.h0r=.8;n.wp218=null;n.tx=null;n.sl=0;n.mv=0;return true}
+function release223(n){const c=CMP218,m=MG222;delete m.jl[n.nm];n.cj='res';const d=jailDoor223(),mid={x:(c.X+27)*T,y:(c.Y+27)*T};n.x=d.x;n.y=d.y;n.hx=n.h0x=mid.x+(Math.random()-.5)*180;n.hy=n.h0y=mid.y+(Math.random()-.5)*180;n.wr=n.h0r=6;n.tx=null;n.sl=0;try{n.wp218=cmpRoute218(n,n.hx,n.hy)}catch(e){n.wp218=null}}
+const remNpc223=(n)=>{const i=NPCS.indexOf(n);if(i>=0)NPCS.splice(i,1);const c=CMP218;if(c){const j=c.pop.indexOf(n);if(j>=0)c.pop.splice(j,1)}};
+/* --- crime --- */
+const CRN223={theft:['Lopás','Theft'],brawl:['Verekedés','Brawl'],vandal:['Rongálás','Vandalism']};
+const RESN223={food:['élelmet','food'],wood:['fát','wood'],stone:['követ','stone'],scrap:['fémet','scrap']};
+function crimeNew223(){const m=MG222,c=CMP218,h=LANG=='hu',res=mgRes222();if(m.case||res.length<8)return;const gd=cmpGuards218().length,tr=trait223();
+ const p=.2+(m.morale<40?.12:0)+(m.food<=0?.12:0)-(gd>=25?.05:0)-(tr=='szigoru'?.07:0)-(m.lv.wall?.02:0);if(Math.random()>=p)return;
+ const cul=res[Math.floor(Math.random()*res.length)],r=Math.random();let ty,loot=null,vic=null;
+ if(r<.6){ty='theft';const k=['food','wood','stone','scrap'][Math.floor(Math.random()*4)],n=Math.min(m[k]|0,6+Math.floor(Math.random()*9));loot={k,n};m[k]-=n}
+ else if(r<.85){ty='brawl';const o=res.filter(x=>x!==cul);vic=o.length?o[Math.floor(Math.random()*o.length)].nm:null;m.morale=Math.max(0,m.morale-3)}
+ else{ty='vandal';const n=Math.min(m.scrap|0,4);loot={k:'scrap',n};m.scrap-=n;m.morale=Math.max(0,m.morale-2)}
+ const catchP=.5+(gd>=25?.1:0)+(tr=='szigoru'?.2:0)+(m.lv.tower?.05:0),days=1+Math.floor(Math.random()*3);
+ if(Math.random()<catchP){const jailed=arrest223(cul,days);if(loot)m[loot.k]+=loot.n;
+  mgSay222((h?'Elfogták: ':'Caught: ')+cul.nm,CRN223[ty][h?0:1]+(jailed?' — '+days+(h?' nap börtön':' days in jail'):(h?' — megbüntették':' — fined')),'#d8b070');return}
+ const others=res.filter(x=>x!==cul).sort(()=>Math.random()-.5).slice(0,2),sus=[cul,...others].sort(()=>Math.random()-.5).map(x=>x.nm),inn=sus.filter(x=>x!=cul.nm),wit=inn[Math.floor(Math.random()*inn.length)];
+ m.case={ty,who:cul.nm,loot,vic,d:day,sus,srch:[],wit,wh:Math.random()<.65};
+ mgSay222((h?'Bűntény: ':'Crime: ')+CRN223[ty][h?0:1],h?'A tettes ismeretlen — beszélj az őrkapitánnyal':'The culprit is unknown — talk to the guard captain','#e08080')}
+function caseTxt223(){const cs=MG222.case,h=LANG=='hu';if(!cs)return '';const L=cs.loot&&cs.loot.n?cs.loot:null;
+ if(cs.ty=='theft')return h?'Valaki ellopott '+(L?L.n:'valamennyi')+' '+(L?RESN223[L.k][0]:'készletet')+' a raktárból.':'Someone took '+(L?L.n:'some')+' '+(L?RESN223[L.k][1]:'supplies')+' from the stores.';
+ if(cs.ty=='brawl')return h?'Verekedés tört ki'+(cs.vic?': '+cs.vic+' megsérült':'')+'.':'A brawl broke out'+(cs.vic?': '+cs.vic+' was hurt':'')+'.';
+ return h?'Valaki megrongálta a palánkot.':'Someone damaged the palisade.'}
+function caseSolve223(){const m=MG222,cs=m.case,c=CMP218,h=LANG=='hu';if(!cs)return;const n=npcBy223(cs.who);let jailed=false;if(n)jailed=arrest223(n,2+Math.floor(Math.random()*2));
+ if(cs.loot&&cs.loot.n)m[cs.loot.k]+=cs.loot.n;c.rep=Math.min(100,(c.rep|0)+8);m.morale=Math.min(100,m.morale+2);m.case=null;
+ for(const[k,q]of[['canned',2],['a9',4]])try{addLoot({x:P.x,y:P.y,k,n:q})}catch(e){}try{gainXp(30)}catch(e){}try{snd('pick')}catch(e){}
+ mgSay222(h?'Nyomozás lezárva':'Case closed',(n?n.nm:'?')+(jailed?(h?' börtönbe került':' goes to jail'):(h?' megbűnhődött':' was punished'))+(h?' · hírnév +8':' · standing +8'),'#9be07d')}
+/* --- the weekly vote --- */
+function elCands223(){const E=lwEns223();return E.cand}
+const candN223=(q)=>q.pl?(LANG=='hu'?'Te':'You'):q.nm;
+const candTr223=(q)=>q.pl?(MG222.ptr||'nepszeru'):trOf223(q.nm);
+function elOpen223(){const m=MG222,E=lwEns223(),h=LANG=='hu',L=lead223();E.cand=[];E.pv=null;E.camp={};E.bias={};E.reg=0;
+ if(m.pl)E.cand.push({nm:'#P',pl:1,inc:1});else if(L)E.cand.push({nm:L.nm,inc:1});
+ const pool=CMP218.pop.filter(n=>(n.cj=='res'||(m.pl&&n.cj=='leader'))&&!E.cand.some(q=>q.nm==n.nm)).sort((a,b)=>(Math.random()*.6+chOf223(b.nm))-(Math.random()*.6+chOf223(a.nm)));
+ for(const n of pool.slice(0,2))E.cand.push({nm:n.nm});for(const q of E.cand)E.bias[q.nm]=(Math.random()-.5)*.24;
+ mgSay222(h?'Választás a Menedékben':'Election in Haven',(h?'Két nap múlva szavazás — jelöltek: ':'Vote in two days — candidates: ')+E.cand.map(candN223).join(', '),'#d8b070')}
+function elLeader223(n){const c=CMP218,old=lead223();if(old===n)return;const hall={x:(c.X+27.5)*T+8,y:(c.Y+48.5)*T+8},mid={x:(c.X+27)*T,y:(c.Y+27)*T};
+ if(old){old.cj='res';old.c=lookFor(old.sx||'m');old.hx=old.h0x=mid.x+(Math.random()-.5)*160;old.hy=old.h0y=mid.y+(Math.random()-.5)*160;old.wr=old.h0r=6;old.tx=null;try{old.wp218=cmpRoute218(old,old.hx,old.hy)}catch(e){old.wp218=null}}
+ n.cj='leader';n.c=cmpUni218(n.c,4,0,0);n.hx=n.h0x=hall.x;n.hy=n.h0y=hall.y;n.wr=n.h0r=2;n.tx=null;n.sl=0;try{n.wp218=cmpRoute218(n,hall.x,hall.y)}catch(e){n.wp218=null}}
+function elTally223(){const m=MG222,c=CMP218,E=lwEns223(),h=LANG=='hu';if(!E.cand.length){E.next=day+7;return}
+ const V=c.pop.filter(n=>n.cj!='pris'),mor=m.morale,rep=c.rep|0,tl={};E.cand.forEach(q=>tl[q.nm]=0);
+ const sc=q=>{const cp=Math.min(8,E.camp[q.nm]|0)*.04,bi=(E.bias&&E.bias[q.nm])||0;let s;if(q.pl&&q.inc)s=.5+(mor-55)/100+rep/100*.3+cp;else if(q.pl)s=.2+rep/100*.95+cp+(E.reg>=2?.08:0);else if(q.inc)s=.5+(mor-55)/120+cp+bi+(trOf223(q.nm)=='nepszeru'?.06:0);else s=.38+(55-mor)/150+chOf223(q.nm)*.3+cp+bi;return s};
+ for(const v of V){let b=null,bs=-9;for(const q of E.cand){const s=sc(q)+Math.random()*.4;if(s>bs){bs=s;b=q}}if(b)tl[b.nm]++}
+ if(E.pv&&tl[E.pv]!=null)tl[E.pv]+=5;
+ let win=E.cand[0];for(const q of E.cand)if(tl[q.nm]>tl[win.nm]||(tl[q.nm]==tl[win.nm]&&q.inc))win=q;
+ const L=lead223(),sum=E.cand.map(q=>candN223(q)+' '+tl[q.nm]).join(' · ');let t,s;
+ if(win.pl){if(!m.pl){m.pl=1;m.ptr=m.ptr||'nepszeru';c.rep=Math.min(100,(c.rep|0)+10);t=h?'Megválasztottak! Te vagy a Menedék vezetője':'You are elected leader of Haven';try{gainXp(60)}catch(e){}}else t=h?'Újraválasztottak':'You were re-elected'}
+ else{const n=npcBy223(win.nm);if(m.pl){m.pl=0}if(n&&n!==L)elLeader223(n);t=win.inc?(h?'Marad a vezető: ':'Stays leader: ')+win.nm:(h?'Új vezető: ':'New leader: ')+win.nm}
+ s=sum;E.last={w:win.nm,tl,sum,d:day};E.cand=[];E.pv=null;E.camp={};E.reg=0;E.next=day+7;mgSay222(t,s,'#9be07d')}
+/* --- the day --- */
+function lwDawn223(){const m=MG222,c=CMP218,h=LANG=='hu';if(!m||!c)return;const E=lwEns223();
+ /* the way the leader rules */
+ const tr=trait223(),L=m.last;if(tr=='gazda')m.food+=4;else if(tr=='nepszeru')m.morale=Math.min(100,m.morale+2);else if(tr=='kereskedo'){m.wood+=3;m.stone+=2;m.scrap+=2}else if(tr=='szigoru')m.morale=Math.max(0,m.morale-1);
+ if(m.pl&&m.ration){const cons=L?L.cons|0:0;m.food=Math.max(0,m.food-Math.round(cons*(m.ration>0?.5:-.3)));m.morale=Math.max(0,Math.min(100,m.morale+(m.ration>0?3:-3)))}
+ /* the jail */
+ for(const nm in m.jl){const q=m.jl[nm];if(day>=q.rel){const n=npcBy223(nm);if(n){release223(n);mgSay222(h?'Szabadlábra helyezték':'Released from jail',n.nm,'#d8b070')}else delete m.jl[nm]}}
+ /* an unsolved case: the culprit slips away */
+ const cs=m.case;if(cs&&day-cs.d>=3){const n=npcBy223(cs.who);if(n)remNpc223(n);m.case=null;m.morale=Math.max(0,m.morale-2);mgSay222(h?'A tettes megszökött':'The culprit got away',cs.who,'#e08080')}
+ else if(!m.case)crimeNew223();
+ /* the vote */
+ if(day>=E.next){if(!E.cand.length)elOpen223();elTally223()}else if(!E.cand.length&&day>=E.next-2)elOpen223()}
+{const md=mgDawn222;mgDawn222=function(){md.apply(this,arguments);try{lwDawn223()}catch(e){console.warn('law',e)}}}
+/* --- the line in the camp bar --- */
+{const mh=mgHud222;mgHud222=function(){mh.apply(this,arguments);try{const m=MG222;if(!(m&&CMP218&&cmpIn218(P.x,P.y,0)&&!uiOpen211()&&!inD))return;const E=lwEns223(),h=LANG=='hu',y0=(CMP218.job?32:17)+(m.proj?24:12);let t=null;
+ if(E.cand.length)t=(h?'Választás ':'Election ')+Math.max(0,E.next-day)+(h?' nap múlva':' d')+(E.pv?'':(h?' — szavazz a vezetőnél':' — vote at the hall'));else if(m.case)t=(h?'Nyomozás: ':'Case: ')+CRN223[m.case.ty][h?0:1]+(h?' — az őrkapitány':' — see the captain');
+ if(t){noTr=true;g.font=fnt(0,8);const w=Math.round(t.length*4.3+14);Q(Math.round(VW/2-w/2),y0,w,10,'rgba(12,11,9,.55)');txt(t,VW/2,y0+8,E.cand.length?'#f0d890':'#f0a0a0','center');noTr=false}}catch(e){noTr=false}}}
+/* --- greetings --- */
+{const ng=npcGreet;npcGreet=function(n){const m=MG222,h=LANG=='hu';if(n&&m&&CMP218){
+  if(n.cj=='pris')return both('Hagyj békén… letöltöm a büntetésem.','Leave me be… I am serving my time.');
+  if(n.cj=='leader'&&m.pl)return both('Vezér! A tanács asztala a tiéd — mondd, mit tegyünk.','Chief! The council table is yours — tell me what to do.');
+  const cs=m.case;if(cs&&cs.sus.includes(n.nm)){
+   if(n.nm==cs.who)return both('Én? Nem én voltam! Ott sem jártam azon az éjjel, esküszöm!','Me? It was not me! I was not even there that night, I swear!');
+   if(n.nm==cs.wit){const pt=cs.wh?cs.who:cs.sus.find(x=>x!=cs.who&&x!=n.nm);return both('Sötét volt, de láttam valakit settenkedni… szerintem '+pt+' volt az.','It was dark, but I saw someone sneaking about… I think it was '+pt+'.')}
+   return both('Hallottam, hogy baj volt. Sajnálom, én aludtam, nem láttam semmit.','I heard there was trouble. Sorry — I was asleep, I saw nothing.')}}
+  return ng.apply(this,arguments)}}
+/* --- the talk --- */
+function elHier223(){const c=CMP218,m=MG222,h=LANG=='hu',L=lead223(),cap=c.pop.find(n=>n.cap218),f=(cj)=>{const n=c.pop.find(q=>q.cj==cj);return n?n.nm:'—'};E_=lwEns223();
+ const rk=m.pl?(h?'a vezető':'the leader'):cmpRank218(c.rep|0)[h?0:1];
+ return h?'Vezető: '+(m.pl?'te':(L?L.nm+' ('+trN223(trOf223(L.nm)).toLowerCase()+')':'—'))+'. Őrkapitány: '+(cap?cap.nm:'—')+'. Tanács: '+f('trader')+' (kereskedő), '+f('nurse')+' (ápoló), '+f('smith')+' (kovács). Rangod: '+rk+'. Következő választás '+Math.max(0,E_.next-day)+' nap múlva.'
+  :'Leader: '+(m.pl?'you':(L?L.nm+' ('+trN223(trOf223(L.nm)).toLowerCase()+')':'—'))+'. Guard captain: '+(cap?cap.nm:'—')+'. Council: '+f('trader')+' (trader), '+f('nurse')+' (nurse), '+f('smith')+' (smith). Your rank: '+rk+'. Next election in '+Math.max(0,E_.next-day)+' days.'}
+let E_=null;
+{const to=talkOpts;talkOpts=function(){const n=TALK&&TALK.n,sub=TALK&&TALK.sub,m=MG222;
+ if(n&&m&&CMP218&&n.cj=='leader'&&sub&&/^el/.test(String(sub))){const E=lwEns223(),h=LANG=='hu',bk=(s)=>({k:'el_back',l:both('Vissza','Back')});
+  if(sub=='el'){const o=[{k:'el_info',l:both('Rangok, hierarchia','Ranks and hierarchy')},{k:'el_vote',l:both('Választás','Election')}];if(m.pl){o.push({k:'el_pol',l:both('Irányvonal váltása','Change my way of ruling')},{k:'el_rat',l:both('Fejadag','Rations')},{k:'el_cs',l:both('Bűnügyek','Law and order')})}else o.push({k:'el_cs',l:both('Bűnügyek','Law and order')});if(E.last)o.push({k:'el_res',l:both('Az utolsó választás eredménye','Last election result')});o.push({k:'el_x',l:both('Mégsem','Never mind')});return o}
+  if(sub=='elv'){const o=[];if(E.cand.length){E.cand.forEach((q,i)=>o.push({k:'elv_'+i,l:(E.pv==q.nm?'✔ ':'')+(h?'Szavazok: ':'Vote: ')+candN223(q)+(q.inc?(h?' (vezető)':' (incumbent)'):'')+' — '+trN223(candTr223(q))}));
+    if(!m.pl&&!E.cand.some(q=>q.pl)&&E.cand.length<4)o.push({k:'elv_run',l:both('Indulok jelöltként','I will stand')});if(E.pv)o.push({k:'elv_camp',l:both('Kampány: egy adag élelem a választóknak','Campaign: hand out a ration')})}o.push(bk());return o}
+  if(sub=='elp'){const o=TRL223.map(k=>({k:'elp_'+k,l:(m.ptr==k?'✔ ':'')+trN223(k)+' — '+trD223(k)}));o.push(bk());return o}
+  if(sub=='elr')return[{k:'elr_-1',l:both('Szűkös adag (kevesebb élelem, -3 morál)','Tight rations (less food, -3 morale)')},{k:'elr_0',l:both('Normál adag','Normal rations')},{k:'elr_1',l:both('Bőséges adag (több élelem, +3 morál)','Generous rations (more food, +3 morale)')},bk()];
+  if(sub=='elc'){const o=[];if(m.case)o.push({k:'elc_case',l:both('Az aktuális ügy','The open case')});o.push({k:'elc_pris',l:both('Fogvatartottak','Prisoners')});o.push(bk());return o}}
+ let o=to.apply(this,arguments);if(n&&m&&CMP218&&n.cj=='leader'&&!sub){const i=o.findIndex(q=>q.k=='mg');o.splice(i<0?o.length-1:i+1,0,{k:'el',l:both('Választás, rangok, rend','Election, ranks, order')})}
+ if(n&&m&&CMP218&&n.cap218&&!sub){const i=o.findIndex(q=>q.k=='bye'),ex=[];if(m.case)ex.push({k:'cs',l:both('Nyomozás','The investigation')});ex.push({k:'cp',l:both('Fogvatartottak','Prisoners')});o.splice(i<0?o.length:i,0,...ex)}
+ if(n&&m&&CMP218&&n.cap218&&sub=='cs'&&m.case){const cs=m.case,h=LANG=='hu',ox=[{k:'cs_what',l:both('Mi történt?','What happened?')}];cs.sus.forEach((nm,i)=>ox.push({k:'cs_s'+i,l:cs.srch.includes(nm)?(h?'(átkutatva) ':'(searched) ')+nm:(h?'Átkutatom: ':'Search: ')+nm}));ox.push({k:'cs_back',l:both('Vissza','Back')});return ox}
+ if(n&&n.cj=='pris'){const o2=[{k:'pr_why',l:both('Miért vagy bent?','Why are you in here?')}];if(m&&m.pl)o2.push({k:'pr_free',l:both('Szabadon engedlek (kegyelem)','I pardon you')});o2.push({k:'bye',l:both('Viszlát','Goodbye')});return o2}
+ return o}}
+{const tp=talkPick;talkPick=function(i){const n=TALK&&TALK.n,m=MG222;if(!n||!m||!CMP218)return tp.apply(this,arguments);const o=talkOpts()[i];if(!o)return tp.apply(this,arguments);const k=o.k,sub=TALK.sub,h=LANG=='hu',E=lwEns223(),C=CMP218;
+ const go=(s,say_)=>{TALK.sub=s;TALK.sel=0;try{snd('ui')}catch(e){}if(say_)talkSay(say_)};
+ /* the captain */
+ if(n.cap218){
+  if(k=='cp'){const L=Object.keys(m.jl).map(nm=>nm+' ('+Math.max(0,m.jl[nm].rel-day)+(h?' nap)':' d)'));try{snd('ui')}catch(e){}talkSay(m.jail?(L.length?both('Börtönben: '+L.join(', ')+'.','In jail: '+L.join(', ')+'.'):both('A cellák üresek. A börtön az északkeleti tömbben van.','The cells are empty. The jail is the north-east block.')):both('Nincs börtönünk — kis vétségért pénzbírság jár.','We have no jail — small offences are fined.'));return}
+  if(k=='cs'){go('cs',both(caseTxt223()+' Három gyanúsított van. Beszélj velük, aztán átkutathatod valamelyiket — de az ártatlan megsértődik.',caseTxt223()+' There are three suspects. Talk to them, then search one — but an innocent one will take offence.'));return}
+  if(k=='cs_back'){go(null,both('Rendben.','All right.'));return}
+  if(k=='cs_what'){try{snd('ui')}catch(e){}const cs=m.case;talkSay(both(caseTxt223()+' Gyanúsítottak: '+cs.sus.join(', ')+'. A tettes egyike közülük.',caseTxt223()+' Suspects: '+cs.sus.join(', ')+'. The culprit is one of them.'));return}
+  if(k&&/^cs_s\d$/.test(k)&&m.case){const cs=m.case,nm=cs.sus[+k.slice(4)];if(!nm||cs.srch.includes(nm)){try{snd('ui')}catch(e){}talkSay(both('Őt már átkutattuk.','We already searched them.'));return}cs.srch.push(nm);
+   if(nm==cs.who){TALK.sub=null;caseSolve223();talkSay(both('Nála volt a zsákmány! Köszönjük — lecsukjuk. Itt a jutalmad.','The loot was on them! Thank you — they go to jail. Here is your reward.'))}
+   else{C.rep=Math.max(0,(C.rep|0)-2);try{snd('hit')}catch(e){}talkSay(both(nm+' nála nem találtunk semmit, és eléggé megsértődött. Hírneved -2.','We found nothing on '+nm+', who is rather offended. Standing -2.'))}return}}
+ /* the jail */
+ if(n.cj=='pris'){if(k=='pr_why'){try{snd('ui')}catch(e){}talkSay(both('Hosszú történet. Egyszer rosszul döntöttem — most itt a nyugalom.','A long story. I made a bad call once — now I have peace and quiet.'));return}
+  if(k=='pr_free'){release223(n);m.morale=Math.max(0,m.morale-1);try{snd('pick')}catch(e){}TALK.sub=null;talkClose(h?'Kegyelmet adtál: '+n.nm+' szabad.':'You pardoned '+n.nm+'.');return}}
+ /* the leader's pages */
+ if(n.cj=='leader'){
+  if(k=='el'){go('el',both(m.pl?'Vezér, a tanács a te szavadra vár. Miről beszéljünk?':'Hetente választunk vezetőt. Mit szeretnél tudni?',m.pl?'Chief, the council waits for your word. What shall we discuss?':'We vote for a leader every week. What would you like to know?'));return}
+  if(k=='el_x'){go(null,both('Ahogy gondolod.','As you like.'));return}
+  if(k=='el_back'){go(sub=='el'?null:'el',both('Rendben.','All right.'));return}
+  if(k=='el_info'){try{snd('ui')}catch(e){}talkSay(elHier223());return}
+  if(k=='el_res'){try{snd('ui')}catch(e){}talkSay(both('Az utolsó szavazás (a '+E.last.d+'. napon): '+E.last.sum+'. Győztes: '+(E.last.w=='#P'?'te':E.last.w)+'.','Last vote (day '+E.last.d+'): '+E.last.sum+'. Winner: '+(E.last.w=='#P'?'you':E.last.w)+'.'));return}
+  if(k=='el_vote'){if(E.cand.length)go('elv',both('A jelöltek: '+E.cand.map(q=>candN223(q)+' ('+trN223(candTr223(q)).toLowerCase()+')').join(', ')+'. A szavazás '+Math.max(0,E.next-day)+' nap múlva lesz. A te szavazatod többet nyom a latban.','The candidates: '+E.cand.map(q=>candN223(q)+' ('+trN223(candTr223(q)).toLowerCase()+')').join(', ')+'. The vote is in '+Math.max(0,E.next-day)+' days. Your vote carries weight.'));
+   else{try{snd('ui')}catch(e){}talkSay(both('Most nincs jelölti időszak. A következő szavazás '+Math.max(0,E.next-day)+' nap múlva; a jelöltek két nappal előtte állnak fel.','There is no campaign right now. The next vote is in '+Math.max(0,E.next-day)+' days; candidates step forward two days before.'))}return}
+  if(sub=='elv'&&k&&/^elv_\d$/.test(k)){const q=E.cand[+k.slice(4)];if(q){E.pv=q.nm;try{snd('pick')}catch(e){}talkSay(both('Rendben, a szavazatod rögzítve: '+candN223(q)+'.','Noted — your vote is recorded: '+candN223(q)+'.'))}return}
+  if(k=='elv_run'){if((C.rep|0)<20){try{snd('ui')}catch(e){}talkSay(both('Még nem ismernek eléggé. Dolgozz a tábornak, hogy legalább 20 hírneved legyen.','They do not know you well enough yet. Work for the camp until your standing is at least 20.'));return}
+   E.cand.push({nm:'#P',pl:1});E.pv='#P';E.reg=1;try{snd('pick')}catch(e){}talkSay(both('Felírtalak a jelöltek közé. Kampányolj: oszd az élelmet, segíts a falunak.','You are on the list. Campaign — hand out food, help the camp.'));return}
+  if(k=='elv_camp'){const ks=Object.keys(FD222);let got=null;for(const it of ks)if((inv[it]|0)>0){got=it;break}if(!got){try{snd('ui')}catch(e){}talkSay(both('Nincs nálad ennivaló.','You carry no food.'));return}
+   inv[got]--;E.camp[E.pv]=Math.min(8,(E.camp[E.pv]|0)+1);if(E.reg)E.reg=2;try{snd('pick')}catch(e){}talkSay(both('Az emberek hálásak. ('+candN223(E.cand.find(q=>q.nm==E.pv)||{nm:E.pv})+' támogatottsága nő.)','People are grateful. (Support for '+candN223(E.cand.find(q=>q.nm==E.pv)||{nm:E.pv})+' grows.)'));return}
+  if(k=='el_pol'&&m.pl){go('elp',both('Hogyan irányítsunk?','How shall we rule?'));return}
+  if(sub=='elp'&&k&&k.startsWith('elp_')){m.ptr=k.slice(4);try{snd('pick')}catch(e){}talkSay(both('Mostantól: '+trN223(m.ptr)+' irányvonal. '+trD223(m.ptr)+'.','From now on: '+trN223(m.ptr)+'. '+trD223(m.ptr)+'.'));return}
+  if(k=='el_rat'&&m.pl){go('elr',both('Mennyit adjunk az embereknek?','How much do we give people?'));return}
+  if(sub=='elr'&&k&&k.startsWith('elr_')){m.ration=+k.slice(4);try{snd('pick')}catch(e){}talkSay(both(m.ration>0?'Bőséges adag. Az emberek örülnek, de fogy a készlet.':m.ration<0?'Szűkös adag. Spórolunk, de a hangulat romlik.':'Normál adag.',m.ration>0?'Generous rations. People are happy, the stores shrink.':m.ration<0?'Tight rations. We save, but spirits sink.':'Normal rations.'));return}
+  if(k=='el_cs'){go('elc',both(m.case?caseTxt223()+' Az őrkapitány vezeti a nyomozást.':'Most napokban rend van. Ha baj lesz, az őrkapitány szól.',m.case?caseTxt223()+' The guard captain leads the investigation.':'Things are quiet. If trouble comes, the guard captain will say.'));return}
+  if(k=='elc_case'&&m.case){try{snd('ui')}catch(e){}talkSay(both(caseTxt223()+' Gyanúsítottak: '+m.case.sus.join(', ')+'. Az őrkapitány átkutathat egyet közülük.',caseTxt223()+' Suspects: '+m.case.sus.join(', ')+'. The captain can search one of them.'));return}
+  if(k=='elc_pris'){const L=Object.keys(m.jl).map(nm=>nm+' ('+Math.max(0,m.jl[nm].rel-day)+(h?' nap)':' d)'));try{snd('ui')}catch(e){}talkSay(L.length?both('Börtönben: '+L.join(', ')+'.','In jail: '+L.join(', ')+'.'):both('A cellák üresek.','The cells are empty.'));return}}
+ return tp.apply(this,arguments)}}
+
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
  if(state=='title')menu();if(state=='opts')optsMenu();if(state=='sndo')sndMenu();if(state=='gfxo')gfxMenu();if(state=='slots')svMenu();if(state=='keys')keysMenu();if(state=='wthr')wthrMenu();if(state=='char')charMenu();if(state=='lobby')drawLobby();if(state=='hb'){Q(0,0,VW,VH,'rgba(6,10,6,.6)');drawHB()}if(0)title('ASHFALL',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Hold the fire. Survive the nights.','','WASD move \u2022 Space chop / fish / attack \u2022 Tab recipes','Press any key']);
