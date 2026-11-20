@@ -13857,6 +13857,113 @@ let E_=null;
   if(k=='elc_pris'){const L=Object.keys(m.jl).map(nm=>nm+' ('+Math.max(0,m.jl[nm].rel-day)+(h?' nap)':' d)'));try{snd('ui')}catch(e){}talkSay(L.length?both('Börtönben: '+L.join(', ')+'.','In jail: '+L.join(', ')+'.'):both('A cellák üresek.','The cells are empty.'));return}}
  return tp.apply(this,arguments)}}
 
+/* ===== v224: softer snowdrifts (the little white domes looked like hard-edged umbrellas on the snow). ===== */
+GAMEV=239;
+function sdrift224(o,fx,fy,tx,ty){const k=o.k|0,hv=aHash(tx,ty,224),w=[10,14,18][k]+Math.floor(hv*4),hh=[2,3,4][k],cx=Math.round(fx+8+(hv-.5)*5),base=Math.round(fy+12+(aHash(tx,ty,225)-.5)*3);
+ /* the soft blue shadow it throws on the ground */
+ g.fillStyle='rgba(130,150,185,.26)';g.fillRect(cx-Math.floor(w/2)+2,base,w-1,1);g.fillStyle='rgba(130,150,185,.16)';g.fillRect(cx-Math.floor(w/2)+4,base+1,w-4,1);
+ for(let r=0;r<hh;r++){const t=(r+1)/hh,hw=Math.max(2,Math.round(w/2*Math.sqrt(1-Math.pow(1-t,2)*.92))),y=base-hh+r+1,l=cx-hw,rr=cx+hw,sh=r>=hh-1?'#d5e0ec':r>=hh-2&&hh>2?'#e2eaf3':'#eef3f8',lt=r==0?'#ffffff':r<hh-1?'#f8fbfd':'#e9eff6';
+  g.fillStyle=lt;g.fillRect(l,y,rr-l,1);g.fillStyle=sh;const rw=Math.max(1,Math.round((rr-l)*.34));g.fillRect(rr-rw,y,rw,1)}
+ g.fillStyle='rgba(255,255,255,.9)';g.fillRect(cx-Math.floor(w/4),base-hh,Math.max(2,Math.floor(w/4)),1)}
+/* a drift is a bump in the snow, not an object: it is painted into the ground (no outline, no halo), the object itself draws nothing */
+{const d=drawObj;drawObj=function(o,x,y){if(o&&o.t=='sdrift'&&!CLASSIC)return;return d.apply(this,arguments)}}
+{const gd=groundDraw;groundDraw=function(x0,y0,now){const r=gd.apply(this,arguments);try{if(CLASSIC||inD)return r;const tx0=Math.max(0,Math.floor(cam.x/T)-1),ty0=Math.max(0,Math.floor(cam.y/T)-1),tx1=Math.min(W-1,Math.ceil((cam.x+VW/ZM)/T)+1),ty1=Math.min(H-1,Math.ceil((cam.y+VH/ZM)/T)+1);
+  for(let ty=ty0;ty<=ty1;ty++)for(let tx=tx0;tx<=tx1;tx++){const o=ob[ty*W+tx];if(o&&o.t=='sdrift')sdrift224(o,tx*T-cam.x,ty*T-cam.y,tx,ty)}}catch(e){}return r}}
+
+/* ===== v225: the HUD can be made see-through (Settings > HUD), and the graphics / HUD / gameplay settings show a "before | after" picture of the game ===== */
+GAMEV=240;
+/* HUD visibility: 100% = as before, down to 20%. Applied when the HUD layer is pasted on the screen (see v210 / v213) */
+var HUDA=1;try{const v=parseFloat(localStorage.getItem('pxc_huda'));if(v>=.2&&v<=1)HUDA=v}catch(e){}
+function hudaSave225(){try{localStorage.setItem('pxc_huda',String(HUDA))}catch(e){}}
+{const hm=hudMoved210;hudMoved210=function(){return HUDA<.999||hm.apply(this,arguments)}}
+hudFlush210=function(){if(!HL210.on)return;HL210.on=false;HL210.fl=1;const L=HL210.cv,c=HL210.cx,g0=HL210.g0,m=HL210.m;g=g0;
+ const k=m.a,W_=hudWidgets210(),cut=[];c.setTransform(1,0,0,1,0,0);
+ for(const w of W_){if(w.dir)continue;const s=w.s;const moved=w.dx||w.dy||w.sx||w.sy||Math.abs(s-1)>.001;if(!moved)continue;
+  for(const r of exSplit213(w.r)){const px=Math.max(0,Math.floor(r[0]*k+m.e)),py=Math.max(0,Math.floor(r[1]*k+m.f)),pw=Math.min(L.width-px,Math.ceil(r[2]*k)),ph=Math.min(L.height-py,Math.ceil(r[3]*k));if(pw<=0||ph<=0)continue;
+   const i=cut.length;if(!SC213[i])SC213[i]=document.createElement('canvas');const sc=SC213[i];if(sc.width<pw||sc.height<ph){sc.width=Math.max(sc.width,pw);sc.height=Math.max(sc.height,ph)}const sx=sc.getContext('2d');sx.clearRect(0,0,sc.width,sc.height);sx.drawImage(L,px,py,pw,ph,0,0,pw,ph);c.clearRect(px,py,pw,ph);
+   const lx=(px-m.e)/k,ly=(py-m.f)/k,X=w.ax+(lx-w.ax)*s+w.sx+w.dx,Y=w.ay+(ly-w.ay)*s+w.sy+w.dy;cut.push([sc,pw,ph,X*k+m.e,Y*k+m.f,pw*s,ph*s,s])}}
+ g.save();g.setTransform(1,0,0,1,0,0);g.globalAlpha=HUDA;g.globalCompositeOperation='source-over';g.filter='none';
+ DI0.call(g,L,0,0);try{g.imageSmoothingQuality='high'}catch(e){}
+ for(const[sc,pw,ph,x,y,dw,dh,s]of cut){g.imageSmoothingEnabled=Math.abs(s-1)>.001;DI0.call(g,sc,0,0,pw,ph,Math.round(x),Math.round(y),Math.round(dw),Math.round(dh))}g.restore()};
+/* the pieces painted after the layer: thermometer, partner panel, camp bar */
+function hudAl225(f){return function(){const a=HUDA;let fr=false;try{fr=hudFree210()}catch(e){}if(a>=.999||!fr)return f.apply(this,arguments);g.save();g.globalAlpha*=a;try{return f.apply(this,arguments)}finally{g.restore()}}}
+{thermo210=hudAl225(thermo210);coopDraw210=hudAl225(coopDraw210);mgHud222=hudAl225(mgHud222)}
+
+/* ---------- a HUD page in the settings ---------- */
+OPN.hu[16]='HUD beállítások';OPN.en[16]='HUD settings';
+{const ov=optVal;optVal=function(i){if(i==16)return '>';return ov(i)}}
+{const os=optStep;optStep=function(i,d){if(i==16){state='gfxo';GPG='hud';gsel=0;try{snd('ui')}catch(e){}return}return os(i,d)}}
+{const p=OPV.indexOf(15);OPV.splice(p>=0?p+1:Math.max(0,OPV.length-1),0,16)}
+optsMenu=function(){const moved=ms.x!=lmx||ms.y!=lmy;lmx=ms.x;lmy=ms.y;const hu=LANG=='hu';Q(0,0,VW,VH,'rgba(6,10,6,.88)');if(osel>=OPV.length)osel=0;
+ g.font=fnt(1,20);g.textAlign='center';g.fillStyle='#a8321f';g.fillText(hu?'Beállítások':'Settings',VW/2+2,42);g.fillStyle=fcol('#d8e4c8');g.fillText(hu?'Beállítások':'Settings',VW/2,40);
+ noTr=true;for(let r=0;r<OPV.length;r++){const i=OPV[r],y=obY(r)+(i==14?6:0);if(moved&&ms.x>=OPB.x&&ms.x<OPB.x+OPB.w&&ms.y>=y&&ms.y<y+OPB.h)osel=r;const on=osel==r;
+  Q(OPB.x-1,y-1,OPB.w+2,OPB.h+2,on?'#ffd84a':'#3a4634');Q(OPB.x,y,OPB.w,OPB.h,on?'#4a3722':'#1c1a12');
+  if(i==14)txt(OPN[hu?'hu':'en'][14],VW/2,y+10,on?'#ffd84a':'#cfd8c0','center');
+  else if(i==5||i==2||i==10||i==11||i==15||i==16){txt(OPN[hu?'hu':'en'][i].replace(/\s*>$/,''),OPB.x+8,y+10,on?'#ffd84a':i==5||i==16?'#e8d8a0':'#b8c8a8');txt('>',OPB.x+OPB.w-8,y+10,on?'#ffd84a':'#cfd8c0','center');if(i==2)txt(optVal(2).replace(/\s*>$/,''),OPB.x+OPB.w-60,y+10,'#f0e6b8','center')}
+  else{txt(OPN[hu?'hu':'en'][i],OPB.x+8,y+10,on?'#ffd84a':'#b8c8a8');txt('<',OPB.x+OPB.w-118,y+10,on?'#ffd84a':'#5a6a52','center');txt(optVal(i),OPB.x+OPB.w-60,y+10,i==12&&DIFF==0?'#9be07d':i==12&&DIFF==3?'#ff8a6a':'#f0e6b8','center');txt('>',OPB.x+OPB.w-8,y+10,on?'#ffd84a':'#5a6a52','center')}}
+ txt(hu?'W/S: választás   A/D: változtatás   Esc: vissza':'W/S choose   A/D change   Esc back',VW/2,obY(OPV.length)+15,'#8fa07f','center');noTr=false};
+optsClick=function(){for(let r=0;r<OPV.length;r++){const i=OPV[r],y=obY(r)+(i==14?6:0);if(ms.x>=OPB.x&&ms.x<OPB.x+OPB.w&&ms.y>=y&&ms.y<y+OPB.h){osel=r;optStep(i,ms.x<OPB.x+OPB.w-60&&i!=5&&i!=6&&i!=7&&i!=1&&i!=2&&i!=10&&i!=11&&i!=14&&i!=15&&i!=16?-1:1);return}}};
+const HLBL225=()=>hu_()?'HUD (kijelző) beállítások':'HUD settings';
+GPAGES.hud={t:['HUD beállítások','HUD settings'],rows:[
+ {k:'hua',l:['HUD láthatósága','HUD opacity'],ty:'sld',get:()=>HUDA,set:v=>{HUDA=Math.max(.2,Math.min(1,v));hudaSave225()}},
+ {k:'hus',l:['HUD mérete','HUD size'],ty:'cyc',get:()=>Math.round(HUDS213*100)+'%',step:d=>{HUDS213=Math.round(Math.max(.6,Math.min(1.3,HUDS213+(d<0?-.1:.1)))*10)/10;HSZ213={};hudsSave213()},desc:()=>hu_()?'Panelek áthelyezése játék közben: tartsd lenyomva a Ctrl-t és húzd őket':'Move the panels in game: hold Ctrl and drag them'},
+ {k:'hur',l:['Alaphelyzet (méret, hely, láthatóság)','Reset (size, place, opacity)'],ty:'act',step:()=>{HUDA=1;hudaSave225();HUDS213=.8;HSZ213={};hudsSave213();HUD210.o={};hudSave210()}},
+ {k:'back',ty:'back'}]};
+{const gs=gfxStep;gfxStep=function(i,dir){const r=gRows()[i];if(r&&r.ty=='act'){r.step(dir);try{snd('ui')}catch(e){}return}
+ if(GPG=='hud'&&r&&r.ty=='back'){state='opts';GPG='main';try{snd('ui')}catch(e){}return}return gs(i,dir)}}
+addEventListener('keydown',e=>{if(state=='gfxo'&&GPG=='hud'&&(e.code=='Escape'||e.code=='Backspace')){e.stopImmediatePropagation();e.preventDefault();state='opts';GPG='main'}},true);
+
+/* ---------- before | after picture ---------- */
+const PV225={b:null,a:null,sig0:'',sigA:'',tA:0,settle:0,busy:false};
+function pvSig225(){try{return[GMODE,SHON,SHS,SHSOFT,SHQ,LTON,shaderOn,BLS,MOOD,MDS,maskFx,typeof zi!='undefined'?zi:0,RSSET,HUDA,HUDS213,JSON.stringify(HSZ213),JSON.stringify(HUD210.o)].join('|')}catch(e){return''}}
+/* one extra frame as the player would see it (state forced to 'play'), shrunk into a small canvas */
+function pvShot225(){if(PV225.busy)return null;PV225.busy=true;const st=state,tt=tut;let cv=null;
+ try{state='play';tut=0;draw();fx();cv=document.createElement('canvas');cv.width=240;cv.height=150;const x=cv.getContext('2d');x.imageSmoothingEnabled=true;try{x.imageSmoothingQuality='high'}catch(e){}
+  x.fillStyle='#000';x.fillRect(0,0,240,150);
+  const v3=typeof V3!='undefined'&&V3&&V3.on&&V3.cv;if(v3){try{x.drawImage(V3.cv,0,0,240,150)}catch(e){}}
+  const gl=typeof GLX!='undefined'&&GLX&&shaderOn&&GLX.cv.style.display!='none';x.drawImage(gl?GLX.cv:C,0,0,240,150);
+  if(typeof HUDSPLIT!='undefined'&&HUDSPLIT)x.drawImage(HC97,0,0,240,150)}
+ catch(e){cv=null}finally{state=st;tut=tt;PV225.busy=false}
+ return cv}
+{const d=draw;draw=function(){
+ try{if(!PV225.busy){
+  if(state!='gfxo'&&state!='opts'){PV225.b=null;PV225.a=null}
+  else if(state=='gfxo'){const now=performance.now(),sg=pvSig225();
+   if(!PV225.b){const s=pvShot225();if(s){PV225.b=s;PV225.a=s;PV225.sig0=PV225.sigA=sg;PV225.tA=now;PV225.settle=0}}
+   else if(sg!==PV225.sigA){if(now-PV225.tA>180){const s=pvShot225();if(s){PV225.a=s;PV225.sigA=sg;PV225.tA=now;PV225.settle=now+700}}}
+   else if(PV225.settle&&now>PV225.settle){PV225.settle=0;const s=pvShot225();if(s)PV225.a=s}}}}catch(e){PV225.busy=false}
+ return d.apply(this,arguments)}}
+function pvDraw225(rowsBot){const hu=hu_();PV225.r=null;if(!PV225.b||!PV225.a)return;const hudPg=GPG=='hud',same=PV225.sigA===PV225.sig0;let top=rowsBot+16,th=Math.min(hudPg?132:98,VH-27-top),tw,xs,ys,lab;
+ if(th>=56){tw=Math.round(th*1.6);const gap=22,x0=Math.round((VW-2*tw-gap)/2);xs=[x0,x0+tw+gap];ys=[top,top];lab=top-4}
+ else{/* crowded page: one small picture on each side of the list */tw=OPB.x-6;th=Math.round(tw/1.6);let dY=0;const R=gRows();for(let i=0;i<R.length;i++)if(R[i].desc)dY=Math.max(dY,gfY(i)+OPB.h+14);top=Math.max(gfY(0)+14,dY+16);if(top+th>VH-18){PV225.r=null;return}xs=[3,OPB.x+OPB.w+3];ys=[top,top];lab=top-4}
+ PV225.r=[[xs[0],ys[0],tw,th],[xs[1],ys[1],tw,th]];
+ g.save();try{g.imageSmoothingEnabled=true;try{g.imageSmoothingQuality='high'}catch(e){}
+  for(let n=0;n<2;n++){const im=n?PV225.a:PV225.b;Q(xs[n]-1,ys[n]-1,tw+2,th+2,n&&!same?'#ffd84a':'#3a4634');g.drawImage(im,xs[n],ys[n],tw,th)}}finally{g.restore()}
+ txt(hu?'Előtte':'Before',xs[0],lab,'#b8c8a8');txt(same?(hu?'Utána (azonos)':'After (same)'):(hu?'Utána':'After'),xs[1],lab,same?'#8fa07f':'#ffd84a');
+ if(xs[1]-xs[0]>tw+4&&ys[0]==ys[1]&&lab==ys[0]-4&&xs[1]-xs[0]-tw<40)txt('>',xs[0]+tw+(xs[1]-xs[0]-tw)/2,ys[0]+th/2+3,'#ffd84a','center');
+ txt(hu?'Kattints a képre a nagyításhoz (Tab)':'Click a picture to enlarge (Tab)',VW/2,VH-14,'#6f806a','center')}
+/* big view: both pictures, bigger */
+function pvBig225(){const hu=hu_(),same=PV225.sigA===PV225.sig0;Q(0,0,VW,VH,'rgba(6,10,6,.96)');g.font=fnt(1,16);g.textAlign='center';g.fillStyle=fcol('#d8e4c8');g.fillText(hu?'Előtte / Utána':'Before / After',VW/2,24);
+ const tw=228,th=Math.round(tw/1.6),y=60,xs=[8,VW-8-tw];g.save();try{g.imageSmoothingEnabled=true;try{g.imageSmoothingQuality='high'}catch(e){}
+  for(let n=0;n<2;n++){Q(xs[n]-1,y-1,tw+2,th+2,n&&!same?'#ffd84a':'#3a4634');g.drawImage(n?PV225.a:PV225.b,xs[n],y,tw,th)}}finally{g.restore()}
+ noTr=true;txt(hu?'Előtte':'Before',xs[0],y-5,'#b8c8a8');txt(same?(hu?'Utána (azonos)':'After (same)'):(hu?'Utána':'After'),xs[1],y-5,same?'#8fa07f':'#ffd84a');
+ txt(hu?'Bármely billentyű vagy kattintás: vissza':'Any key or click: back',VW/2,y+th+24,'#8fa07f','center');noTr=false}
+/* the graphics menu again: "act" rows, the picture under the list and the hint line at the very bottom */
+gfxMenu=function(){if(PV225.big&&PV225.b&&PV225.a){pvBig225();return}PV225.big=false;const moved=ms.x!=lmx||ms.y!=lmy;lmx=ms.x;lmy=ms.y;const hu=hu_(),pg=GPAGES[GPG],R=pg.rows,ti=pg.t[hu?0:1];Q(0,0,VW,VH,'rgba(6,10,6,.88)');
+ g.font=fnt(1,20);g.textAlign='center';g.fillStyle='#a8321f';g.fillText(ti,VW/2+2,42);g.fillStyle=fcol('#d8e4c8');g.fillText(ti,VW/2,40);noTr=true;if(gsel>=R.length)gsel=0;
+ for(let i=0;i<R.length;i++){const r=R[i],y=gfY(i);if(moved&&ms.x>=OPB.x&&ms.x<OPB.x+OPB.w&&ms.y>=y&&ms.y<y+OPB.h)gsel=i;const on=gsel==i,dis=r.dis&&r.dis();
+  Q(OPB.x-1,y-1,OPB.w+2,OPB.h+2,on?'#ffd84a':'#3a4634');Q(OPB.x,y,OPB.w,OPB.h,on?'#4a3722':'#1c1a12');
+  if(r.ty=='back'||r.ty=='act'){txt(r.ty=='back'?(hu?'Vissza':'Back'):r.l[hu?0:1],VW/2,y+10,on?'#ffd84a':r.ty=='act'?'#e8d8a0':'#cfd8c0','center');continue}
+  txt(r.l[hu?0:1],OPB.x+8,y+10,dis?'#5a6a52':on?'#ffd84a':r.ty=='link'?'#e8d8a0':'#b8c8a8');
+  if(r.ty=='link')txt('>',OPB.x+OPB.w-8,y+10,on?'#ffd84a':'#cfd8c0','center');
+  else if(r.ty=='sld'){const v=r.get(),bx=OPB.x+OPB.w-150,bw=100;txt('<',bx-10,y+10,on?'#ffd84a':'#5a6a52','center');Q(bx,y+5,bw,5,'#2a2a1e');Q(bx,y+5,Math.round(bw*v),5,dis?'#4a5a42':'#8ac85a');Q(bx+Math.round(bw*v)-1,y+3,3,9,dis?'#6a6a5a':'#f0e6b8');txt(Math.round(v*100)+'%',OPB.x+OPB.w-26,y+10,dis?'#5a6a52':'#f0e6b8','center');txt('>',OPB.x+OPB.w-6,y+10,on?'#ffd84a':'#5a6a52','center')}
+  else{const cx=r.wide?OPB.x+OPB.w-78:OPB.x+OPB.w-60;txt('<',r.wide?OPB.x+OPB.w-150:OPB.x+OPB.w-118,y+10,on&&!dis?'#ffd84a':'#5a6a52','center');txt(r.get(),cx,y+10,dis?'#5a6a52':r.k=='mode'&&GMODE==3?'#ffb060':'#f0e6b8','center');txt('>',OPB.x+OPB.w-8,y+10,on&&!dis?'#ffd84a':'#5a6a52','center')}
+  if(r.desc){const ds=r.desc();g.font=fnt(0,9);const wd=g.measureText(ds).width,f=Math.min(1,(VW-14)/Math.max(1,wd));if(f<1){g.save();g.translate(VW/2,y+OPB.h+9);g.scale(f,f);txt(ds,0,0,'#8fa07f','center');g.restore()}else txt(ds,VW/2,y+OPB.h+9,'#8fa07f','center')}}
+ try{pvDraw225(gfY(R.length-1)+OPB.h)}catch(e){}
+ txt(hu?'W/S: választás   A/D vagy kattintás: állítás   Esc: vissza':'W/S choose   A/D or click: adjust   Esc back',VW/2,VH-4,'#8fa07f','center');noTr=false};
+{const gk=gfxKey;gfxKey=function(c){if(PV225.big){PV225.big=false;return}if(c=='Tab'&&PV225.b){PV225.big=true;return}return gk(c)}}
+{const gc=gfxClick;gfxClick=function(){if(PV225.big){PV225.big=false;return}if(PV225.r)for(const r of PV225.r)if(ms.x>=r[0]&&ms.x<r[0]+r[2]&&ms.y>=r[1]&&ms.y<r[1]+r[3]){PV225.big=true;return}return gc()}}
+
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
  if(state=='title')menu();if(state=='opts')optsMenu();if(state=='sndo')sndMenu();if(state=='gfxo')gfxMenu();if(state=='slots')svMenu();if(state=='keys')keysMenu();if(state=='wthr')wthrMenu();if(state=='char')charMenu();if(state=='lobby')drawLobby();if(state=='hb'){Q(0,0,VW,VH,'rgba(6,10,6,.6)');drawHB()}if(0)title('ASHFALL',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Hold the fire. Survive the nights.','','WASD move \u2022 Space chop / fish / attack \u2022 Tab recipes','Press any key']);
