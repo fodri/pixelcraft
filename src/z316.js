@@ -9,22 +9,24 @@ const PTR={'ЭНЕРГЕТИК':['Energetik (a kultúrpalota neve)','Energetik (
  'СЛАВА ТРУДУ!':['Dicsőség a munkának!','Glory to labour!'],'МИР · ТРУД · МАЙ':['Béke · Munka · Május','Peace · Labour · May'],'НАРОД И ПАРТИЯ — ЕДИНЫ!':['A nép és a Párt egy!','The people and the Party are one!'],'ЛЕНИНСКИМ КУРСОМ':['Lenini úton!','On Lenin’s course!']};
 let PCAP=null;
 function priCapScan(){PCAP=[];for(let i=0;i<W*H;i++){const o=ob[i];if(!o||o.pm!=null)continue;const tx=i%W,ty=(i/W)|0,fw=o.fw||1,fh=o.fh||1;let ru=null,cx=tx+fw/2,cy=ty+fh,h=2.4,w=fw;
-  if(o.t=='psign'){ru=o.tx;h=(o.hy!=null?o.hy:1.35)+fh+.5}else if(o.t=='pbill'){ru=PSLOG[(o.k|0)%PSLOG.length];cy=ty+1;h=4.3;w=4}
-  else if(o.t=='pgate'){ru='ПАРК';cx=tx+3.5;cy=ty+.5;h=4.4;w=5}else if(o.t=='pkiosk'){ru='ПЕЧАТЬ';cy=ty+1;h=2.9}else if(o.t=='pbump'){ru='АТТРАКЦИОН';cy=ty+2;h=3.4;w=6}
-  if(ru&&PTR[ru])PCAP.push({ru,x:cx,y:cy,h,w:Math.max(2,w)})}}
-function priCaption(){if(!PCAP)priCapScan();if(!PCAP.length||inD||inC)return;const px=P.x/T,py=P.y/T,fp=typeof fvA=='function'&&fvA();let best=null,bd=1e9;
- if(fp){const yaw=FV.yaw,fx=-Math.sin(yaw),fy=-Math.cos(yaw);for(const e of PCAP){const dx=e.x-px,dy=e.y-py,d=Math.hypot(dx,dy);if(d>20||d<.6)continue;const c=(fx*dx+fy*dy)/d;if(c<.7)continue;if(c<Math.cos(Math.min(1.2,Math.atan((e.w/2+.6)/d)+.12)))continue;if(d<bd){bd=d;best=e}}}
- else{for(const e of PCAP){const d=Math.hypot(e.x-px,e.y-py);if(d<6.5&&d<bd){bd=d;best=e}}}
- if(!best)return;let sx,sy;
- if(fp){const v=new THREE.Vector3(best.x,v3H(best.x|0,best.y|0)+best.h,best.y).project(V3.cam);if(v.z>1||v.z<-1)return;sx=(v.x*.5+.5)*VW;sy=(1-(v.y*.5+.5))*VH}
- else{sx=(best.x*T-cam.x)*ZM;sy=(best.y*T-cam.y)*ZM-22*ZM}
- const hu=LANG=='hu',tx=PTR[best.ru][hu?0:1],ru=best.ru.replace('|',' · ');
- noTr=true;g.save();g.textAlign='center';g.font='bold 8px "DejaVu Sans",Arial,sans-serif';const w1=g.measureText(ru).width;g.font=fnt(0,8);const w2=g.measureText(tx).width,bw=Math.ceil(Math.max(w1,w2))+10,bh=23;
- let bx=Math.round(sx-bw/2),by=Math.round(sy-bh-4);bx=Math.max(3,Math.min(VW-bw-3,bx));by=Math.max(16,Math.min(VH-bh-60,by));
- Q(bx,by,bw,bh,'rgba(10,12,8,.8)');Q(bx,by,bw,1,'#e8c43a');Q(bx,by+bh-1,bw,1,'rgba(232,196,58,.35)');
- g.font='bold 8px "DejaVu Sans",Arial,sans-serif';g.fillStyle='rgba(0,0,0,.9)';g.fillText(ru,bx+bw/2+1,by+10);g.fillStyle='#e8c43a';g.fillText(ru,bx+bw/2,by+9);
- g.font=fnt(0,8);g.fillStyle='rgba(0,0,0,.9)';g.fillText(tx,bx+bw/2+1,by+20);g.fillStyle='#f2f0e0';g.fillText(tx,bx+bw/2,by+19);g.restore();noTr=false}
-{const h0=hud;hud=function(){const r=h0.apply(this,arguments);try{if(PRI&&state=='play')priCaption()}catch(e){noTr=false}return r}}
+  let ay=ty*T;if(o.t=='psign'){ru=o.tx;h=(o.hy!=null?o.hy:1.35)+fh+.5}else if(o.t=='pbill'){ru=PSLOG[(o.k|0)%PSLOG.length];cy=ty+1;h=4.3;w=4;ay=ty*T-4}
+  else if(o.t=='pgate'){ru='ПАРК';cx=tx+3.5;cy=ty+.5;h=4.4;w=5;ay=ty*T-26}else if(o.t=='pkiosk'){ru='ПЕЧАТЬ';cy=ty+1;h=2.9;ay=ty*T+4}else if(o.t=='pbump'){ru='АТТРАКЦИОН';cy=ty+2;h=3.4;w=6;ay=ty*T-4}
+  if(ru&&PTR[ru])PCAP.push({ru,x:cx,y:cy,h,w:Math.max(2,w),ay})}}
+let CAPD=null;
+function capEl(){if(CAPD)return CAPD;const w=document.getElementById('wrap')||document.body,d=document.createElement('div');d.id='prcap';
+ d.style.cssText='position:absolute;pointer-events:none;z-index:35;display:none;transform:translate(-50%,-100%);text-align:center;background:rgba(10,12,8,.84);border-top:2px solid #e8c43a;padding:.25em .7em .3em;font-family:"DejaVu Sans",Arial,sans-serif;line-height:1.3;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.55)';w.appendChild(d);return CAPD=d}
+function priCaption(){const d=capEl();if(!PCAP)priCapScan();if(!PCAP.length||inD||inC||fvUI()){d.style.display='none';return}
+ const px=P.x/T,py=P.y/T,fp=typeof fvA=='function'&&fvA();let best=null,bd=1e9;
+ if(fp){const yaw=FV.yaw,fx=-Math.sin(yaw),fy=-Math.cos(yaw);for(const e of PCAP){const dx=e.x-px,dy=e.y-py,dd=Math.hypot(dx,dy);if(dd>20||dd<.6)continue;const c=(fx*dx+fy*dy)/dd;if(c<.7)continue;if(c<Math.cos(Math.min(1.2,Math.atan((e.w/2+.6)/dd)+.12)))continue;if(dd<bd){bd=dd;best=e}}}
+ else{for(const e of PCAP){const dd=Math.hypot(e.x-px,e.y-py);if(dd<6.5&&dd<bd){bd=dd;best=e}}}
+ if(!best){d.style.display='none';return}let sx,sy;
+ if(fp){const v=new THREE.Vector3(best.x,v3H(best.x|0,best.y|0)+best.h,best.y).project(V3.cam);if(v.z>1||v.z<-1){d.style.display='none';return}sx=(v.x*.5+.5)*VW;sy=(1-(v.y*.5+.5))*VH}
+ else{sx=(best.x*T-cam.x)*ZM;sy=(best.ay-cam.y)*ZM-3}
+ sx=Math.max(VW*.12,Math.min(VW*.88,sx));sy=Math.max(VH*.14,Math.min(VH*.8,sy));
+ const hu=LANG=='hu',tx=PTR[best.ru][hu?0:1],ru=best.ru.replace('|',' · '),key=ru+'|'+tx;
+ if(d._k!==key){d._k=key;d.innerHTML='<div style="color:#e8c43a;font-weight:bold;letter-spacing:.04em"></div><div style="color:#f2f0e0"></div>';d.children[0].textContent=ru;d.children[1].textContent=tx}
+ const wd=(d.parentNode.clientWidth||960);d.style.fontSize=Math.max(11,wd/480*8.4)+'px';d.style.left=(sx/VW*100)+'%';d.style.top=(sy/VH*100)+'%';d.style.display='block'}
+{const h0=hud;hud=function(){const r=h0.apply(this,arguments);try{if(PRI&&state=='play')priCaption();else if(CAPD)CAPD.style.display='none'}catch(e){console.warn('cap',e)}return r}}
 /* ---------- B. UAZ ---------- */
 const UAZC=[['#5a6a3c','#6e8048','#3e4a2a'],['#8a5a3a','#a06c48','#5e3c26'],['#6e7c84','#8494a0','#48545c']];
 BIG.puaz=function(o,x,y){const c=UAZC[(o.c|0)%3],fw=o.fw||3,fh=o.fh||2,cx=pSX(x)+fw*8,cy=pSY(y)+fh*8;g.save();g.translate(cx,cy);if(o.v)g.rotate(Math.PI/2);
