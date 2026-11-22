@@ -14867,13 +14867,18 @@ M3.puaz=(o,G,fw,fh)=>{const c=[[0x5a6a3c,0x3e4a2a],[0x8a5a3a,0x5e3c26],[0x6e7c84
  for(const a of ANIM3)if(a.ch&&a.ch.vis)a.fn(t)}}
 
 /* ===== z317: the first-person view is a 2.5D (DOOM-style) one: low-res pixels, turn left-right only, no looking up/down, no jumping, crouching or sliding, no sun shadows or lens flare ===== */
+const PRES=1280;
+const prRatio=()=>Math.min(1,PRES/Math.max(1,C.clientWidth));
 {const vd=v3Draw;v3Draw=function(){try{if(V3&&V3.R){const R=V3.R;
-   if(PRI&&!R._p25){const rs=R.setSize;R._rs=rs;R.setSize=function(w,h,u){if(PRI&&fvA()){const k=Math.min(1,320/w);w=Math.max(1,Math.round(w*k));h=Math.max(1,Math.round(h*k))}return rs.call(this,w,h,u)};R._p25=1;R.setPixelRatio(1);V3.w=-1}
-   else if(!PRI&&R._p25){R.setSize=R._rs;R._p25=0;V3.w=-1}}}catch(e){}
+   if(PRI&&!R._p25){R._gp=R.getPixelRatio;R._sp=R.setPixelRatio;
+     R.setPixelRatio=function(r){this._rq=r;if(PRI&&fvA())r=prRatio();return this._sp.call(this,r)};
+     R.getPixelRatio=function(){return(PRI&&fvA()&&this._rq!=null)?this._rq:this._gp.call(this)};R._p25=1;V3.w=-1}
+   else if(!PRI&&R._p25){R.setPixelRatio=R._sp;R.getPixelRatio=R._gp;R._p25=0;V3.w=-1}
+   if(R._p25&&PRI&&fvA()){const want=prRatio();if(Math.abs(R._gp.call(R)-want)>.004){R._sp.call(R,want);V3.w=-1}}}}catch(e){}
   return vd.apply(this,arguments)}}
 {const ff=fvFrame;fvFrame=function(){if(PRI){FV.pitch=-.03;FV.vy=0;FV.hz=0;FV.cr=0;FV.slide=0;FV.fl=0;FV.flW=0}ff.apply(this,arguments)}}
 {const fs=fvShadows;fvShadows=function(on){return fs.call(this,on&&!PRI)}}
-{const t0=toast112;toast112=function(a,b){if(PRI&&/FPS/.test(String(a)))b=LANG=='hu'?'Egér / nyilak: fordulás · W A S D: mozgás · Shift: futás · F4: felülnézet':'Mouse / arrows: turn · WASD: move · Shift: run · F4: top-down';return t0.call(this,a,b)}}
+{const t0=toast112;toast112=function(a,b){if(PRI&&/FPS/.test(String(a)))b=LANG=='hu'?'Egér / nyilak: fordulás · W A S D: mozgás · Shift: futás · X: FPS / TPS nézet':'Mouse / arrows: turn · WASD: move · Shift: run · X: FPS / TPS view';return t0.call(this,a,b)}}
 
 /* ===== z318: the first-person view on touch screens — joystick moves, dragging turns, a tap fires, a button switches between FPS and top-down ===== */
 const TFP={id:null,x:0,x0:0,y0:0,t0:0,moved:false,fired:false,tm:null,init:false};
@@ -14894,8 +14899,41 @@ C.addEventListener('touchend',tfpEnd,{passive:false,capture:true});C.addEventLis
 /* the switch button */
 {const w=document.getElementById('wrap');const b=document.createElement('div');b.id='fpsbtn';b.style.cssText='position:absolute;left:1.2%;top:38%;width:11%;max-width:62px;aspect-ratio:1;border-radius:50%;background:rgba(10,12,8,.62);border:2px solid #e8c43a;color:#e8c43a;font:bold 13px "DejaVu Sans",Arial,sans-serif;display:none;align-items:center;justify-content:center;z-index:30;user-select:none;-webkit-user-select:none;touch-action:none;cursor:pointer';
  const go=e=>{e.preventDefault();e.stopPropagation();if(PRI&&state=='play')fvToggle()};b.addEventListener('touchstart',go,{passive:false});b.addEventListener('click',go);(w||document.body).appendChild(b);
- setInterval(()=>{const show=!!PRI&&state=='play'&&!fvUI()&&!inD;b.style.display=show?'flex':'none';if(show){const t=fvA()?'2D':'FPS';if(b.textContent!==t)b.textContent=t}},300)}
-{const t0=toast112;toast112=function(a,b){if(PRI&&TCH.on&&/FPS/.test(String(a)))b=LANG=='hu'?'Joystick: mozgás · húzás: fordulás · koppintás: lövés · 2D gomb: felülnézet':'Joystick: move · drag: turn · tap: fire · 2D button: top-down';return t0.call(this,a,b)}}
+ setInterval(()=>{const show=!!PRI&&state=='play'&&!fvUI()&&!inD;b.style.display=show?'flex':'none';if(show){const t=TPS?'FPS':'TPS';if(b.textContent!==t)b.textContent=t}},300)}
+{const t0=toast112;toast112=function(a,b){if(PRI&&TCH.on&&/FPS/.test(String(a)))b=LANG=='hu'?'Joystick: mozgás · húzás: fordulás · koppintás: lövés · kerek gomb: FPS / TPS':'Joystick: move · drag: turn · tap: fire · round button: FPS / TPS';return t0.call(this,a,b)}}
+
+/* ===== z319: Pripjaty has no top-down view any more — only a 2.5D first-person (FPS) and a 2.5D third-person (TPS) view; X (or the round button) switches between them ===== */
+let TPS=false;try{TPS=localStorage.getItem('pxc_tps')=='1'}catch(e){}
+const tpsOn=()=>!!(PRI&&TPS&&typeof fvA=='function'&&fvA());
+function tpsSet(v){TPS=!!v;try{localStorage.setItem('pxc_tps',TPS?'1':'0')}catch(e){}
+ const h=LANG=='hu';try{say(TPS?(h?'Harmadik személyű nézet (TPS)':'Third-person view (TPS)'):(h?'Belső nézet (FPS)':'First-person view (FPS)'))}catch(e){}}
+/* never top-down: the view button and X only change between FPS and TPS */
+{const ft=fvToggle;fvToggle=function(){if(!PRI)return ft.apply(this,arguments);if(!FPV||!fvCan()){FPV=true;return}tpsSet(!TPS)}}
+{const up=update;update=function(dt){up(dt);if(PRI&&state=='play'&&!FPV&&typeof THREE!='undefined'&&typeof V3!='undefined'&&V3&&V3.ok)FPV=true}}
+addEventListener('keydown',e=>{if(e.code!='KeyX'||e.repeat||!PRI||state!='play'||e.ctrlKey||e.altKey||e.metaKey)return;
+ const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(!fvA()||fvUI())return;fvToggle()},true);
+/* the camera: behind and a bit above the player, over the right shoulder, pulled in by walls */
+{const fc=fvCam;fvCam=function(){const tg=fc.apply(this,arguments),c=V3.cam;FV.eye=FV.eye||new THREE.Vector3();FV.eye.copy(c.position);
+ if(!tpsOn()){FV.tpD=null;return tg}
+ const yaw=FV.yaw,fx=-Math.sin(yaw),fz=-Math.cos(yaw),rx=Math.cos(yaw),rz=-Math.sin(yaw),px=P.x/T,pz=P.y/T,D=3.4,SH=.45;
+ let ok=.35;for(let t=.35;t<=D;t+=.12){const k=t/D,x=px-fx*t+rx*SH*k,z=pz-fz*t+rz*SH*k;if(blocked(x*T,z*T,3))break;ok=t}
+ const dt=FV.dt||.016;if(FV.tpD==null)FV.tpD=ok;FV.tpD+=(ok-FV.tpD)*Math.min(1,dt*(ok<FV.tpD?18:4));const d=FV.tpD,k=d/D;
+ c.position.set(px-fx*d+rx*SH*k,FV.eye.y+.6*k+.1,pz-fz*d+rz*SH*k);c.rotation.set(-.1,yaw,0);
+ if(Math.abs(c.fov-70)>.01){c.fov=70;c.updateProjectionMatrix()}return tg}}
+/* aiming: what lies under the crosshair is the target; shots leave the player's eyes toward it */
+{const fa=fvAim;fvAim=function(){if(!tpsOn())return fa.apply(this,arguments);const c=V3.cam;c.updateMatrixWorld();const p0=c.position.clone(),q0=c.quaternion.clone(),
+  dir=new THREE.Vector3(0,0,-1).applyQuaternion(q0),tg=p0.clone().addScaledVector(dir,(FV.tpD||2)+12);
+  c.position.copy(FV.eye);c.lookAt(tg);try{return fa.apply(this,arguments)}finally{c.position.copy(p0);c.quaternion.copy(q0)}}}
+/* the player is a 2.5D sprite seen from behind */
+{const dp=drawP;drawP=function(){if(!tpsOn())return dp.apply(this,arguments);const fx=P.fx,fy=P.fy;P.fx=0;P.fy=-1;try{return dp.apply(this,arguments)}finally{P.fx=fx;P.fy=fy}}}
+{const fw=fvWeapon;fvWeapon=function(){if(PRI&&TPS)return;return fw.apply(this,arguments)}}
+/* show the sprite and a blob shadow only while the frame is rendered */
+{const vd=v3Draw;v3Draw=function(){try{if(V3&&V3.R&&!V3.R._tp){const R=V3.R,r0=R.render;R.render=function(s,c){let e=null;
+   try{if(s===V3.S&&tpsOn()){e=V3.ents.get('P');if(e&&e.m){e.m.visible=true;e.m.castShadow=false}
+     if(!FV.psh){const m=new THREE.Mesh(new THREE.CircleGeometry(.42,14),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.32,depthWrite:false,fog:false}));m.rotation.x=-Math.PI/2;m.renderOrder=2;V3.S.add(m);FV.psh=m}
+     FV.psh.visible=true;FV.psh.position.set(P.x/T,v3HW(P.x,P.y)+.03,P.y/T)}else if(FV.psh)FV.psh.visible=false}catch(x){}
+   try{return r0.apply(this,arguments)}finally{if(e&&e.m)e.m.visible=false}};R._tp=1}}catch(e){}
+  return vd.apply(this,arguments)}}
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
