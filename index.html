@@ -13964,6 +13964,1171 @@ gfxMenu=function(){if(PV225.big&&PV225.b&&PV225.a){pvBig225();return}PV225.big=f
 {const gk=gfxKey;gfxKey=function(c){if(PV225.big){PV225.big=false;return}if(c=='Tab'&&PV225.b){PV225.big=true;return}return gk(c)}}
 {const gc=gfxClick;gfxClick=function(){if(PV225.big){PV225.big=false;return}if(PV225.r)for(const r of PV225.r)if(ms.x>=r[0]&&ms.x<r[0]+r[2]&&ms.y>=r[1]&&ms.y<r[1]+r[3]){PV225.big=true;return}return gc()}}
 
+/* ===== z301: PRIPJATY 1986 — the one story mode. A hand-built city frozen in 1986, seen 84 years later by a stalker on the first day.
+   Core: the mode card, starting the fixed world, saved state, the look (colour grade, mist, vignette, grain) ===== */
+GAMEV=301;
+const PRIS=19860426;
+var PRI=null;
+const prH=()=>LANG=='hu';
+const prT=(h,e)=>LANG=='hu'?h:e;
+function prRng(s){let a=s>>>0;return()=>{a=(a+0x6D2B79F5)>>>0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+/* ---------- the mode card: Survival | Pripjaty 1986 ---------- */
+drawModeQ=function(){const h=prH(),R_=mqRects();noTr=true;Q(0,0,VW,VH,'rgba(4,6,8,.92)');g.font=fnt(1,15);g.textAlign='center';g.fillStyle='#ffd84a';g.fillText(h?'Válassz játékmódot':'Choose a game mode',VW/2,R_[0].y-16);
+ const C=[[h?'Túlélő mód':'Survival',h?['Szabad játék, a te','szabályaid szerint.','Építs, fedezz fel, élj túl.']:['Free play on your','own terms.','Build, explore, survive.'],'#6aa84a'],
+  ['Pripjaty 1986',h?['Az első napod a Zónában.','Szkafander, Geiger, tisztogatás,','egy város, ami megállt 1986-ban.']:['Your first day in the Zone.','Hazmat suit, Geiger counter, clearing,','a city that stopped in 1986.'],'#c8302a']];
+ R_.forEach((q,i)=>{const s=MODEQ.sel==i;Q(q.x-2,q.y-2,q.w+4,q.h+4,s?'#ffd84a':'#5a4a30');Q(q.x,q.y,q.w,q.h,s?'#22281c':'#16140e');Q(q.x,q.y,q.w,3,C[i][2]);
+  if(i==0){Q(q.x+q.w/2-10,q.y+18,20,14,'#7a5434');Q(q.x+q.w/2-12,q.y+14,24,4,'#a8743e');Q(q.x+q.w/2-3,q.y+24,6,8,'#3a2414')}
+  else{Q(q.x+q.w/2-18,q.y+10,36,26,'#a8241c');try{pStar(q.x+q.w/2-7,q.y+20,7,'#ffd84a');pHS(q.x+q.w/2+9,q.y+23,13,'#ffd84a')}catch(e){}}
+  g.font=fnt(1,12);g.textAlign='center';g.fillStyle=s?'#ffd84a':'#e8f2d8';g.fillText(C[i][0],q.x+q.w/2,q.y+50);C[i][1].forEach((l,k)=>txt(l,q.x+q.w/2,q.y+66+k*11,'#a8b49a','center'))});
+ txt(h?'← → választ   Enter: indít   Esc: vissza':'← → choose   Enter: start   Esc: back',VW/2,R_[0].y+R_[0].h+20,'#6f7c62','center');noTr=false};
+{const sm=startMode;startMode=function(story){if(!story)return sm.apply(this,arguments);return priStart()}}
+
+function priNew(){return{v:1,day0:day,rub:0,rep:0,q:{},f:{},suit:100,filt:100,sx:0,sy:0,read:{},kill:0,jobs:{},visit:{},seen:{}}}
+function priStart(){MODEQ=null;STQ=null;STORY=null;try{if(net){net.r.leave().catch(()=>{});net=null}}catch(e){}
+ init(PRIS);tut=0;started=true;state='play';PRI=null;priBuild();PRI=priNew();PRI.day0=day;priPlacePlayer();priOpening();try{priSave()}catch(e){}}
+function priPlacePlayer(){const[x,y]=PRIST;SX=x;SY=y;P.x=x*T+8;P.y=y*T+8;P.hp=100;P.food=Math.max(P.food||0,85);P.th=Math.max(P.th??0,85);try{cam.x=cl(P.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y-VH/(2*ZM),0,H*T-VH/ZM)}catch(e){}}
+
+/* ---------- saved state ---------- */
+function priSave(){try{if(PRI)localStorage.setItem(SKEY()+'_pri',JSON.stringify(PRI));else localStorage.removeItem(SKEY()+'_pri')}catch(e){}}
+{const sv=save;save=function(){const r=sv.apply(this,arguments);priSave();return r}}
+{const ld=load;load=function(){PRI=null;const r=ld.apply(this,arguments);try{if(r){const s=localStorage.getItem(SKEY()+'_pri');if(s){PRI=JSON.parse(s);PRI.q=PRI.q||{};PRI.f=PRI.f||{};PRI.read=PRI.read||{};PRI.jobs=PRI.jobs||{};PRI.visit=PRI.visit||{};PRI.seen=PRI.seen||{};try{priAfterLoad()}catch(e){}}}}catch(e){PRI=null}return r}}
+{const in_=init;init=function(...a){PRI=null;return in_.apply(this,a)}}
+
+/* ---------- the look: an overcast, washed-out 1986 — colour grade, mist, vignette, grain ---------- */
+{const p=PAL;p[0]=['#6e7a3e','#74803f','#7a8646','#808c4a'];p[3]=['#7a7e80','#74787a','#84888a','#7e8284']}
+const MIST={cv:null,t:0};
+function mistMake(){const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d'),r=prRng(1986);for(let i=0;i<22;i++){const px=r()*256,py=r()*256,rr=30+r()*56,gr=x.createRadialGradient(px,py,0,px,py,rr);gr.addColorStop(0,'rgba(222,230,240,.5)');gr.addColorStop(1,'rgba(222,230,240,0)');x.fillStyle=gr;for(const ox of[-256,0,256])for(const oy of[-256,0,256]){x.save();x.translate(ox,oy);x.fillRect(px-rr,py-rr,rr*2,rr*2);x.restore()}}MIST.cv=c}
+function priGrade(){if(!PRI||CLASSIC||(typeof fvA=='function'&&fvA()))return;const cw=g.canvas.width,ch=g.canvas.height,now=performance.now();
+ g.save();g.setTransform(1,0,0,1,0,0);
+ try{g.globalCompositeOperation='saturation';g.fillStyle='rgba(128,128,128,'+(inD?.3:.5)+')';g.fillRect(0,0,cw,ch);
+  g.globalCompositeOperation='multiply';g.fillStyle=inD?'rgb(212,206,188)':'rgb(204,213,228)';g.fillRect(0,0,cw,ch);
+  g.globalCompositeOperation='source-over';
+  if(!inD){if(!MIST.cv)mistMake();g.globalAlpha=.16;const s=cw/256*1.1;for(let k=0;k<2;k++){const ox=-((now/(k?90:140))*(k?1:-.6)%256+256)%256,oy=((now/(k?260:200))%256);g.drawImage(MIST.cv,0,0,256,256,ox*s*(k?1.2:1)-cw*.1,oy*s*.5-ch*.1,256*s*(k?1.3:1),256*s*(k?1.3:1));g.drawImage(MIST.cv,0,0,256,256,ox*s*(k?1.2:1)-cw*.1+256*s*(k?1.3:1),oy*s*.5-ch*.1,256*s*(k?1.3:1),256*s*(k?1.3:1))}g.globalAlpha=1}
+  const gr=g.createRadialGradient(cw/2,ch/2,Math.min(cw,ch)*.28,cw/2,ch/2,Math.max(cw,ch)*.78);gr.addColorStop(0,'rgba(10,12,8,0)');gr.addColorStop(1,'rgba(10,12,8,'+(inD?.62:.5)+')');g.fillStyle=gr;g.fillRect(0,0,cw,ch);
+  g.fillStyle='rgba(235,235,220,.07)';for(let i=0;i<46;i++)g.fillRect((Math.random()*cw)|0,(Math.random()*ch)|0,2,2);
+ }finally{g.restore()}}
+{const hd=hud;hud=function(){try{if(PRI&&state=='play')priGrade()}catch(e){}return hd.apply(this,arguments)}}
+
+/* ===== z302: art for Pripjaty 1986 — red star, hammer and sickle, banners, billboards, the funfair (ferris wheel, carousel, bumper cars, swings),
+   playground, kindergarten and school things, kiosks, monuments, panel-block roofs ===== */
+function pStar(cx,cy,r,col){g.save();g.fillStyle=col;g.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?r*.42:r,x=cx+Math.cos(a)*rr,y=cy+Math.sin(a)*rr;i?g.lineTo(x,y):g.moveTo(x,y)}g.closePath();g.fill();g.restore()}
+function pHS(cx,cy,s,col){g.save();g.translate(cx,cy);g.strokeStyle=col;g.fillStyle=col;g.lineCap='butt';
+ g.lineWidth=Math.max(1,s*.14);g.beginPath();g.arc(s*.02,s*.04,s*.34,Math.PI*.78,Math.PI*2.1);g.stroke();
+ g.lineWidth=Math.max(1,s*.12);g.beginPath();g.moveTo(-s*.27,s*.22);g.lineTo(-s*.42,s*.42);g.stroke();
+ g.lineWidth=Math.max(1,s*.12);g.beginPath();g.moveTo(-s*.26,-s*.3);g.lineTo(s*.26,s*.42);g.stroke();
+ g.save();g.translate(-s*.2,-s*.22);g.rotate(Math.atan2(.72,.52)-Math.PI/2);g.fillRect(-s*.2,-s*.08,s*.4,s*.17);g.restore();g.restore()}
+function pTxt(s,x,y,col,sz,al,sh){g.save();g.font='bold '+sz+'px "DejaVu Sans",Arial,sans-serif';g.textAlign=al||'left';if(sh!==0){g.fillStyle='rgba(0,0,0,.55)';g.fillText(s,x+1,y+1)}g.fillStyle=col;g.fillText(s,x,y);g.restore()}
+const pSX=(x)=>Math.round(x-cam.x),pSY=(y)=>Math.round(y-cam.y);
+const PRED='#a8241c',PRED2='#8a1c16',PGOLD='#e8c43a',PCONC='#8e9094',PCONC2='#6e7074';
+function pShadow(x,y,w,h){W_(x,y,w,h,'rgba(0,0,0,.28)')}
+/* register: solid, names */
+const PSOL=['pcar2','pbump','pswing','pgate','ppil','pmon','pkiosk','pwheel','pbill','pbusst','pcot','pboard','pgasm','pslide','pframe','pcrane'];
+for(const k of PSOL){SOLID[k]=1;SOLID['p_'+k]=1}
+Object.assign(NMX,{pbanner:'banner',pflag:'red flag',ppos:'poster',pwheel:'ferris wheel',pcar2:'carousel',pbump:'bumper cars',pswing:'chain swing',pgate:'park gate',pmon:'monument',pkiosk:'kiosk',pbill:'billboard',pbusst:'bus stop',pcot:'cot',pdoll:'doll',pboard:'blackboard',pgasm:'gas masks',pcal:'calendar',pbust:'bust'});
+/* ---- small things ---- */
+DRAWX.pbanner=function(o,x,y){const k=o.k|0,t=performance.now(),w=Math.floor(t/380+x)%2;pShadow(x+2,y+13,12,3);W_(x+7,y-14,2,29,'#5a5a5a');W_(x+7,y-14,1,29,'#7a7a7a');W_(x+5,y-17,6,3,'#444');
+ const bx=x+9,by=y-12;W_(bx,by,13,17+(w?0:1),k==2?'#8a3a30':PRED);W_(bx,by,13,1,k==2?'#a85a4a':'#c8402e');W_(bx,by+16,13,1,PRED2);
+ const sx=pSX(bx+6.5),sy=pSY(by+8);if(k==1)pHS(sx,sy,10,PGOLD);else pStar(sx,sy,5,PGOLD)};
+DRAWX.pflag=function(o,x,y){const t=performance.now(),w=Math.floor(t/260+x*.3)%2;pShadow(x+2,y+14,12,2);W_(x+7,y-18,2,33,'#6a6a6a');W_(x+7,y-18,1,33,'#8a8a8a');W_(x+9,y-17,16,10,PRED);W_(x+9,y-17,16,1,'#c8402e');W_(x+9+w,y-8,14,2,PRED2);try{pHS(pSX(x+14),pSY(y-12),5,PGOLD);pStar(pSX(x+10),pSY(y-14),2,PGOLD)}catch(e){}W_(x+6,y-20,4,2,PGOLD)};
+DRAWX.ppos=function(o,x,y){const k=o.k|0;W_(x+2,y+2,12,13,'#2a2622');
+ if(k==0){W_(x+3,y+3,10,11,PRED);pStar(pSX(x+8),pSY(y+8),4.3,PGOLD)}
+ else if(k==1){W_(x+3,y+3,10,11,PRED);pHS(pSX(x+8),pSY(y+8),9,PGOLD)}
+ else if(k==2){W_(x+3,y+3,10,11,'#d8cfa8');W_(x+3,y+3,10,3,PRED);W_(x+5,y+8,2,5,'#4a4a52');W_(x+8,y+7,2,6,'#6a4a3a');W_(x+10,y+9,2,4,'#3a4a5a');W_(x+4,y+7,8,1,'#8a7a5a')}
+ else if(k==3){W_(x+3,y+3,10,11,'#c8c0a0');W_(x+4,y+5,8,1,'#8a7a5a');W_(x+4,y+8,6,1,'#8a7a5a');W_(x+5,y+10,5,1,'#8a7a5a');W_(x+10,y+4,2,2,PRED)}
+ else{W_(x+3,y+3,10,11,'#ece6d4');W_(x+3,y+3,10,3,PRED);for(let r=0;r<4;r++)for(let c=0;c<5;c++)W_(x+4+c*2,y+7+r*2,1,1,'#6a6a6a');W_(x+8,y+9,3,3,'rgba(160,30,24,.55)');W_(x+9,y+10,1,1,'#a8241c')}};
+DRAWX.pcal=function(o,x,y){W_(x+3,y+1,10,14,'#ece6d4');W_(x+3,y+1,10,4,PRED);W_(x+3,y+1,10,1,'#c8402e');for(let r=0;r<4;r++)for(let c=0;c<5;c++)W_(x+4+c*2,y+6+r*2,1,1,'#5a5a5a');W_(x+8,y+10,3,3,'rgba(160,30,24,.6)');W_(x+5,y+1,1,2,'#222');W_(x+10,y+1,1,2,'#222')};
+DRAWX.pdoll=function(o,x,y){const k=o.k|0;W_(x+3,y+13,10,2,'rgba(0,0,0,.25)');const c=['#b8604a','#5a7a9a','#9a8a4a'][k%3];W_(x+5,y+6,6,7,c);W_(x+6,y+2,4,4,'#d8b898');W_(x+6,y+3,1,1,'#222');W_(x+9,y+3,1,1,'#222');W_(x+4,y+7,1,4,'#d8b898');W_(x+11,y+8,1,3,'#d8b898');W_(x+6,y+13,1,2,'#4a3a3a');W_(x+9,y+13,1,2,'#4a3a3a')};
+DRAWX.pcot=function(o,x,y){W_(x+1,y+14,14,2,'rgba(0,0,0,.28)');W_(x+1,y+2,14,13,'#8a7a58');W_(x+2,y+3,12,11,'#b8b098');W_(x+2,y+3,12,4,'#d8d0b8');W_(x+2,y+8,12,1,'#8a7a58');for(let i=0;i<4;i++)W_(x+2+i*3,y+2,1,13,'#6a5a3a');W_(x+5,y+5,3,2,'#c8a888')};
+DRAWX.pgasm=function(o,x,y){W_(x+1,y+13,14,2,'rgba(0,0,0,.3)');for(let i=0;i<7;i++){const a=(i*5)%4,b=(i*3)%3;W_(x+2+a*3,y+9-b*3,5,5,'#3a4034');W_(x+3+a*3,y+9-b*3,3,3,'#5a6050');W_(x+4+a*3,y+14-b*3,1,2,'#2a2e26');W_(x+3+a*3,y+10-b*3,1,1,'#aab8a0');W_(x+5+a*3,y+10-b*3,1,1,'#aab8a0')}};
+DRAWX.pboard=function(o,x,y){W_(x,y+13,16,3,'rgba(0,0,0,.28)');W_(x,y+1,16,13,'#3a2a1a');W_(x+1,y+2,14,11,'#2a3a30');W_(x+3,y+5,7,1,'#d8d8c8');W_(x+3,y+8,9,1,'#d8d8c8');W_(x+2,y+14,12,1,'#a8a090')};
+DRAWX.pbust=function(o,x,y){W_(x+2,y+13,12,3,'rgba(0,0,0,.3)');W_(x+3,y+9,10,6,PCONC2);W_(x+3,y+9,10,1,'#a8aaae');W_(x+5,y+2,6,8,'#aaaaa4');W_(x+5,y+2,6,1,'#c8c8c0');W_(x+6,y+4,1,1,'#555');W_(x+9,y+4,1,1,'#555');W_(x+6,y+8,4,2,'#9a9a94')};
+DRAWX.pslide=function(o,x,y){W_(x+1,y+13,14,3,'rgba(0,0,0,.26)');W_(x+2,y+2,3,12,'#9a5a2a');W_(x+2,y+2,3,2,'#c88a3a');W_(x+5,y+5,9,3,'#b8baba');W_(x+11,y+8,4,3,'#b8baba');W_(x+5,y+5,9,1,'#e0e2e2')};
+DRAWX.psw2=function(o,x,y){const t=performance.now(),s=Math.round(Math.sin(t/900+x)*2);W_(x+1,y+14,14,2,'rgba(0,0,0,.25)');W_(x+1,y,2,15,'#7a4a2a');W_(x+13,y,2,15,'#7a4a2a');W_(x+1,y,14,2,'#9a6a3a');W_(x+4+s,y+2,1,8,'#555');W_(x+11+s,y+2,1,8,'#555');W_(x+4+s,y+10,8,2,'#8a5a2a')};
+DRAWX.psand=function(o,x,y){W_(x+1,y+3,14,12,'#6a4a2a');W_(x+2,y+4,12,10,'#c8b078');W_(x+5,y+7,2,2,'#b09858');W_(x+9,y+10,3,2,'#a88848');W_(x+4,y+11,2,1,'#d8c088')};
+DRAWX.pcrnd=function(o,x,y){const t=performance.now(),a=t/3000;W_(x+1,y+14,14,2,'rgba(0,0,0,.25)');W_(x+2,y+3,12,12,'#4a4a4e');W_(x+3,y+4,10,10,'#6a6a70');for(let i=0;i<4;i++){const q=a+i*Math.PI/2;W_(x+8+Math.cos(q)*4-1,y+9+Math.sin(q)*4-1,3,3,'#b8603a')}W_(x+7,y+8,2,2,'#2a2a2a')};
+DRAWX.ppil=function(o,x,y){W_(x,y+14,16,3,'rgba(0,0,0,.3)');W_(x+2,y-16,12,32,PCONC);W_(x+2,y-16,2,32,'#b0b2b6');W_(x+12,y-16,2,32,PCONC2);W_(x,y-18,16,4,'#a0a2a6');W_(x,y-18,16,1,'#c8cacc');try{pStar(pSX(x+8),pSY(y-6),4,PRED)}catch(e){}};
+DRAWX.ppole=function(o,x,y){W_(x+6,y+14,4,2,'rgba(0,0,0,.3)');W_(x+7,y-26,2,40,'#5a4a38');W_(x+7,y-26,1,40,'#7a6a52');W_(x+1,y-22,14,2,'#4a3a2a');W_(x+3,y-17,10,2,'#4a3a2a');W_(x+1,y-23,1,2,'#cfd8d0');W_(x+14,y-23,1,2,'#cfd8d0')};
+/* ---- billboard: red board with star, hammer and sickle and a slogan ---- */
+const PSLOG=['СЛАВА ТРУДУ!','МИР · ТРУД · МАЙ','ПРИПЯТЬ','НАРОД И ПАРТИЯ — ЕДИНЫ!','ЛЕНИНСКИМ КУРСОМ'];
+BIG.pbill=function(o,x,y){const k=(o.k|0)%PSLOG.length;W_(x+4,y+30,56,4,'rgba(0,0,0,.28)');W_(x+8,y+14,3,19,'#5a5a5e');W_(x+53,y+14,3,19,'#5a5a5e');W_(x+2,y-2,60,22,'#3a3a3e');W_(x+3,y-1,58,20,PRED);W_(x+3,y-1,58,1,'#c8402e');W_(x+3,y+18,58,1,PRED2);
+ try{pStar(pSX(x+13),pSY(y+9),6,PGOLD);pHS(pSX(x+50),pSY(y+9),12,PGOLD);pTxt(PSLOG[k],pSX(x+32),pSY(y+12),'#f0d890',k==3?5:7,'center',0)}catch(e){}};
+FPR.pbill=[4,2];
+/* ---- park gate and arch ---- */
+BIG.pgate=function(o,x,y){W_(x,y+14,16,3,'rgba(0,0,0,.3)');W_(x+2,y-14,12,30,PCONC);W_(x+2,y-14,2,30,'#b0b2b6');W_(x+12,y-14,2,30,PCONC2);W_(x,y-16,16,4,'#a0a2a6');
+ /* the arch over the entrance, 5 tiles wide: red board with the star and the name */
+ const ax=x+16,aw=80;W_(ax,y-26,aw,22,'#3a3a3e');W_(ax+1,y-25,aw-2,20,PRED);W_(ax+1,y-25,aw-2,1,'#c8402e');W_(ax+1,y-6,aw-2,1,PRED2);
+ try{pStar(pSX(ax+10),pSY(y-15),7,PGOLD);pStar(pSX(ax+aw-10),pSY(y-15),7,PGOLD);pTxt('ПАРК',pSX(ax+aw/2),pSY(y-11),'#f4dc88',10,'center',0);pStar(pSX(x+8),pSY(y-3),3.5,PRED)}catch(e){}};
+/* ---- ferris wheel: 9 tiles of sky, rusty yellow and red cabins, turning very slowly in the wind ---- */
+BIG.pwheel=function(o,x,y){const t=performance.now(),R=60,cx=x+24,cy=y-72,sx=pSX(cx),sy=pSY(cy),rot=t/21000+(o.ph||0);
+ W_(x-30,y+22,110,6,'rgba(0,0,0,.26)');
+ g.save();g.lineCap='butt';
+ /* A-frame legs */
+ g.strokeStyle='#7a4a2a';g.lineWidth=4;g.beginPath();g.moveTo(sx-2,sy+2);g.lineTo(sx-34,sy+R+36);g.moveTo(sx+2,sy+2);g.lineTo(sx+38,sy+R+36);g.stroke();
+ g.strokeStyle='#a8602e';g.lineWidth=1.5;g.beginPath();g.moveTo(sx-2,sy+2);g.lineTo(sx-32,sy+R+36);g.moveTo(sx+2,sy+2);g.lineTo(sx+36,sy+R+36);g.stroke();
+ g.strokeStyle='#5a3a22';g.lineWidth=2;g.beginPath();g.moveTo(sx-22,sy+R*.62);g.lineTo(sx+22,sy+R*.62);g.moveTo(sx-28,sy+R*.88);g.lineTo(sx+28,sy+R*.88);g.stroke();
+ /* rim */
+ g.strokeStyle='#8a6a1a';g.lineWidth=4;g.beginPath();g.arc(sx,sy,R,0,Math.PI*2);g.stroke();g.strokeStyle='#d8b43a';g.lineWidth=2;g.beginPath();g.arc(sx,sy,R,0,Math.PI*2);g.stroke();
+ g.strokeStyle='#a8882a';g.lineWidth=1.5;g.beginPath();g.arc(sx,sy,R*.7,0,Math.PI*2);g.stroke();
+ /* spokes */
+ g.strokeStyle='#8a5a30';g.lineWidth=1.2;for(let i=0;i<16;i++){const a=rot+i*Math.PI/8;g.beginPath();g.moveTo(sx,sy);g.lineTo(sx+Math.cos(a)*R,sy+Math.sin(a)*R);g.stroke()}
+ /* cabins */
+ for(let i=0;i<12;i++){const a=rot+i*Math.PI/6,bx=sx+Math.cos(a)*R,by=sy+Math.sin(a)*R,sw=Math.sin(t/1700+i*1.3)*.1;g.save();g.translate(bx,by);g.rotate(sw);
+  g.strokeStyle='#4a4a4a';g.lineWidth=1;g.beginPath();g.moveTo(0,0);g.lineTo(0,4);g.stroke();
+  const c=i%2?['#a8241c','#d8503a']:['#c8a22a','#ecca4a'];g.fillStyle='#2a2420';g.fillRect(-5,3,10,9);g.fillStyle=c[0];g.fillRect(-4,4,8,7);g.fillStyle=c[1];g.fillRect(-4,4,8,2);g.fillStyle='#3a4a52';g.fillRect(-3,7,6,3);g.restore()}
+ /* hub */
+ g.fillStyle='#4a3a2a';g.beginPath();g.arc(sx,sy,6,0,Math.PI*2);g.fill();g.fillStyle='#a8602e';g.beginPath();g.arc(sx,sy,3.4,0,Math.PI*2);g.fill();
+ pStar(sx,sy-R-6,5,PRED);
+ g.restore()};
+/* ---- carousel, bumper cars, chain swing ---- */
+BIG.pcar2=function(o,x,y){const t=performance.now(),sx=pSX(x+24),sy=pSY(y+10);W_(x-4,y+30,56,5,'rgba(0,0,0,.26)');
+ g.save();g.fillStyle='#4a4a4e';g.beginPath();g.ellipse(sx,sy+16,28,9,0,0,Math.PI*2);g.fill();g.fillStyle='#7a6a58';g.beginPath();g.ellipse(sx,sy+14,26,8,0,0,Math.PI*2);g.fill();
+ for(let i=0;i<6;i++){const a=t/4000+i*Math.PI/3,px=sx+Math.cos(a)*18,py=sy+14+Math.sin(a)*5.5;g.fillStyle='#6a6a6a';g.fillRect(px-.5,py-12,1,13);g.fillStyle=i%2?'#c8402e':'#d8c8a0';g.fillRect(px-2,py-5,5,4)}
+ g.fillStyle='#5a5a5e';g.fillRect(sx-1.5,sy-14,3,28);
+ for(let i=0;i<10;i++){const a0=-Math.PI+i*Math.PI/5;g.fillStyle=i%2?'#c8402e':'#e0d4b0';g.beginPath();g.moveTo(sx,sy-22);g.arc(sx,sy-8,28,a0+Math.PI*.0,a0+Math.PI/5+Math.PI*.0);g.closePath();g.fill()}
+ g.fillStyle='#8a1c16';g.beginPath();g.ellipse(sx,sy-8,28,10,0,0,Math.PI*2);g.globalAlpha=.25;g.fill();g.globalAlpha=1;
+ pStar(sx,sy-26,4,PGOLD);g.restore()};
+BIG.pbump=function(o,x,y){W_(x+2,y+60,92,5,'rgba(0,0,0,.26)');W_(x+4,y+8,88,52,'#6a6a6e');W_(x+6,y+10,84,48,'#5a5a60');
+ for(let i=0;i<6;i++){const cx=x+14+((i*29)%70),cy=y+18+((i*17)%34),c=['#c8402e','#d8b43a','#3a6a9a','#4a8a4a','#a8602e','#8a4a8a'][i];W_(cx,cy,10,7,'#1a1a1c');W_(cx+1,cy+1,8,5,c);W_(cx+2,cy+2,6,2,'rgba(255,255,255,.25)')}
+ for(const px of[x+2,x+88]){W_(px,y-4,3,58,'#8a8a8e');W_(px,y-4,1,58,'#b0b0b4')}for(const py of[y-4,y+52])W_(x+2,py,90,3,'#7a7a7e');
+ for(let i=0;i<10;i++)W_(x+3+i*9,y-4,5,6,i%2?PRED:'#d8c8a0');try{pTxt('АТТРАКЦИОН',pSX(x+48),pSY(y+4),'#f4dc88',6,'center',0)}catch(e){}};
+BIG.pswing=function(o,x,y){const t=performance.now(),sx=pSX(x+24),sy=pSY(y+16);W_(x+2,y+34,44,4,'rgba(0,0,0,.26)');g.save();g.fillStyle='#4a4a50';g.fillRect(sx-2,sy-22,4,40);
+ for(let i=0;i<8;i++){const a=t/2600+i*Math.PI/4,ex=sx+Math.cos(a)*22,ey=sy+4+Math.sin(a)*7+8;g.strokeStyle='#7a7a7a';g.lineWidth=1;g.beginPath();g.moveTo(sx,sy-18);g.lineTo(ex,ey-8);g.stroke();g.fillStyle=i%2?'#c8402e':'#d8b43a';g.fillRect(ex-2,ey-8,4,5)}
+ g.fillStyle='#a8241c';g.beginPath();g.ellipse(sx,sy-18,16,5,0,0,Math.PI*2);g.fill();g.fillStyle='#c8402e';g.beginPath();g.ellipse(sx,sy-19,13,3.5,0,0,Math.PI*2);g.fill();g.restore()};
+/* ---- monument: a concrete plinth with the red hammer and sickle ---- */
+BIG.pmon=function(o,x,y){W_(x+2,y+40,44,5,'rgba(0,0,0,.3)');W_(x+2,y+28,44,14,PCONC2);W_(x+2,y+28,44,2,'#b0b2b6');W_(x+5,y+22,38,8,PCONC);W_(x+5,y+22,38,1,'#c0c2c6');
+ W_(x+8,y-16,32,40,'#5a5a5e');W_(x+9,y-15,30,38,PRED);W_(x+9,y-15,30,1,'#c8402e');W_(x+9,y+22,30,1,PRED2);try{pStar(pSX(x+24),pSY(y-3),9,PGOLD);pHS(pSX(x+24),pSY(y+11),17,PGOLD)}catch(e){}};
+BIG.pkiosk=function(o,x,y){W_(x+1,y+28,30,4,'rgba(0,0,0,.28)');W_(x+2,y+8,28,22,'#4a6a5a');W_(x+3,y+9,26,20,'#6a8a78');W_(x+3,y+9,26,3,'#8aaa98');W_(x+5,y+14,22,9,'#1c2a26');W_(x+6,y+15,20,7,'#3a4a44');for(let i=0;i<5;i++)W_(x+7+i*4,y+17,3,4,['#c8402e','#d8c8a0','#d8b43a','#c8402e','#d8c8a0'][i]);
+ W_(x,y+4,32,5,PRED);W_(x,y+4,32,1,'#c8402e');W_(x+3,y+24,26,4,'#5a6a5e');try{pTxt('ПЕЧАТЬ',pSX(x+16),pSY(y+9),'#f4dc88',5,'center',0)}catch(e){}};
+BIG.pbusst=function(o,x,y){W_(x+1,y+18,46,4,'rgba(0,0,0,.26)');W_(x+2,y-2,44,20,'#7a7e82');W_(x+3,y-1,42,4,'#a8aaae');W_(x+3,y+3,42,14,'#6a6e72');for(const px of[x+4,x+42])W_(px,y+3,2,16,'#4a4a4e');W_(x+6,y+4,36,12,'#3a4a50');W_(x+6,y+4,36,2,'#5a7078');W_(x+5,y-3,38,2,PRED);try{pStar(pSX(x+14),pSY(y+11),3.5,PRED);pHS(pSX(x+24),pSY(y+11),7,PGOLD);pStar(pSX(x+34),pSY(y+11),3.5,PRED)}catch(e){}};
+BIG.pframe=function(o,x,y){W_(x+1,y+14,30,3,'rgba(0,0,0,.28)');W_(x,y+2,32,14,'#4a3a2a');W_(x+1,y+3,30,12,'#6a5a46');W_(x+2,y+4,28,10,'#2a2a28');W_(x+14,y+2,4,14,'#4a3a2a')};
+/* ---- panel-block and landmark roofs ---- */
+const PROOFS={prp:1,prc:1,prh:1,prs:1,prk:1,prm:1,prx:1};
+{const rc=roofCanvas;roofCanvas=function(b,k){if(!(b&&PROOFS[b.rf]))return rc.apply(this,arguments);let cv=ROOFC.get(k);if(cv)return cv;cv=document.createElement('canvas');const w=b.w*T,h=(b.h-1)*T;cv.width=w+6;cv.height=h+6;const cg=cv.getContext('2d'),sg=g,sc=cam;g=cg;cam={x:0,y:0};
+ try{const r=prRng((b.x*73856093)^(b.y*19349663)^b.w);const base=b.rf=='prp'?'#8c8e8e':b.rf=='prc'?'#9a9488':b.rf=='prh'?'#a4a49e':b.rf=='prs'?'#98968c':b.rf=='prk'?'#8a7e72':b.rf=='prm'?'#8e9088':'#868890';
+  Q(0,0,w,h,base);for(let i=0;i<w*h/26;i++){const a=r(),c=r();Q(Math.floor(a*w),Math.floor(c*h),1,1,i%2?'rgba(255,255,255,.08)':'rgba(0,0,0,.1)')}
+  for(let i=0;i<9;i++){const a=r(),c=r();Q(Math.floor(a*(w-30)),Math.floor(c*(h-14)),10+Math.floor(r()*26),5+Math.floor(r()*8),'rgba(60,70,50,.16)')}
+  Q(0,0,w,3,'#aeb0b0');Q(0,h-3,w,3,'#6a6c6c');Q(0,0,3,h,'#a4a6a6');Q(w-3,0,3,h,'#6e7070');Q(3,3,w-6,1,'rgba(0,0,0,.3)');Q(3,3,1,h-6,'rgba(0,0,0,.25)');Q(3,h-4,w-6,1,'rgba(255,255,255,.14)');
+  /* expansion seams every few tiles */
+  for(let x=T*4;x<w-8;x+=T*4)Q(x,3,1,h-6,'rgba(0,0,0,.22)');
+  if(b.rf=='prp'){ /* panel block: lift rooms, antennas, a slogan on the roof */
+   const n=Math.max(2,Math.floor(w/(T*7)));for(let i=0;i<n;i++){const hx=T*3+i*Math.floor((w-T*6)/Math.max(1,n-1))-(n==1?0:0);Q(hx,h-28,18,14,'#6a6c70');Q(hx,h-28,18,2,'#9a9c9e');Q(hx+3,h-22,5,8,'#2a2c30')}
+   for(let i=0;i<14;i++){const ax=10+Math.floor(r()*(w-20)),ay=8+Math.floor(r()*(h-40));Q(ax,ay,1,10,'#4a4a4a');Q(ax-4,ay,9,1,'#3a3a3a');Q(ax-3,ay+3,7,1,'#3a3a3a');Q(ax-2,ay+6,5,1,'#3a3a3a')}
+   const s=PSLOG[(b.x+b.y)%3];pTxt(s,w/2,h/2+6,'#d8ccb0',14,'center',0);if(r()<.7)pStar(w-24,h/2,10,PRED);pStar(22,h/2,9,PRED);
+   for(let i=0;i<4;i++){const ax=Math.floor(r()*(w-20))+8,ay=Math.floor(r()*(h-20))+8;Q(ax,ay,12,2,'rgba(40,30,20,.35)')}}
+  else if(b.rf=='prc'){ /* palace of culture: a big star and the hall */
+   Q(w/2-40,h/2-30,80,60,'#a8a29a');Q(w/2-40,h/2-30,80,2,'#c8c2ba');pStar(w/2,h/2,26,PRED);pStar(w/2,h/2,17,PGOLD);for(let i=0;i<8;i++)Q(8+i*Math.floor((w-24)/7),8,10,6,'#6a6a6e')}
+  else if(b.rf=='prh'){Q(w/2-6,h/2-18,12,36,PRED);Q(w/2-18,h/2-6,36,12,PRED);Q(w/2-4,h/2-16,8,32,'#ece6d4');Q(w/2-16,h/2-4,32,8,'#ece6d4')}
+  else if(b.rf=='prs'){pStar(w-26,h/2,12,PRED);Q(14,h/2-4,60,8,'#5a5c5c');pTxt('ШКОЛА',w/2,h/2+5,'#d8ccb0',11,'center',0)}
+  else if(b.rf=='prk'){pStar(w/2,h/2,10,PRED);for(let i=0;i<5;i++)Q(12+i*(w-30)/4,8,8,8,'#c8a02a')}
+  else if(b.rf=='prm'){Q(10,h/2-10,w-20,20,'#7a7c7a');pTxt('УНИВЕРМАГ',w/2,h/2+4,'#e8dcb8',12,'center',0);pStar(24,h/2,8,PRED);pStar(w-24,h/2,8,PRED)}
+  else{pStar(w/2,h/2,12,PRED)}
+  }finally{g=sg;cam=sc}ROOFC.set(k,cv);return cv}}
+
+/* ===== z303: the map of Pripjaty — a fixed, hand-planned city (320 x 320 tiles): forest, river, the south checkpoint, the avenue, the main street,
+   panel-block slabs you can walk into floor by floor, the amusement park with the ferris wheel, the central square ===== */
+const PRIST=[160,291];
+var PRB=null;
+const pIn=(x,y)=>x>=1&&y>=1&&x<W-1&&y<H-1;
+const pT=(x,y,m)=>{if(pIn(x,y))map[y*W+x]=m};
+const pO=(x,y,o)=>{if(pIn(x,y))ob[y*W+x]=o};
+function pzRect(x,y,w,h,m){for(let yy=y;yy<y+h;yy++)for(let xx=x;xx<x+w;xx++)pT(xx,yy,m)}
+function pClr(x,y,w,h){for(let yy=y;yy<y+h;yy++)for(let xx=x;xx<x+w;xx++)if(pIn(xx,yy))ob[yy*W+xx]=null}
+function pBm(x,y,w,h,b){for(let yy=y;yy<y+h;yy++)for(let xx=x;xx<x+w;xx++)if(pIn(xx,yy))bm[yy*W+xx]=b}
+const pFree=(x,y)=>pIn(x,y)&&!ob[y*W+x];
+/* the grid of streets (x, y, width) */
+const PRS={ew:[[98,4],[140,8],[186,4],[224,4]],ns:[[112,4],[204,4]],ave:[156,8,148,262],ring:[[66,4],[250,4]],x0:66,x1:254,y0:58,y1:262};
+function priBuild(){
+ const r=prRng(PRIS);W=H=320;
+ map=new Uint8Array(W*H);ob=new Array(W*H).fill(null);bm=new Uint8Array(W*H);el=new Uint8Array(W*H);holes=new Map();
+ ISC=[[W>>1,H>>1,0]];BLD=[];CARS=[];NPCS.length=0;zs=[];deer=[];loot=[];arrs=[];try{corpses.length=0}catch(e){}MINES={};try{TOWNS105.length=0}catch(e){}
+ PRB={slabs:[],places:{},floors:{},npc:{},zones:[]};
+ /* ----- ground: grass with forest thickening away from the city ----- */
+ for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x,dx=(x-160)/112,dy=(y-160)/118,d=Math.hypot(dx,dy),wob=ns(x*.3,y*.3,8)*.2;
+  const rv=x>=286+Math.round(ns(y*.15,3,5)*9-4);
+  if(rv){map[i]=x>=292+Math.round(ns(y*.15,3,5)*9-4)?1:2;continue}
+  const pt=Math.max(.02,Math.min(.62,(d-.84+wob)*.95+.03));
+  const v=r();if(v<pt)ob[i]={t:'tree',hp:6};else if(v<pt+.03)ob[i]={t:r()<.5?'bush':'shrub',b:0,r:0};else if(v<pt+(d<.9?.06:.12))ob[i]={t:'tgrass'};}
+ for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(x<8||y<8||x>=W-8||y>=H-8){const i=y*W+x;if(map[i]==0)ob[i]={t:'tree',hp:6}}}
+ /* ----- streets: asphalt with a worn sidewalk; everything in the way is cleared ----- */
+ const road=(x,y,w,h)=>{pzRect(x-2,y-2,w+4,h+4,14);pClr(x-2,y-2,w+4,h+4);};
+ const asph=(x,y,w,h)=>{pzRect(x,y,w,h,3);pClr(x,y,w,h)};
+ for(const[y,w]of PRS.ew)road(PRS.x0,y,PRS.x1-PRS.x0,w);for(const[x,w]of PRS.ns)road(x,PRS.y0,w,PRS.y1-PRS.y0);road(PRS.ave[0],PRS.ave[2],PRS.ave[1],PRS.ave[3]-PRS.ave[2]);for(const[x,w]of PRS.ring)road(x,PRS.y0,w,PRS.y1-PRS.y0);
+ for(const[y,w]of PRS.ew)asph(PRS.x0,y,PRS.x1-PRS.x0,w);for(const[x,w]of PRS.ns)asph(x,PRS.y0,w,PRS.y1-PRS.y0);asph(PRS.ave[0],PRS.ave[2],PRS.ave[1],PRS.ave[3]-PRS.ave[2]);for(const[x,w]of PRS.ring)asph(x,PRS.y0,w,PRS.y1-PRS.y0);
+ /* the road in from the south checkpoint */
+ road(158,262,4,40);asph(158,262,4,40);
+ /* the checkpoint yard */
+ pzRect(138,276,44,22,14);pClr(138,276,44,22);
+ priRoadLife(r);
+ priBlocks(r);
+ priCheckpoint(r);
+ priPark(r);
+ priPlaza(r);
+ priLandmarks(r);
+ priFinish(r);
+}
+/* road marks, wrecks, grass pushing through the asphalt */
+DRAWX.plane=function(o,x,y){if(o.v)W_(x+7,y+2,2,5,o.c||'#c8c0a0');else W_(x+2,y+7,5,2,o.c||'#c8c0a0')};
+DRAWX.pcrack=function(o,x,y){W_(x+3,y+4,1,4,'#2a2c2e');W_(x+4,y+8,3,1,'#2a2c2e');W_(x+7,y+8,1,4,'#2a2c2e');W_(x+9,y+11,3,1,'#2a2c2e');W_(x+11,y+3,1,3,'#2a2c2e')};
+function priRoadLife(r){
+ const dash=(x0,y0,x1,y1,vert)=>{for(let k=0;;k+=3){const x=vert?x0:x0+k,y=vert?y0+k:y0;if(vert?y>y1:x>x1)break;if(pIn(x,y)&&!ob[y*W+x]&&map[y*W+x]==3)ob[y*W+x]={t:'plane',v:vert?1:0}}};
+ for(const[y,w]of PRS.ew){dash(PRS.x0,y+Math.floor(w/2)-(w>4?0:0),PRS.x1,y,false)}
+ for(const[x,w]of PRS.ns)dash(x+Math.floor(w/2),PRS.y0,x,PRS.y1,true);dash(PRS.ave[0]+3,PRS.ave[2],0,PRS.ave[3],true);dash(160,262,0,300,true);
+ /* grass and cracks pushing through */
+ for(let y=PRS.y0;y<PRS.y1+40;y++)for(let x=PRS.x0;x<PRS.x1;x++){const i=y*W+x;if(map[i]!=3||ob[i])continue;const v=r();if(v<.035)ob[i]={t:'tgrass'};else if(v<.06)ob[i]={t:'pcrack'};else if(v<.068)ob[i]={t:'bush',b:0,r:0}}
+ /* abandoned cars on the streets */
+ const cars=[];for(const[y,w]of PRS.ew)for(let x=PRS.x0+6;x<PRS.x1-6;x+=9+Math.floor(r()*20)){if(r()<.55)cars.push([x,y+(r()<.5?0:w-1)])}
+ for(const[x,w]of PRS.ns)for(let y=PRS.y0+6;y<PRS.y1-6;y+=10+Math.floor(r()*22)){if(r()<.5)cars.push([x+(r()<.5?0:w-1),y])}
+ for(let y=PRS.ave[2]+6;y<PRS.ave[3]-6;y+=11+Math.floor(r()*18))if(r()<.6)cars.push([PRS.ave[0]+(r()<.5?0:7),y]);
+ for(const[x,y]of cars){if(pFree(x,y)&&map[y*W+x]==3)ob[y*W+x]={t:'wreck',r:Math.floor(r()*4),hp:30}}
+ /* wide street lamps */
+ for(const[y,w]of PRS.ew)for(let x=PRS.x0+4;x<PRS.x1;x+=14){const yy=y-1;if(pFree(x,yy))ob[yy*W+x]={t:'slamp',b:r()<.5?1:0,fk:r()<.3?1:0}}
+}
+function priBlocks(r){
+ const slabs=[[169,66],[169,81],[77,192],[77,208],[121,192],[169,192],[169,208],[77,232],[77,246],[121,232],[121,246],[214,232],[214,246]];
+ for(const[x,y]of slabs){pzClr(x-2,y-2,34,17);pzSlab(x,y,4+Math.floor(r()*2),r)}
+ /* yards: benches, playgrounds, garages, a scatter of junk */
+ for(const[x,y]of slabs){const yx=x+2+Math.floor(r()*20),yy=y+PRL.h+1;if(pFreeAny(yx,yy+1))setFP({t:'bench',hp:10,r:0,on:true},yx,yy+1,2,1)}
+ priYard(r)}
+function pzClr(x,y,w,h){pClr(x,y,w,h)}
+function priYard(r){
+ /* playgrounds */
+ const pg=[[100,214],[143,214],[188,214],[100,252],[143,252]];
+ for(const[x,y]of pg){pzRect(x,y,7,6,0);pClr(x,y,7,6);for(let i=0;i<5;i++){const k=['psw2','pslide','psand','pcrnd','psw2'][i];pO(x+(i%3)*2,y+Math.floor(i/3)*3,{t:k})}}
+}
+function priCheckpoint(r){
+ const cx=160;
+ /* the barrier and the guard booth on the road south of the town */
+ pO(cx-3,284,{t:'hpad',k:1});
+ for(const x of[156,157,162,163]){pO(x,285,{t:'sbag',hp:20})}
+ pO(cx-2,285,{t:'pflag'});pO(cx+2,285,{t:'pbanner',k:0});
+ /* the contractor's hut (west) and the equipment shed (east) */
+ const hut=(x,y,w,h,rf)=>{shell(x,y,w,h,'sblock',12,{win:1});pO(x+Math.floor(w/2),y+h-1,{t:'door',open:false});BLD.push({x,y,w,h,rf:rf||'house',c:2});};
+ hut(143,278,11,9);hut(167,278,11,9);
+ PRB.places.hutW={x:143,y:278,w:11,h:9};PRB.places.hutE={x:167,y:278,w:11,h:9};
+ /* inside the contractors' hut: a board, a table, a stove, bunks */
+ setFP({t:'bed',hp:10,r:0,on:true},145,280,1,2);setFP({t:'bed',hp:10,r:0,on:true},146,280,1,2);pO(149,280,{t:'stove'});pO(150,281,{t:'pot'});pO(148,284,{t:'mtab',k:1});pO(147,284,{t:'ochair',r:3});pO(149,284,{t:'ochair',r:1});pO(152,280,{t:'cabinet'});pO(152,283,{t:'counter',k:1});
+ PRB.places.board={x:151,y:285};
+ for(let x=145;x<153;x+=3)ob[278*W+x]=ob[278*W+x]&&ob[278*W+x].t=='win'?ob[278*W+x]:ob[278*W+x];
+ /* the store shed: crates, lockers */
+ pO(170,280,{t:'rcrate',hp:99});pO(171,280,{t:'rcrate',hp:99});pO(173,280,{t:'cabinet'});pO(174,280,{t:'cabinet'});pO(175,282,{t:'counter',k:1});pO(170,284,{t:'tire'},0);
+ PRB.places.shop={x:174,y:284};
+ /* some sandbags, a watchtower, fences either side of the road */
+ for(let x=138;x<182;x++){if(x>=156&&x<=163)continue;if(pFree(x,276))pO(x,276,{t:'fence',hp:60});if(pFree(x,297)&&r()<.6)pO(x,297,{t:'fence',hp:60})}
+ for(const x of[139,180])pO(x,278,{t:'tower',s:1,hp:99});
+}
+function priFinish(r){
+ for(let i=0;i<W*H;i++){if(map[i]==3&&ob[i]&&ob[i].t=='tree')ob[i]=null}
+ PRB.cx=160;PRB.cy=160;
+ /* keep the start free */
+ pClr(PRIST[0]-2,PRIST[1]-2,5,5);
+}
+function priOpening(){try{say(prT('Pripjaty, 1986. Mintha megállt volna az idő.','Pripjat, 1986. As if time had stopped.'))}catch(e){}}
+
+/* ===== z304: panel blocks — 30 x 11 slabs with eight flats on every floor, a stair hall, a dead lift; the floors above are built when you climb ===== */
+const PRL={w:30,h:11,cr:5,nP:[7,14,22],sP:[7,13,16,22],nF:[[1,6],[8,13],[15,21],[23,28]],sF:[[1,6],[8,12],[17,21],[23,28]],hall:[14,15]};
+/* wall decals: posters on the faces of interior walls and on facades */
+{const d=drawObj;drawObj=function(o,x,y){const r=d.apply(this,arguments);if(o&&o.dec!=null&&(o.t=='twall'||o.t=='sblock')){try{if(o.dec>=10){const k=o.dec-10;if(k==0){pStar(pSX(x+8),pSY(y+9),5,PGOLD)}else if(k==1){pHS(pSX(x+8),pSY(y+9),9,PGOLD)}else if(k==2){W_(x+2,y+3,12,9,PRED);pStar(pSX(x+8),pSY(y+8),3.5,PGOLD)}}else DRAWX.ppos({k:o.dec},x,y-1)}catch(e){}}return r}}
+function pzZ(x,y,v){zs.push({id:nid(),x:x*T+8,y:y*T+8,hp:VHP[v]||6,a:0,t:0,vx:0,vy:0,z:1,v,pri:1,st79:1})}
+/* flat furniture layouts: 3 rows, row 0 next to the door, row 2 at the far wall */
+const PFL=[["....c.","b.t.NN","b...v."],["..c.t.","kb.b.N","kb.b.N"],["...o..","..tc.f","s.k..."],["....d.","ZZ..D.","ZZ.k.w"],["c.....","t.b.k.","..b.kv"],["..o..f","t..c.s","w.u..."]];
+function priFlat(x,y,fw,fd,up,li,r,wreck){const L=PFL[li%PFL.length],mir=r()<.5;
+ const at=(u,v)=>{const X=x+(mir?fw-1-u:u),Y=up?y+(fd-1-v):y+v;return[X,Y]};
+ for(let v=0;v<fd;v++)for(let u=0;u<Math.min(fw,6);u++){let ch=L[v][u];if(ch=='.'||ch==' ')continue;if(r()<(wreck||.25)&&!'bNZu'.includes(ch)){continue}
+  const[X,Y]=at(u,v);if(!pFreeAny(X,Y))continue;const i=Y*W+X;
+  switch(ch){
+   case 'b':if(v<fd-1&&L[v+1][u]=='b'){const[X2,Y2]=at(u,v+1);const yy=Math.min(Y,Y2);if(pFreeAny(X,yy)&&pFreeAny(X,yy+1))setFP({t:'bed',hp:10,r:0,on:true},X,yy,1,2)}break;
+   case 'N':if(u<5&&L[v][u+1]=='N'){const[X2]=at(u+1,v);const xx=Math.min(X,X2);if(pFreeAny(xx,Y)&&pFreeAny(xx+1,Y))setFP({t:'sofa',hp:10,r:0,c:Math.floor(r()*4)},xx,Y,2,1)}break;
+   case 'Z':ob[i]={t:'pcot'};break;case 'D':ob[i]={t:'pdoll',k:Math.floor(r()*3)};break;
+   case 't':ob[i]={t:'mtab',k:1};break;case 'c':ob[i]={t:'ochair',r:up?2:0};break;case 'k':ob[i]={t:'cabinet'};break;case 'v':ob[i]={t:'tv'};break;
+   case 'o':ob[i]={t:'stove'};break;case 'f':ob[i]={t:'fridge'};break;case 's':ob[i]={t:'sink'};break;case 'w':ob[i]={t:'wc'};break;case 'u':ob[i]={t:'tub'};break;case 'd':ob[i]={t:'desk'};break;case 'p':ob[i]={t:'pot'};break}}
+ if(r()<.28){const[X,Y]=at(Math.floor(r()*fw),Math.floor(r()*fd));if(pFreeAny(X,Y))ob[Y*W+X]={t:r()<.6?'papers':'bones'}}}
+function pFreeAny(x,y){return x>=1&&y>=1&&x<W-1&&y<H-1&&!ob[y*W+x]}
+/* one floor of a slab, written into the current map at (x0,y0). world: the ground floor outdoors; f>0: an upper floor (separate map) */
+function priFloor(x0,y0,f,rec,world,r){const L=PRL,w=L.w,h=L.h,top=!world&&f>rec.n;
+ for(let yy=0;yy<h;yy++)for(let xx=0;xx<w;xx++){const X=x0+xx,Y=y0+yy,i=Y*W+X,edge=xx==0||yy==0||xx==w-1||yy==h-1;
+  if(top){map[i]=14;ob[i]=edge?{t:'rail'}:null;continue}
+  map[i]=edge?3:16;ob[i]=null;if(world)bm[i]=3;
+  if(edge){const corner=(xx==0||xx==w-1)&&(yy==0||yy==h-1);ob[i]={t:'sblock',hp:200};if(!corner&&(yy==0||yy==h-1)&&xx%3==1&&r()<.8)ob[i]={t:'win',hp:200,open:r()<.2};else if(yy==h-1&&!corner&&xx%5==2&&r()<.7&&world)ob[i].dec=10+Math.floor(r()*3)}}
+ if(top){for(let k=0;k<5;k++){const X=x0+3+Math.floor(r()*(w-6)),Y=y0+2+Math.floor(r()*(h-4));if(pFreeAny(X,Y))ob[Y*W+X]={t:r()<.5?'acu':'antenna'}}
+  /* the stair head that leads back down */{const X=x0+14,Y=y0+5;ob[Y*W+X]={t:'odn',b:rec._b,f}}return}
+ const wall=(x,y)=>{ob[(y0+y)*W+x0+x]={t:'twall',hp:120}};
+ /* partitions and doors */
+ for(let xx=1;xx<w-1;xx++){wall(xx,4);wall(xx,6)}
+ for(const c of L.nP)for(let yy=1;yy<=3;yy++)wall(c,yy);for(const c of L.sP)for(let yy=7;yy<=9;yy++)wall(c,yy);
+ /* the hall: the open strip at columns 14-15 from the corridor to the front */
+ for(const c of L.hall){ob[(y0+6)*W+x0+c]=null}
+ const door=(x,y)=>{ob[(y0+y)*W+x0+x]={t:'door',open:false}};
+ for(const[a,b]of L.nF)door(a+Math.floor((b-a)/2),4);for(const[a,b]of L.sF)door(a+Math.floor((b-a)/2),6);
+ /* decals on the faces of the corridor-side walls */
+ for(let xx=2;xx<w-2;xx++){const o=ob[(y0+4)*W+x0+xx];if(o&&o.t=='twall'&&r()<.28)o.dec=Math.floor(r()*5);const o2=ob[(y0+6)*W+x0+xx];if(o2&&o2.t=='twall'&&r()<.26)o2.dec=Math.floor(r()*5)}
+ /* flats */
+ const n=L.nF.length;let k=0;
+ for(const[a,b]of L.nF){priFlat(x0+a,y0+1,b-a+1,3,true,(rec.sd+f*3+k++)%PFL.length,r,.2+(f?.1:0))}
+ for(const[a,b]of L.sF){priFlat(x0+a,y0+7,b-a+1,3,false,(rec.sd+f*5+k++)%PFL.length,r,.2+(f?.1:0))}
+ /* corridor lights */
+ for(let xx=3;xx<w-2;xx+=6){const X=x0+xx,Y=y0+5;if(!ob[Y*W+X])ob[Y*W+X]={t:'fix',fk:r()<.4?1:0}}
+ /* the stair hall: stairs up and down, the dead lift, the way out on the ground floor */
+ const hx=x0+14,hy=y0+8,b=rec._b;
+ if(world){ob[hy*W+hx]={t:'oup',n:rec.n,bw:w,bh:h,mi:0,sd:rec.sd,k:'pan',b:hy*W+hx,f:0};rec._b=hy*W+hx;ob[hy*W+hx+1]={t:'elev'};ob[(y0+h-1)*W+x0+14]={t:'door',open:false};ob[(y0+h-1)*W+x0+15]={t:'door',open:false}}
+ else{ob[hy*W+hx]={t:'odn',b,f};if(f<rec.n)ob[hy*W+hx+1]={t:'oup',b,f};else ob[hy*W+hx+1]={t:'elev'};ob[(y0+8)*W+x0+14].f=f}
+ /* the "they": a few per floor */
+ if(!world){const nz=2+Math.floor(r()*3);for(let q=0,t=0;q<nz&&t<80;t++){const X=x0+2+Math.floor(r()*(w-4)),Y=y0+1+Math.floor(r()*(h-2));if(ob[Y*W+X]||map[Y*W+X]!=16)continue;const v=[0,0,1,2,3,4][Math.floor(r()*6)];pzZ(X,Y,v);q++}}}
+{const go=genOF;genOF=function(rec,f){if(!rec||rec.k!='pan')return go.apply(this,arguments);loot=[];map=new Uint8Array(W*H).fill(5);ob=new Array(W*H).fill(null);deer=[];zs=[];priFloor(40,40,f,rec,false,R)}}
+/* a slab on the map. x,y = top-left; floors above: n */
+function pzSlab(x,y,n,r){const L=PRL;const rec={n,sd:Math.floor(r()*997),k:'pan',mi:0};priFloor(x,y,0,rec,true,r);BLD.push({x,y,w:L.w,h:L.h,rf:'prp',sd:1});PRB.slabs.push({x,y,n});
+ /* the yard in front and behind: a path, a bench, junk */
+ for(let xx=x+12;xx<x+18;xx++)for(let yy=y+L.h;yy<y+L.h+3;yy++){pT(xx,yy,14);pO(xx,yy,null)}
+ for(let xx=x-1;xx<x+L.w+1;xx++){if(pIn(xx,y-1)&&!ob[(y-1)*W+xx]&&r()<.18)ob[(y-1)*W+xx]={t:'bush',b:0,r:0}}
+ if(r()<.8)pO(x+10,y+L.h+2,{t:'trash',hp:99});if(r()<.7)pO(x+19,y+L.h+2,{t:'pflag'});}
+
+/* ===== z305: the amusement park, the central square and the big public buildings (palace of culture, school, department store, hospital, hotel, kindergarten) ===== */
+function priPark(r){
+ const x0=116,y0=102,x1=203,y1=138;
+ /* the park: grass, paved paths, a fence all round with the main gate in the south */
+ for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const i=y*W+x;map[i]=0;ob[i]=r()<.05?{t:'tree',hp:6}:r()<.05?{t:'bush',b:0,r:0}:r()<.1?{t:'tgrass'}:null}
+ const path=(ax,ay,bx,by)=>{const dx=Math.sign(bx-ax),dy=Math.sign(by-ay);let x=ax,y=ay;for(let k=0;k<400;k++){for(let u=0;u<2;u++){pT(x+(dy?u:0),y+(dx?u:0),14);pO(x+(dy?u:0),y+(dx?u:0),null)}if(x==bx&&y==by)break;if(x!=bx)x+=dx;else y+=dy}};
+ path(159,139,159,106);path(122,121,198,121);path(122,121,122,132);path(198,121,198,132);path(122,132,196,132);path(140,121,140,110);path(178,121,178,110);
+ /* the plaza of the wheel */
+ pzRect(150,112,20,16,14);pClr(150,112,20,16);
+ /* fence */
+ for(let x=x0;x<=x1;x++){if(x>=157&&x<=161)continue;pO(x,y1+1<H?y1:y1,{t:'fence',hp:60});pO(x,y0,{t:'fence',hp:60})}for(let y=y0;y<=y1;y++){pO(x0,y,{t:'fence',hp:60});pO(x1,y,{t:'fence',hp:60})}
+ /* gate: two pillars and the arch with the red star */
+ pClr(156,135,8,4);pzRect(155,135,9,4,14);setFP({t:'pgate'},156,137,1,1);pO(162,137,{t:'ppil'});
+ pO(155,138,{t:'pflag'});pO(164,138,{t:'pbanner',k:0});
+ /* the ferris wheel, carousel, bumper cars, swings, kiosk */
+ pClr(150,125,12,5);setFP({t:'pwheel',ph:.4},158,126,3,2);PRB.places.wheel={x:159,y:121};
+ pClr(126,122,5,4);setFP({t:'pcar2'},127,123,3,2);
+ pClr(170,122,8,6);setFP({t:'pbump'},171,123,6,4);
+ pClr(183,124,6,4);setFP({t:'pswing'},184,125,3,2);
+ pClr(139,131,4,3);setFP({t:'pkiosk'},140,130,2,2);
+ pClr(176,106,8,4);setFP({t:'pbill',k:2},177,106,4,2);
+ /* benches, lamp posts, the shooting gallery, trash */
+ const bn=[[148,124],[168,124],[134,128],[186,119],[130,114],[190,112]];for(const[x,y]of bn){pClr(x,y,2,1);setFP({t:'bench',hp:10,r:0,on:true},x,y,2,1)}
+ for(const[x,y]of[[152,118],[166,118],[152,130],[166,130],[140,126],[178,126]])pO(x,y,{t:'slamp',b:1,fk:r()<.5?1:0});
+ for(const[x,y]of[[146,132],[172,132],[132,119]])pO(x,y,{t:'trash',hp:99});
+ for(const[x,y]of[[119,124],[196,124]])pO(x,y,{t:'pframe'});
+ /* pavilions: ticket booth & shooting gallery as small shells */
+ const hut=(x,y,w,h,c)=>{shell(x,y,w,h,'sblock',12,{win:1});pO(x+Math.floor(w/2),y+h-1,{t:'door',open:false});BLD.push({x,y,w,h,rf:'prk',c});for(let yy=y;yy<y+h;yy++)for(let xx=x;xx<x+w;xx++)bm[yy*W+xx]=3};
+ pClr(146,107,8,6);hut(146,107,8,6,1);pO(148,109,{t:'counter',k:1});pO(150,109,{t:'cabinet'});pO(152,110,{t:'pdoll',k:0});
+ pClr(124,106,9,6);hut(124,106,9,6,1);pO(126,108,{t:'counter',k:1});pO(128,108,{t:'rcrate',hp:99});pO(130,108,{t:'cabinet'});
+ /* the "they" in the park */
+ for(const[x,y]of[[150,110],[170,112],[130,120]])pzZ(x,y,0);
+ /* a monument by the east gate and a red banner row along the fence */
+ for(let x=122;x<198;x+=14)if(pFree(x,y1-1))pO(x,y1-1,{t:'pbanner',k:r()<.5?0:1});
+}
+function priPlaza(r){
+ const x0=164,y0=148,x1=203,y1=185;
+ pzRect(x0,y0,x1-x0+1,y1-y0+1,14);pClr(x0,y0,x1-x0+1,y1-y0+1);
+ /* checker of darker slabs */
+ for(let y=y0+2;y<=y1-2;y+=4)for(let x=x0+2;x<=x1-2;x+=4)pzRect(x,y,2,2,3);
+ pzRect(172,157,24,18,0);pClr(172,157,24,18);
+ for(let y=157;y<175;y++)for(let x=172;x<196;x++){const o=r();if(o<.06)pO(x,y,{t:"tgrass"})}
+ setFP({t:'pmon'},182,160,3,3);PRB.places.monument={x:183,y:162};
+ for(const[x,y]of[[176,158],[188,158],[176,172],[188,172],[172,166],[194,166]])pO(x,y,{t:'pflag'});
+ for(const[x,y]of[[168,152],[198,152],[168,182],[198,182]]){pO(x,y,{t:'slamp',b:1,fk:r()<.5?1:0})}
+ for(const[x,y]of[[166,156],[200,156],[166,178],[200,178]]){pClr(x,y,2,1);setFP({t:'bench',hp:10,r:0,on:true},x,y,2,1)}
+ pClr(168,148,4,2);setFP({t:'pbill',k:0},168,148,4,2);pClr(190,184,4,2);setFP({t:'pbill',k:3},190,184,4,2);
+ for(const[x,y]of[[171,163],[195,163],[181,175]])pO(x,y,{t:'pbust'});
+ pClr(165,176,3,2);setFP({t:'pkiosk'},165,176,2,2);
+ pClr(158,148,4,3);setFP({t:'pbusst'},156,150,3,2);
+}
+/* ---------- buildings with a corridor and rooms ---------- */
+function pzFurn(theme,x,y,w,h,up,r){const at=(u,v)=>[x+u,up?y+h-1-v:y+v];const put=(u,v,o)=>{const[X,Y]=at(u,v);if(X>=x&&X<x+w&&Y>=y&&Y<y+h&&pFreeAny(X,Y))ob[Y*W+X]=o};const fp=(u,v,o,fw,fh)=>{const[X,Y]=at(u,v);const ax=X,ay=up&&fh>1?Y-fh+1:Y;if(ax+fw<=x+w&&ay>=y&&ay+fh<=y+h){let ok=1;for(let yy=0;yy<fh;yy++)for(let xx=0;xx<fw;xx++)if(!pFreeAny(ax+xx,ay+yy))ok=0;if(ok)setFP(o,ax,ay,fw,fh)}};
+ const decal=(k)=>{const wy=y-1;const X=x+Math.floor(w/2),o=ob[wy*W+X];if(o&&(o.t=='twall'||o.t=='sblock'))o.dec=k};
+ const far=h-1;
+ if(theme=='class'){decal(r()<.8?5:2);for(let v=1;v<far;v+=2)for(let u=1;u<w-1;u+=2){put(u,v,{t:'desk'});put(u,v-1,{t:'ochair',r:up?0:2})}put(0,far,{t:'desk'});put(w-1,far,{t:'cabinet'});if(r()<.5)put(w-1,1,{t:'pgasm'})}
+ else if(theme=='ward'){decal(r()<.5?4:3);for(let u=0;u<w-1;u+=3)fp(u,Math.max(0,h-2),{t:'bed',hp:10,r:0,on:true},1,2);put(w-1,0,{t:'cabinet'});put(w-1,far,{t:'bshelf'});if(r()<.5)put(1,0,{t:'fridge'})}
+ else if(theme=='office'){decal(r()<.5?0:3);put(1,far,{t:'desk'});put(1,Math.max(0,far-1),{t:'ochair',r:up?0:2});put(w-1,far,{t:'cabinet'});put(w-1,Math.max(0,far-1),{t:'bshelf'});if(w>4)put(3,far,{t:'copier'})}
+ else if(theme=='kinder'){decal(r()<.5?2:4);for(let u=0;u<w-1;u+=2)put(u,far,{t:'pcot'});put(1,1,{t:'pdoll',k:0});put(w-2,1,{t:'pdoll',k:1});put(Math.floor(w/2),Math.max(0,far-1),{t:'mtab',k:1});for(let u=1;u<w-1;u+=3)if(r()<.7)put(u,0,{t:'pdoll',k:Math.floor(r()*3)})}
+ else if(theme=='hotel'){decal(r()<.6?2:1);fp(0,Math.max(0,h-2),{t:'bed',hp:10,r:0,on:true},1,2);fp(1,Math.max(0,h-2),{t:'bed',hp:10,r:0,on:true},1,2);put(w-1,far,{t:'tv'});put(w-1,0,{t:'cabinet'});put(Math.floor(w/2),Math.max(0,far-1),{t:'mtab',k:1})}
+ else if(theme=='canteen'){for(let u=1;u<w-1;u+=3)for(let v=1;v<h;v+=2){put(u,v,{t:'mtab',k:1});put(u-1,v,{t:'ochair',r:3});put(u+1,v,{t:'ochair',r:1})}put(0,far,{t:'counter',k:2});put(1,far,{t:'stove'})}
+ else if(theme=='lib'){decal(3);for(let u=0;u<w;u+=2)put(u,far,{t:'bshelf'});for(let u=1;u<w-1;u+=3)put(u,Math.floor(far/2),{t:'mtab',k:1})}
+ if(r()<.3)put(Math.floor(r()*w),Math.floor(r()*h),{t:'papers'})}
+function pzBuilding(x,y,w,h,rf,themes,r,opt){opt=opt||{};
+ pClr(x-2,y-2,w+4,h+5);shell(x,y,w,h,'sblock',16,{win:1});for(let yy=y;yy<y+h;yy++)for(let xx=x;xx<x+w;xx++)bm[yy*W+xx]=3;
+ const cy=y+Math.floor(h/2),hx=x+Math.floor(w/2);
+ /* partitions along the corridor, doors, front doors */
+ for(let xx=x+1;xx<x+w-1;xx++){pO(xx,cy-1,{t:'twall',hp:120});pO(xx,cy+1,{t:'twall',hp:120})}
+ const rooms=[];const rw=opt.rw||7;
+ const row=(ya,yb,xa,xb,up)=>{const n=Math.max(1,Math.round((xb-xa+1)/rw)),wd=(xb-xa+1)/n;for(let k=0;k<n;k++){const a=Math.round(xa+k*wd),b=Math.round(xa+(k+1)*wd)-1;if(k>0)for(let yy=ya;yy<=yb;yy++)pO(a-1,yy,{t:'twall',hp:120});rooms.push({x:k>0?a:a,y:ya,w:(k>0?b-a+1:b-a+1)-(k<n-1?1:0),h:yb-ya+1,up,dx:a+Math.floor(((k<n-1?b-1:b)-a)/2)})}};
+ row(y+1,cy-2,x+1,x+w-2,true);
+ /* south rooms: left and right of a 3-wide hall */
+ row(cy+2,y+h-2,x+1,hx-2,false);row(cy+2,y+h-2,hx+2,x+w-2,false);
+ for(const rm of rooms){const ty=rm.up?cy-1:cy+1;pO(rm.dx,ty,{t:'door',open:false});pzFurn(themes[Math.floor(r()*themes.length)],rm.x,rm.y,Math.max(2,rm.w),rm.h,rm.up,r)}
+ /* the hall in front: floor, front door, lobby things */
+ for(let yy=cy+2;yy<y+h-1;yy++)for(let xx=hx-1;xx<=hx+1;xx++){pO(xx,yy,null)}
+ for(let xx=hx-1;xx<=hx+1;xx++)pO(xx,cy+1,null);
+ pO(hx,y+h-1,{t:'door',open:false});pO(hx-1,y+h-1,{t:'win',hp:200,open:false});pO(hx+1,y+h-1,{t:'win',hp:200,open:false});
+ pO(hx-1,y+h-3,{t:'pbust'});pO(hx+1,y+h-3,{t:'pbust'});
+ for(let xx=x+3;xx<x+w-2;xx+=6)if(pFreeAny(xx,cy))ob[cy*W+xx]={t:'fix',fk:r()<.4?1:0};
+ for(let xx=x+2;xx<x+w-2;xx+=9)if(pFreeAny(xx,cy))ob[cy*W+xx]={t:'pbanner',k:r()<.5?0:1};
+ /* steps and banners outside */
+ pzRect(hx-2,y+h,5,2,14);pClr(hx-2,y+h,5,2);pO(hx-3,y+h,{t:'pflag'});pO(hx+3,y+h,{t:'pbanner',k:0});
+ BLD.push({x,y,w,h,rf,sd:1});
+ /* the "they" inside */
+ const nz=opt.z||3;for(let q=0,t=0;q<nz&&t<100;t++){const X=x+2+Math.floor(r()*(w-4)),Y=y+1+Math.floor(r()*(h-2));if(ob[Y*W+X]||map[Y*W+X]!=16)continue;pzZ(X,Y,[0,0,1,2,3,4][Math.floor(r()*6)]);q++}}
+/* an open-plan hall: department store / palace hall */
+function pzHall(x,y,w,h,rf,r,kind){pClr(x-2,y-2,w+4,h+5);shell(x,y,w,h,'sblock',16,{win:1});for(let yy=y;yy<y+h;yy++)for(let xx=x;xx<x+w;xx++)bm[yy*W+xx]=3;
+ const hx=x+Math.floor(w/2);pO(hx,y+h-1,{t:'door',open:false});pO(hx+1,y+h-1,{t:'door',open:false});
+ for(let xx=hx-3;xx<=hx+4;xx+=1)if(xx!=hx&&xx!=hx+1&&pFreeAny(xx,y+h-1)&&xx%2)ob[(y+h-1)*W+xx]={t:'win',hp:200,open:false};
+ if(kind=='store'){
+  for(let yy=y+3;yy<y+h-5;yy+=3)for(let xx=x+3;xx<x+w-3;xx++){if(xx%7==0)continue;if(r()<.9)pO(xx,yy,{t:'gshelf',k:(xx+yy)%3})}
+  for(let xx=x+2;xx<x+w-2;xx+=3)pO(xx,y+h-3,{t:'counter',k:1});pO(x+1,y+h-3,{t:'cart'});pO(x+w-2,y+h-4,{t:'cart'});
+  for(let yy=y+1;yy<y+3;yy++)for(let xx=x+1;xx<x+w-1;xx+=2)pO(xx,yy,{t:'rcrate',hp:99});
+  for(let xx=x+3;xx<x+w-3;xx+=8){const o=ob[y*W+xx];if(o&&o.t=='sblock')o.dec=1}}
+ else if(kind=='palace'){
+  const sx=x+3,sw=w-6;pzRect(x+1,y+1,w-2,5,12);for(let xx=x+1;xx<x+w-1;xx++){const o=ob[y*W+xx];if(o&&o.t=='sblock'&&(xx-x)%3!=1)o.dec=13;pO(xx,y+1,null)}
+  for(let xx=x+2;xx<x+w-2;xx+=4)pO(xx,y+1,{t:'pframe'});pO(hx,y+3,{t:'pbust'});pO(x+2,y+4,{t:'pbanner',k:0});pO(x+w-3,y+4,{t:'pbanner',k:1});
+  for(let yy=y+8;yy<y+h-5;yy+=2)for(let xx=x+3;xx<x+w-3;xx+=3){if(xx>=hx-1&&xx<=hx+1)continue;if(r()<.9)setFP({t:'bench',hp:10,r:0,on:true},xx,yy,2,1)}
+  for(let xx=x+2;xx<x+w-2;xx+=8)pO(xx,y+h-3,{t:'pcal'})}
+ for(let xx=x+3;xx<x+w-2;xx+=7)for(let yy=y+4;yy<y+h-3;yy+=7)if(pFreeAny(xx,yy))ob[yy*W+xx]={t:'fix',fk:r()<.4?1:0};
+ pzRect(hx-2,y+h,6,2,14);pClr(hx-2,y+h,6,2);pO(hx-3,y+h,{t:'pflag'});pO(hx+4,y+h,{t:'pbanner',k:0});
+ BLD.push({x,y,w,h,rf,sd:1});
+ const nz=kind=='palace'?5:4;for(let q=0,t=0;q<nz&&t<100;t++){const X=x+2+Math.floor(r()*(w-4)),Y=y+2+Math.floor(r()*(h-4));if(ob[Y*W+X]||map[Y*W+X]!=16)continue;pzZ(X,Y,[0,0,1,2,3,4][Math.floor(r()*6)]);q++}}
+function priLandmarks(r){
+ pzHall(118,152,36,28,'prc',r,'palace');PRB.places.palace={x:136,y:166};
+ pzBuilding(76,152,34,24,'prs',['class','class','class','office','lib'],r,{rw:7,z:4});PRB.places.school={x:93,y:166};
+ pzHall(76,106,32,24,'prm',r,'store');PRB.places.store={x:92,y:118};
+ pzBuilding(214,104,32,24,'prh',['ward','ward','ward','office'],r,{rw:7,z:4});PRB.places.hospital={x:230,y:114};
+ pzBuilding(214,154,32,24,'prx',['hotel','hotel','hotel','canteen'],r,{rw:6,z:3});PRB.places.hotel={x:230,y:166};
+ pzBuilding(216,196,30,18,'prk',['kinder','kinder','canteen'],r,{rw:7,z:3});PRB.places.kinder={x:230,y:206};
+}
+
+/* ===== z306: a drab, worn ground — plain grass (no jungle rosettes/twigs), dark cracked asphalt ===== */
+{const p0=pats;pats=function(x){const r=p0(x);if(!r._G0){r._G0=r.G;r._G1=x.createPattern(texCanvas(['g0','g1','g3','g4','g0','g1','g3','g4','g5','g0','g1','g3','g0','g1'],6,3),'repeat')}r.G=PRI?r._G1:r._G0;return r}}
+{const gt=gTile;gTile=function(tx,ty,now){gt(tx,ty,now);if(!PRI||inD||inC||tx<0||ty<0||tx>=W||ty>=H)return;if(map[ty*W+tx]!=3||bm[ty*W+tx]==3&&0)return;const px=tx*T,py=ty*T,h=hs(tx,ty);
+  W_(px,py,T,T,'rgba(26,28,34,.62)');
+  if(h>.55)W_(px+Math.floor(h*60)%11+1,py+Math.floor(h*97)%11+2,4+Math.floor(h*13)%5,1,'#1b1d22');
+  if(h<.2){const a=Math.floor(h*130)%10+2;W_(px+a,py+3,1,6,'#202228');W_(px+a+1,py+8,2,1,'#202228')}
+  if(h>.9)W_(px+5,py+6,3,2,'#585a58');
+  if((tx*3+ty*7)%13==0)W_(px+3,py+11,9,1,'rgba(150,150,140,.18)')}}
+{const f=priFinish;priFinish=function(r){const o=f.apply(this,arguments);try{GROUND.clear();GQC.clear&&0}catch(e){}return o}}
+/* the tall landmark sprites are much larger than the sprite cache margins: draw them raw */
+try{STYSKIP.pwheel=1;STYSKIP.pgate=1}catch(e){}
+/* no berry bushes in the Zone: they look like a game, not like 1986 */
+{const f=priFinish;priFinish=function(r){const o=f.apply(this,arguments);for(let i=0;i<W*H;i++){const q=ob[i];if(q&&(q.t=='bush'))ob[i]=null}try{GQC.clear&&0}catch(e){}return o}}
+
+/* ===== z307: the hazmat suit, radiation field, Geiger gauge, customising ===== */
+var HZN=null;
+const HZP=[{n:['Sárga','Yellow'],c:['#c9b23c','#e8d878','#8a7620']},{n:['Olajzöld','Olive'],c:['#6a7a3a','#8a9a52','#46522a']},{n:['Szürke','Grey'],c:['#8e9094','#b4b6ba','#5e6064']},{n:['Narancs','Orange'],c:['#c8641e','#e88a3a','#8a3e10']}];
+HZP.forEach((p,i)=>{TP['hz'+i]=p.c});TP.hzb=['#2a2a26','#46463e','#141412'];
+{const dc=drawChar;drawChar=function(x,y,c,w,fx,fy,s,e){let pk=null;if(PRI){if(c===CH&&PRI.hz)pk=PRI.hzc|0;else if(HZN)pk=HZN.hzc|0}
+ if(pk!=null){const k='hz'+pk;e=Object.assign({},e||{},{h:k,c:k,l:k,b:'hzb',m:true})}return dc.call(this,x,y,c,w,fx,fy,s,e)}}
+{const dn=drawNPC;drawNPC=function(n){HZN=n.hz?n:null;try{return dn.apply(this,arguments)}finally{HZN=null}}}
+{const pn=priNew;priNew=function(){const o=pn.apply(this,arguments);o.hz=true;o.hzc=0;o.rub=40;o.v=2;o.q={on:0,i:0,ready:0,got:0,tot:0};o.cust=0;o.pro=0;return o}}
+/* ---------- the radiation field ---------- */
+function priZone(tx,ty){if(tx>=272)return 'river';if(tx<110&&ty<118)return 'rf';return 'town'}
+function priRadAt(tx,ty){let r=.06+Math.max(0,(150-ty)/150)*.22;const z=priZone(tx,ty);
+ if(z=='rf'){const d=Math.min(1,Math.hypot(tx-50,ty-50)/80);r=2.0+(1-d)*5.5}else if(z=='river')r=.22;
+ if(PRB&&PRB.hot)for(const h of PRB.hot){const d=Math.hypot(tx-h.x,ty-h.y);if(d<h.r)r+=h.s*Math.pow(1-d/h.r,2)}return r}
+function priHot(){const q=prRng(PRIS+77),L=[];
+ for(let k=0;k<24;k++){let x,y,t=0;do{x=30+Math.floor(q()*240);y=30+Math.floor(q()*250);t++}while(t<60&&map[y*W+x]!=3&&map[y*W+x]!=14&&map[y*W+x]!=0);L.push({x,y,r:4+Math.floor(q()*5),s:1.4+q()*4})}
+ L.push({x:159,y:122,r:7,s:1.6},{x:93,y:166,r:6,s:2.4},{x:230,y:110,r:5,s:2.2});return L}
+{const f=priFinish;priFinish=function(r){const o=f.apply(this,arguments);PRB.hot=priHot();return o}}
+function priAfterLoad(){PRB={slabs:[],places:{},floors:{},npc:{},zones:[]};PRB.hot=priHot();PAT=0;PQK=new Map()}
+{const sr=sporeRate;sporeRate=function(){if(!PRI)return sr();if(creative)return 0;if(inC)return 0;if(inD)return .05+(curOf&&curOf.f>curOf.n?.12:0);return priRadAt(P.x/T|0,P.y/T|0)}}
+{const st=sporeTick;sporeTick=function(dt){if(!PRI)return st(dt);const a=P.inf||0;st(dt);const b=P.inf||0,d=b-a;
+ if(d>0&&PRI.hz&&PRI.suit>0){const prot=PRI.filt>0?.9:.6;P.inf=a+d*(1-prot);PRI.suit=Math.max(0,PRI.suit-d*.9);if(PRI.filt>0)PRI.filt=Math.max(0,PRI.filt-d*1.2);
+  if(PRI.suit<=0&&!PRI.w0){PRI.w0=1;say(LANG=='hu'?'A szkafander elszakadt — már nem véd!':'The suit is torn — it no longer protects!')}
+  if(PRI.filt<=0&&!PRI.w1){PRI.w1=1;say(LANG=='hu'?'A szűrő kifogyott. Cserélni kell!':'The filter is spent. Replace it!')}}
+ if(PRI.suit>20)PRI.w0=0;if(PRI.filt>20)PRI.w1=0}}
+/* ---------- gauge ---------- */
+{const h0=hud;hud=function(){const r=h0.apply(this,arguments);try{if(PRI&&state=='play'&&!tut)priGauge()}catch(e){}return r}}
+function priGauge(){const hu=LANG=='hu',x=VW-102,y=4,rate=P.rate||0,lv=rate<.5?0:rate<2?1:rate<5?2:3,col=['#8ad060','#d8c840','#e88a30','#e03a2a'][lv];
+ noTr=true;Q(x,y,98,50,'rgba(10,12,8,.62)');Q(x,y,98,1,'#46503e');Q(x,y+49,98,1,'#2a3024');
+ g.font=fnt(0,9);txt((hu?'SUGÁR ':'RAD ')+(rate*.4).toFixed(2)+' mSv/h',x+5,y+11,col);
+ const bar=(yy,v,c,lab)=>{Q(x+5,yy,60,4,'#1a1c16');Q(x+5,yy,Math.round(60*Math.max(0,Math.min(1,v/100))),4,c);g.font=fnt(0,7);txt(lab,x+69,yy+5,'#9aa08a')};
+ bar(y+16,P.inf||0,(P.inf||0)>45?'#e03a2a':'#b6ff40',hu?'dózis':'dose');
+ bar(y+25,PRI.hz?PRI.suit:0,PRI.suit>30?'#d8c840':'#e88a30',hu?'ruha':'suit');
+ bar(y+34,PRI.hz?PRI.filt:0,'#6ab0d8',hu?'szűrő':'filter');
+ g.font=fnt(0,8);txt(PRI.rub+(hu?' rubel':' rub'),x+5,y+47,'#e8d890');noTr=false}
+/* ---------- the quartermaster: shop, suit, looks ---------- */
+const PCOST={filt:30,patch:45,tonic:35,canned:12,bottle:6,ammo:18,gas:15,batt:20};
+function priShopLine(k){return PCOST[k]}
+
+/* ===== z308: the people of the checkpoint, the quartermaster, contracts, kills pay ===== */
+const PRC=[
+ {k:'kill',n:4,rub:120,r:[162,146,205,187],h:['Első nap: a Központi tér','First day: the Central Square'],d:['Tisztítsd meg a Központi teret. Legalább négy „Ő”-t kell kiiktatnod. Ne fuss, ne kiabálj, és ne nézz túl sokáig a szemükbe.','Clear the Central Square of at least four of Them.']},
+ {k:'fetch',n:4,rub:160,r:[77,107,106,128],h:['Univermag: a csomagok','Univermag: the parcels'],d:['Az Univermag raktárában négy lezárt csomag maradt a „Május 1.” ünnepre. Hozd el mind a négyet — a ládák az üzlet falai mellett vannak.','Four sealed parcels remain in the department store. Bring them all.']},
+ {k:'kill',n:6,rub:260,r:[212,102,248,130],h:['Kórház: kiürítés','Hospital: clearing'],d:['A kórházban még dolgoznak. Vagyis… ők azt hiszik. Kell hat „Ő” a folyosókról.','Clear six of Them from the hospital corridors.']},
+ {k:'fetch',n:3,rub:220,r:[77,153,108,174],h:['Iskola: a naplók','School: the logbooks'],d:['Az iskolában három osztálynapló maradt. Valaki szerint „még mindig vannak jelenléti ívek”. Hozd el őket.','Retrieve three class logbooks from the school.']},
+ {k:'kill',n:7,rub:300,r:[116,102,203,138],h:['Vidámpark: a kerék alatt','Amusement park: under the wheel'],d:['A vidámpark nem nyílt meg 1986. május 1-jén. Valami mégis forog a kerék alatt. Tisztítsd meg a parkot — hét „Ő”.','Clear the amusement park — seven of Them.']},
+ {k:'kill',n:6,rub:280,r:[212,152,248,180],h:['Szálloda: a vendégek','Hotel: the guests'],d:['A Polesszje-szálló vendégei nem mentek el. Hat „Ő” a szobákban.','The hotel guests never left. Six of Them in the rooms.']},
+ {k:'visit',n:1,rub:450,at:[106,116],h:['A Vörös Erdő pereme','Edge of the Red Forest'],d:['Vegyél mintát a Vörös Erdő szélén (nyugat-északnyugat). Szkafander kell, és friss szűrő. Ha túl hangos a Geiger — fordulj vissza.','Take a sample at the edge of the Red Forest. Suit and a fresh filter required.']}];
+function priPeople(){
+ const q=prRng(PRIS+5);NPCS.length=0;
+ const mk=(tx,ty,nm,pri,o)=>{const n=Object.assign({x:tx*T+8,y:ty*T+8,hx:tx*T+8,hy:ty*T+8,wr:0,c:lookFor('m',q),nm,tr:0,g:0,kn:0,sx:'m',pri,job:'x'},o||{});NPCS.push(n);return n};
+ mk(148,283,'Vaszilij Pavlics','qm');mk(172,283,'Gyenyiszov','boss',{hz:true,hzc:1});
+ mk(158,283,'Őr','guard',{hz:true,hzc:2});mk(162,283,'Őr','guard',{hz:true,hzc:2});
+ const V=[[160,248,'Tyimofej'],[186,172,'Szása'],[121,196,'Anyiszja'],[140,100,'Gyima']];for(const[x,y,nm]of V)mk(x,y,nm,'vet',{wr:3,hz:true,hzc:Math.floor(q()*4),sx:q()<.3?'f':'m'})}
+{const f=priFinish;priFinish=function(r){const o=f.apply(this,arguments);try{priPeople()}catch(e){console.warn('people',e)}return o}}
+/* ---------- the talk system ---------- */
+const PVET=[['Ők nem szeretik a hangos zajt. De a csöndet még kevésbé.','They hate loud noise. Silence even more.'],['A kerék kilenc perc alatt fordul körbe. Én számoltam. Régen.','The wheel takes nine minutes. I counted. Long ago.'],['Ne vegyél le a maszkot a Vörös Erdő szélén. Még ha hívnak is.','Never take the mask off at the Red Forest. Even if they call.'],['Május elsején nyitott volna a park. Néha még hallom a zenét.','The park was to open on May first. Sometimes I still hear the music.'],['A panelházakban a hetedik emelet a legrosszabb. Nem tudom, miért.','The seventh floor is the worst in the panel blocks. I don\'t know why.'],['A házakban még ott vannak a naptárak. Mind április 26.','The calendars are still there. All say April 26.']];
+function priTalkOpts(n){const hu=LANG=='hu',pg=TALK.pg|0,o=[],L=(k,h,e)=>o.push({k,l:hu?h:(e||h)});
+ if(n.pri=='qm'){if(pg==0){L('shop','Vásárlás','Shop');L('look',PRI.cust?'Szkafander és kinézet':'Szkafander (a prológus után)','Suit and looks');L('news','Mi újság?','What\'s new?');L('gear','Gáz és akkumulátor','Gas and battery');L('bye','Viszlát!','Goodbye!')}
+  else if(pg==1){L('b_filt','Szűrő — '+PCOST.filt+' rubel','Filter — '+PCOST.filt);L('b_patch','Szkafander-javítás — '+PCOST.patch,'Suit patch — '+PCOST.patch);L('b_tonic','Sugárellenes tabletta — '+PCOST.tonic,'Anti-rad pills — '+PCOST.tonic);L('b_food','Konzerv + víz — '+(PCOST.canned+PCOST.bottle),'Canned food + water — '+(PCOST.canned+PCOST.bottle));L('back','Vissza','Back')}
+  else if(pg==2){L('hz',PRI.hz?'Szkafander levétele':'Szkafander felvétele',PRI.hz?'Take off the suit':'Put on the suit');L('hzc','Szín: '+HZP[PRI.hzc|0].n[0],'Colour: '+HZP[PRI.hzc|0].n[1]);L('sh','Ruha színe','Shirt colour');L('pn','Nadrág színe','Trousers colour');L('more','Tovább…','More…')}
+  else if(pg==5){L('b_gas','Gázpalack-töltés — '+PCOST.gas,'Gas refill — '+PCOST.gas);L('b_batt','Éjjellátó-akku — '+PCOST.batt,'Night-vision battery — '+PCOST.batt);L('back','Vissza','Back')}
+  else{L('hs','Hajstílus','Hair style');L('hc','Hajszín','Hair colour');L('sk','Bőrszín','Skin');L('ac','Kiegészítő','Accessory');L('back','Vissza','Back')}}
+ else if(n.pri=='boss'){L('job',PRI.q.on?'Aktuális megbízás':'Munka kérése','Work');if(PRI.q.on)L('rep','Jelentés','Report');L('where','Mi ez a hely?','What is this place?');L('who','Kik „Ők”?','Who are They?');L('bye','Viszlát!','Goodbye!')}
+ else{L('news','Mi újság?','What\'s new?');L('where','Hol vagyunk?','Where are we?');L('bye','Viszlát!','Goodbye!')}
+ return o}
+{const to=talkOpts;talkOpts=function(){if(PRI&&TALK&&TALK.n&&TALK.n.pri)return priTalkOpts(TALK.n);return to.apply(this,arguments)}}
+{const ng=npcGreet;npcGreet=function(n){if(PRI&&n&&n.pri){const hu=LANG=='hu';n.kn=1;TALK&&(TALK.pg=0);
+  if(n.pri=='qm')return hu?['Hé, újonc! Én vagyok Vaszilij Pavlics, az intéző. Szűrő, tabletta, kopott szkafander — nálam minden van. A pénz kell, a ruha kell.','Á, te vagy az új. Ne feledd: a szűrő nem örök.']:['Hey, rookie! I\'m Vasily Pavlovich, the quartermaster. Filters, pills, worn suits — I have it all.'];
+  if(n.pri=='boss')return hu?['Gyenyiszov. A megbízó. Itt senki nem kérdez, honnan jöttél — csak azt, hogy mit hozol. Tisztítás, szállítás, mérés. Jó pénzért bármi.','Megint te. Van munka, ha bírod.']:['Denisov. The contractor. Nobody asks where you came from here — only what you bring.'];
+  if(n.pri=='guard')return hu?['Az Övezet 1986-ban megállt. Te csak vendég vagy.','Ne menj a Vörös Erdőbe szkafander nélkül.']:['The Zone stopped in 1986. You are just a guest.'];
+  return PVET[Math.floor(Math.random()*PVET.length)].slice(hu?0:1,hu?1:2)}return ng.apply(this,arguments)}}
+function priTalkPick(i){const o=talkOpts()[i];if(!o)return;const n=TALK.n,hu=LANG=='hu',S=(h,e)=>talkSay(hu?h:(e||h));snd('ui');TALK.sel=i;const k=o.k;
+ if(k=='bye'){talkClose(hu?['Vigyázz magadra, stalker.','Csöndben járj.']:['Take care, stalker.']);return}
+ if(k=='back'){TALK.pg=n.pri=='qm'&&TALK.pg==3?2:0;S('Mit szeretnél?','What would you like?');return}
+ if(k=='gear'){TALK.pg=5;S('Gáz a melegítéshez, akku az éjjellátóhoz.','Gas and batteries.');return}
+ if(k=='shop'){TALK.pg=1;S('Mire van szükséged? Kész pénz, rubel.','What do you need? Cash, roubles.');return}
+ if(k=='look'){if(!PRI.cust){S('Még nem. Előbb fejezd be az első munkát — utána átalakíthatod a felszerelésed.','Not yet. Finish your first job, then you can customise your gear.');return}TALK.pg=2;S('Mit igazítsunk?','What shall we adjust?');return}
+ if(k=='more'){TALK.pg=3;S('Még valami?','Anything else?');return}
+ const buy=(c,fn,msg)=>{if(PRI.rub<c){S('Nincs elég rubeled.','Not enough roubles.');return}PRI.rub-=c;fn();snd('pick');S(msg[0],msg[1])};
+ if(k=='b_gas')return buy(PCOST.gas,()=>{PRI.gas=6},['Tele a gázpalack: 6 melegítés.','Bottle full.']);
+ if(k=='b_batt')return buy(PCOST.batt,()=>{PRI.nvT=100},['Új akku az éjjellátóba.','New battery.']);
+ if(k=='b_filt')return buy(PCOST.filt,()=>{PRI.filt=100;PRI.w1=0},['Friss szűrő a szkafanderben.','A fresh filter is in.']);
+ if(k=='b_patch')return buy(PCOST.patch,()=>{PRI.suit=100;PRI.w0=0},['Összefoltoztam a szkafandert.','Patched up the suit.']);
+ if(k=='b_tonic')return buy(PCOST.tonic,()=>{inv.tonic=(inv.tonic||0)+1},['Egy tabletta. Ne edd éhgyomorra.','One pill. Not on an empty stomach.']);
+ if(k=='b_food')return buy(PCOST.canned+PCOST.bottle,()=>{inv.canned=(inv.canned||0)+1;inv.bottle=(inv.bottle||0)+1},['Konzerv és víz.','Canned food and water.']);
+ if(k=='hz'){PRI.hz=!PRI.hz;S(PRI.hz?'Felvetted a szkafandert.':'Levetted a szkafandert. A Geiger tovább szól.','Suit on.');return}
+ if(k=='hzc'){PRI.hzc=((PRI.hzc|0)+1)%HZP.length;S('Új szín: '+HZP[PRI.hzc].n[0],'New colour');return}
+ if(['sh','pn','hs','hc','sk','ac'].includes(k)){chStep(CHK.indexOf(k),1);S('Rendben.','Done.');return}
+ if(k=='news'){const a=PVET[Math.floor(Math.random()*PVET.length)];S(a[0],a[1]);return}
+ if(k=='where'){S('Pripjaty. Az atomváros: 1970-ben alapították, 1986. április 26-án kiürítették. Az óra megállt — te csak vendég vagy.','Pripyat: founded 1970, evacuated April 26, 1986. The clock stopped.');return}
+ if(k=='who'){S('Ők. Ne mondj mást. Nem zombik és nem emberek — vagy már nem. Ők voltak a lakók, a vendégek, a gyerekek. Ők nem fáradnak el.','They. Don\'t call them anything else.');return}
+ if(k=='job'){if(PRI.q.on){S(priCDesc(),priCDesc());return}if(PRI.q.i>=PRC.length){S('Mára nincs több munka. Holnap talán… talán nem.','No more work for now.');return}priStartC(PRI.q.i);S('Itt a megbízás: '+priCDesc(),'Here is your job: '+priCDesc());return}
+ if(k=='rep'){if(!PRI.q.on){S('Nincs mit jelenteni.','Nothing to report.');return}if(!PRI.q.ready){S('Még nem végeztél. '+priCProg(),'Not done yet. '+priCProg());return}priFinishC();S('Szép munka. Fizetés: kész pénz. '+(PRI.cust&&PRI.q.i==1?'Vaszilijnál most már átöltözhetsz, és személyre szabhatod a felszerelésed.':''),'Good work. Paid.');return}}
+{const tp=talkPick;talkPick=function(i){if(PRI&&TALK&&TALK.n&&TALK.n.pri)return priTalkPick(i);return tp.apply(this,arguments)}}
+/* ---------- contracts ---------- */
+function priCDesc(){const c=PRC[PRI.q.i];if(!c)return'';return(LANG=='hu'?c.h[0]+' — '+c.d[0]:c.h[1]+' — '+c.d[1])+' ('+c.rub+(LANG=='hu'?' rubel)':' rub)')}
+function priCProg(){const c=PRC[PRI.q.i];if(!c)return'';if(c.k=='kill'){const left=zs.filter(z=>z.pq==PRI.q.i+1).length;return(LANG=='hu'?'Még ':'Left: ')+left+(LANG=='hu'?' „Ő” van hátra.':' of Them remain.')}return(PRI.q.got|0)+' / '+PRI.q.tot}
+function priFreeSpot(x0,y0,x1,y1,tiles,away){for(let t=0;t<600;t++){const x=x0+Math.floor(Math.random()*(x1-x0+1)),y=y0+Math.floor(Math.random()*(y1-y0+1)),i=y*W+x;if(ob[i]||!tiles.includes(map[i]))continue;if(away&&Math.hypot(x*T+8-P.x,y*T+8-P.y)<T*9)continue;return[x,y]}return null}
+function priStartC(i){const c=PRC[i];PRI.q.on=1;PRI.q.ready=0;PRI.q.got=0;PRI.q.tot=c.n;PRI.q.i=i;
+ if(c.k=='kill'){let n=0;const[x0,y0,x1,y1]=c.r;for(const z of zs)if(z.x>=x0*T&&z.x<=(x1+1)*T&&z.y>=y0*T&&z.y<=(y1+1)*T){z.pq=i+1;z.st79=1;n++}
+  for(let t=0;n<c.n&&t<60;t++){const s=priFreeSpot(x0,y0,x1,y1,[0,14,16,12,3],true);if(!s)break;const v=[0,0,1,2,3,4][Math.floor(Math.random()*6)];zs.push({id:nid(),x:s[0]*T+8,y:s[1]*T+8,hp:VHP[v]||6,a:0,t:0,vx:0,vy:0,z:1,v,pri:1,st79:1,pq:i+1});n++}
+  PRI.q.tot=n}
+ else if(c.k=='fetch'){const[x0,y0,x1,y1]=c.r;for(let k=0;k<c.n;k++){const s=priFreeSpot(x0,y0,x1,y1,[16,12,14],false);if(s)ob[s[1]*W+s[0]]={t:'pparcel',pq:i+1}}}
+ else if(c.k=='visit'){let[x,y]=c.at;for(let r=0;r<12;r++){let ok=0;for(let dy=-r;dy<=r&&!ok;dy++)for(let dx=-r;dx<=r&&!ok;dx++){const xx=x+dx,yy=y+dy,j=yy*W+xx;if(xx>1&&yy>1&&xx<W-2&&yy<H-2&&!ob[j]&&map[j]==0){ob[j]={t:'pparcel',pq:i+1,s:1};ok=1}}if(ok)break}}
+ try{priSave()}catch(e){}}
+function priFinishC(){const c=PRC[PRI.q.i];PRI.rub+=c.rub;PRI.rep=(PRI.rep||0)+1;PRI.q.on=0;PRI.q.ready=0;PRI.q.i++;if(PRI.q.i>=1)PRI.cust=1;
+ try{TQ112.push({title:LANG=='hu'?'Megbízás teljesítve':'Contract complete',sub:'+'+c.rub+(LANG=='hu'?' rubel':' rub'),col:'#d8c040'})}catch(e){}snd('pick');try{priSave()}catch(e){}}
+DRAWX.pparcel=function(o,x,y){pShadow(x+2,y+12,12,3);W_(x+3,y+5,10,8,'#7a5a34');W_(x+3,y+5,10,1,'#a07a4a');W_(x+3,y+9,10,1,'#4a3418');W_(x+7,y+5,2,8,'#c8b890');if(o.s){W_(x+4,y+2,8,3,'#46503e');W_(x+6,y+1,4,2,'#b6ff40')}else{try{pStar(pSX(x+8),pSY(y+7),2,PGOLD)}catch(e){}}};
+INT.pparcel=1;NMX.pparcel='parcel';
+{const u=useObj;useObj=function(n){if(PRI&&n&&n.o&&n.o.t=='pparcel'){const i=n.ty*W+n.tx,o=n.o,c=PRC[(o.pq||1)-1];if(!PRI.q.on||PRI.q.i!=(o.pq||1)-1){say(LANG=='hu'?'Valaki csomagja. Nem a te dolgod — most nem.':'Someone else\'s parcel.');return}ob[i]=null;PRI.q.got=(PRI.q.got|0)+1;snd('pick');
+  say(c.k=='visit'?(LANG=='hu'?'Mintát vettél a talajból. A Geiger sír.':'You took a soil sample. The Geiger screams.'):(LANG=='hu'?'Felvetted: '+PRI.q.got+' / '+PRI.q.tot:'Picked up: '+PRI.q.got+' / '+PRI.q.tot));if(PRI.q.got>=PRI.q.tot)PRI.q.ready=1;if(c.k=='visit')P.inf=Math.min(100,(P.inf||0)+6);return}return u.apply(this,arguments)}}
+/* ---------- progress tick, kill money, objective on the HUD ---------- */
+var PQK=new Map();
+{const up=update;update=function(dt){up(dt);if(!PRI||state!='play')return;
+ const cur=new Map();for(const z of zs)if(z.pri)cur.set(z.id,[z.x,z.y]);
+ for(const[id,p]of PQK)if(!cur.has(id)&&Math.hypot(p[0]-P.x,p[1]-P.y)<260){PRI.kill=(PRI.kill|0)+1;const g_=3+Math.floor(Math.random()*5);PRI.rub+=g_;try{TQ112.push({title:'+'+g_+(LANG=='hu'?' rubel':' rub'),sub:LANG=='hu'?'Ők — egy kevesebb':'One of Them less',col:'#c8b860'})}catch(e){}}
+ PQK=cur;
+ if(PRI.q.on&&!PRI.q.ready){const c=PRC[PRI.q.i];if(c&&c.k=='kill'){const lf=zs.filter(z=>z.pq==PRI.q.i+1).length;PRI.q.left=lf;if(lf==0&&(PRI.t0||0)>3){PRI.q.ready=1}}}
+ if(PRI.q.ready&&!PRI.q.said){PRI.q.said=1;say(LANG=='hu'?'A feladat kész — jelentsd Gyenyiszovnak a keleti bódéban.':'Done — report to Denisov.')}if(!PRI.q.ready)PRI.q.said=0}}
+{const h0=hud;hud=function(){const r=h0.apply(this,arguments);try{if(PRI&&state=='play'&&!tut)priObj()}catch(e){}return r}}
+function priObj(){const hu=LANG=='hu',x=VW-102,y=70;noTr=true;const c=PRC[PRI.q.i];let t1,t2;
+ if(PRI.q.on&&c){t1=(hu?c.h[0]:c.h[1]);t2=PRI.q.ready?(hu?'Jelentsd Gyenyiszovnak':'Report to Denisov'):priCProg()}else if(PRI.q.i<PRC.length){t1=hu?'Nincs aktív megbízás':'No active contract';t2=hu?'Gyenyiszov, keleti bódé':'Talk to Denisov (east hut)'}else{t1=hu?'Minden munka kész':'All jobs done';t2=''}
+ g.font=fnt(0,9);const w=Math.min(VW-10,Math.max(96,Math.ceil(g.measureText(t1).width)+10,Math.ceil(g.measureText(t2||'').width)+10));Q(VW-4-w,y,w,t2?24:13,'rgba(10,12,8,.58)');txt(t1,VW-w+1,y+10,'#d8c890');if(t2)txt(t2,VW-w+1,y+20,PRI.q.ready?'#b6ff40':'#9aa08a');noTr=false}
+
+/* after loading: the contract's survivors come back (zombies are not saved with the world) */
+{const al=priAfterLoad;priAfterLoad=function(){al.apply(this,arguments);try{if(PRI.q&&PRI.q.on&&!PRI.q.ready){const i=PRI.q.i,c=PRC[i];if(c&&c.k=='kill'){const have=zs.filter(z=>z.pq==i+1).length,need=(PRI.q.left!=null?PRI.q.left:PRI.q.tot)-have,[x0,y0,x1,y1]=c.r;for(let n=0;n<need;n++){const s=priFreeSpot(x0,y0,x1,y1,[0,14,16,12,3],true);if(!s)break;const v=[0,0,1,2,3,4][Math.floor(Math.random()*6)];zs.push({id:nid(),x:s[0]*T+8,y:s[1]*T+8,hp:VHP[v]||6,a:0,t:0,vx:0,vy:0,z:1,v,pri:1,st79:1,pq:i+1})}}}PRI.t0=0}catch(e){console.warn('after load',e)}}}
+
+/* ===== z309: the prologue, 1986 notes, the places of the town, ambience, horror (atmosphere only) ===== */
+{const jf=jnFind;jnFind=function(k){if(PRI&&!/^(lk_|p_)/.test(k))return;return jf.apply(this,arguments)}}
+{const pp=priPlacePlayer;priPlacePlayer=function(){pp.apply(this,arguments);priKit()}}
+function priKit(){inv.pistol=1;givehb('pistol');inv.a9=30;inv.axe=1;givehb('axe');inv.canned=2;inv.bottle=2;inv.tonic=1;try{givehb('canned')}catch(e){}}
+/* ---------- prologue ---------- */
+const PRL0=[['2070. november. Pripjaty. A város nyolcvannégy éve áll üresen — vagy legalábbis ezt mondják.','November 2070. Pripyat. The city has stood empty for eighty-four years — or so they say.'],
+ ['Az első napom stalkerként. A megbízó fizet, ha tisztítok, szállítok vagy mérek. Jó pénzért bármi.','My first day as a stalker. The contractor pays for clearing, hauling, measuring. For good money, anything.'],
+ ['Teljes szkafander, szűrő, Geiger-számláló. A számláló a jobb felső sarokban — ha sír, menj el onnan.','Full suit, filter, Geiger counter. The gauge is in the top right — when it screams, leave.'],
+ ['Az ellenőrzőpont után minden megáll 1986-ban. Gyenyiszov a keleti bódéban vár. Ők a városban vannak: ne nézz túl sokáig a szemükbe.','Past the checkpoint everything is stuck in 1986. Denisov waits in the east hut. They are in the city: don\'t look them in the eye for too long.']];
+{const up=update;update=function(dt){up(dt);if(!PRI||state!='play')return;PRI.t0=(PRI.t0||0)+dt;
+ if(!PRI.pro&&PRI.t0>1.6&&!DLG&&!inD){PRI.pro=1;for(const l of PRL0)dlSay('memo',LANG=='hu'?'Napló':'Journal',LANG=='hu'?l[0]:l[1],null,'')}
+ priAreaTick(dt);priAmbTick(dt)}}
+/* ---------- places ---------- */
+const PRPL=[['ck',[138,276,181,297],'Ellenőrzőpont','Checkpoint','A déli sorompó. Itt kap munkát és felszerelést, aki bemegy.','The south barrier. Work and gear for those who go in.'],
+ ['sq',[164,148,203,185],'Központi tér','Central Square','Az emlékmű, a vörös zászlók — május elsejére készültek.','The monument, the red flags — all ready for the first of May.'],
+ ['pk',[116,102,203,138],'Vidámpark','Amusement Park','Az óriáskerék soha nem forgott igazán. Mégis, a kabinok imbolyognak.','The wheel never really turned. Yet the cabins sway.'],
+ ['pc',[118,152,153,179],'Kultúrpalota','Palace of Culture','Nagy csarnok, vörös csillag a falon. Valaki még mindig itt próbál.','A great hall, a red star on the wall. Someone is still rehearsing.'],
+ ['sc',[76,152,109,175],'Iskola','School','Az osztálynaplók április 25-ig vannak kitöltve.','The class registers are filled in until April 25.'],
+ ['st',[76,106,107,129],'Univermag','Department Store','Ünnepi áruk: a polcokon minden rendben, csak a vevők hiányoznak.','Festive goods: everything is on the shelves, only the customers are missing.'],
+ ['ho',[214,104,245,127],'Kórház','Hospital','Itt kezdődött az első riadó. A folyosók még nem csendesek.','Where the first alarm began. The corridors are not quiet.'],
+ ['ht',[214,154,245,177],'Polesszje szálló','Hotel Polissya','Vendégkönyv, kulcsok, bőröndök. Senki nem jelentkezett ki.','A guest book, keys, suitcases. Nobody checked out.'],
+ ['kg',[216,196,245,213],'Óvoda','Kindergarten','Apró ágyak, babák. A legrosszabb hely a városban — nem tudni, miért.','Tiny beds, dolls. The worst place in town — nobody knows why.'],
+ ['lk',[60,186,262,262],'Lakónegyed','Residential blocks','Panelházak, emeletről emeletre. Minden lakásban ott a naptár: április 26.','Panel blocks, floor upon floor. Every flat still has the calendar: April 26.']];
+var PAT=0;
+function priAreaTick(dt){PAT-=dt;if(PAT>0)return;PAT=.7;const tx=P.x/T|0,ty=P.y/T|0;let k=null;
+ if(!inD){for(const a of PRPL)if(tx>=a[1][0]&&tx<=a[1][2]&&ty>=a[1][1]&&ty<=a[1][3]){k=a;break}
+  if(!k&&priZone(tx,ty)=='rf')k=['rf',0,'Vörös Erdő','Red Forest','A fák rozsdavörösek. A Geiger egyfolytában sír. Ide csak szkafanderben.','Rust-red trees. The Geiger never stops.']}
+ if(k&&!PRI.seen[k[0]]){PRI.seen[k[0]]=1;jnFind('p_'+k[0],k[2],k[3],k[4],k[5])}}
+/* ---------- 1986 notes ---------- */
+const PRN=[['Műszaklap — április 25.','Shift sheet — April 25','1986. április 25. Műszakvezető: a holnapi vizsgálatot elhalasztották. A „Vörös Csillag” klub próbája 18:00-kor. Ne felejtsétek: a május elsejei felvonuláshoz zászlók kellenek!'],
+ ['Gyerek naplója','A child\'s diary','Apa azt mondta, május elsején kinyit a kerék. Már most hallom a zenét. Anya szerint csak a szél. Nem a szél.'],
+ ['Hangosbemondó — április 27.','Loudspeaker — April 27','FIGYELEM! A lakosság szíves figyelmébe! A Városi Tanács határozata: mindenkit ideiglenesen kitelepítünk. Vigyenek magukkal iratokat és háromnapi élelmet. Az otthonaikat… rövid időn belül… elhagyják. (A hang itt elhallgat.)'],
+ ['Újságkivágás','Newspaper clipping','„A szocializmus atomvárosa: vidám, fiatal, példamutató! Pripjaty lakói a párt vezetésével új életet építenek. Dicsőség a munkának!”'],
+ ['Kórházi jegyzet','Hospital note','Április 26., reggel. Sürgősségi: szokatlan sérülések, hányás, bőrpír. Nem szabad pánikot kelteni. A jelentést a pártbizottságnak kell megküldeni.'],
+ ['Vendégkönyv','Guest book','Április 26., szombat. A vendégek öt órakor lementek a lépcsőn, mind. Azóta egyet sem láttunk elmenni.'],
+ ['Osztálynapló','Class register','Április 26., szombat. Nincs tanítás. A tanár szerint ritka tiszta idő. A gyerekek a tetőről nézték a fényt a távolban. Szép volt.'],
+ ['Áruházi árlista','Store price list','Kenyér 25 kop. · Tej 30 kop. · Rádió „Gorizont” 189 rubel. A május elsejei kosarak a raktárban. Átvételig lezárni!'],
+ ['Graffiti','Graffiti','NE NÉZZ VISSZA. Ők a falak mögött vannak, nem az árnyékban. — T.'],
+ ['Fenntartási Hivatal — 2070','Maintenance Office — 2070','FIGYELMEZTETÉS: az Övezetben az idő nem múlik. A hivatalos nyilvántartás szerint a naptár április 26-nál áll. Ha találkozik velük: ne válaszoljon, ha a nevén szólítják.'],
+ ['Cédula','Slip','Kedves lakó! A holnapi szubbotnik elmarad. A kerék átadása május 1-jén 10:00-kor. Mindenki jöjjön el — családdal!'],
+ ['Stalker jegyzet','Stalker note','Az óriáskeréknél ne várj pontosan délben. Kilencet fordul, és mindig ugyanott áll meg, ahol senki nem áll.'],
+ ['Rádióüzenet','Radio message','…ez a hangszóró-ellenőrzés… kérjük, őrizzék meg a nyugalmukat… kérjük… őrizzék… (statikus zaj, majd egy női hang számolni kezd).'],
+ ['Óvodai lista','Kindergarten list','Csoport „Napocska”: Anyuka, Kolja, Lenocska, Mása, Vityka… A lista április 26-nál véget ér. A fekete ceruzával ráírva: „még itt vannak”.']];
+DRAWX.pnote=function(o,x,y){pShadow(x+3,y+12,10,2);W_(x+3,y+4,10,9,'#d8cfa8');W_(x+3,y+4,10,1,'#f0e8c8');W_(x+5,y+6,6,1,'#6a6a5a');W_(x+5,y+8,5,1,'#6a6a5a');W_(x+5,y+10,6,1,'#6a6a5a');W_(x+10,y+4,3,3,PRED)};
+INT.pnote=1;NMX.pnote='note';
+{const u=useObj;useObj=function(n){if(PRI&&n&&n.o&&n.o.t=='pnote'){const o=n.o,d=PRN[(o.k|0)%PRN.length];dlSay('note',LANG=='hu'?d[0]:d[1],d[2],null,'');if(!PRI.read[o.k|0]){PRI.read[o.k|0]=1;try{jnFind('p_n'+(o.k|0),d[0],d[1],d[2],d[2])}catch(e){}}return}return u.apply(this,arguments)}}
+{const f=priFinish;priFinish=function(r){const o=f.apply(this,arguments);const q=prRng(PRIS+9);let k=0;
+ const rects=[[116,102,203,138],[164,148,203,185],[118,152,153,179],[76,152,109,175],[76,106,107,129],[214,104,245,127],[214,154,245,177],[216,196,245,213],[138,276,181,297],[143,278,153,286],[167,278,177,286]];
+ for(const rc of rects){for(let c=0;c<3;c++){const t=(c==2&&q()<.5)?0:1;for(let a=0;a<80;a++){const x=rc[0]+Math.floor(q()*(rc[2]-rc[0]+1)),y=rc[1]+Math.floor(q()*(rc[3]-rc[1]+1)),i=y*W+x;if(ob[i]||![16,12,14,0].includes(map[i]))continue;ob[i]={t:'pnote',k:(k++)%PRN.length};break}}}
+ return o}}
+/* ---------- ambience: radio static, whispers, creaks — atmosphere only ---------- */
+const PRH=[['Valahol egy hinta nyikorog. Pedig nincs szél.','Somewhere a swing creaks. There is no wind.'],['A kerék egy kicsit megmozdult. Biztos a szél.','The wheel moved a little. It must be the wind.'],['Valaki a nevedet suttogja a panelházban.','Someone whispers your name inside the block.'],['Az egyik ablakban mintha mozdult volna egy alak.','Something moved in one of the windows.'],['A Geiger egy pillanatra elhallgat. Ez rosszabb.','The Geiger falls silent for a moment. That is worse.'],['Hangosbemondó recseg a távolban: „…őrizzék meg a nyugalmukat…”','A loudspeaker crackles far away: "...remain calm..."'],['Gyerekkacaj. Aztán megint csönd.','Children laughing. Then silence again.']];
+var PAM=25,PAMX=0;
+function priNoise(dur,f0,qv,gain,pan){try{if(!AC||AC.state!='running')return;const n=Math.floor(AC.sampleRate*dur),b=AC.createBuffer(1,n,AC.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*(1-i/n)*(.5+.5*Math.sin(i/90));const s=AC.createBufferSource();s.buffer=b;const fl=AC.createBiquadFilter();fl.type='bandpass';fl.frequency.value=f0;fl.Q.value=qv;const gn=AC.createGain();gn.gain.value=gain;let out=gn;if(AC.createStereoPanner){const p=AC.createStereoPanner();p.pan.value=pan;gn.connect(p);out=p}s.connect(fl);fl.connect(gn);out.connect(AC.destination);s.start()}catch(e){}}
+function priAmbTick(dt){if(inD&&0)return;PAM-=dt;if(PAM>0)return;PAM=35+Math.random()*55;if(DLG||TALK)return;const k=Math.floor(Math.random()*PRH.length);
+ if(k==5||k==4)priNoise(1.6,1800,3,.05,(Math.random()-.5)*1.4);else if(k==2||k==6)priNoise(2.2,420,1.5,.035,(Math.random()-.5)*1.8);else priNoise(.9,160,4,.04,(Math.random()-.5)*1.2);
+ say(LANG=='hu'?PRH[k][0]:PRH[k][1])}
+HU.unshift(['The Zone stopped in 1986. You are just a guest.','Az Övezet 1986-ban megállt. Te csak vendég vagy.']);
+
+/* ===== z310: the Red Forest — rust-red trees (a filter over the normal sprite) ===== */
+{const d0=drawObj;drawObj=function(o,x,y){if(PRI&&o&&o.t=='tree'&&!inD&&x<110*T&&y<118*T){g.save();g.filter='sepia(1) saturate(4.2) hue-rotate(-38deg) brightness(.88)';try{return d0.apply(this,arguments)}finally{g.restore()}}return d0.apply(this,arguments)}}
+
+/* ===== z311: switch off the survival-mode world events that do not belong in Pripjaty (camp, scientists, wanderers, hordes, adventures, old reactor) ===== */
+function priNoSurv(){try{CMP218=null}catch(e){}try{SCI104={none:1}}catch(e){}}
+{const f=priFinish;priFinish=function(r){const o=f.apply(this,arguments);priNoSurv();return o}}
+{const al=priAfterLoad;priAfterLoad=function(){al.apply(this,arguments);priNoSurv()}}
+for(const nm of['hordeTick','advTick','setlSpawnWanderer','hordeMorning']){try{const f=eval(nm);eval(nm+'=function(){if(PRI)return;return f.apply(this,arguments)}')}catch(e){console.warn('noSurv',nm,e)}}
+try{const lr=locReactor;locReactor=function(){return PRI?null:lr.apply(this,arguments)}}catch(e){}
+{const st=sporeTick;sporeTick=function(dt){if(PRI&&PRI.hz&&PRI.suit>0)sporeMsgT=60;return st.apply(this,arguments)}}
+function priNoSurv2(){try{OPL200=true}catch(e){}try{PUBW[wseed+'|'+W]=1}catch(e){}try{L206=true}catch(e){}try{RVL194=true}catch(e){}}
+{const f=priNoSurv;priNoSurv=function(){f();priNoSurv2()}}
+
+/* ===== z312: a permanent Eastern-European winter: snow on the ground, falling snow, a cold grey-blue grade ===== */
+{const so=seasonIdx;seasonIdx=function(){return PRI?3:so.apply(this,arguments)}}
+{const sw=seaWinter;seaWinter=function(){return PRI?!inD:sw.apply(this,arguments)}}
+{const w0=weather;weather=function(){if(!PRI)return w0.apply(this,arguments);const c=cb;cb=1;try{return w0.apply(this,arguments)}finally{cb=c}}}
+{const up=update;update=function(dt){up(dt);if(PRI&&state=='play'){PRI.wt=(PRI.wt||0)+dt;if(!inD)wea=Math.sin(PRI.wt/140)>.82?2:1;else wea=0}}}
+/* snow cover that replaces the jungle-grass ground texture */
+function priSnowTex(){const c=document.createElement('canvas');c.width=c.height=288;const x=c.getContext('2d'),r=prRng(7041);x.fillStyle='#dfe7ee';x.fillRect(0,0,288,288);
+ for(let y=0;y<288;y+=2)for(let xx=0;xx<288;xx+=2){const a=Math.sin(xx/288*6.2832*3+Math.sin(y/288*6.2832*2)*1.7)*Math.sin(y/288*6.2832*4)*.5+.5,v=r();let col=null;
+  if(a>.74)col='rgba(255,255,255,.6)';else if(a<.2)col='rgba(150,170,198,.3)';
+  if(v<.05)col='rgba(168,184,206,.55)';else if(v<.08)col='rgba(250,252,255,.75)';
+  if(col){x.fillStyle=col;x.fillRect(xx,y,2,2)}}
+ for(let i=0;i<150;i++){const px=Math.floor(r()*284),py=Math.floor(r()*280);x.fillStyle=r()<.5?'#8d8b62':'#6e6a48';x.fillRect(px,py,1,3+Math.floor(r()*3));if(r()<.5)x.fillRect(px+2,py+1,1,3)}
+ for(let i=0;i<26;i++){const px=Math.floor(r()*280),py=Math.floor(r()*284);x.fillStyle='rgba(88,76,56,.45)';x.fillRect(px,py,3,2)}
+ return c}
+{const p0=pats;pats=function(x){const r=p0(x);if(PRI){if(!r._G2)r._G2=x.createPattern(priSnowTex(),'repeat');r.G=r._G2}return r}}
+/* snow on the pavements and a thin slush on the asphalt */
+{const gt=gTile;gTile=function(tx,ty,now){gt(tx,ty,now);if(!PRI||inD||inC||tx<0||ty<0||tx>=W||ty>=H)return;const m=map[ty*W+tx];if(m!=3&&m!=14)return;const cov=m==14?.55:.2,px=tx*T,py=ty*T;
+ for(let cy=0;cy<4;cy++)for(let cx=0;cx<4;cx++){const h=hs(tx*4+cx+.37,ty*4+cy+.71)*.6+hs(Math.floor((tx*4+cx)/3)+.2,Math.floor((ty*4+cy)/3)+.9)*.4;if(h<cov){const v=hs(tx*4+cx+5.1,ty*4+cy+2.3);W_(px+cx*4,py+cy*4,4,4,m==14?(v<.6?'#e4ebf1':'#d2dde7'):(v<.6?'rgba(196,206,218,.55)':'rgba(150,164,180,.45)'))}}}}
+
+/* ===== z313: an Eastern-European look — Cyrillic signs, street plates, the city stele, birches, Ukrainian/Russian names ===== */
+const PSIGNC=[['#a8241c','#f0d060','#6a1410'],['#e8e0c0','#2a3a22','#8a8468'],['#2a5a98','#f4f4f0','#163a66'],['#9a9c9a','#2a2c2e','#6a6c6a'],['#2e5a3c','#e8e4c0','#1a3a24']];
+function pFitTxt(s,cx,cy,col,sz,maxw){g.save();let z=sz;g.font='bold '+z+'px "DejaVu Sans",Arial,sans-serif';while(z>5&&g.measureText(s).width>maxw){z--;g.font='bold '+z+'px "DejaVu Sans",Arial,sans-serif'}g.textAlign='center';g.fillStyle=col;g.fillText(s,cx,cy);g.restore()}
+BIG.psign=function(o,x,y){const w=(o.fw||1)*T,h=(o.fh||1)*T,c=PSIGNC[o.k|0]||PSIGNC[0],sx=pSX(x),sy=pSY(y);
+ W_(x,y,w,h,'#1c1c1e');W_(x+1,y+1,w-2,h-2,c[0]);W_(x+1,y+1,w-2,1,'rgba(255,255,255,.22)');W_(x+1,y+h-2,w-2,1,c[2]);W_(x+3,y+3,1,1,'#3a3a3a');W_(x+w-4,y+3,1,1,'#3a3a3a');
+ const lines=String(o.tx||'').split('|');
+ if(lines.length==1)pFitTxt(lines[0],sx+w/2,sy+h/2+3.5,c[1],h>20?13:9,w-8);
+ else{pFitTxt(lines[0],sx+w/2,sy+h/2-1,c[1],h>20?14:9,w-8);pFitTxt(lines[1],sx+w/2,sy+h-5,c[1],7,w-8)}};
+SOLID.psign=1;SOLID.p_psign=1;NMX.psign='sign';NMX.pbirch='birch';
+function pSign(x,y,w,h,tx,k,hy){setFP({t:'psign',tx,k,hy},x,y,w,h)}
+/* birches: white trunks, black marks, bare thin branches under snow */
+DRAWX.pbirch=function(o,x,y){const h=hs(x*.13,y*.17),tx=x+7,lean=h<.3?-1:h>.7?1:0;pShadow(x+2,y+13,12,3);
+ for(let j=0;j<30;j++){const dx=Math.round(lean*j/14);W_(tx+dx,y+14-j,2,1,'#e6e4da');W_(tx+dx+1,y+14-j,1,1,'#b8b6ac')}
+ for(const j of[2,6,10,13,18,22,26]){const dx=Math.round(lean*j/14);W_(tx+dx,y+14-j,2,1,'#2a2a28');if(j%3==0)W_(tx+dx+(j&1?-1:2),y+14-j,1,1,'#2a2a28')}
+ const br=(j,len,dir)=>{for(let k=0;k<len;k++)W_(tx+Math.round(lean*j/14)+(dir>0?2:-1)+dir*k,y+14-j-Math.floor(k*.7),1,1,'#7a766a')};
+ br(20,9,-1);br(24,10,1);br(16,7,1);br(27,6,-1);br(12,6,-1);br(29,4,1);
+ for(const[a,b]of[[-6,-16],[-3,-14],[5,-20],[8,-16],[-8,-9]])W_(tx+a,y+b+10,3,1,'#eef3f8')};
+STYSKIP.pbirch=1;SOLID.pbirch=1;SOLID.p_pbirch=1;
+/* the ground-floor signs of the big buildings, street plates, the stele — placed once after the map is built */
+function priSigns(){const r=prRng(PRIS+31);
+ const row=(x,y,w,h,tx,k)=>{for(let yy=y;yy<y+h;yy++)for(let xx=x;xx<x+w;xx++){const o=ob[yy*W+xx];if(o&&(o.t=='door'||o.t=='oup'||o.t=='odn'))return}pSign(x,y,w,h,tx,k,1.35)};
+ const face=(x,y,w,h,L,R_,kL,kR)=>{const hx=x+Math.floor(w/2),wy=y+h-1;if(L)row(hx-8,wy,5,1,L,kL);if(R_)row(hx+4,wy,5,1,R_,kR)};
+ face(118,152,36,28,'ЭНЕРГЕТИК','ДВОРЕЦ КУЛЬТУРЫ',0,0);
+ face(76,152,34,24,'ШКОЛА №3','УЧИТЬСЯ!',4,0);
+ face(76,106,32,24,'УНИВЕРМАГ','ПРИПЯТЬ',1,1);
+ face(214,104,32,24,'МСЧ-126','БОЛЬНИЦА',4,4);
+ face(214,154,32,24,'ПОЛЕСЬЕ','ГОСТИНИЦА',0,2);
+ face(216,196,30,18,'ДЕТСКИЙ САД','«КЛЮЧИК»',1,1);
+ /* checkpoint huts */
+ row(168,286,3,1,'ШТАБ',0);row(144,286,3,1,'СКЛАД',2);
+ /* the city stele on the road in from the south */
+ for(let yy=265;yy<268;yy++)for(let xx=165;xx<172;xx++)ob[yy*W+xx]=null;pSign(165,266,7,2,'ПРИПЯТЬ|1970',3,0);
+ /* street plates on the north pavements of the crossings */
+ const EW=['ПР. ЛЕНИНА','УЛ. КУРЧАТОВА','УЛ. ЭНТУЗИАСТОВ','УЛ. ДРУЖБЫ НАРОДОВ'],NS=['УЛ. ГЕРОЕВ СТАЛИНГРАДА','БУЛЬВАР СТРОИТЕЛЕЙ'];
+ let k=0;for(const[y,w]of PRS.ew)for(const[x,ww]of PRS.ns){const px=x-6,py=y-1;if(px<4)continue;let ok=true;for(let xx=px;xx<px+5;xx++)if(ob[py*W+xx]||map[py*W+xx]!=14)ok=false;if(ok)pSign(px,py,5,1,EW[k%EW.length],2,.7);k++}
+ k=0;for(const[x,w]of PRS.ns)for(const[y,ww]of PRS.ew){const px=x+w+1,py=y-1;let ok=true;for(let xx=px;xx<px+5;xx++)if(ob[py*W+xx]||map[py*W+xx]!=14)ok=false;if(ok)pSign(px,py,5,1,NS[k%NS.length],2,.7);k++}
+ /* birches replace a third of the trees outside the red forest */
+ for(let i=0;i<W*H;i++){const o=ob[i];if(o&&o.t=='tree'){const x=i%W,y=(i/W)|0;if(!(x<110&&y<118)&&hs(x*.31,y*.27)<.38)ob[i]={t:'pbirch',hp:6}}}}
+{const f=priFinish;priFinish=function(r){const o=f.apply(this,arguments);try{priSigns()}catch(e){console.warn('signs',e)}return o}}
+/* Ukrainian and Russian names for the people of the Zone */
+{const nm={'Vaszilij Pavlics':'Vaszil Pavlovics','Gyenyiszov':'Gyenyiszov','Tyimofej':'Bohdan','Szása':'Olekszandr','Anyiszja':'Szvitlana','Gyima':'Mikola'};
+ const f=priPeople;priPeople=function(){f.apply(this,arguments);for(const n of NPCS)if(nm[n.nm])n.nm=nm[n.nm]}}
+
+/* ===== z314: survival of a hard winter — body heat, frozen weapons, cold waves and blizzards, filter failure (tunnel vision), mechanical Geiger dial, tube night vision, hand gas burner ===== */
+{const pn=priNew;priNew=function(){const o=pn.apply(this,arguments);o.heat=100;o.nv=0;o.nvT=100;o.tv=0;o.gas=6;o.cw=0;o.cwT=120;return o}}
+{const sc=seaColdTick;seaColdTick=function(){if(PRI)return;return sc.apply(this,arguments)}}
+function priFrostAt(tx,ty){let f=0;if(PRB&&PRB.frost)for(const q of PRB.frost){const d=Math.hypot(tx-q.x,ty-q.y);if(d<q.r)f+=q.s*(1-d/q.r)}return f}
+function priHeatTick(dt){const night=dk0()>.5,blz=wea==2&&!inD;let d;
+ if(inD)d=curOf&&curOf.k=='bkr'?4:.22;
+ else if(inAnyBld(P.x,P.y))d=.18;
+ else{let dr=.15+(night?.08:0)+(blz?.2:0)+(PRI.cw>0?.34:0);dr+=priFrostAt(P.x/T|0,P.y/T|0)*1.1;if(PRI.hz&&PRI.suit>0)dr*=.6;d=-dr}
+ if(!inD&&nearWarm(90))d=3.4;
+ PRI.heat=Math.max(0,Math.min(100,PRI.heat+d*dt));
+ if(PRI.heat<=0&&!creative){P.hp-=dt*1.1;P.hurt=Math.max(P.hurt||0,.08)}
+ const lv=PRI.heat<20?2:PRI.heat<40?1:0;if(lv>(PRI.hl|0)){PRI.hl=lv;say(lv==2?(LANG=='hu'?'A zárszerkezet ráfagyott! Melegedj vagy használd a gázégőt (Y).':'The action is freezing up! Warm up or use the burner (Y).'):(LANG=='hu'?'A kezed elgémberedett — lassabban tudsz tüzelni.':'Your hands are stiffening — slower to fire.'))}else if(lv<(PRI.hl|0))PRI.hl=lv;
+ const f=PRI.heat<20?1.9:PRI.heat<40?1.4:1;for(const k in GUN){if(GUN[k].rt0==null)GUN[k].rt0=GUN[k].rt;GUN[k].rt=GUN[k].rt0*f}
+ /* cold waves */
+ PRI.cwT-=dt;if(PRI.cwT<=0){if(PRI.cw>0){PRI.cw=0;PRI.cwT=150+Math.random()*180}else{PRI.cw=34;PRI.cwT=34;if(!inD)say(LANG=='hu'?'Fagyhullám érkezik! Menj fedezékbe vagy tűz mellé.':'A cold wave is rolling in! Find cover or a fire.')}}
+ /* filter failure */
+ const bad=P.rate>.6&&!inD&&(!PRI.hz||PRI.filt<=0||PRI.suit<=0);PRI.tv+=((bad?1:0)-PRI.tv)*Math.min(1,dt*1.4);if(PRI.tv>.6&&!creative){P.hp-=dt*.7;if(!PRI.cgh||PRI.cgh<=0){PRI.cgh=3+Math.random()*3;snd('hurt');say(LANG=='hu'?'*köhögés* A szűrő nem véd — látótér beszűkül!':'*cough* No filter — your vision is closing in!')}}
+ PRI.cgh=(PRI.cgh||0)-dt;
+ /* night vision tube */
+ if(PRI.nv){PRI.nvT=Math.max(0,PRI.nvT-dt*1.1);if(PRI.nvT<=0){PRI.nv=0;say(LANG=='hu'?'Az éjjellátó akkumulátora lemerült.':'The night-vision battery is flat.')}}else PRI.nvT=Math.min(100,PRI.nvT+dt*.35)}
+{const up=update;update=function(dt){up(dt);if(PRI&&state=='play'&&!creative&&P.hp>0)try{priHeatTick(dt)}catch(e){}}}
+{const ek=eatK;eatK=function(k){const r=ek.apply(this,arguments);if(PRI&&(k=='cooked'||k=='canned')){PRI.heat=Math.min(100,PRI.heat+16)}return r}}
+addEventListener('keydown',e=>{if(!PRI||state!='play'||e.repeat||e.ctrlKey||e.metaKey||book||invOpen||stOpen||showMap||SFOC)return;
+ if(e.code=='KeyZ'){if(PRI.nv){PRI.nv=0;snd('ui')}else if(PRI.nvT>8){PRI.nv=1;snd('ui');say(LANG=='hu'?'A csöves éjjellátó felmelegszik… zöld fény.':'The tube night-vision hums to life…')}else say(LANG=='hu'?'Az akkumulátor üres.':'Battery empty.')}
+ if(e.code=='KeyY')priBurner()});
+function priBurner(){if((PRI.gas|0)<=0){say(LANG=='hu'?'A gázpalack üres. Vaszilijnál töltheted.':'The gas bottle is empty.');return}PRI.gas--;PRI.heat=Math.min(100,PRI.heat+24);snd('pick');
+ let melted=false;const px=P.x/T|0,py=P.y/T|0;for(let y=py-2;y<=py+2;y++)for(let x=px-2;x<=px+2;x++){const o=ob[y*W+x];if(o&&o.t=='plock'&&!o.open){o.open=1;melted=true;try{priLockOpen(x,y,o)}catch(e){}}}
+ say(melted?(LANG=='hu'?'A jégbe fagyott zár megolvadt.':'The frozen lock melts.'):(LANG=='hu'?'Felmelegítetted a kezed a kézi gázégővel. Gáz: '+PRI.gas:'Warmed your hands. Gas: '+PRI.gas))}
+function priLockOpen(){}
+/* ---------- the mechanical dial ---------- */
+priGauge=function(){const hu=LANG=='hu',x=VW-118,y=4,rate=P.rate||0,v=rate*.4,lv=rate<.5?0:rate<2?1:rate<5?2:3,col=['#8ad060','#d8c840','#e88a30','#e03a2a'][lv];
+ noTr=true;Q(x,y,114,62,'rgba(10,12,8,.64)');Q(x,y,114,1,'#46503e');Q(x,y+61,114,1,'#2a3024');
+ /* dial */
+ const cx=x+30,cy=y+34,R=24,t=Math.max(0,Math.min(1,(Math.log10(Math.max(.005,v))+2)/4));
+ g.save();g.fillStyle='#d8d0a8';g.beginPath();g.arc(cx,cy,R,Math.PI,0);g.lineTo(cx+R,cy+4);g.lineTo(cx-R,cy+4);g.closePath();g.fill();g.strokeStyle='#2a2418';g.lineWidth=2;g.stroke();
+ g.lineWidth=3;for(const[a,b,c]of[[0,.45,'#5a9a3a'],[.45,.75,'#c8b030'],[.75,1,'#b83a2a']]){g.strokeStyle=c;g.beginPath();g.arc(cx,cy,R-4,Math.PI+a*Math.PI,Math.PI+b*Math.PI);g.stroke()}
+ g.strokeStyle='#2a2418';g.lineWidth=1;for(let i=0;i<=10;i++){const a=Math.PI+i/10*Math.PI;g.beginPath();g.moveTo(cx+Math.cos(a)*(R-7),cy+Math.sin(a)*(R-7));g.lineTo(cx+Math.cos(a)*(R-(i%5?9:11)),cy+Math.sin(a)*(R-(i%5?9:11)));g.stroke()}
+ const jit=(Math.random()-.5)*.05*Math.min(3,rate+.2),a=Math.PI+t*Math.PI+jit;g.strokeStyle='#a01810';g.lineWidth=1.6;g.beginPath();g.moveTo(cx,cy+2);g.lineTo(cx+Math.cos(a)*(R-3),cy+Math.sin(a)*(R-3));g.stroke();g.fillStyle='#2a2418';g.beginPath();g.arc(cx,cy+2,2.4,0,6.3);g.fill();g.restore();
+ g.font=fnt(0,7);txt('mSv/h',cx,cy+3,'#4a4228','center');
+ g.font=fnt(0,8);txt(v.toFixed(2),cx,y+58,col,'center');
+ const bar=(yy,val,c,lab)=>{Q(x+62,yy,34,4,'#1a1c16');Q(x+62,yy,Math.round(34*Math.max(0,Math.min(1,val/100))),4,c);g.font=fnt(0,7);txt(lab,x+98,yy+5,'#9aa08a')};
+ bar(y+8,P.inf||0,(P.inf||0)>45?'#e03a2a':'#b6ff40',hu?'dóz':'dose');
+ bar(y+19,PRI.hz?PRI.suit:0,PRI.suit>30?'#d8c840':'#e88a30',hu?'ruha':'suit');
+ bar(y+30,PRI.hz?PRI.filt:0,'#6ab0d8',hu?'szűr':'filt');
+ bar(y+41,PRI.heat,PRI.heat<30?'#e0e8ff':'#e89a50',hu?'hő':'heat');
+ g.font=fnt(0,7);txt(PRI.rub+(hu?' rubel':' rub')+' · '+(PRI.gas|0)+(hu?' gáz':' gas'),x+62,y+58,'#e8d890');noTr=false};
+{const po=priObj;priObj=function(){const y0=VH;po.apply(this,arguments)}}
+/* ---------- grade extras: frost edge, blizzard whiteout, filter tunnel vision, tube night vision ---------- */
+{const pg=priGrade;priGrade=function(){pg.apply(this,arguments);if(!PRI||CLASSIC)return;const FPX=typeof fvA=='function'&&fvA();const cw=g.canvas.width,ch=g.canvas.height,tp=T*(cw/VW)*ZM;g.save();g.setTransform(1,0,0,1,0,0);
+ try{
+  if(PRI.nv&&FPX){g.fillStyle='rgba(50,255,100,.3)';g.fillRect(0,0,cw,ch);g.fillStyle='rgba(0,0,0,.16)';for(let yy=0;yy<ch;yy+=3)g.fillRect(0,yy,cw,1)}
+  else if(PRI.nv){g.globalCompositeOperation='multiply';g.fillStyle='rgb(120,255,150)';g.fillRect(0,0,cw,ch);g.globalCompositeOperation='lighter';g.fillStyle='rgba(18,70,28,'+(.22+dk0()*.3)+')';g.fillRect(0,0,cw,ch);g.globalCompositeOperation='source-over';
+   g.fillStyle='rgba(0,0,0,.18)';for(let yy=0;yy<ch;yy+=3)g.fillRect(0,yy,cw,1)}
+  if(wea==2&&!inD){const gr=g.createRadialGradient(cw/2,ch/2,tp*3.2,cw/2,ch/2,tp*10);gr.addColorStop(0,'rgba(214,222,232,0)');gr.addColorStop(1,'rgba(214,222,232,.9)');g.fillStyle=gr;g.fillRect(0,0,cw,ch)}
+  if(PRI.cw>0&&!inD){g.fillStyle='rgba(210,225,245,.1)';g.fillRect(0,0,cw,ch)}
+  const fr=Math.max(0,(40-PRI.heat)/40);if(fr>0){const gr=g.createRadialGradient(cw/2,ch/2,Math.min(cw,ch)*.3,cw/2,ch/2,Math.max(cw,ch)*.75);gr.addColorStop(0,'rgba(220,235,255,0)');gr.addColorStop(1,'rgba(220,235,255,'+(.6*fr)+')');g.fillStyle=gr;g.fillRect(0,0,cw,ch)}
+  if(PRI.tv>.02){const gr=g.createRadialGradient(cw/2,ch/2,Math.min(cw,ch)*(.45-.3*PRI.tv),cw/2,ch/2,Math.max(cw,ch)*(.62-.26*PRI.tv));gr.addColorStop(0,'rgba(8,10,6,0)');gr.addColorStop(1,'rgba(8,10,6,'+(.97*PRI.tv)+')');g.fillStyle=gr;g.fillRect(0,0,cw,ch)}
+ }finally{g.restore()}}}
+
+/* ===== z315: first-person (3D) view in Pripjaty ===== */
+/* no wild horse herds in the dead city */
+{const hg=hrsGen219;hrsGen219=function(){if(PRI){HRS219=[];HID219=1;MNT219=null;return}return hg.apply(this,arguments)}}
+{const up=update;update=function(dt){up(dt);if(PRI&&HRS219.length&&state=='play')HRS219=[]}}
+/* landmarks and signs get their own upright planes in the 3D view: the wheel (it keeps turning), the park arch and every Cyrillic sign, readable from the front */
+const SP3={psign:{L:0,R:0,T:0,bk:0,y:1.35}},TL3=new Map();
+{const bo=v3BuildObjs;v3BuildObjs=function(ch){bo.apply(this,arguments);
+ try{if(!PRI)return;const x0=ch.cx*GQS,y0=ch.cy*GQS;
+  for(let y=0;y<GQS;y++)for(let x=0;x<GQS;x++){const tx=x0+x,ty=y0+y,o=ob[ty*W+tx];if(!o||!SP3[o.t])continue;
+   const sp=SP3[o.t],s=v3Sprite(o,tx,ty),fw=o.fw||1,fh=o.fh||1;
+   for(const m of ch.og.children.slice())if(m.material===s.mat||(m.geometry&&m.geometry===s.gm))ch.og.remove(m);
+   const cw=fw*T+sp.L+sp.R,chh=fh*T+sp.T,key=tx+','+ty;let e=TL3.get(key);
+   if(!e||e.cv.width!==cw){const cv=document.createElement('canvas');cv.width=cw;cv.height=chh;const tex=v3Tex(cv),mat=new THREE.MeshLambertMaterial({map:tex,alphaTest:o.t=='psign'?.5:.06,side:THREE.FrontSide});if(o.t!='psign'){tex.generateMipmaps=false;tex.minFilter=THREE.LinearFilter;tex.magFilter=THREE.NearestFilter}e={cv,tex,mat,t:0};TL3.set(key,e)}
+   e.o=o;e.tx=tx;e.ty=ty;e.L=sp.L;e.Tm=sp.T;e.wh=o.t=='pwheel';v3Paint(e.cv,tx*T-sp.L,ty*T-sp.T,()=>{drawObj(o,tx*T,ty*T)});e.tex.needsUpdate=true;
+   const wu=cw/16,hu=chh/16,by=v3H(tx,ty)+(o.t=='psign'?(o.hy!=null?o.hy:sp.y):sp.y),mk=(z,ry)=>{const ge=new THREE.PlaneGeometry(wu,hu);ge.translate(ry?-(wu/2-sp.L/16):wu/2-sp.L/16,hu/2,0);const m=new THREE.Mesh(ge,e.mat);m.position.set(tx+(ry?fw:0),by,z);m.rotation.y=ry?Math.PI:0;m.castShadow=false;m.receiveShadow=false;ch.og.add(m);return m};
+   mk(ty+fh+.03,0);if(sp.bk&&!(o.hy>=1))mk(ty-.03,1)}
+ }catch(er){console.warn('sp3',er)}}}
+/* the winter haze is thick, but the landmarks have to show through it; a blizzard still closes in */
+{const vl=v3Light;v3Light=function(tg){vl.apply(this,arguments);if(PRI&&!inD&&wea!=2&&V3.S.fog){V3.S.fog.near*=1.7;V3.S.fog.far*=2.2}}}
+
+/* ===== z316: translations over the Cyrillic signs, UAZ instead of wrecks, real 3D models for the big props, camera-facing sprites for the small things ===== */
+/* ---------- A. what the signs say ---------- */
+const PTR={'ЭНЕРГЕТИК':['Energetik (a kultúrpalota neve)','Energetik (name of the palace of culture)'],'ДВОРЕЦ КУЛЬТУРЫ':['Kultúrpalota','Palace of Culture'],'ШКОЛА №3':['3. számú iskola','School No. 3'],'УЧИТЬСЯ!':['Tanulni!','Study!'],
+ 'УНИВЕРМАГ':['Áruház','Department store'],'ПРИПЯТЬ':['Pripjaty','Pripyat'],'МСЧ-126':['126. sz. egészségügyi egység','Medical Unit No. 126'],'БОЛЬНИЦА':['Kórház','Hospital'],'ПОЛЕСЬЕ':['Poleszje (a vidék neve)','Polesie (the region)'],
+ 'ГОСТИНИЦА':['Szálloda','Hotel'],'ДЕТСКИЙ САД':['Óvoda','Kindergarten'],'«КЛЮЧИК»':['„Kulcsocska” (az óvoda neve)','“Little Key” (kindergarten name)'],'ШТАБ':['Parancsnokság','Headquarters'],'СКЛАД':['Raktár','Warehouse'],
+ 'ПРИПЯТЬ|1970':['Pripjaty, 1970 — a város alapítása','Pripyat, 1970 — founding of the city'],'ПР. ЛЕНИНА':['Lenin sugárút','Lenin Avenue'],'УЛ. КУРЧАТОВА':['Kurcsatov utca','Kurchatov Street'],
+ 'УЛ. ЭНТУЗИАСТОВ':['Lelkesedők utcája','Enthusiasts Street'],'УЛ. ДРУЖБЫ НАРОДОВ':['Népek barátsága utca','Friendship of Peoples Street'],'УЛ. ГЕРОЕВ СТАЛИНГРАДА':['Sztálingrád hőseinek utcája','Heroes of Stalingrad Street'],
+ 'БУЛЬВАР СТРОИТЕЛЕЙ':['Építők körútja','Builders’ Boulevard'],'ПАРК':['Park','Park'],'ПЕЧАТЬ':['Sajtó (újságos kioszk)','Press (newsstand)'],'АТТРАКЦИОН':['Attrakció (vidámparki játék)','Attraction (fairground ride)'],
+ 'СЛАВА ТРУДУ!':['Dicsőség a munkának!','Glory to labour!'],'МИР · ТРУД · МАЙ':['Béke · Munka · Május','Peace · Labour · May'],'НАРОД И ПАРТИЯ — ЕДИНЫ!':['A nép és a Párt egy!','The people and the Party are one!'],'ЛЕНИНСКИМ КУРСОМ':['Lenini úton!','On Lenin’s course!']};
+let PCAP=null;
+function priCapScan(){PCAP=[];for(let i=0;i<W*H;i++){const o=ob[i];if(!o||o.pm!=null)continue;const tx=i%W,ty=(i/W)|0,fw=o.fw||1,fh=o.fh||1;let ru=null,cx=tx+fw/2,cy=ty+fh,h=2.4,w=fw;
+  let ay=ty*T;if(o.t=='psign'){ru=o.tx;h=(o.hy!=null?o.hy:1.35)+fh+.5}else if(o.t=='pbill'){ru=PSLOG[(o.k|0)%PSLOG.length];cy=ty+1;h=4.3;w=4;ay=ty*T-4}
+  else if(o.t=='pgate'){ru='ПАРК';cx=tx+3.5;cy=ty+.5;h=4.4;w=5;ay=ty*T-26}else if(o.t=='pkiosk'){ru='ПЕЧАТЬ';cy=ty+1;h=2.9;ay=ty*T+4}else if(o.t=='pbump'){ru='АТТРАКЦИОН';cy=ty+2;h=3.4;w=6;ay=ty*T-4}
+  if(ru&&PTR[ru])PCAP.push({ru,x:cx,y:cy,h,w:Math.max(2,w),ay})}}
+let CAPD=null;
+function capEl(){if(CAPD)return CAPD;const w=document.getElementById('wrap')||document.body,d=document.createElement('div');d.id='prcap';
+ d.style.cssText='position:absolute;pointer-events:none;z-index:35;display:none;transform:translate(-50%,-100%);text-align:center;background:rgba(10,12,8,.84);border-top:2px solid #e8c43a;padding:.25em .7em .3em;font-family:"DejaVu Sans",Arial,sans-serif;line-height:1.3;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.55)';w.appendChild(d);return CAPD=d}
+function priCaption(){const d=capEl();if(!PCAP)priCapScan();if(!PCAP.length||inD||inC||fvUI()){d.style.display='none';return}
+ const px=P.x/T,py=P.y/T,fp=typeof fvA=='function'&&fvA();let best=null,bd=1e9;
+ if(fp){const yaw=FV.yaw,fx=-Math.sin(yaw),fy=-Math.cos(yaw);for(const e of PCAP){const dx=e.x-px,dy=e.y-py,dd=Math.hypot(dx,dy);if(dd>20||dd<.6)continue;const c=(fx*dx+fy*dy)/dd;if(c<.7)continue;if(c<Math.cos(Math.min(1.2,Math.atan((e.w/2+.6)/dd)+.12)))continue;if(dd<bd){bd=dd;best=e}}}
+ else{for(const e of PCAP){const dd=Math.hypot(e.x-px,e.y-py);if(dd<6.5&&dd<bd){bd=dd;best=e}}}
+ if(!best){d.style.display='none';return}let sx,sy;
+ if(fp){const v=new THREE.Vector3(best.x,v3H(best.x|0,best.y|0)+best.h,best.y).project(V3.cam);if(v.z>1||v.z<-1){d.style.display='none';return}sx=(v.x*.5+.5)*VW;sy=(1-(v.y*.5+.5))*VH}
+ else{sx=(best.x*T-cam.x)*ZM;sy=(best.ay-cam.y)*ZM-3}
+ sx=Math.max(VW*.12,Math.min(VW*.88,sx));sy=Math.max(VH*.14,Math.min(VH*.8,sy));
+ const hu=LANG=='hu',tx=PTR[best.ru][hu?0:1],ru=best.ru.replace('|',' · '),key=ru+'|'+tx;
+ if(d._k!==key){d._k=key;d.innerHTML='<div style="color:#e8c43a;font-weight:bold;letter-spacing:.04em"></div><div style="color:#f2f0e0"></div>';d.children[0].textContent=ru;d.children[1].textContent=tx}
+ const wd=(d.parentNode.clientWidth||960);d.style.fontSize=Math.max(11,wd/480*8.4)+'px';d.style.left=(sx/VW*100)+'%';d.style.top=(sy/VH*100)+'%';d.style.display='block'}
+{const h0=hud;hud=function(){const r=h0.apply(this,arguments);try{if(PRI&&state=='play')priCaption();else if(CAPD)CAPD.style.display='none'}catch(e){console.warn('cap',e)}return r}}
+/* ---------- B. UAZ ---------- */
+const UAZC=[['#5a6a3c','#6e8048','#3e4a2a'],['#8a5a3a','#a06c48','#5e3c26'],['#6e7c84','#8494a0','#48545c']];
+BIG.puaz=function(o,x,y){const c=UAZC[(o.c|0)%3],fw=o.fw||3,fh=o.fh||2,cx=pSX(x)+fw*8,cy=pSY(y)+fh*8;g.save();g.translate(cx,cy);if(o.v)g.rotate(Math.PI/2);
+ g.fillStyle='rgba(0,0,0,.27)';g.fillRect(-21,-9,44,23);
+ g.fillStyle='#1c1c1e';for(const wx of[-14,12])for(const wy of[-12,8]){g.fillRect(wx,wy,8,4)}
+ g.fillStyle=c[2];g.fillRect(-20,-10,40,20);g.fillStyle=c[0];g.fillRect(-19,-9,38,18);g.fillStyle=c[1];g.fillRect(-19,-9,38,2);   /* hood + body */
+ g.fillStyle=c[1];g.fillRect(8,-8,11,16);g.fillStyle='#1a2428';g.fillRect(6,-7,3,14);g.fillStyle='rgba(120,150,170,.55)';g.fillRect(6,-7,3,14);   /* windscreen */
+ g.fillStyle='#b8b098';g.fillRect(-17,-8,23,16);g.fillStyle='#d8d4c4';g.fillRect(-17,-8,23,2);for(let i=0;i<4;i++){g.fillStyle='rgba(60,56,40,.25)';g.fillRect(-14+i*5,-8,1,16)}   /* canvas roof */
+ g.fillStyle='#f4f8fc';g.fillRect(-16,-6,6,3);g.fillRect(-9,-1,9,4);g.fillRect(-14,3,5,3);   /* snow */
+ g.fillStyle='#2a2a2c';g.beginPath();g.arc(-21,0,4,0,6.3);g.fill();g.fillStyle='#4a4a4e';g.beginPath();g.arc(-21,0,2,0,6.3);g.fill();   /* spare wheel */
+ g.fillStyle='#e8d890';g.fillRect(19,-8,2,3);g.fillRect(19,5,2,3);g.fillStyle='#8a8a8e';g.fillRect(20,-6,1,12);g.restore()};
+SOLID.puaz=1;SOLID.p_puaz=1;NMX.puaz='UAZ';
+function priUaz(){const r=prRng(PRIS+55),band=(y,x)=>{for(const[yy,w]of PRS.ew)if(y>=yy&&y<yy+w)return 0;for(const[xx,w]of PRS.ns)if(x>=xx&&x<xx+w)return 1;if(x>=PRS.ave[0]&&x<PRS.ave[0]+PRS.ave[1])return 1;return -1};
+ const wrecks=[];for(let i=0;i<W*H;i++){const o=ob[i];if(o&&o.t=='wreck'){wrecks.push([i%W,(i/W)|0]);ob[i]=null}}
+ for(const[x,y]of wrecks){if(r()<.42)continue;const v=band(y,x);if(v<0)continue;const fw=v?2:3,fh=v?3:2,x0=x-1,y0=y-1;let ok=true;
+  for(let yy=y0;yy<y0+fh&&ok;yy++)for(let xx=x0;xx<x0+fw;xx++){if(map[yy*W+xx]!=3){ok=false;break}const o=ob[yy*W+xx];if(o&&o.t!='plane'&&o.t!='pcrack'&&o.t!='tgrass'&&o.t!='bush'){ok=false;break}}
+  if(!ok)continue;for(let yy=y0;yy<y0+fh;yy++)for(let xx=x0;xx<x0+fw;xx++)ob[yy*W+xx]=null;setFP({t:'puaz',v,c:Math.floor(r()*3)},x0,y0,fw,fh)}}
+{const f=priFinish;priFinish=function(rr){const o=f.apply(this,arguments);PCAP=null;try{priUaz()}catch(e){console.warn('uaz',e)}return o}}
+/* ---------- C. real 3D models ---------- */
+const LM3=new Map(),BRD3=new Map(),ANIM3=[];
+function lm3(c){let m=LM3.get(c);if(!m){m=new THREE.MeshLambertMaterial({color:c});LM3.set(c,m)}return m}
+function bx3(G,x,y,z,w,h,d,c){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),lm3(c));m.position.set(x+w/2,y+h/2,z+d/2);G.add(m);return m}
+function cy3(G,x,y,z,r0,r1,h,c,seg,ax){const m=new THREE.Mesh(new THREE.CylinderGeometry(r0,r1,h,seg||12),lm3(c));m.position.set(x,y+h/2,z);if(ax)m.rotation.x=Math.PI/2;G.add(m);return m}
+function brd3(key,w,h,fn){let m=BRD3.get(key);if(m)return m;const cv=document.createElement('canvas');cv.width=w;cv.height=h;v3Paint(cv,0,0,fn);m=new THREE.MeshLambertMaterial({map:v3Tex(cv)});BRD3.set(key,m);return m}
+function pl3(G,x,y,z,w,h,mat,back){const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),mat);m.position.set(x+w/2,y+h/2,z);if(back){m.rotation.y=Math.PI;m.position.x=x+w/2}G.add(m);return m}
+const P3={concrete:0x8e9094,dark:0x5a5a5e,red:0xa8241c,gold:0xe8c43a,cream:0xe0d4b0};
+function pylon3(G,x,z,ht){bx3(G,x+.1,0,z+.1,.8,ht,.8,P3.concrete);bx3(G,x,ht,z,1,.22,1,0xa0a2a6);bx3(G,x+.1,.1,z+.1,.8,.12,.8,0x6e7074);
+ const st=brd3('pstar',32,32,()=>{Q(0,0,32,32,'#8e9094');pStar(16,16,12,PRED)});pl3(G,x+.25,ht*.5,z+.905,.5,.5,st);pl3(G,x+.25,ht*.5,z+.095,.5,.5,st,1)}
+const M3={};
+M3.ppil=(o,G)=>pylon3(G,0,0,3.3);
+M3.pgate=(o,G)=>{pylon3(G,0,0,3.3);const m=brd3('arch',160,40,()=>{Q(0,0,160,40,'#3a3a3e');Q(2,2,156,36,PRED);pStar(22,20,11,PGOLD);pStar(138,20,11,PGOLD);pTxt('ПАРК',80,29,'#f4dc88',22,'center',0)});
+ bx3(G,1,2.55,.3,5,1.35,.4,0x3a3a3e);pl3(G,1,2.6,.705,5,1.25,m);pl3(G,1,2.6,.295,5,1.25,m,1);bx3(G,1.2,2.4,.35,4.6,.16,.3,0x6e7074)};
+M3.pmon=(o,G)=>{bx3(G,.1,0,.4,2.8,.4,2.2,0x6e7074);bx3(G,.4,.4,.7,2.2,.35,1.6,P3.concrete);bx3(G,.55,.75,1.1,1.9,3.0,.8,0x5a5a5e);
+ const m=brd3('mon',120,190,()=>{Q(0,0,120,190,'#5a5a5e');Q(3,3,114,184,PRED);pStar(60,48,30,PGOLD);pHS(60,128,66,PGOLD)});pl3(G,.62,.9,1.91,1.76,2.7,m);pl3(G,.62,.9,1.09,1.76,2.7,m,1)};
+M3.pbill=(o,G)=>{const k=(o.k|0)%PSLOG.length,m=brd3('bill'+k,232,88,()=>{Q(0,0,232,88,'#3a3a3e');Q(3,3,226,82,PRED);pStar(30,44,20,PGOLD);pHS(198,44,48,PGOLD);pTxt(PSLOG[k],116,52,'#f0d890',k==3?17:24,'center',0)});
+ bx3(G,.5,0,.95,.14,2.6,.14,0x5a5a5e);bx3(G,3.36,0,.95,.14,2.6,.14,0x5a5a5e);bx3(G,.1,2.2,.9,3.8,1.5,.2,0x3a3a3e);pl3(G,.15,2.25,1.105,3.7,1.4,m);pl3(G,.15,2.25,.895,3.7,1.4,m,1)};
+M3.pbusst=(o,G)=>{bx3(G,0,2.3,.2,3,.18,1.5,0x7a7e82);bx3(G,0,2.2,.2,3,.1,.08,P3.red);for(const x of[.1,2.85])for(const z of[.25,1.55])bx3(G,x,0,z,.07,2.3,.07,0x4a4a4e);
+ bx3(G,.1,.2,.2,2.8,2.1,.07,0x3a4a50);const m=brd3('busst',180,100,()=>{Q(0,0,180,100,'#3a4a50');Q(0,0,180,8,PRED);pStar(40,52,16,PRED);pHS(90,52,40,PGOLD);pStar(140,52,16,PRED)});pl3(G,.2,.5,.275,2.6,1.4,m);pl3(G,.2,.5,.195,2.6,1.4,m,1);bx3(G,.4,.45,.5,2.2,.07,.45,0x8a6a40);bx3(G,.4,.2,.55,.07,.25,.35,0x4a3a2a);bx3(G,2.5,.2,.55,.07,.25,.35,0x4a3a2a)};
+M3.pkiosk=(o,G)=>{bx3(G,.15,0,.4,1.7,1.9,1.25,0x6a8a78);bx3(G,0,1.9,.3,2,.22,1.45,P3.red);bx3(G,0,2.12,.3,2,.05,1.45,0xf0f4f8);
+ const w=brd3('kiosk',120,100,()=>{Q(0,0,120,100,'#6a8a78');Q(8,40,104,36,'#1c2a26');for(let i=0;i<7;i++)Q(14+i*14,48,10,14,['#c8402e','#d8c8a0','#d8b43a','#c8402e','#d8c8a0','#3a6a9a','#c8402e'][i]);Q(0,0,120,30,PRED);pTxt('ПЕЧАТЬ',60,22,'#f4dc88',17,'center',0)});pl3(G,.2,.2,1.655,1.6,1.4,w);pl3(G,.2,.2,.395,1.6,1.4,w,1)};
+M3.pbump=(o,G)=>{bx3(G,.1,0,.2,5.6,.08,3.6,0x4a4a50);for(const[x,z,w,d]of[[.1,.2,5.6,.15],[.1,3.65,5.6,.15],[.1,.2,.15,3.6],[5.55,.2,.15,3.6]])bx3(G,x,.08,z,w,.42,d,0x8a8a8e);
+ for(const x of[.05,5.5])for(const z of[.15,3.6])bx3(G,x,0,z,.14,2.4,.14,0x7a7a7e);bx3(G,.05,2.35,.15,5.6,.12,.14,0x7a7a7e);bx3(G,.05,2.35,3.6,5.6,.12,.14,0x7a7a7e);
+ for(let i=0;i<12;i++)bx3(G,.3+i*.46,2.0,3.62,.26,.34,.05,i%2?P3.red:P3.cream);
+ const sg=brd3('bump',220,34,()=>{Q(0,0,220,34,'#3a3a3e');Q(2,2,216,30,PRED);pTxt('АТТРАКЦИОН',110,25,'#f4dc88',20,'center',0)});pl3(G,.5,2.45,3.68,4.6,.7,sg);
+ const cc=[0xc8402e,0xd8b43a,0x3a6a9a,0x4a8a4a,0xa8602e,0x8a4a8a];for(let i=0;i<6;i++){const x=.6+((i*37)%44)/10,z=.6+((i*23)%26)/10;bx3(G,x,.1,z,.62,.3,.46,0x1a1a1c);bx3(G,x+.04,.2,z+.04,.54,.28,.38,cc[i]);bx3(G,x+.28,.48,z+.2,.04,.5,.04,0x6a6a6a)}};
+M3.pcar2=(o,G,fw,fh)=>{const cx=fw/2,cz=fh/2;cy3(G,cx,0,cz,1.4,1.45,.3,0x7a6a58,18);cy3(G,cx,.3,cz,.1,.1,2.2,0x5a5a5e,8);const R=new THREE.Group();R.position.set(cx,0,cz);G.add(R);
+ for(let i=0;i<10;i++){const a0=i*Math.PI/5,m=new THREE.Mesh(new THREE.CylinderGeometry(.04,1.5,.75,1,1,false,a0,Math.PI/5),new THREE.MeshLambertMaterial({color:i%2?0xc8402e:0xe0d4b0,side:THREE.DoubleSide}));m.position.set(0,2.55,0);R.add(m)}
+ bx3(R,-.07,2.9,-.07,.14,.14,.14,P3.gold);for(let i=0;i<6;i++){const a=i*Math.PI/3,x=Math.cos(a)*1.0,z=Math.sin(a)*1.0;bx3(R,x-.02,.35,z-.02,.04,1.8,.04,0x6a6a6a);bx3(R,x-.11,.7,z-.2,.22,.36,.4,i%2?0xc8402e:0xd8c8a0)}
+ ANIM3.push({g:R,fn:t=>{R.rotation.y=t/4000}})};
+M3.pswing=(o,G,fw,fh)=>{const cx=fw/2,cz=fh/2;cy3(G,cx,0,cz,.1,.13,3.5,0x4a4a50,8);const R=new THREE.Group();R.position.set(cx,0,cz);G.add(R);
+ const cn=new THREE.Mesh(new THREE.CylinderGeometry(.1,1.4,.55,12),new THREE.MeshLambertMaterial({color:0xa8241c}));cn.position.y=3.35;R.add(cn);
+ for(let i=0;i<8;i++){const a=i*Math.PI/4,W2=new THREE.Group();W2.rotation.y=a;R.add(W2);const ch=new THREE.Mesh(new THREE.BoxGeometry(.03,2.33,.03),lm3(0x7a7a7a));ch.position.set(.6,2.2,0);ch.rotation.z=.54;W2.add(ch);bx3(W2,1.05,1.0,-.15,.36,.08,.3,i%2?0xc8402e:0xd8b43a)}
+ ANIM3.push({g:R,fn:t=>{R.rotation.y=t/2600}})};
+M3.pwheel=(o,G,fw,fh)=>{const cx=fw/2,cz=fh/2,R=3.7,hy=6.2,Wg=new THREE.Group();Wg.position.set(cx,hy,cz);G.add(Wg);const rm=lm3(0xc8a038),sm=lm3(0xb89030);
+ for(const z of[-.42,.42]){let t=new THREE.Mesh(new THREE.TorusGeometry(R,.07,5,40),rm);t.position.z=z;Wg.add(t);t=new THREE.Mesh(new THREE.TorusGeometry(R*.52,.05,5,28),rm);t.position.z=z;Wg.add(t)}
+ for(let i=0;i<12;i++){const a=i*Math.PI/6;for(const z of[-.42,.42]){const b=new THREE.Mesh(new THREE.BoxGeometry(R,.05,.05),sm);b.position.set(Math.cos(a)*R/2,Math.sin(a)*R/2,z);b.rotation.z=a;Wg.add(b)}
+  const c=new THREE.Mesh(new THREE.BoxGeometry(.05,.05,.84),sm);c.position.set(Math.cos(a)*R,Math.sin(a)*R,0);Wg.add(c)}
+ const hub=new THREE.Mesh(new THREE.CylinderGeometry(.4,.4,1.1,12),lm3(0x7a4a2a));hub.rotation.x=Math.PI/2;Wg.add(hub);
+ const cab=[],cc=[0xc8402e,0xd8b43a,0x3a6a9a,0x4a8a4a,0xa8602e,0xc8402e,0xd8b43a,0x3a6a9a,0x4a8a4a,0xa8602e,0xc8402e,0xd8b43a];
+ for(let i=0;i<12;i++){const a=i*Math.PI/6,C=new THREE.Group();C.position.set(Math.cos(a)*R,Math.sin(a)*R,0);Wg.add(C);bx3(C,-.34,-.95,-.3,.68,.55,.6,cc[i]);bx3(C,-.38,-.4,-.34,.76,.07,.68,0xf0f4f8);bx3(C,-.03,-.45,-.03,.06,.45,.06,0x6a6a6a);cab.push(C)}
+ const lg=lm3(0x7a4a2a),ang=Math.atan(2.4/hy),L=Math.hypot(2.4,hy);
+ for(const z of[-.6,.6])for(const s of[-1,1]){const b=new THREE.Mesh(new THREE.BoxGeometry(.16,L,.16),lg);b.position.set(cx+s*1.2,hy/2,cz+z);b.rotation.z=s*ang;G.add(b)}
+ for(const z of[-.6,.6])bx3(G,cx-1.9,1.3,cz+z-.04,3.8,.08,.08,0x5a3a22);bx3(G,cx-2.7,0,cz-.9,5.4,.12,1.8,0x6e7074);
+ ANIM3.push({g:Wg,fn:t=>{const r=t/21000*2.4;Wg.rotation.z=r;for(const c of cab)c.rotation.z=-r}})};
+M3.puaz=(o,G,fw,fh)=>{const c=[[0x5a6a3c,0x3e4a2a],[0x8a5a3a,0x5e3c26],[0x6e7c84,0x48545c]][(o.c|0)%3],U=new THREE.Group();U.position.set(fw/2,0,fh/2);if(o.v)U.rotation.y=-Math.PI/2;G.add(U);
+ bx3(U,-1.2,.24,-.54,2.4,.5,1.08,c[0]);bx3(U,.35,.74,-.5,.85,.1,1.0,c[0]);bx3(U,-1.15,.74,-.5,1.5,.52,1.0,0xb8b098);bx3(U,-1.15,1.26,-.5,1.5,.04,1.0,0xd8d4c4);
+ bx3(U,.35,.74,-.46,.04,.36,.92,0x1a2428);bx3(U,-1.2,.6,-.54,.02,.2,1.08,c[1]);bx3(U,1.19,.35,-.46,.02,.14,.28,0xe8d890);bx3(U,1.19,.35,.18,.02,.14,.28,0xe8d890);bx3(U,1.2,.3,-.5,.05,.12,1.0,0x8a8a8e);
+ bx3(U,-1.1,1.3,-.46,1.0,.05,.8,0xf4f8fc);bx3(U,.42,.84,-.42,.7,.04,.84,0xf4f8fc);
+ for(const x of[-.78,.78])for(const z of[-.58,.58]){const w=cy3(U,x,0,z,.27,.27,.2,0x1c1c1e,10,1);w.position.set(x,.27,z)}
+ cy3(U,-1.28,.2,0,.24,.24,.12,0x2a2a2c,10,0).rotation.z=Math.PI/2;const sp=U.children[U.children.length-1];sp.position.set(-1.3,.7,0)};
+/* ---------- D. in the chunk build: M3 models in place of the flat planes; small stuff turns to the camera ---------- */
+{const bo=v3BuildObjs;v3BuildObjs=function(ch){bo.apply(this,arguments);
+ try{if(!PRI)return;const x0=ch.cx*GQS,y0=ch.cy*GQS;
+  for(let a=ANIM3.length-1;a>=0;a--)if(ANIM3[a].og===ch.og||ANIM3[a].ch===ch&&ANIM3[a].og!==ch.og)ANIM3.splice(a,1);
+  const n0=ANIM3.length;
+  for(let y=0;y<GQS;y++)for(let x=0;x<GQS;x++){const tx=x0+x,ty=y0+y,o=ob[ty*W+tx];if(!o||!M3[o.t])continue;const s=v3Sprite(o,tx,ty),fw=o.fw||1,fh=o.fh||1;
+   for(const m of ch.og.children.slice())if(m.material===s.mat)ch.og.remove(m);
+   const G=new THREE.Group();G.position.set(tx,v3H(tx,ty),ty);const k0=ANIM3.length;try{M3[o.t](o,G,fw,fh)}catch(e){console.warn('m3',o.t,e)}for(let a=k0;a<ANIM3.length;a++){ANIM3[a].og=ch.og;ANIM3[a].ch=ch}ch.og.add(G)}
+  ch.pb=[];ch._px={P:[],N:[],U:[],C:[]};for(const b of(ch.xb||[])){const m=b.m;if(!m.parent)continue;
+   for(const m2 of ch.og.children.slice())if(m2!==m&&m2.material===m.material&&m2.geometry===m.geometry)ch.og.remove(m2);
+   const fh=Math.round((b.p0.z+.15-b.cz)*2),tx=Math.round(b.p0.x),ty=Math.round(b.p0.z+.15-fh),o=(tx>=0&&ty>=0&&tx<W&&ty<H)?ob[ty*W+tx]:null;
+   if(o&&typeof pxConv=='function'){let ok=false;try{ok=pxConv(ch,b,o,tx,ty)}catch(e){console.warn('px',e)}if(ok){ch.og.remove(m);if(b.c)ch.og.remove(b.c);continue}}
+   if(o&&o.t=='pbirch')try{b.s=4.6/(fvSprH(m.material.map.image)/16)}catch(e){}
+   m.scale.setScalar(b.s||FV_ES);m.castShadow=false;ch.pb.push(b)}
+  try{pxFlush(ch)}catch(e){console.warn('pxflush',e)}
+ }catch(er){console.warn('z316 build',er)}}}
+{const ff=fvFrame;fvFrame=function(){ff.apply(this,arguments);if(!PRI||!V3)return;const yaw=FV.yaw,cy=Math.cos(yaw),sy=Math.sin(yaw),t=performance.now();
+ for(const ch of V3.chunks.values()){if(!ch.vis||!ch.pb)continue;for(const b of ch.pb){const m=b.m,s=b.s||FV_ES,hw=b.hw*s;m.rotation.set(0,yaw,0);m.position.set(b.cx-hw*cy,b.y,b.cz+hw*sy)}}
+ for(const a of ANIM3)if(a.ch&&a.ch.vis)a.fn(t)}}
+
+/* ===== z317: the first-person view is a 2.5D (DOOM-style) one: low-res pixels, turn left-right only, no looking up/down, no jumping, crouching or sliding, no sun shadows or lens flare ===== */
+const PRES=1280;
+const prRatio=()=>Math.min(1,PRES/Math.max(1,C.clientWidth));
+{const vd=v3Draw;v3Draw=function(){try{if(V3&&V3.R){const R=V3.R;
+   if(PRI&&!R._p25){R._gp=R.getPixelRatio;R._sp=R.setPixelRatio;
+     R.setPixelRatio=function(r){this._rq=r;if(PRI&&fvA())r=prRatio();return this._sp.call(this,r)};
+     R.getPixelRatio=function(){return(PRI&&fvA()&&this._rq!=null)?this._rq:this._gp.call(this)};R._p25=1;V3.w=-1}
+   else if(!PRI&&R._p25){R.setPixelRatio=R._sp;R.getPixelRatio=R._gp;R._p25=0;V3.w=-1}
+   if(R._p25&&PRI&&fvA()){const want=prRatio();if(Math.abs(R._gp.call(R)-want)>.004){R._sp.call(R,want);V3.w=-1}}}}catch(e){}
+  return vd.apply(this,arguments)}}
+{const ff=fvFrame;fvFrame=function(){if(PRI){FV.pitch=Math.max(-1.05,Math.min(1.05,FV.pitch));FV.bob=0;FV.vy=0;FV.hz=0;FV.cr=0;FV.slide=0;FV.fl=0;FV.flW=0}ff.apply(this,arguments)}}
+{const fs=fvShadows;fvShadows=function(on){return fs.call(this,on&&!PRI)}}
+{const t0=toast112;toast112=function(a,b){if(PRI&&/FPS/.test(String(a)))b=LANG=='hu'?'Egér / nyilak: fordulás · W A S D: mozgás · Shift: futás · X: FPS / TPS nézet':'Mouse / arrows: turn · WASD: move · Shift: run · X: FPS / TPS view';return t0.call(this,a,b)}}
+
+/* ===== z318: the first-person view on touch screens — joystick moves, dragging turns, a tap fires, a button switches between FPS and top-down ===== */
+const TFP={id:null,x:0,x0:0,y0:0,t0:0,moved:false,fired:false,tm:null,init:false};
+{const fc=fvCan;fvCan=function(){if(PRI&&typeof THREE!='undefined'&&TCH.on)return state=='play'&&!inD&&!view;return fc.apply(this,arguments)}}
+{const up=update;update=function(dt){up(dt);if(!PRI||state!='play')return;
+ if(!TFP.init){TFP.init=true;let s=null;try{s=localStorage.getItem('pxc_fps')}catch(e){}if(s!=='0')FPV=true}
+ if(TCH.on&&fvA()&&!fvUI()){FV.lock=true;FV.noLock=false}}}
+const tfpActive=()=>PRI&&TCH.on&&fvA()&&!fvUI()&&state=='play';
+C.addEventListener('touchstart',e=>{if(!tfpActive())return;e.preventDefault();e.stopImmediatePropagation();const t=e.changedTouches[0];
+ if(TFP.id!=null)return;TFP.id=t.identifier;TFP.x=TFP.x0=t.clientX;TFP.y0=t.clientY;TFP.t0=performance.now();TFP.moved=false;TFP.fired=false;
+ TFP.tm=setTimeout(()=>{if(TFP.id!=null&&!TFP.moved&&tfpActive()){TFP.fired=true;tMouse('mousedown',t,0)}},260)},{passive:false,capture:true});
+C.addEventListener('touchmove',e=>{if(TFP.id==null)return;if(tfpActive()){e.preventDefault();e.stopImmediatePropagation()}
+ for(const t of e.changedTouches)if(t.identifier==TFP.id){const dx=t.clientX-TFP.x;TFP.x=t.clientX;if(Math.hypot(t.clientX-TFP.x0,t.clientY-TFP.y0)>12)TFP.moved=true;if(tfpActive()&&FV.lock)FV.yaw-=dx*.0055}},{passive:false,capture:true});
+const tfpEnd=e=>{if(TFP.id==null)return;for(const t of e.changedTouches)if(t.identifier==TFP.id){if(tfpActive()){e.preventDefault();e.stopImmediatePropagation()}clearTimeout(TFP.tm);
+  if(TFP.fired)tMouse('mouseup',t,0);else if(!TFP.moved&&performance.now()-TFP.t0<400&&tfpActive()){tMouse('mousedown',t,0);setTimeout(()=>tMouse('mouseup',t,0),90)}
+  TFP.id=null;TFP.fired=false}};
+C.addEventListener('touchend',tfpEnd,{passive:false,capture:true});C.addEventListener('touchcancel',tfpEnd,{passive:false,capture:true});
+/* the switch button */
+{const w=document.getElementById('wrap');const b=document.createElement('div');b.id='fpsbtn';b.style.cssText='position:absolute;left:1.2%;top:38%;width:11%;max-width:62px;aspect-ratio:1;border-radius:50%;background:rgba(10,12,8,.62);border:2px solid #e8c43a;color:#e8c43a;font:bold 13px "DejaVu Sans",Arial,sans-serif;display:none;align-items:center;justify-content:center;z-index:30;user-select:none;-webkit-user-select:none;touch-action:none;cursor:pointer';
+ const go=e=>{e.preventDefault();e.stopPropagation();if(PRI&&state=='play')fvToggle()};b.addEventListener('touchstart',go,{passive:false});b.addEventListener('click',go);(w||document.body).appendChild(b);
+ setInterval(()=>{const show=!!PRI&&state=='play'&&!fvUI()&&!inD;b.style.display=show?'flex':'none';if(show){const t=TPS?'FPS':'TPS';if(b.textContent!==t)b.textContent=t}},300)}
+{const t0=toast112;toast112=function(a,b){if(PRI&&TCH.on&&/FPS/.test(String(a)))b=LANG=='hu'?'Joystick: mozgás · húzás: fordulás · koppintás: lövés · kerek gomb: FPS / TPS':'Joystick: move · drag: turn · tap: fire · round button: FPS / TPS';return t0.call(this,a,b)}}
+
+/* ===== z319: Pripjaty has no top-down view — a 2.5D first-person (FPS) and a 2.5D third-person (TPS) view; X (or the round button) switches between them. TPS: orbit camera over the right shoulder (looks up and down), a direction-aware animated sprite ===== */
+let TPS=false;try{TPS=localStorage.getItem('pxc_tps')=='1'}catch(e){}
+const tpsOn=()=>!!(PRI&&TPS&&typeof fvA=='function'&&fvA());
+function tpsSet(v){TPS=!!v;try{localStorage.setItem('pxc_tps',TPS?'1':'0')}catch(e){}
+ const h=LANG=='hu';try{say(TPS?(h?'Harmadik személyű nézet (TPS)':'Third-person view (TPS)'):(h?'Belső nézet (FPS)':'First-person view (FPS)'))}catch(e){}}
+/* never top-down: the view button and X only change between FPS and TPS */
+{const ft=fvToggle;fvToggle=function(){if(!PRI)return ft.apply(this,arguments);if(!FPV||!fvCan()){FPV=true;return}tpsSet(!TPS)}}
+{const up=update;update=function(dt){up(dt);if(PRI&&state=='play'&&!FPV&&typeof THREE!='undefined'&&typeof V3!='undefined'&&V3&&V3.ok)FPV=true}}
+addEventListener('keydown',e=>{if(e.code!='KeyX'||e.repeat||!PRI||state!='play'||e.ctrlKey||e.altKey||e.metaKey)return;
+ const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(!fvA()||fvUI())return;fvToggle()},true);
+const TPA={dir:'b',ph:0,lean:0,run:0,t:0,D:2.0};
+/* which way the sprite faces, relative to the camera: away when walking forward, toward you when backing up, sideways when strafing */
+function tpaDir(){const mx=FV.mvx||0,my=FV.mvy||0;if(Math.hypot(mx,my)<.1)return;
+ const yaw=FV.yaw,f=mx*-Math.sin(yaw)+my*-Math.cos(yaw),s=mx*Math.cos(yaw)+my*-Math.sin(yaw),af=Math.abs(f),as=Math.abs(s);let d=TPA.dir;
+ if(d=='b'||d=='f'){if(as>af*1.4)d=s>0?'r':'l';else d=f>=0?'b':'f'}else{if(af>as*1.4)d=f>=0?'b':'f';else d=s>0?'r':'l'}TPA.dir=d}
+/* the camera: orbits the player's head — behind, a little above, over the right shoulder — pulled in by walls */
+{const fc=fvCam;fvCam=function(){const tg=fc.apply(this,arguments),c=V3.cam;FV.eye=FV.eye||new THREE.Vector3();FV.eye.copy(c.position);
+ if(!tpsOn()){FV.tpD=null;return tg}
+ const dt=FV.dt||.016,yaw=FV.yaw,p=Math.max(-1.05,Math.min(1.05,FV.pitch||0)),cp=Math.cos(p),sp=Math.sin(p),
+  fx=-Math.sin(yaw)*cp,fy=sp,fz=-Math.cos(yaw)*cp,rx=Math.cos(yaw),rz=-Math.sin(yaw),px=P.x/T,pz=P.y/T,run=(FV.spd>78&&K.ShiftLeft)?1:0;
+ TPA.run+=(run-TPA.run)*Math.min(1,dt*4);const D=2.0+.3*TPA.run,SH=.95;
+ let ok=.35;for(let t=.35;t<=D;t+=.12){const k=t/D,x=px-fx*t+rx*SH*k,z=pz-fz*t+rz*SH*k;if(blocked(x*T,z*T,3))break;ok=t}
+ if(FV.tpD==null)FV.tpD=ok;FV.tpD+=(ok-FV.tpD)*Math.min(1,dt*(ok<FV.tpD?18:4));const d=FV.tpD,k=d/D,
+  cx=px-fx*d+rx*SH*k,cz=pz-fz*d+rz*SH*k;let cy=FV.eye.y-fy*d+.12*k;const gr=v3HW(cx*T,cz*T)+.22;if(cy<gr)cy=gr;
+ c.position.set(cx,cy,cz);c.rotation.set(p-.03,yaw,0);const fov=72+6*TPA.run;if(Math.abs(c.fov-fov)>.01){c.fov=fov;c.updateProjectionMatrix()}return tg}}
+/* aiming: what lies under the crosshair is the target; shots leave the player's eyes toward it */
+{const fa=fvAim;fvAim=function(){if(!tpsOn())return fa.apply(this,arguments);const c=V3.cam;c.updateMatrixWorld();const p0=c.position.clone(),q0=c.quaternion.clone(),
+  dir=new THREE.Vector3(0,0,-1).applyQuaternion(q0),tg=p0.clone().addScaledVector(dir,(FV.tpD||2)+12);
+  c.position.copy(FV.eye);c.lookAt(tg);try{return fa.apply(this,arguments)}finally{c.position.copy(p0);c.quaternion.copy(q0)}}}
+/* the player is a 2.5D sprite: it faces the way it moves relative to the view */
+{const dp=drawP;drawP=function(){if(!tpsOn())return dp.apply(this,arguments);tpaDir();const fx=P.fx,fy=P.fy,d=TPA.dir;P.fx=d=='l'?-1:d=='r'?1:0;P.fy=d=='b'?-1:d=='f'?1:0;try{return dp.apply(this,arguments)}finally{P.fx=fx;P.fy=fy}}}
+{const fw=fvWeapon;fvWeapon=function(){if(PRI&&TPS)return;return fw.apply(this,arguments)}}
+/* show the sprite and a blob shadow only while the frame is rendered; the sprite leans into a strafe and kicks back when firing */
+{const vd=v3Draw;v3Draw=function(){try{if(V3&&V3.R&&!V3.R._tp){const R=V3.R,r0=R.render;R.render=function(s,c){let e=null;
+   try{if(s===V3.S&&tpsOn()&&!(typeof CNS!="undefined"&&CNS.on)){e=V3.ents.get('P');const dt=FV.dt||.016;
+     if(e&&e.m){e.m.visible=true;e.m.castShadow=false;const mv=Math.hypot(FV.mvx||0,FV.mvy||0)>.1,tl=(TPA.dir=='r'?-.07:TPA.dir=='l'?.07:0)*(mv?1:0)-(TPA.run>.4?.03:0);TPA.lean+=(tl-TPA.lean)*Math.min(1,dt*9);
+      const kick=P.cd>0?Math.min(1,P.cd/.45):0;e.m.rotation.z=TPA.lean;e.m.scale.y*=1+(!mv?Math.sin(performance.now()/620)*.006:0)-kick*.03;e.m.scale.x*=1+kick*.02}
+     if(!FV.psh){const m=new THREE.Mesh(new THREE.CircleGeometry(.42,14),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.32,depthWrite:false,fog:false}));m.rotation.x=-Math.PI/2;m.renderOrder=2;V3.S.add(m);FV.psh=m}
+     FV.psh.visible=true;FV.psh.position.set(P.x/T,v3HW(P.x,P.y)+.03,P.y/T)}else if(FV.psh)FV.psh.visible=false}catch(x){}
+   try{if(s===V3.S&&PRI&&fvOn())tiltEnts()}catch(x){}
+   try{return r0.apply(this,arguments)}finally{if(e&&e.m)e.m.visible=false}};R._tp=1}}catch(e){}
+  return vd.apply(this,arguments)}}
+/* sprites lean back from a camera that is above them (and forward when it is below), so they are never seen foreshortened */
+function tiltEnts(){const cam=V3.cam;for(const[k,e]of FV.ent){const m=e.m;if(!m||!m.visible)continue;if(m.rotation.order!=='YXZ')m.rotation.order='YXZ';
+ const dx=cam.position.x-m.position.x,dz=cam.position.z-m.position.z,h=Math.hypot(dx,dz)||1,el=Math.atan2(cam.position.y-(m.position.y+.7),h);m.rotation.x=Math.max(-.9,Math.min(.9,-el*.85))}}
+
+/* ===== z320: free look — no click needed: moving the mouse turns the view, the cursor is hidden over the picture, and pushing it to a screen edge keeps turning ===== */
+const FLK={out:true,edge:0};
+const FLK_V=e=>FLK.out?0:(e<-.9?(-e-.9)/.1:e>.96?(e-.96)/.04:0);
+document.addEventListener('mouseleave',()=>{FLK.out=true});document.addEventListener('mouseenter',()=>{FLK.out=false});
+addEventListener('blur',()=>{FLK.out=true});addEventListener('mousemove',()=>{FLK.out=false},true);
+{const up=update;update=function(dt){
+  if(PRI&&state=='play'&&!TCH.on&&typeof FV!='undefined'){FV.noLock=true;if(FV.lock)fvUnlock()}
+  const r=up.apply(this,arguments);
+  try{if(PRI&&state=='play'&&!TCH.on&&fvLive()){
+    const ex=Math.max(-1,Math.min(1,(ms.x/VW-.5)*2)),a=FLK.out?0:Math.max(0,Math.abs(ex)-.84)/.16;FLK.edge=a;
+    if(a>0)FV.yaw-=Math.sign(ex)*a*2.4*(dt||.016);
+    const ey=Math.max(-1,Math.min(1,(ms.y/VH-.5)*2)),ay=FLK_V(ey);if(ay)FV.pitch=Math.max(-1.2,Math.min(1.2,FV.pitch-Math.sign(ey)*ay*1.5*(dt||.016)));
+    const hide=!FLK.out&&ms.y>26&&ms.y<VH-40;if(C.style.cursor!==(hide?'none':''))C.style.cursor=hide?'none':''
+  }else if(C.style.cursor==='none')C.style.cursor=''}catch(e){}
+  return r}}
+{const t0=toast112;toast112=function(a,b){if(PRI&&!TCH.on&&/FPS/.test(String(a)))b=LANG=='hu'?'Egér: szabad nézelődés (kattintás nélkül, a szélén tovább fordul) · W A S D: mozgás · Shift: futás · X: FPS / TPS':'Mouse: free look (no click needed, edges keep turning) · WASD: move · Shift: run · X: FPS / TPS';return t0.call(this,a,b)}}
+
+/* ===== z321: the rest of the scenery turns pixel-3D too — birches and tall grass are built from little cubes, every other leftover flat prop is extruded from its own sprite (pixel by pixel); only people, monsters and flat wall/ground decals stay flat ===== */
+const PXM=new THREE.MeshLambertMaterial({vertexColors:true});
+const PXSKIP={pdoll:1,bones:1,papers:1,pnote:1,pframe:1,pcal:1};
+const PXFLAT={plane:1,hpad:1,pcrack:1};
+const PXTHIN={pflag:1,pbanner:1};
+const PXC=new Map();
+function pxPix(s){let c=PXC.get(s.cv);if(c&&c.w===s.cv.width&&c.h===s.cv.height)return c;const cv=s.cv,w=cv.width,h=cv.height,d=cv.getContext('2d').getImageData(0,0,w,h).data,px=new Array(w*h).fill(null),cnt=new Map();let n=0,x0=999,x1=-1;
+ for(let j=0;j<h;j++)for(let i=0;i<w;i++){const k=(j*w+i)*4;if(d[k+3]>=170){px[j*w+i]=new THREE.Color(d[k]/255,d[k+1]/255,d[k+2]/255);n++;if(i<x0)x0=i;if(i>x1)x1=i;const q=(d[k]>>4)+','+(d[k+1]>>4)+','+(d[k+2]>>4);cnt.set(q,(cnt.get(q)||0)+1)}}
+ const pal=[...cnt.entries()].sort((a,b)=>b[1]-a[1]).slice(0,6).map(([q])=>{const t=q.split(',').map(v=>(+v*16+8)/255);return new THREE.Color(t[0],t[1],t[2])});
+ c={w,h,px,n,bw:Math.max(1,x1-x0+1),pal};PXC.set(s.cv,c);return c}
+/* a sprite pushed out into a slab of little cubes */
+function pxExtrude(A,o,tx,ty,gy,s){const c=pxPix(s);if(!c.n||c.n>1800)return false;
+ const u=1/16,dp=PXTHIN[o.t]?2:Math.max(2,Math.min(9,Math.round(c.bw*.55))),zc=ty+(o.fh||1)*.5,z0=zc-dp*u/2,z1=zc+dp*u/2,at=(i,j)=>(i>=0&&j>=0&&i<c.w&&j<c.h)?c.px[j*c.w+i]:null;
+ for(let j=0;j<c.h;j++)for(let i=0;i<c.w;i++){const col=c.px[j*c.w+i];if(!col)continue;const x0=tx+i*u-1,x1=x0+u,y1=gy+(c.h-j)*u,y0=y1-u;
+  fvFace(A,[x0,y1,z1],[x1,y1,z1],[x1,y0,z1],[x0,y0,z1],[0,0,1],col,.95);fvFace(A,[x1,y1,z0],[x0,y1,z0],[x0,y0,z0],[x1,y0,z0],[0,0,-1],col,.72);
+  if(!at(i,j-1))fvFace(A,[x0,y1,z0],[x1,y1,z0],[x1,y1,z1],[x0,y1,z1],[0,1,0],col,1.1);
+  if(!at(i-1,j))fvFace(A,[x0,y1,z0],[x0,y1,z1],[x0,y0,z1],[x0,y0,z0],[-1,0,0],col,.78);
+  if(!at(i+1,j))fvFace(A,[x1,y1,z1],[x1,y1,z0],[x1,y0,z0],[x1,y0,z1],[1,0,0],col,.84)}
+ return true}
+/* road paint, helipad marks, cracks: the sprite laid flat on the ground */
+function pxFlat(A,o,tx,ty,gy,s){const c=pxPix(s);if(!c.n)return false;const u=1/16,fh=o.fh||1,y=gy+.03;
+ for(let j=0;j<c.h;j++)for(let i=0;i<c.w;i++){const col=c.px[j*c.w+i];if(!col)continue;const x0=tx+i*u-1,x1=x0+u,z1=ty+fh-(c.h-j-1)*u,z0=z1-u;fvFace(A,[x0,y,z0],[x1,y,z0],[x1,y,z1],[x0,y,z1],[0,1,0],col,1.12)}
+ return true}
+/* a bare winter birch: white trunk with dark marks, thin branches, a little snow */
+function pxBirch(A,tx,ty,gy){const r=k=>aHash(tx*13+k,ty*7+k*3,91+k),cx=tx+.5+(r(1)-.5)*.35,cz=ty+.5+(r(2)-.5)*.35,Ht=4+r(3)*1.4,tw=.07+r(4)*.02,
+  white=new THREE.Color(.9,.89,.84),dark=new THREE.Color(.1,.1,.1),br=new THREE.Color(.4,.35,.29),sn=new THREE.Color(.95,.97,1),lx=(r(5)-.5)*.05,lz=(r(6)-.5)*.05;
+ let x=cx,z=cz,y=0;const seg=.5;
+ while(y<Ht){const hh=Math.min(seg,Ht-y),k=y*7|0,sd=r(60+k)<.5?1:-1;fvCube(A,x-tw,gy+y,z-tw,x+tw,gy+y+hh,z+tw,white.clone().multiplyScalar(.93+r(70+k)*.12),null,false);
+  if(r(80+k)<.75){const my=gy+y+.08+r(90+k)*.25;if(r(100+k)<.5)fvCube(A,x-tw*1.08,my,z+(sd>0?0:-tw*1.08),x+tw*1.08,my+.04+r(110+k)*.04,z+(sd>0?tw*1.08:0),dark,null,false);else fvCube(A,x+(sd>0?0:-tw*1.08),my,z-tw*1.08,x+(sd>0?tw*1.08:0),my+.04+r(120+k)*.04,z+tw*1.08,dark,null,false)}
+  y+=hh;x+=lx*hh;z+=lz*hh}
+ fvCube(A,x-tw*.8,gy+Ht,z-tw*.8,x+tw*.8,gy+Ht+.14,z+tw*.8,br,null,false);
+ const nb=5+Math.floor(r(7)*3);for(let b=0;b<nb;b++){const a=r(130+b)*Math.PI*2,by=Ht*(.42+r(140+b)*.5),ca=Math.cos(a),sa=Math.sin(a),n=3+Math.floor(r(150+b)*2);let bx=cx+lx*by,bz=cz+lz*by,yy=by;
+  for(let k=0;k<n;k++){const w=.035-k*.004;bx+=ca*.16;bz+=sa*.16;yy+=.1+(k>1?.06:0);fvCube(A,bx-w,gy+yy,bz-w,bx+w,gy+yy+.07,bz+w,br,null,false);
+   if(r(160+b*5+k)<.4)fvCube(A,bx-w*1.4,gy+yy+.07,bz-w*1.4,bx+w*1.4,gy+yy+.1,bz+w*1.4,sn,null,false)}}}
+/* a tuft of dry winter grass: bent blades, a few with snow on top */
+function pxGrass(A,s,tx,ty,gy){const pal=pxPix(s).pal,r=k=>aHash(tx*17+k,ty*11+k*5,57+k),n=5+Math.floor(r(0)*4),sn=new THREE.Color(.93,.95,.98);if(!pal.length)return;
+ for(let i=0;i<n;i++){const bx=tx+.12+r(i*3+1)*.76,bz=ty+.12+r(i*3+2)*.76,hh=.32+r(i*3+3)*.42,w=.04+r(i+50)*.012,col=pal[Math.floor(r(i+9)*pal.length)%pal.length].clone().multiplyScalar(.85+r(i+19)*.3),lean=(r(i+20)-.5)*.16,lz=(r(i+30)-.5)*.16;
+  fvCube(A,bx-w,gy,bz-w,bx+w,gy+hh*.55,bz+w,col,null,false);fvCube(A,bx-w+lean,gy+hh*.55,bz-w+lz,bx+w+lean,gy+hh,bz+w+lz,col,null,false);
+  if(r(i+40)<.3)fvCube(A,bx-w+lean,gy+hh,bz-w+lz,bx+w+lean,gy+hh+.035,bz+w+lz,sn,null,false)}}
+/* called for every leftover flat sprite while a chunk is built */
+function pxConv(ch,b,o,tx,ty){if(!ch._px||PXSKIP[o.t])return false;const A=ch._px,gy=b.y;
+ if(o.t=='fix'){const y0=gy+1.8,c1=new THREE.Color(.86,.85,.78);fvCube(A,tx+.12,y0,ty+.4,tx+.88,y0+.06,ty+.6,c1,null,false);fvCube(A,tx+.16,y0-.012,ty+.43,tx+.84,y0,ty+.57,new THREE.Color(.98,.97,.88),null,false);return true}
+ if(PXFLAT[o.t]){const s0=v3Sprite(o,tx,ty);return pxFlat(A,o,tx,ty,gy,s0)}
+ if(o.t=='pbirch'){pxBirch(A,tx,ty,gy);return true}
+ const s=v3Sprite(o,tx,ty);if(o.t=='tgrass'){pxGrass(A,s,tx,ty,gy);return true}
+ return pxExtrude(A,o,tx,ty,gy,s)}
+function pxFlush(ch){const A=ch._px;ch._px=null;if(!A||!A.P.length)return;const m=new THREE.Mesh(v3Geo(A.P,A.N,A.U,A.C),PXM);m.castShadow=false;m.receiveShadow=false;m.userData.px=1;ch.og.add(m)}
+
+/* ===== z322: co-op in Pripjaty — the game's own PeerJS rooms (Online co-op on the title screen), but the room is the same Pripjaty on both sides; name tags and the room code on screen ===== */
+let PRCOOP=false;
+{const in_=init;init=function(...a){if(!PRCOOP)return in_.apply(this,a);a[0]=PRIS;const r=in_.apply(this,a);try{priBuild();PRI=priNew();PRI.day0=day;priPlacePlayer()}catch(e){console.warn('coop init',e)}return r}}
+{const go=goOnline;goOnline=async function(code){PRCOOP=/^P/i.test(String(code||''));try{await go.apply(this,arguments)}finally{PRCOOP=false}
+  try{if(net&&state=='play'&&PRI&&!PRI.coopT){PRI.coopT=1;if(!net.isHost){P.x+=T*1.6;P.y+=T*.6}if(typeof plbBegin=='function')plbBegin();else priOpening()}}catch(e){console.warn('coop open',e)}}}
+{const lg=lobbyGo;lobbyGo=function(){if(typeof lcode=='string'&&!lcode.length)lcode='P'+Math.random().toString(36).slice(2,6).toUpperCase().padEnd(4,'0');return lg.apply(this,arguments)}}
+function coopTags(){noTr=true;try{
+ for(const p of net.peers){const q=p.presence;if(!q||!isFinite(q.x)||!isFinite(q.y)||!peerSame(q))continue;const qx=isFinite(p.sx)?p.sx:q.x,qy=isFinite(p.sy)?p.sy:q.y,s=fvScr(qx,qy,2.25*FVU);if(!s)continue;fvTag(String(q.n||'?').slice(0,12),s[0],s[1],'#8fe0ff')}
+ const hu=LANG=='hu',n=net.peers.length+1,t='CO-OP  '+net.code+'  ·  '+n+(hu?' játékos':' players');g.font=fnt(0,8);const w=Math.ceil(g.measureText(t).width)+10;Q(VW/2-w/2,VH-58,w,12,'rgba(12,10,8,.66)');txt(t,VW/2,VH-49,'#8fe0ff','center')}finally{noTr=false}}
+{const h0=hud;hud=function(){const r=h0.apply(this,arguments);try{if(PRI&&net&&!net.dead&&state=='play'&&fvOn()&&!fvUI())coopTags()}catch(e){noTr=false}return r}}
+
+/* title lobby: a code starting with P is a Pripjaty room, blank = a new Pripjaty room; the survival codes (F S D C M) work as before */
+{const dl=drawLobby;drawLobby=function(){dl.apply(this,arguments);try{txt(LANG=='hu'?'P betűs kód: Pripjaty 1986 co-op (üres = új Pripjaty szoba)':'Code starting with P: Pripjaty 1986 co-op (blank = new Pripjaty room)',VW/2,226,'#c8302a','center')}catch(e){}}}
+
+/* ===== z323: the opening is a slow cutscene — a camera flies over the Ferris wheel, the monument and the HQ hut, letterbox bars, text typed out slowly; Space / Enter / click skips ===== */
+const CNS={on:false,t:0,T:41.4,out:false,ot:0,a:1,fin:0,sv:null,yaw:0,skip:false};
+const CNSL=[[2.3,6.2,'1986. április 26., 01:23.','April 26, 1986 — 01:23.'],
+ [6.6,13.6,'A 4-es reaktor felrobban. Ötvenezer ember azt hiszi, csak pár napra mennek el.','Reactor four explodes. Fifty thousand people think they are leaving for a few days.'],
+ [16.2,20.6,'Soha nem jöttek vissza.','They never came back.'],
+ [20.9,27.0,'2070. A világ befagyott, de Pripjaty ugyanaz maradt — mintha megállt volna az idő.','2070. The world froze over, but Pripyat stayed the same — as if time had stopped.'],
+ [28.8,34.2,'A csendben mozgás van. Ők még itt vannak.','Something moves in the silence. They are still here.'],
+ [34.6,40.6,'Te vagy az új stalker. Maradj melegen. Figyeld a Geigert.','You are the new stalker. Stay warm. Watch the Geiger counter.']];
+const ciSm=u=>{u=Math.max(0,Math.min(1,u));return u*u*(3-2*u)},ciL=(a,b,u)=>a+(b-a)*u;
+let CNSS=null;
+function cinShots(){if(CNSS)return CNSS;let wx=161,wz=130,mx=182,mz=161;
+ for(let i=0;i<W*H;i++){const o=ob[i];if(!o||o.pm!=null)continue;if(o.t=='pwheel'){wx=i%W+(o.fw||6)/2;wz=((i/W)|0)+(o.fh||6)/2}else if(o.t=='pmon'){mx=i%W+(o.fw||2)/2;mz=((i/W)|0)+(o.fh||2)/2}}
+ const hx=170,hz=288;
+ CNSS=[{t0:0,d:14.6,f:u=>{const e=ciSm(u),a=ciL(2.55,3.35,e),r=ciL(19,15,e);return[wx+Math.sin(a)*r,wz-Math.cos(a)*r,ciL(10,5.5,e),wx,wz,ciL(6.6,5.6,e)]}},
+  {t0:14.6,d:12.6,f:u=>{const e=ciSm(u),a=ciL(.4,1.15,e),r=ciL(10,6.5,e);return[mx+Math.sin(a)*r,mz+Math.cos(a)*r,ciL(1.5,2.1,e),mx,mz,ciL(2.4,3.2,e)]}},
+  {t0:27.2,d:14.2,f:u=>{const e=ciSm(u);return[ciL(179,173,e),ciL(299,295,e),ciL(1.3,2.7,e),hx,hz,ciL(1.7,2.6,e)]}}];return CNSS}
+function cinStart(){if(window.NOCUT||/nocut/.test(location.search)||CNS.on||!PRI)return;CNSS=null;CNS.on=true;CNS.t=0;CNS.out=false;CNS.ot=0;CNS.skip=false;CNS.a=1;CNS.fin=0;CNS.sv={x:P.x,y:P.y};if(typeof THREE!='undefined')FPV=true}
+function cinEnd(){CNS.on=false;CNS.out=false;if(CNS.sv){P.x=CNS.sv.x;P.y=CNS.sv.y}CNS.fin=1.1;try{FV.yaw=-1.25;FV.pitch=-.05;FV.tpD=null;cam.x=cl(P.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y-VH/(2*ZM),0,H*T-VH/ZM)}catch(e){}
+ try{const e=document.getElementById('prcap');if(e)e.style.display='none'}catch(x){}try{say(prT('Pripjaty, 1986. Mintha megállt volna az idő.','Pripjat, 1986. As if time had stopped.'))}catch(e){}}
+function cinStep(dt){CNS.t+=dt;if(typeof THREE!='undefined'&&V3&&V3.ok)FPV=true;if(CNS.skip&&!CNS.out){CNS.out=true;CNS.ot=0}
+ if(CNS.out){CNS.ot+=dt;if(CNS.ot>=.7){cinEnd();return}}else if(CNS.t>=CNS.T){CNS.out=true;CNS.ot=0}
+ const S=cinShots();let sh=S[S.length-1];for(const q of S)if(CNS.t>=q.t0&&CNS.t<q.t0+q.d){sh=q;break}
+ const lt=CNS.t-sh.t0;let a=lt<.9?1:Math.max(0,1-(lt-.9)/1);const rem=sh.d-lt;if(rem<.8)a=Math.max(a,1-rem/.8);if(CNS.out)a=Math.max(a,Math.min(1,CNS.ot/.7));CNS.a=a;CNS.sh=sh;CNS.u=Math.min(1,lt/sh.d)}
+/* the camera */
+{const fc=fvCam;fvCam=function(){if(!CNS.on||!CNS.sh)return fc.apply(this,arguments);const c=V3.cam,v=CNS.sh.f(CNS.u),gx=v[0],gz=v[1],gy=v3HW(gx*T,gz*T);
+ c.position.set(gx,gy+v[2],gz);c.rotation.order='YXZ';const lx=v[3],lz=v[4],ly=v3HW(lx*T,lz*T)+v[5];c.lookAt(lx,ly,lz);
+ if(Math.abs(c.fov-52)>.01||c.near!==.04){c.fov=52;c.near=.04;c.far=140;c.updateProjectionMatrix()}
+ P.x=cl(gx*T,16,(W-2)*T);P.y=cl(gz*T,16,(H-2)*T);FV.yaw=Math.atan2(-(lx-gx),-(lz-gz));
+ const tg=FV.tg||(FV.tg=new THREE.Vector3());tg.set(gx,gy,gz);V3.tgt=tg.clone();return tg}}
+try{FVUI.push(()=>CNS.on)}catch(e){}
+/* the world stands still while it plays */
+{const up=update;update=function(dt){if(PRI&&CNS.on&&state=='play'){cinStep(dt);return}if(CNS.fin>0)CNS.fin=Math.max(0,CNS.fin-dt);return up.apply(this,arguments)}}
+for(const ev of['keydown','mousedown','touchstart'])addEventListener(ev,e=>{if(!CNS.on||CNS.out)return;if(ev=='keydown'&&!/^(Space|Enter|Escape|NumpadEnter)$/.test(e.code))return;try{e.preventDefault();e.stopImmediatePropagation()}catch(x){}CNS.skip=true},true);
+{const po=priOpening;priOpening=function(){const r=po.apply(this,arguments);try{cinStart()}catch(e){console.warn('cut',e)}return r}}
+/* drawing: bars, typed subtitles, fade */
+function cinWrap(t,maxw){const w=t.split(' '),L=[];let c='';for(const x of w){const n=c?c+' '+x:x;if(g.measureText(n).width>maxw&&c){L.push(c);c=x}else c=n}if(c)L.push(c);return L}
+function drawCin(){try{weather()}catch(e){}
+ const bh=Math.round(VH*.115*Math.min(1,CNS.t/.9)),hu=LANG=='hu';Q(0,0,VW,bh,'#000');Q(0,VH-bh,VW,bh,'#000');
+ noTr=true;try{let li=null;for(const l of CNSL)if(CNS.t>=l[0]&&CNS.t<l[1]+.5){li=l;break}
+  if(li){const t=hu?li[2]:li[3],n=Math.min(t.length,Math.floor((CNS.t-li[0])*17)),done=n>=t.length,al=Math.min(1,(li[1]+.5-CNS.t)/.5);g.font=fnt(1,10);const L=cinWrap(t,VW-90);let k=0;g.globalAlpha=Math.max(0,Math.min(1,al))*(1-CNS.a*.9);
+   const y0=VH-bh-6-(L.length-1)*13;for(let j=0;j<L.length;j++){const part=t.slice(0,n),cut=L.slice(0,j).join(' ').length+(j?1:0),seg=part.slice(cut,cut+L[j].length);if(seg.length){txt(seg+(!done&&j==L.length-1||(!done&&seg.length<L[j].length)?'_':''),VW/2,y0+j*13+1,'#000','center');txt(seg+(!done&&seg.length<L[j].length?'_':''),VW/2,y0+j*13,'#efe6c4','center')}}g.globalAlpha=1}
+  g.globalAlpha=.55;g.font=fnt(0,7);txt(hu?'Szóköz / Enter / kattintás: kihagyás':'Space / Enter / click: skip',VW-8,VH-5,'#9a9a8a','right');g.globalAlpha=1;
+  if(CNS.a>0){g.globalAlpha=CNS.a;Q(0,0,VW,VH,'#000');g.globalAlpha=1}}finally{noTr=false;g.globalAlpha=1}}
+{const h0=hud;hud=function(){if(PRI&&CNS.on&&state=='play'){try{const e=document.getElementById('prcap');if(e)e.style.display='none'}catch(x){}drawCin();return}
+ const r=h0.apply(this,arguments);if(PRI&&CNS.fin>0&&state=='play'){g.globalAlpha=Math.min(1,CNS.fin/1.1);Q(0,0,VW,VH,'#000');g.globalAlpha=1}return r}}
+
+/* ===== z324: co-op lobby — after joining with the room code, a waiting room (DOM overlay): the code (copyable), who is in, ready / Start (host), Leave. Start → everyone gets the opening cutscene; joining late skips it ===== */
+const PLB={on:false,ready:false,seen:{},list:[],go:false,el:null,iv:0,t0:0,late:false};
+const plbH=()=>LANG=='hu';
+function plbBegin(){const nt=net;if(!nt||PLB.on)return;PLB.on=true;PLB.ready=false;PLB.seen={};PLB.list=[];PLB.go=false;PLB.late=false;PLB.t0=performance.now();PLB.nt=nt;
+ const r=nt.r;
+ r.on('plbr',m=>{if(!nt.isHost||!m||!m.data)return;PLB.seen[m.from]={n:String(m.data.n||'?').slice(0,12),r:!!m.data.r,t:performance.now()}});
+ r.on('plbs',m=>{if(nt.isHost||!m||!m.data)return;const d=m.data;PLB.list=Array.isArray(d.l)?d.l:[];if(d.go&&PLB.on){PLB.late=performance.now()-PLB.t0<2500;plbGo(PLB.late)}else if(d.go)PLB.go=true});
+ plbDom();plbTick();clearInterval(PLB.iv);PLB.iv=setInterval(plbTick,400)}
+function plbGo(skipCut){PLB.on=false;PLB.go=true;clearInterval(PLB.iv);PLB.iv=0;plbShow(false);
+ try{if(skipCut){say(plbH()?'Csatlakoztál a játékhoz':'You joined the game')}else priOpening()}catch(e){console.warn('plbGo',e)}
+ if(net&&net.isHost){PLB.hiv=setInterval(()=>{if(!net||net.dead){clearInterval(PLB.hiv);return}try{net.r.emit('plbs',{go:1,l:[]})}catch(e){}},1500)}}
+function plbTick(){const nt=net;if(!PLB.on)return;if(!nt||nt.dead){plbRender();return}
+ const me={id:nt.r.id,n:String(uname||'Player').slice(0,12),r:nt.isHost?true:PLB.ready,h:nt.isHost};
+ if(nt.isHost){const now=performance.now(),l=[me];for(const p of nt.peers){const s=PLB.seen[p.id];l.push({id:p.id,n:s&&now-s.t<4000?s.n:'…',r:!!(s&&s.r&&now-s.t<4000),h:false})}
+  PLB.list=l;try{nt.r.emit('plbs',{l})}catch(e){}}
+ else{try{nt.r.emit('plbr',{n:me.n,r:me.r})}catch(e){}}
+ plbRender()}
+function plbDom(){if(PLB.el)return PLB.el;const d=document.createElement('div');d.id='prlb';
+ d.style.cssText='position:fixed;left:0;top:0;right:0;bottom:0;z-index:90;display:none;align-items:center;justify-content:center;background:rgba(6,8,6,.82);font-family:"DejaVu Sans",Arial,sans-serif;color:#efe6c4;-webkit-user-select:none;user-select:none';
+ d.innerHTML='<div style="width:min(440px,92vw);background:#14160f;border:2px solid #e8c43a;box-shadow:0 6px 30px #000;padding:18px 22px 16px;text-align:center">'
+ +'<div id="prlb_t" style="font-size:12px;letter-spacing:.22em;color:#8fe0ff;font-weight:700"></div>'
+ +'<div style="margin:8px 0 2px;font-size:11px;color:#9a9a8a" id="prlb_h"></div>'
+ +'<div id="prlb_c" style="font-size:36px;font-weight:700;letter-spacing:.3em;color:#ffd84a;margin:2px 0 8px;padding-left:.3em"></div>'
+ +'<button id="prlb_cp" style="font:inherit;font-size:11px;background:#262a1c;color:#efe6c4;border:1px solid #5a6446;padding:4px 12px;cursor:pointer"></button>'
+ +'<div id="prlb_l" style="margin:14px 0 6px;text-align:left"></div>'
+ +'<div id="prlb_m" style="min-height:16px;font-size:11px;color:#c9b26a;margin:4px 0 10px"></div>'
+ +'<div style="display:flex;gap:10px;justify-content:center"><button id="prlb_go" style="font:inherit;font-size:13px;font-weight:700;background:#e8c43a;color:#1a1608;border:0;padding:8px 22px;cursor:pointer"></button>'
+ +'<button id="prlb_lv" style="font:inherit;font-size:13px;background:#3a2018;color:#efd0c4;border:1px solid #7a4a3a;padding:8px 16px;cursor:pointer"></button></div></div>';
+ document.body.appendChild(d);PLB.el=d;
+ const $=i=>d.querySelector('#'+i);
+ $('prlb_cp').onclick=()=>{const c=net&&net.code||'';try{navigator.clipboard.writeText(c)}catch(e){const t=document.createElement('textarea');t.value=c;document.body.appendChild(t);t.select();try{document.execCommand('copy')}catch(x){}t.remove()}$('prlb_cp').textContent=plbH()?'Kimásolva ✓':'Copied ✓';setTimeout(plbRender,1400)};
+ $('prlb_go').onclick=plbAct;$('prlb_lv').onclick=plbLeave;return d}
+function plbAct(){const nt=net;if(!PLB.on||!nt||nt.dead)return;
+ if(nt.isHost){try{nt.r.emit('plbs',{go:1,l:PLB.list})}catch(e){}plbGo(false)}else{PLB.ready=!PLB.ready;plbTick()}}
+function plbLeave(){PLB.on=false;clearInterval(PLB.iv);plbShow(false);try{if(net){net.r.leave().catch(()=>{})}}catch(e){}net=null;state='title'}
+function plbShow(v){if(PLB.el)PLB.el.style.display=v?'flex':'none'}
+function plbRender(){if(!PLB.on){plbShow(false);return}const d=plbDom(),$=i=>d.querySelector('#'+i),hu=plbH(),nt=net;plbShow(true);
+ const dead=!nt||nt.dead;
+ $('prlb_t').textContent=hu?'CO-OP ELŐSZOBA':'CO-OP LOBBY';$('prlb_h').textContent=hu?'Szoba kód — a másik játékos ezt adja meg az Online co-opnál':'Room code — the other player types this in Online co-op';
+ $('prlb_c').textContent=nt&&nt.code||'—';if(!$('prlb_cp').textContent.includes('✓'))$('prlb_cp').textContent=hu?'Kód másolása':'Copy code';
+ const L=PLB.list.length?PLB.list:[{id:'me',n:String(uname||'Player').slice(0,12),r:!!(nt&&nt.isHost),h:!!(nt&&nt.isHost)}];
+ $('prlb_l').innerHTML=L.map(p=>{const me=nt&&p.id===nt.r.id,st=p.h?(hu?'HOST':'HOST'):(p.r?(hu?'kész':'ready'):(hu?'várakozik':'waiting')),col=p.h||p.r?'#8fe0a0':'#c9b26a';
+  return '<div style="display:flex;justify-content:space-between;padding:5px 8px;margin:3px 0;background:#1d2016;border-left:3px solid '+(me?'#8fe0ff':'#4a5238')+';font-size:13px"><span>'+String(p.n).replace(/[<>&]/g,'')+(me?(hu?'  (te)':'  (you)'):'')+'</span><span style="color:'+col+';font-size:11px;font-weight:700">'+st+'</span></div>'}).join('');
+ const n=L.length;
+ $('prlb_m').textContent=dead?(hu?'A host kilépett — a szoba megszűnt.':'The host left — the room is closed.'):nt.isHost?(n<2?(hu?'Még senki sem csatlakozott — indíthatsz egyedül is, később is be tudnak jönni.':'Nobody has joined yet — you can start alone; others can join later.'):(hu?'Indítsd el, ha mindenki kész.':'Start when everyone is ready.')):(PLB.ready?(hu?'Várjuk, hogy a host elindítsa a játékot…':'Waiting for the host to start…'):(hu?'Nyomd meg a Kész gombot.':'Press Ready.'));
+ const go=$('prlb_go');go.style.display=dead?'none':'';go.textContent=nt&&nt.isHost?(hu?'INDÍTÁS':'START'):(PLB.ready?(hu?'Mégsem kész':'Not ready'):(hu?'KÉSZ':'READY'));$('prlb_lv').textContent=hu?'Kilépés':'Leave'}
+/* the world stands still, keys go to the lobby */
+{const up=update;update=function(dt){if(PLB.on&&state=='play')return;return up.apply(this,arguments)}}
+addEventListener('keydown',e=>{if(!PLB.on)return;if(/^(Enter|NumpadEnter|Space)$/.test(e.code))plbAct();else if(e.code=='Escape')plbLeave();try{e.preventDefault();e.stopImmediatePropagation()}catch(x){}},true);
+for(const ev of['mousedown','mouseup','click','touchstart','wheel'])addEventListener(ev,e=>{if(!PLB.on)return;if(e.target&&e.target.closest&&e.target.closest('#prlb'))return;try{e.stopImmediatePropagation()}catch(x){}},true);
+try{FVUI.push(()=>PLB.on)}catch(e){}
+/* no calendar box on top of the cutscene / lobby */
+{const c=calOn209;calOn209=function(){if(PRI&&(CNS.on||PLB.on))return false;return c.apply(this,arguments)}}
+
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
  if(state=='title')menu();if(state=='opts')optsMenu();if(state=='sndo')sndMenu();if(state=='gfxo')gfxMenu();if(state=='slots')svMenu();if(state=='keys')keysMenu();if(state=='wthr')wthrMenu();if(state=='char')charMenu();if(state=='lobby')drawLobby();if(state=='hb'){Q(0,0,VW,VH,'rgba(6,10,6,.6)');drawHB()}if(0)title('ASHFALL',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Hold the fire. Survive the nights.','','WASD move \u2022 Space chop / fish / attack \u2022 Tab recipes','Press any key']);
