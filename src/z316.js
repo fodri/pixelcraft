@@ -105,11 +105,13 @@ M3.puaz=(o,G,fw,fh)=>{const c=[[0x5a6a3c,0x3e4a2a],[0x8a5a3a,0x5e3c26],[0x6e7c84
   for(let y=0;y<GQS;y++)for(let x=0;x<GQS;x++){const tx=x0+x,ty=y0+y,o=ob[ty*W+tx];if(!o||!M3[o.t])continue;const s=v3Sprite(o,tx,ty),fw=o.fw||1,fh=o.fh||1;
    for(const m of ch.og.children.slice())if(m.material===s.mat)ch.og.remove(m);
    const G=new THREE.Group();G.position.set(tx,v3H(tx,ty),ty);const k0=ANIM3.length;try{M3[o.t](o,G,fw,fh)}catch(e){console.warn('m3',o.t,e)}for(let a=k0;a<ANIM3.length;a++){ANIM3[a].og=ch.og;ANIM3[a].ch=ch}ch.og.add(G)}
-  ch.pb=[];for(const b of(ch.xb||[])){const m=b.m;if(!m.parent)continue;
+  ch.pb=[];ch._px={P:[],N:[],U:[],C:[]};for(const b of(ch.xb||[])){const m=b.m;if(!m.parent)continue;
    for(const m2 of ch.og.children.slice())if(m2!==m&&m2.material===m.material&&m2.geometry===m.geometry)ch.og.remove(m2);
    const fh=Math.round((b.p0.z+.15-b.cz)*2),tx=Math.round(b.p0.x),ty=Math.round(b.p0.z+.15-fh),o=(tx>=0&&ty>=0&&tx<W&&ty<H)?ob[ty*W+tx]:null;
+   if(o&&typeof pxConv=='function'){let ok=false;try{ok=pxConv(ch,b,o,tx,ty)}catch(e){console.warn('px',e)}if(ok){ch.og.remove(m);if(b.c)ch.og.remove(b.c);continue}}
    if(o&&o.t=='pbirch')try{b.s=4.6/(fvSprH(m.material.map.image)/16)}catch(e){}
    m.scale.setScalar(b.s||FV_ES);m.castShadow=false;ch.pb.push(b)}
+  try{pxFlush(ch)}catch(e){console.warn('pxflush',e)}
  }catch(er){console.warn('z316 build',er)}}}
 {const ff=fvFrame;fvFrame=function(){ff.apply(this,arguments);if(!PRI||!V3)return;const yaw=FV.yaw,cy=Math.cos(yaw),sy=Math.sin(yaw),t=performance.now();
  for(const ch of V3.chunks.values()){if(!ch.vis||!ch.pb)continue;for(const b of ch.pb){const m=b.m,s=b.s||FV_ES,hw=b.hw*s;m.rotation.set(0,yaw,0);m.position.set(b.cx-hw*cy,b.y,b.cz+hw*sy)}}

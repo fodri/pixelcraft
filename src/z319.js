@@ -11,11 +11,11 @@ addEventListener('keydown',e=>{if(e.code!='KeyX'||e.repeat||!PRI||state!='play'|
 /* the camera: behind and a bit above the player, over the right shoulder, pulled in by walls */
 {const fc=fvCam;fvCam=function(){const tg=fc.apply(this,arguments),c=V3.cam;FV.eye=FV.eye||new THREE.Vector3();FV.eye.copy(c.position);
  if(!tpsOn()){FV.tpD=null;return tg}
- const yaw=FV.yaw,fx=-Math.sin(yaw),fz=-Math.cos(yaw),rx=Math.cos(yaw),rz=-Math.sin(yaw),px=P.x/T,pz=P.y/T,D=3.4,SH=.45;
+ const yaw=FV.yaw,fx=-Math.sin(yaw),fz=-Math.cos(yaw),rx=Math.cos(yaw),rz=-Math.sin(yaw),px=P.x/T,pz=P.y/T,D=2.0,SH=.95;
  let ok=.35;for(let t=.35;t<=D;t+=.12){const k=t/D,x=px-fx*t+rx*SH*k,z=pz-fz*t+rz*SH*k;if(blocked(x*T,z*T,3))break;ok=t}
  const dt=FV.dt||.016;if(FV.tpD==null)FV.tpD=ok;FV.tpD+=(ok-FV.tpD)*Math.min(1,dt*(ok<FV.tpD?18:4));const d=FV.tpD,k=d/D;
- c.position.set(px-fx*d+rx*SH*k,FV.eye.y+.6*k+.1,pz-fz*d+rz*SH*k);c.rotation.set(-.1,yaw,0);
- if(Math.abs(c.fov-70)>.01){c.fov=70;c.updateProjectionMatrix()}return tg}}
+ c.position.set(px-fx*d+rx*SH*k,FV.eye.y+.14*k+.06,pz-fz*d+rz*SH*k);c.rotation.set(-.07,yaw,0);
+ if(Math.abs(c.fov-74)>.01){c.fov=74;c.updateProjectionMatrix()}return tg}}
 /* aiming: what lies under the crosshair is the target; shots leave the player's eyes toward it */
 {const fa=fvAim;fvAim=function(){if(!tpsOn())return fa.apply(this,arguments);const c=V3.cam;c.updateMatrixWorld();const p0=c.position.clone(),q0=c.quaternion.clone(),
   dir=new THREE.Vector3(0,0,-1).applyQuaternion(q0),tg=p0.clone().addScaledVector(dir,(FV.tpD||2)+12);
