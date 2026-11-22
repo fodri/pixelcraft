@@ -13998,11 +13998,11 @@ function priSave(){try{if(PRI)localStorage.setItem(SKEY()+'_pri',JSON.stringify(
 /* ---------- the look: an overcast, washed-out 1986 — colour grade, mist, vignette, grain ---------- */
 {const p=PAL;p[0]=['#6e7a3e','#74803f','#7a8646','#808c4a'];p[3]=['#7a7e80','#74787a','#84888a','#7e8284']}
 const MIST={cv:null,t:0};
-function mistMake(){const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d'),r=prRng(1986);for(let i=0;i<22;i++){const px=r()*256,py=r()*256,rr=30+r()*56,gr=x.createRadialGradient(px,py,0,px,py,rr);gr.addColorStop(0,'rgba(215,220,205,.5)');gr.addColorStop(1,'rgba(215,220,205,0)');x.fillStyle=gr;for(const ox of[-256,0,256])for(const oy of[-256,0,256]){x.save();x.translate(ox,oy);x.fillRect(px-rr,py-rr,rr*2,rr*2);x.restore()}}MIST.cv=c}
+function mistMake(){const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d'),r=prRng(1986);for(let i=0;i<22;i++){const px=r()*256,py=r()*256,rr=30+r()*56,gr=x.createRadialGradient(px,py,0,px,py,rr);gr.addColorStop(0,'rgba(222,230,240,.5)');gr.addColorStop(1,'rgba(222,230,240,0)');x.fillStyle=gr;for(const ox of[-256,0,256])for(const oy of[-256,0,256]){x.save();x.translate(ox,oy);x.fillRect(px-rr,py-rr,rr*2,rr*2);x.restore()}}MIST.cv=c}
 function priGrade(){if(!PRI||CLASSIC)return;const cw=g.canvas.width,ch=g.canvas.height,now=performance.now();
  g.save();g.setTransform(1,0,0,1,0,0);
- try{g.globalCompositeOperation='saturation';g.fillStyle='rgba(128,128,128,'+(inD?.3:.42)+')';g.fillRect(0,0,cw,ch);
-  g.globalCompositeOperation='multiply';g.fillStyle=inD?'rgb(210,204,184)':'rgb(222,218,196)';g.fillRect(0,0,cw,ch);
+ try{g.globalCompositeOperation='saturation';g.fillStyle='rgba(128,128,128,'+(inD?.3:.5)+')';g.fillRect(0,0,cw,ch);
+  g.globalCompositeOperation='multiply';g.fillStyle=inD?'rgb(212,206,188)':'rgb(204,213,228)';g.fillRect(0,0,cw,ch);
   g.globalCompositeOperation='source-over';
   if(!inD){if(!MIST.cv)mistMake();g.globalAlpha=.16;const s=cw/256*1.1;for(let k=0;k<2;k++){const ox=-((now/(k?90:140))*(k?1:-.6)%256+256)%256,oy=((now/(k?260:200))%256);g.drawImage(MIST.cv,0,0,256,256,ox*s*(k?1.2:1)-cw*.1,oy*s*.5-ch*.1,256*s*(k?1.3:1),256*s*(k?1.3:1));g.drawImage(MIST.cv,0,0,256,256,ox*s*(k?1.2:1)-cw*.1+256*s*(k?1.3:1),oy*s*.5-ch*.1,256*s*(k?1.3:1),256*s*(k?1.3:1))}g.globalAlpha=1}
   const gr=g.createRadialGradient(cw/2,ch/2,Math.min(cw,ch)*.28,cw/2,ch/2,Math.max(cw,ch)*.78);gr.addColorStop(0,'rgba(10,12,8,0)');gr.addColorStop(1,'rgba(10,12,8,'+(inD?.62:.5)+')');g.fillStyle=gr;g.fillRect(0,0,cw,ch);
@@ -14444,7 +14444,7 @@ function priGauge(){const hu=LANG=='hu',x=VW-102,y=4,rate=P.rate||0,lv=rate<.5?0
  bar(y+34,PRI.hz?PRI.filt:0,'#6ab0d8',hu?'szűrő':'filter');
  g.font=fnt(0,8);txt(PRI.rub+(hu?' rubel':' rub'),x+5,y+47,'#e8d890');noTr=false}
 /* ---------- the quartermaster: shop, suit, looks ---------- */
-const PCOST={filt:30,patch:45,tonic:35,canned:12,bottle:6,ammo:18};
+const PCOST={filt:30,patch:45,tonic:35,canned:12,bottle:6,ammo:18,gas:15,batt:20};
 function priShopLine(k){return PCOST[k]}
 
 /* ===== z308: the people of the checkpoint, the quartermaster, contracts, kills pay ===== */
@@ -14466,9 +14466,10 @@ function priPeople(){
 /* ---------- the talk system ---------- */
 const PVET=[['Ők nem szeretik a hangos zajt. De a csöndet még kevésbé.','They hate loud noise. Silence even more.'],['A kerék kilenc perc alatt fordul körbe. Én számoltam. Régen.','The wheel takes nine minutes. I counted. Long ago.'],['Ne vegyél le a maszkot a Vörös Erdő szélén. Még ha hívnak is.','Never take the mask off at the Red Forest. Even if they call.'],['Május elsején nyitott volna a park. Néha még hallom a zenét.','The park was to open on May first. Sometimes I still hear the music.'],['A panelházakban a hetedik emelet a legrosszabb. Nem tudom, miért.','The seventh floor is the worst in the panel blocks. I don\'t know why.'],['A házakban még ott vannak a naptárak. Mind április 26.','The calendars are still there. All say April 26.']];
 function priTalkOpts(n){const hu=LANG=='hu',pg=TALK.pg|0,o=[],L=(k,h,e)=>o.push({k,l:hu?h:(e||h)});
- if(n.pri=='qm'){if(pg==0){L('shop','Vásárlás','Shop');L('look',PRI.cust?'Szkafander és kinézet':'Szkafander (a prológus után)','Suit and looks');L('news','Mi újság?','What\'s new?');L('bye','Viszlát!','Goodbye!')}
+ if(n.pri=='qm'){if(pg==0){L('shop','Vásárlás','Shop');L('look',PRI.cust?'Szkafander és kinézet':'Szkafander (a prológus után)','Suit and looks');L('news','Mi újság?','What\'s new?');L('gear','Gáz és akkumulátor','Gas and battery');L('bye','Viszlát!','Goodbye!')}
   else if(pg==1){L('b_filt','Szűrő — '+PCOST.filt+' rubel','Filter — '+PCOST.filt);L('b_patch','Szkafander-javítás — '+PCOST.patch,'Suit patch — '+PCOST.patch);L('b_tonic','Sugárellenes tabletta — '+PCOST.tonic,'Anti-rad pills — '+PCOST.tonic);L('b_food','Konzerv + víz — '+(PCOST.canned+PCOST.bottle),'Canned food + water — '+(PCOST.canned+PCOST.bottle));L('back','Vissza','Back')}
   else if(pg==2){L('hz',PRI.hz?'Szkafander levétele':'Szkafander felvétele',PRI.hz?'Take off the suit':'Put on the suit');L('hzc','Szín: '+HZP[PRI.hzc|0].n[0],'Colour: '+HZP[PRI.hzc|0].n[1]);L('sh','Ruha színe','Shirt colour');L('pn','Nadrág színe','Trousers colour');L('more','Tovább…','More…')}
+  else if(pg==5){L('b_gas','Gázpalack-töltés — '+PCOST.gas,'Gas refill — '+PCOST.gas);L('b_batt','Éjjellátó-akku — '+PCOST.batt,'Night-vision battery — '+PCOST.batt);L('back','Vissza','Back')}
   else{L('hs','Hajstílus','Hair style');L('hc','Hajszín','Hair colour');L('sk','Bőrszín','Skin');L('ac','Kiegészítő','Accessory');L('back','Vissza','Back')}}
  else if(n.pri=='boss'){L('job',PRI.q.on?'Aktuális megbízás':'Munka kérése','Work');if(PRI.q.on)L('rep','Jelentés','Report');L('where','Mi ez a hely?','What is this place?');L('who','Kik „Ők”?','Who are They?');L('bye','Viszlát!','Goodbye!')}
  else{L('news','Mi újság?','What\'s new?');L('where','Hol vagyunk?','Where are we?');L('bye','Viszlát!','Goodbye!')}
@@ -14482,10 +14483,13 @@ function priTalkOpts(n){const hu=LANG=='hu',pg=TALK.pg|0,o=[],L=(k,h,e)=>o.push(
 function priTalkPick(i){const o=talkOpts()[i];if(!o)return;const n=TALK.n,hu=LANG=='hu',S=(h,e)=>talkSay(hu?h:(e||h));snd('ui');TALK.sel=i;const k=o.k;
  if(k=='bye'){talkClose(hu?['Vigyázz magadra, stalker.','Csöndben járj.']:['Take care, stalker.']);return}
  if(k=='back'){TALK.pg=n.pri=='qm'&&TALK.pg==3?2:0;S('Mit szeretnél?','What would you like?');return}
+ if(k=='gear'){TALK.pg=5;S('Gáz a melegítéshez, akku az éjjellátóhoz.','Gas and batteries.');return}
  if(k=='shop'){TALK.pg=1;S('Mire van szükséged? Kész pénz, rubel.','What do you need? Cash, roubles.');return}
  if(k=='look'){if(!PRI.cust){S('Még nem. Előbb fejezd be az első munkát — utána átalakíthatod a felszerelésed.','Not yet. Finish your first job, then you can customise your gear.');return}TALK.pg=2;S('Mit igazítsunk?','What shall we adjust?');return}
  if(k=='more'){TALK.pg=3;S('Még valami?','Anything else?');return}
  const buy=(c,fn,msg)=>{if(PRI.rub<c){S('Nincs elég rubeled.','Not enough roubles.');return}PRI.rub-=c;fn();snd('pick');S(msg[0],msg[1])};
+ if(k=='b_gas')return buy(PCOST.gas,()=>{PRI.gas=6},['Tele a gázpalack: 6 melegítés.','Bottle full.']);
+ if(k=='b_batt')return buy(PCOST.batt,()=>{PRI.nvT=100},['Új akku az éjjellátóba.','New battery.']);
  if(k=='b_filt')return buy(PCOST.filt,()=>{PRI.filt=100;PRI.w1=0},['Friss szűrő a szkafanderben.','A fresh filter is in.']);
  if(k=='b_patch')return buy(PCOST.patch,()=>{PRI.suit=100;PRI.w0=0},['Összefoltoztam a szkafandert.','Patched up the suit.']);
  if(k=='b_tonic')return buy(PCOST.tonic,()=>{inv.tonic=(inv.tonic||0)+1},['Egy tabletta. Ne edd éhgyomorra.','One pill. Not on an empty stomach.']);
@@ -14525,7 +14529,7 @@ var PQK=new Map();
  if(PRI.q.on&&!PRI.q.ready){const c=PRC[PRI.q.i];if(c&&c.k=='kill'){const lf=zs.filter(z=>z.pq==PRI.q.i+1).length;PRI.q.left=lf;if(lf==0&&(PRI.t0||0)>3){PRI.q.ready=1}}}
  if(PRI.q.ready&&!PRI.q.said){PRI.q.said=1;say(LANG=='hu'?'A feladat kész — jelentsd Gyenyiszovnak a keleti bódéban.':'Done — report to Denisov.')}if(!PRI.q.ready)PRI.q.said=0}}
 {const h0=hud;hud=function(){const r=h0.apply(this,arguments);try{if(PRI&&state=='play'&&!tut)priObj()}catch(e){}return r}}
-function priObj(){const hu=LANG=='hu',x=VW-102,y=58;noTr=true;const c=PRC[PRI.q.i];let t1,t2;
+function priObj(){const hu=LANG=='hu',x=VW-102,y=70;noTr=true;const c=PRC[PRI.q.i];let t1,t2;
  if(PRI.q.on&&c){t1=(hu?c.h[0]:c.h[1]);t2=PRI.q.ready?(hu?'Jelentsd Gyenyiszovnak':'Report to Denisov'):priCProg()}else if(PRI.q.i<PRC.length){t1=hu?'Nincs aktív megbízás':'No active contract';t2=hu?'Gyenyiszov, keleti bódé':'Talk to Denisov (east hut)'}else{t1=hu?'Minden munka kész':'All jobs done';t2=''}
  g.font=fnt(0,9);const w=Math.min(VW-10,Math.max(96,Math.ceil(g.measureText(t1).width)+10,Math.ceil(g.measureText(t2||'').width)+10));Q(VW-4-w,y,w,t2?24:13,'rgba(10,12,8,.58)');txt(t1,VW-w+1,y+10,'#d8c890');if(t2)txt(t2,VW-w+1,y+20,PRI.q.ready?'#b6ff40':'#9aa08a');noTr=false}
 
@@ -14603,6 +14607,126 @@ try{const lr=locReactor;locReactor=function(){return PRI?null:lr.apply(this,argu
 {const st=sporeTick;sporeTick=function(dt){if(PRI&&PRI.hz&&PRI.suit>0)sporeMsgT=60;return st.apply(this,arguments)}}
 function priNoSurv2(){try{OPL200=true}catch(e){}try{PUBW[wseed+'|'+W]=1}catch(e){}try{L206=true}catch(e){}try{RVL194=true}catch(e){}}
 {const f=priNoSurv;priNoSurv=function(){f();priNoSurv2()}}
+
+/* ===== z312: a permanent Eastern-European winter: snow on the ground, falling snow, a cold grey-blue grade ===== */
+{const so=seasonIdx;seasonIdx=function(){return PRI?3:so.apply(this,arguments)}}
+{const sw=seaWinter;seaWinter=function(){return PRI?!inD:sw.apply(this,arguments)}}
+{const w0=weather;weather=function(){if(!PRI)return w0.apply(this,arguments);const c=cb;cb=1;try{return w0.apply(this,arguments)}finally{cb=c}}}
+{const up=update;update=function(dt){up(dt);if(PRI&&state=='play'){PRI.wt=(PRI.wt||0)+dt;if(!inD)wea=Math.sin(PRI.wt/140)>.82?2:1;else wea=0}}}
+/* snow cover that replaces the jungle-grass ground texture */
+function priSnowTex(){const c=document.createElement('canvas');c.width=c.height=288;const x=c.getContext('2d'),r=prRng(7041);x.fillStyle='#dfe7ee';x.fillRect(0,0,288,288);
+ for(let y=0;y<288;y+=2)for(let xx=0;xx<288;xx+=2){const a=Math.sin(xx/288*6.2832*3+Math.sin(y/288*6.2832*2)*1.7)*Math.sin(y/288*6.2832*4)*.5+.5,v=r();let col=null;
+  if(a>.74)col='rgba(255,255,255,.6)';else if(a<.2)col='rgba(150,170,198,.3)';
+  if(v<.05)col='rgba(168,184,206,.55)';else if(v<.08)col='rgba(250,252,255,.75)';
+  if(col){x.fillStyle=col;x.fillRect(xx,y,2,2)}}
+ for(let i=0;i<150;i++){const px=Math.floor(r()*284),py=Math.floor(r()*280);x.fillStyle=r()<.5?'#8d8b62':'#6e6a48';x.fillRect(px,py,1,3+Math.floor(r()*3));if(r()<.5)x.fillRect(px+2,py+1,1,3)}
+ for(let i=0;i<26;i++){const px=Math.floor(r()*280),py=Math.floor(r()*284);x.fillStyle='rgba(88,76,56,.45)';x.fillRect(px,py,3,2)}
+ return c}
+{const p0=pats;pats=function(x){const r=p0(x);if(PRI){if(!r._G2)r._G2=x.createPattern(priSnowTex(),'repeat');r.G=r._G2}return r}}
+/* snow on the pavements and a thin slush on the asphalt */
+{const gt=gTile;gTile=function(tx,ty,now){gt(tx,ty,now);if(!PRI||inD||inC||tx<0||ty<0||tx>=W||ty>=H)return;const m=map[ty*W+tx];if(m!=3&&m!=14)return;const cov=m==14?.55:.2,px=tx*T,py=ty*T;
+ for(let cy=0;cy<4;cy++)for(let cx=0;cx<4;cx++){const h=hs(tx*4+cx+.37,ty*4+cy+.71)*.6+hs(Math.floor((tx*4+cx)/3)+.2,Math.floor((ty*4+cy)/3)+.9)*.4;if(h<cov){const v=hs(tx*4+cx+5.1,ty*4+cy+2.3);W_(px+cx*4,py+cy*4,4,4,m==14?(v<.6?'#e4ebf1':'#d2dde7'):(v<.6?'rgba(196,206,218,.55)':'rgba(150,164,180,.45)'))}}}}
+
+/* ===== z313: an Eastern-European look — Cyrillic signs, street plates, the city stele, birches, Ukrainian/Russian names ===== */
+const PSIGNC=[['#a8241c','#f0d060','#6a1410'],['#e8e0c0','#2a3a22','#8a8468'],['#2a5a98','#f4f4f0','#163a66'],['#9a9c9a','#2a2c2e','#6a6c6a'],['#2e5a3c','#e8e4c0','#1a3a24']];
+function pFitTxt(s,cx,cy,col,sz,maxw){g.save();let z=sz;g.font='bold '+z+'px "DejaVu Sans",Arial,sans-serif';while(z>5&&g.measureText(s).width>maxw){z--;g.font='bold '+z+'px "DejaVu Sans",Arial,sans-serif'}g.textAlign='center';g.fillStyle=col;g.fillText(s,cx,cy);g.restore()}
+BIG.psign=function(o,x,y){const w=(o.fw||1)*T,h=(o.fh||1)*T,c=PSIGNC[o.k|0]||PSIGNC[0],sx=pSX(x),sy=pSY(y);
+ W_(x,y,w,h,'#1c1c1e');W_(x+1,y+1,w-2,h-2,c[0]);W_(x+1,y+1,w-2,1,'rgba(255,255,255,.22)');W_(x+1,y+h-2,w-2,1,c[2]);W_(x+3,y+3,1,1,'#3a3a3a');W_(x+w-4,y+3,1,1,'#3a3a3a');
+ const lines=String(o.tx||'').split('|');
+ if(lines.length==1)pFitTxt(lines[0],sx+w/2,sy+h/2+3.5,c[1],h>20?13:9,w-8);
+ else{pFitTxt(lines[0],sx+w/2,sy+h/2-1,c[1],h>20?14:9,w-8);pFitTxt(lines[1],sx+w/2,sy+h-5,c[1],7,w-8)}};
+SOLID.psign=1;SOLID.p_psign=1;NMX.psign='sign';NMX.pbirch='birch';
+function pSign(x,y,w,h,tx,k){setFP({t:'psign',tx,k},x,y,w,h)}
+/* birches: white trunks, black marks, bare thin branches under snow */
+DRAWX.pbirch=function(o,x,y){const h=hs(x*.13,y*.17),tx=x+7,lean=h<.3?-1:h>.7?1:0;pShadow(x+2,y+13,12,3);
+ for(let j=0;j<30;j++){const dx=Math.round(lean*j/14);W_(tx+dx,y+14-j,2,1,'#e6e4da');W_(tx+dx+1,y+14-j,1,1,'#b8b6ac')}
+ for(const j of[2,6,10,13,18,22,26]){const dx=Math.round(lean*j/14);W_(tx+dx,y+14-j,2,1,'#2a2a28');if(j%3==0)W_(tx+dx+(j&1?-1:2),y+14-j,1,1,'#2a2a28')}
+ const br=(j,len,dir)=>{for(let k=0;k<len;k++)W_(tx+Math.round(lean*j/14)+(dir>0?2:-1)+dir*k,y+14-j-Math.floor(k*.7),1,1,'#7a766a')};
+ br(20,9,-1);br(24,10,1);br(16,7,1);br(27,6,-1);br(12,6,-1);br(29,4,1);
+ for(const[a,b]of[[-6,-16],[-3,-14],[5,-20],[8,-16],[-8,-9]])W_(tx+a,y+b+10,3,1,'#eef3f8')};
+STYSKIP.pbirch=1;SOLID.pbirch=1;SOLID.p_pbirch=1;
+/* the ground-floor signs of the big buildings, street plates, the stele — placed once after the map is built */
+function priSigns(){const r=prRng(PRIS+31);
+ const row=(x,y,w,h,tx,k)=>{for(let yy=y;yy<y+h;yy++)for(let xx=x;xx<x+w;xx++){const o=ob[yy*W+xx];if(o&&(o.t=='door'||o.t=='oup'||o.t=='odn'))return}pSign(x,y,w,h,tx,k)};
+ const face=(x,y,w,h,L,R_,kL,kR)=>{const hx=x+Math.floor(w/2),wy=y+h-1;if(L)row(hx-8,wy,5,1,L,kL);if(R_)row(hx+4,wy,5,1,R_,kR)};
+ face(118,152,36,28,'ЭНЕРГЕТИК','ДВОРЕЦ КУЛЬТУРЫ',0,0);
+ face(76,152,34,24,'ШКОЛА №3','УЧИТЬСЯ!',4,0);
+ face(76,106,32,24,'УНИВЕРМАГ','ПРИПЯТЬ',1,1);
+ face(214,104,32,24,'МСЧ-126','БОЛЬНИЦА',4,4);
+ face(214,154,32,24,'ПОЛЕСЬЕ','ГОСТИНИЦА',0,2);
+ face(216,196,30,18,'ДЕТСКИЙ САД','«КЛЮЧИК»',1,1);
+ /* checkpoint huts */
+ row(168,286,3,1,'ШТАБ',0);row(144,286,3,1,'СКЛАД',2);
+ /* the city stele on the road in from the south */
+ for(let yy=265;yy<268;yy++)for(let xx=165;xx<172;xx++)ob[yy*W+xx]=null;pSign(165,266,7,2,'ПРИПЯТЬ|1970',3);
+ /* street plates on the north pavements of the crossings */
+ const EW=['ПР. ЛЕНИНА','УЛ. КУРЧАТОВА','УЛ. ЭНТУЗИАСТОВ','УЛ. ДРУЖБЫ НАРОДОВ'],NS=['УЛ. ГЕРОЕВ СТАЛИНГРАДА','БУЛЬВАР СТРОИТЕЛЕЙ'];
+ let k=0;for(const[y,w]of PRS.ew)for(const[x,ww]of PRS.ns){const px=x-6,py=y-1;if(px<4)continue;let ok=true;for(let xx=px;xx<px+5;xx++)if(ob[py*W+xx]||map[py*W+xx]!=14)ok=false;if(ok)pSign(px,py,5,1,EW[k%EW.length],2);k++}
+ k=0;for(const[x,w]of PRS.ns)for(const[y,ww]of PRS.ew){const px=x+w+1,py=y-1;let ok=true;for(let xx=px;xx<px+5;xx++)if(ob[py*W+xx]||map[py*W+xx]!=14)ok=false;if(ok)pSign(px,py,5,1,NS[k%NS.length],2);k++}
+ /* birches replace a third of the trees outside the red forest */
+ for(let i=0;i<W*H;i++){const o=ob[i];if(o&&o.t=='tree'){const x=i%W,y=(i/W)|0;if(!(x<110&&y<118)&&hs(x*.31,y*.27)<.38)ob[i]={t:'pbirch',hp:6}}}}
+{const f=priFinish;priFinish=function(r){const o=f.apply(this,arguments);try{priSigns()}catch(e){console.warn('signs',e)}return o}}
+/* Ukrainian and Russian names for the people of the Zone */
+{const nm={'Vaszilij Pavlics':'Vaszil Pavlovics','Gyenyiszov':'Gyenyiszov','Tyimofej':'Bohdan','Szása':'Olekszandr','Anyiszja':'Szvitlana','Gyima':'Mikola'};
+ const f=priPeople;priPeople=function(){f.apply(this,arguments);for(const n of NPCS)if(nm[n.nm])n.nm=nm[n.nm]}}
+
+/* ===== z314: survival of a hard winter — body heat, frozen weapons, cold waves and blizzards, filter failure (tunnel vision), mechanical Geiger dial, tube night vision, hand gas burner ===== */
+{const pn=priNew;priNew=function(){const o=pn.apply(this,arguments);o.heat=100;o.nv=0;o.nvT=100;o.tv=0;o.gas=6;o.cw=0;o.cwT=120;return o}}
+{const sc=seaColdTick;seaColdTick=function(){if(PRI)return;return sc.apply(this,arguments)}}
+function priFrostAt(tx,ty){let f=0;if(PRB&&PRB.frost)for(const q of PRB.frost){const d=Math.hypot(tx-q.x,ty-q.y);if(d<q.r)f+=q.s*(1-d/q.r)}return f}
+function priHeatTick(dt){const night=dk0()>.5,blz=wea==2&&!inD;let d;
+ if(inD)d=curOf&&curOf.k=='bkr'?4:.22;
+ else if(inAnyBld(P.x,P.y))d=.18;
+ else{let dr=.15+(night?.08:0)+(blz?.2:0)+(PRI.cw>0?.34:0);dr+=priFrostAt(P.x/T|0,P.y/T|0)*1.1;if(PRI.hz&&PRI.suit>0)dr*=.6;d=-dr}
+ if(!inD&&nearWarm(90))d=3.4;
+ PRI.heat=Math.max(0,Math.min(100,PRI.heat+d*dt));
+ if(PRI.heat<=0&&!creative){P.hp-=dt*1.1;P.hurt=Math.max(P.hurt||0,.08)}
+ const lv=PRI.heat<20?2:PRI.heat<40?1:0;if(lv>(PRI.hl|0)){PRI.hl=lv;say(lv==2?(LANG=='hu'?'A zárszerkezet ráfagyott! Melegedj vagy használd a gázégőt (Y).':'The action is freezing up! Warm up or use the burner (Y).'):(LANG=='hu'?'A kezed elgémberedett — lassabban tudsz tüzelni.':'Your hands are stiffening — slower to fire.'))}else if(lv<(PRI.hl|0))PRI.hl=lv;
+ const f=PRI.heat<20?1.9:PRI.heat<40?1.4:1;for(const k in GUN){if(GUN[k].rt0==null)GUN[k].rt0=GUN[k].rt;GUN[k].rt=GUN[k].rt0*f}
+ /* cold waves */
+ PRI.cwT-=dt;if(PRI.cwT<=0){if(PRI.cw>0){PRI.cw=0;PRI.cwT=150+Math.random()*180}else{PRI.cw=34;PRI.cwT=34;if(!inD)say(LANG=='hu'?'Fagyhullám érkezik! Menj fedezékbe vagy tűz mellé.':'A cold wave is rolling in! Find cover or a fire.')}}
+ /* filter failure */
+ const bad=P.rate>.6&&!inD&&(!PRI.hz||PRI.filt<=0||PRI.suit<=0);PRI.tv+=((bad?1:0)-PRI.tv)*Math.min(1,dt*1.4);if(PRI.tv>.6&&!creative){P.hp-=dt*.7;if(!PRI.cgh||PRI.cgh<=0){PRI.cgh=3+Math.random()*3;snd('hurt');say(LANG=='hu'?'*köhögés* A szűrő nem véd — látótér beszűkül!':'*cough* No filter — your vision is closing in!')}}
+ PRI.cgh=(PRI.cgh||0)-dt;
+ /* night vision tube */
+ if(PRI.nv){PRI.nvT=Math.max(0,PRI.nvT-dt*1.1);if(PRI.nvT<=0){PRI.nv=0;say(LANG=='hu'?'Az éjjellátó akkumulátora lemerült.':'The night-vision battery is flat.')}}else PRI.nvT=Math.min(100,PRI.nvT+dt*.35)}
+{const up=update;update=function(dt){up(dt);if(PRI&&state=='play'&&!creative&&P.hp>0)try{priHeatTick(dt)}catch(e){}}}
+{const ek=eatK;eatK=function(k){const r=ek.apply(this,arguments);if(PRI&&(k=='cooked'||k=='canned')){PRI.heat=Math.min(100,PRI.heat+16)}return r}}
+addEventListener('keydown',e=>{if(!PRI||state!='play'||e.repeat||e.ctrlKey||e.metaKey||book||invOpen||stOpen||showMap||SFOC)return;
+ if(e.code=='KeyZ'){if(PRI.nv){PRI.nv=0;snd('ui')}else if(PRI.nvT>8){PRI.nv=1;snd('ui');say(LANG=='hu'?'A csöves éjjellátó felmelegszik… zöld fény.':'The tube night-vision hums to life…')}else say(LANG=='hu'?'Az akkumulátor üres.':'Battery empty.')}
+ if(e.code=='KeyY')priBurner()});
+function priBurner(){if((PRI.gas|0)<=0){say(LANG=='hu'?'A gázpalack üres. Vaszilijnál töltheted.':'The gas bottle is empty.');return}PRI.gas--;PRI.heat=Math.min(100,PRI.heat+24);snd('pick');
+ let melted=false;const px=P.x/T|0,py=P.y/T|0;for(let y=py-2;y<=py+2;y++)for(let x=px-2;x<=px+2;x++){const o=ob[y*W+x];if(o&&o.t=='plock'&&!o.open){o.open=1;melted=true;try{priLockOpen(x,y,o)}catch(e){}}}
+ say(melted?(LANG=='hu'?'A jégbe fagyott zár megolvadt.':'The frozen lock melts.'):(LANG=='hu'?'Felmelegítetted a kezed a kézi gázégővel. Gáz: '+PRI.gas:'Warmed your hands. Gas: '+PRI.gas))}
+function priLockOpen(){}
+/* ---------- the mechanical dial ---------- */
+priGauge=function(){const hu=LANG=='hu',x=VW-118,y=4,rate=P.rate||0,v=rate*.4,lv=rate<.5?0:rate<2?1:rate<5?2:3,col=['#8ad060','#d8c840','#e88a30','#e03a2a'][lv];
+ noTr=true;Q(x,y,114,62,'rgba(10,12,8,.64)');Q(x,y,114,1,'#46503e');Q(x,y+61,114,1,'#2a3024');
+ /* dial */
+ const cx=x+30,cy=y+34,R=24,t=Math.max(0,Math.min(1,(Math.log10(Math.max(.005,v))+2)/4));
+ g.save();g.fillStyle='#d8d0a8';g.beginPath();g.arc(cx,cy,R,Math.PI,0);g.lineTo(cx+R,cy+4);g.lineTo(cx-R,cy+4);g.closePath();g.fill();g.strokeStyle='#2a2418';g.lineWidth=2;g.stroke();
+ g.lineWidth=3;for(const[a,b,c]of[[0,.45,'#5a9a3a'],[.45,.75,'#c8b030'],[.75,1,'#b83a2a']]){g.strokeStyle=c;g.beginPath();g.arc(cx,cy,R-4,Math.PI+a*Math.PI,Math.PI+b*Math.PI);g.stroke()}
+ g.strokeStyle='#2a2418';g.lineWidth=1;for(let i=0;i<=10;i++){const a=Math.PI+i/10*Math.PI;g.beginPath();g.moveTo(cx+Math.cos(a)*(R-7),cy+Math.sin(a)*(R-7));g.lineTo(cx+Math.cos(a)*(R-(i%5?9:11)),cy+Math.sin(a)*(R-(i%5?9:11)));g.stroke()}
+ const jit=(Math.random()-.5)*.05*Math.min(3,rate+.2),a=Math.PI+t*Math.PI+jit;g.strokeStyle='#a01810';g.lineWidth=1.6;g.beginPath();g.moveTo(cx,cy+2);g.lineTo(cx+Math.cos(a)*(R-3),cy+Math.sin(a)*(R-3));g.stroke();g.fillStyle='#2a2418';g.beginPath();g.arc(cx,cy+2,2.4,0,6.3);g.fill();g.restore();
+ g.font=fnt(0,7);txt('mSv/h',cx,cy+3,'#4a4228','center');
+ g.font=fnt(0,8);txt(v.toFixed(2),cx,y+58,col,'center');
+ const bar=(yy,val,c,lab)=>{Q(x+62,yy,34,4,'#1a1c16');Q(x+62,yy,Math.round(34*Math.max(0,Math.min(1,val/100))),4,c);g.font=fnt(0,7);txt(lab,x+98,yy+5,'#9aa08a')};
+ bar(y+8,P.inf||0,(P.inf||0)>45?'#e03a2a':'#b6ff40',hu?'dóz':'dose');
+ bar(y+19,PRI.hz?PRI.suit:0,PRI.suit>30?'#d8c840':'#e88a30',hu?'ruha':'suit');
+ bar(y+30,PRI.hz?PRI.filt:0,'#6ab0d8',hu?'szűr':'filt');
+ bar(y+41,PRI.heat,PRI.heat<30?'#e0e8ff':'#e89a50',hu?'hő':'heat');
+ g.font=fnt(0,7);txt(PRI.rub+(hu?' rubel':' rub')+' · '+(PRI.gas|0)+(hu?' gáz':' gas'),x+62,y+58,'#e8d890');noTr=false};
+{const po=priObj;priObj=function(){const y0=VH;po.apply(this,arguments)}}
+/* ---------- grade extras: frost edge, blizzard whiteout, filter tunnel vision, tube night vision ---------- */
+{const pg=priGrade;priGrade=function(){pg.apply(this,arguments);if(!PRI||CLASSIC)return;const cw=g.canvas.width,ch=g.canvas.height,tp=T*(cw/VW)*ZM;g.save();g.setTransform(1,0,0,1,0,0);
+ try{
+  if(PRI.nv){g.globalCompositeOperation='multiply';g.fillStyle='rgb(120,255,150)';g.fillRect(0,0,cw,ch);g.globalCompositeOperation='lighter';g.fillStyle='rgba(18,70,28,'+(.22+dk0()*.3)+')';g.fillRect(0,0,cw,ch);g.globalCompositeOperation='source-over';
+   g.fillStyle='rgba(0,0,0,.18)';for(let yy=0;yy<ch;yy+=3)g.fillRect(0,yy,cw,1)}
+  if(wea==2&&!inD){const gr=g.createRadialGradient(cw/2,ch/2,tp*3.2,cw/2,ch/2,tp*10);gr.addColorStop(0,'rgba(214,222,232,0)');gr.addColorStop(1,'rgba(214,222,232,.9)');g.fillStyle=gr;g.fillRect(0,0,cw,ch)}
+  if(PRI.cw>0&&!inD){g.fillStyle='rgba(210,225,245,.1)';g.fillRect(0,0,cw,ch)}
+  const fr=Math.max(0,(40-PRI.heat)/40);if(fr>0){const gr=g.createRadialGradient(cw/2,ch/2,Math.min(cw,ch)*.3,cw/2,ch/2,Math.max(cw,ch)*.75);gr.addColorStop(0,'rgba(220,235,255,0)');gr.addColorStop(1,'rgba(220,235,255,'+(.6*fr)+')');g.fillStyle=gr;g.fillRect(0,0,cw,ch)}
+  if(PRI.tv>.02){const gr=g.createRadialGradient(cw/2,ch/2,Math.min(cw,ch)*(.5-.34*PRI.tv),cw/2,ch/2,Math.max(cw,ch)*(.75-.2*PRI.tv));gr.addColorStop(0,'rgba(8,10,6,0)');gr.addColorStop(1,'rgba(8,10,6,'+(.97*PRI.tv)+')');g.fillStyle=gr;g.fillRect(0,0,cw,ch)}
+ }finally{g.restore()}}}
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();

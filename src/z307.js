@@ -33,5 +33,5 @@ function priGauge(){const hu=LANG=='hu',x=VW-102,y=4,rate=P.rate||0,lv=rate<.5?0
  bar(y+34,PRI.hz?PRI.filt:0,'#6ab0d8',hu?'szűrő':'filter');
  g.font=fnt(0,8);txt(PRI.rub+(hu?' rubel':' rub'),x+5,y+47,'#e8d890');noTr=false}
 /* ---------- the quartermaster: shop, suit, looks ---------- */
-const PCOST={filt:30,patch:45,tonic:35,canned:12,bottle:6,ammo:18};
+const PCOST={filt:30,patch:45,tonic:35,canned:12,bottle:6,ammo:18,gas:15,batt:20};
 function priShopLine(k){return PCOST[k]}

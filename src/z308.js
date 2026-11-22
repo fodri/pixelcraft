@@ -17,9 +17,10 @@ function priPeople(){
 /* ---------- the talk system ---------- */
 const PVET=[['Ők nem szeretik a hangos zajt. De a csöndet még kevésbé.','They hate loud noise. Silence even more.'],['A kerék kilenc perc alatt fordul körbe. Én számoltam. Régen.','The wheel takes nine minutes. I counted. Long ago.'],['Ne vegyél le a maszkot a Vörös Erdő szélén. Még ha hívnak is.','Never take the mask off at the Red Forest. Even if they call.'],['Május elsején nyitott volna a park. Néha még hallom a zenét.','The park was to open on May first. Sometimes I still hear the music.'],['A panelházakban a hetedik emelet a legrosszabb. Nem tudom, miért.','The seventh floor is the worst in the panel blocks. I don\'t know why.'],['A házakban még ott vannak a naptárak. Mind április 26.','The calendars are still there. All say April 26.']];
 function priTalkOpts(n){const hu=LANG=='hu',pg=TALK.pg|0,o=[],L=(k,h,e)=>o.push({k,l:hu?h:(e||h)});
- if(n.pri=='qm'){if(pg==0){L('shop','Vásárlás','Shop');L('look',PRI.cust?'Szkafander és kinézet':'Szkafander (a prológus után)','Suit and looks');L('news','Mi újság?','What\'s new?');L('bye','Viszlát!','Goodbye!')}
+ if(n.pri=='qm'){if(pg==0){L('shop','Vásárlás','Shop');L('look',PRI.cust?'Szkafander és kinézet':'Szkafander (a prológus után)','Suit and looks');L('news','Mi újság?','What\'s new?');L('gear','Gáz és akkumulátor','Gas and battery');L('bye','Viszlát!','Goodbye!')}
   else if(pg==1){L('b_filt','Szűrő — '+PCOST.filt+' rubel','Filter — '+PCOST.filt);L('b_patch','Szkafander-javítás — '+PCOST.patch,'Suit patch — '+PCOST.patch);L('b_tonic','Sugárellenes tabletta — '+PCOST.tonic,'Anti-rad pills — '+PCOST.tonic);L('b_food','Konzerv + víz — '+(PCOST.canned+PCOST.bottle),'Canned food + water — '+(PCOST.canned+PCOST.bottle));L('back','Vissza','Back')}
   else if(pg==2){L('hz',PRI.hz?'Szkafander levétele':'Szkafander felvétele',PRI.hz?'Take off the suit':'Put on the suit');L('hzc','Szín: '+HZP[PRI.hzc|0].n[0],'Colour: '+HZP[PRI.hzc|0].n[1]);L('sh','Ruha színe','Shirt colour');L('pn','Nadrág színe','Trousers colour');L('more','Tovább…','More…')}
+  else if(pg==5){L('b_gas','Gázpalack-töltés — '+PCOST.gas,'Gas refill — '+PCOST.gas);L('b_batt','Éjjellátó-akku — '+PCOST.batt,'Night-vision battery — '+PCOST.batt);L('back','Vissza','Back')}
   else{L('hs','Hajstílus','Hair style');L('hc','Hajszín','Hair colour');L('sk','Bőrszín','Skin');L('ac','Kiegészítő','Accessory');L('back','Vissza','Back')}}
  else if(n.pri=='boss'){L('job',PRI.q.on?'Aktuális megbízás':'Munka kérése','Work');if(PRI.q.on)L('rep','Jelentés','Report');L('where','Mi ez a hely?','What is this place?');L('who','Kik „Ők”?','Who are They?');L('bye','Viszlát!','Goodbye!')}
  else{L('news','Mi újság?','What\'s new?');L('where','Hol vagyunk?','Where are we?');L('bye','Viszlát!','Goodbye!')}
@@ -33,10 +34,13 @@ function priTalkOpts(n){const hu=LANG=='hu',pg=TALK.pg|0,o=[],L=(k,h,e)=>o.push(
 function priTalkPick(i){const o=talkOpts()[i];if(!o)return;const n=TALK.n,hu=LANG=='hu',S=(h,e)=>talkSay(hu?h:(e||h));snd('ui');TALK.sel=i;const k=o.k;
  if(k=='bye'){talkClose(hu?['Vigyázz magadra, stalker.','Csöndben járj.']:['Take care, stalker.']);return}
  if(k=='back'){TALK.pg=n.pri=='qm'&&TALK.pg==3?2:0;S('Mit szeretnél?','What would you like?');return}
+ if(k=='gear'){TALK.pg=5;S('Gáz a melegítéshez, akku az éjjellátóhoz.','Gas and batteries.');return}
  if(k=='shop'){TALK.pg=1;S('Mire van szükséged? Kész pénz, rubel.','What do you need? Cash, roubles.');return}
  if(k=='look'){if(!PRI.cust){S('Még nem. Előbb fejezd be az első munkát — utána átalakíthatod a felszerelésed.','Not yet. Finish your first job, then you can customise your gear.');return}TALK.pg=2;S('Mit igazítsunk?','What shall we adjust?');return}
  if(k=='more'){TALK.pg=3;S('Még valami?','Anything else?');return}
  const buy=(c,fn,msg)=>{if(PRI.rub<c){S('Nincs elég rubeled.','Not enough roubles.');return}PRI.rub-=c;fn();snd('pick');S(msg[0],msg[1])};
+ if(k=='b_gas')return buy(PCOST.gas,()=>{PRI.gas=6},['Tele a gázpalack: 6 melegítés.','Bottle full.']);
+ if(k=='b_batt')return buy(PCOST.batt,()=>{PRI.nvT=100},['Új akku az éjjellátóba.','New battery.']);
  if(k=='b_filt')return buy(PCOST.filt,()=>{PRI.filt=100;PRI.w1=0},['Friss szűrő a szkafanderben.','A fresh filter is in.']);
  if(k=='b_patch')return buy(PCOST.patch,()=>{PRI.suit=100;PRI.w0=0},['Összefoltoztam a szkafandert.','Patched up the suit.']);
  if(k=='b_tonic')return buy(PCOST.tonic,()=>{inv.tonic=(inv.tonic||0)+1},['Egy tabletta. Ne edd éhgyomorra.','One pill. Not on an empty stomach.']);
@@ -76,7 +80,7 @@ var PQK=new Map();
  if(PRI.q.on&&!PRI.q.ready){const c=PRC[PRI.q.i];if(c&&c.k=='kill'){const lf=zs.filter(z=>z.pq==PRI.q.i+1).length;PRI.q.left=lf;if(lf==0&&(PRI.t0||0)>3){PRI.q.ready=1}}}
  if(PRI.q.ready&&!PRI.q.said){PRI.q.said=1;say(LANG=='hu'?'A feladat kész — jelentsd Gyenyiszovnak a keleti bódéban.':'Done — report to Denisov.')}if(!PRI.q.ready)PRI.q.said=0}}
 {const h0=hud;hud=function(){const r=h0.apply(this,arguments);try{if(PRI&&state=='play'&&!tut)priObj()}catch(e){}return r}}
-function priObj(){const hu=LANG=='hu',x=VW-102,y=58;noTr=true;const c=PRC[PRI.q.i];let t1,t2;
+function priObj(){const hu=LANG=='hu',x=VW-102,y=70;noTr=true;const c=PRC[PRI.q.i];let t1,t2;
  if(PRI.q.on&&c){t1=(hu?c.h[0]:c.h[1]);t2=PRI.q.ready?(hu?'Jelentsd Gyenyiszovnak':'Report to Denisov'):priCProg()}else if(PRI.q.i<PRC.length){t1=hu?'Nincs aktív megbízás':'No active contract';t2=hu?'Gyenyiszov, keleti bódé':'Talk to Denisov (east hut)'}else{t1=hu?'Minden munka kész':'All jobs done';t2=''}
  g.font=fnt(0,9);const w=Math.min(VW-10,Math.max(96,Math.ceil(g.measureText(t1).width)+10,Math.ceil(g.measureText(t2||'').width)+10));Q(VW-4-w,y,w,t2?24:13,'rgba(10,12,8,.58)');txt(t1,VW-w+1,y+10,'#d8c890');if(t2)txt(t2,VW-w+1,y+20,PRI.q.ready?'#b6ff40':'#9aa08a');noTr=false}
 

@@ -32,11 +32,11 @@ function priSave(){try{if(PRI)localStorage.setItem(SKEY()+'_pri',JSON.stringify(
 /* ---------- the look: an overcast, washed-out 1986 — colour grade, mist, vignette, grain ---------- */
 {const p=PAL;p[0]=['#6e7a3e','#74803f','#7a8646','#808c4a'];p[3]=['#7a7e80','#74787a','#84888a','#7e8284']}
 const MIST={cv:null,t:0};
-function mistMake(){const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d'),r=prRng(1986);for(let i=0;i<22;i++){const px=r()*256,py=r()*256,rr=30+r()*56,gr=x.createRadialGradient(px,py,0,px,py,rr);gr.addColorStop(0,'rgba(215,220,205,.5)');gr.addColorStop(1,'rgba(215,220,205,0)');x.fillStyle=gr;for(const ox of[-256,0,256])for(const oy of[-256,0,256]){x.save();x.translate(ox,oy);x.fillRect(px-rr,py-rr,rr*2,rr*2);x.restore()}}MIST.cv=c}
+function mistMake(){const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d'),r=prRng(1986);for(let i=0;i<22;i++){const px=r()*256,py=r()*256,rr=30+r()*56,gr=x.createRadialGradient(px,py,0,px,py,rr);gr.addColorStop(0,'rgba(222,230,240,.5)');gr.addColorStop(1,'rgba(222,230,240,0)');x.fillStyle=gr;for(const ox of[-256,0,256])for(const oy of[-256,0,256]){x.save();x.translate(ox,oy);x.fillRect(px-rr,py-rr,rr*2,rr*2);x.restore()}}MIST.cv=c}
 function priGrade(){if(!PRI||CLASSIC)return;const cw=g.canvas.width,ch=g.canvas.height,now=performance.now();
  g.save();g.setTransform(1,0,0,1,0,0);
- try{g.globalCompositeOperation='saturation';g.fillStyle='rgba(128,128,128,'+(inD?.3:.42)+')';g.fillRect(0,0,cw,ch);
-  g.globalCompositeOperation='multiply';g.fillStyle=inD?'rgb(210,204,184)':'rgb(222,218,196)';g.fillRect(0,0,cw,ch);
+ try{g.globalCompositeOperation='saturation';g.fillStyle='rgba(128,128,128,'+(inD?.3:.5)+')';g.fillRect(0,0,cw,ch);
+  g.globalCompositeOperation='multiply';g.fillStyle=inD?'rgb(212,206,188)':'rgb(204,213,228)';g.fillRect(0,0,cw,ch);
   g.globalCompositeOperation='source-over';
   if(!inD){if(!MIST.cv)mistMake();g.globalAlpha=.16;const s=cw/256*1.1;for(let k=0;k<2;k++){const ox=-((now/(k?90:140))*(k?1:-.6)%256+256)%256,oy=((now/(k?260:200))%256);g.drawImage(MIST.cv,0,0,256,256,ox*s*(k?1.2:1)-cw*.1,oy*s*.5-ch*.1,256*s*(k?1.3:1),256*s*(k?1.3:1));g.drawImage(MIST.cv,0,0,256,256,ox*s*(k?1.2:1)-cw*.1+256*s*(k?1.3:1),oy*s*.5-ch*.1,256*s*(k?1.3:1),256*s*(k?1.3:1))}g.globalAlpha=1}
   const gr=g.createRadialGradient(cw/2,ch/2,Math.min(cw,ch)*.28,cw/2,ch/2,Math.max(cw,ch)*.78);gr.addColorStop(0,'rgba(10,12,8,0)');gr.addColorStop(1,'rgba(10,12,8,'+(inD?.62:.5)+')');g.fillStyle=gr;g.fillRect(0,0,cw,ch);
