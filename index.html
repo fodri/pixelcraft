@@ -14878,7 +14878,7 @@ const prRatio=()=>Math.min(1,PRES/Math.max(1,C.clientWidth));
    else if(!PRI&&R._p25){R.setPixelRatio=R._sp;R.getPixelRatio=R._gp;R._p25=0;V3.w=-1}
    if(R._p25&&PRI&&fvA()){const want=prRatio();if(Math.abs(R._gp.call(R)-want)>.004){R._sp.call(R,want);V3.w=-1}}}}catch(e){}
   return vd.apply(this,arguments)}}
-{const ff=fvFrame;fvFrame=function(){if(PRI){FV.pitch=-.03;FV.vy=0;FV.hz=0;FV.cr=0;FV.slide=0;FV.fl=0;FV.flW=0}ff.apply(this,arguments)}}
+{const ff=fvFrame;fvFrame=function(){if(PRI){FV.pitch=Math.max(-1.05,Math.min(1.05,FV.pitch));FV.bob=0;FV.vy=0;FV.hz=0;FV.cr=0;FV.slide=0;FV.fl=0;FV.flW=0}ff.apply(this,arguments)}}
 {const fs=fvShadows;fvShadows=function(on){return fs.call(this,on&&!PRI)}}
 {const t0=toast112;toast112=function(a,b){if(PRI&&/FPS/.test(String(a)))b=LANG=='hu'?'Egér / nyilak: fordulás · W A S D: mozgás · Shift: futás · X: FPS / TPS nézet':'Mouse / arrows: turn · WASD: move · Shift: run · X: FPS / TPS view';return t0.call(this,a,b)}}
 
@@ -14904,7 +14904,7 @@ C.addEventListener('touchend',tfpEnd,{passive:false,capture:true});C.addEventLis
  setInterval(()=>{const show=!!PRI&&state=='play'&&!fvUI()&&!inD;b.style.display=show?'flex':'none';if(show){const t=TPS?'FPS':'TPS';if(b.textContent!==t)b.textContent=t}},300)}
 {const t0=toast112;toast112=function(a,b){if(PRI&&TCH.on&&/FPS/.test(String(a)))b=LANG=='hu'?'Joystick: mozgás · húzás: fordulás · koppintás: lövés · kerek gomb: FPS / TPS':'Joystick: move · drag: turn · tap: fire · round button: FPS / TPS';return t0.call(this,a,b)}}
 
-/* ===== z319: Pripjaty has no top-down view any more — only a 2.5D first-person (FPS) and a 2.5D third-person (TPS) view; X (or the round button) switches between them ===== */
+/* ===== z319: Pripjaty has no top-down view — a 2.5D first-person (FPS) and a 2.5D third-person (TPS) view; X (or the round button) switches between them. TPS: orbit camera over the right shoulder (looks up and down), a direction-aware animated sprite ===== */
 let TPS=false;try{TPS=localStorage.getItem('pxc_tps')=='1'}catch(e){}
 const tpsOn=()=>!!(PRI&&TPS&&typeof fvA=='function'&&fvA());
 function tpsSet(v){TPS=!!v;try{localStorage.setItem('pxc_tps',TPS?'1':'0')}catch(e){}
@@ -14914,31 +14914,45 @@ function tpsSet(v){TPS=!!v;try{localStorage.setItem('pxc_tps',TPS?'1':'0')}catch
 {const up=update;update=function(dt){up(dt);if(PRI&&state=='play'&&!FPV&&typeof THREE!='undefined'&&typeof V3!='undefined'&&V3&&V3.ok)FPV=true}}
 addEventListener('keydown',e=>{if(e.code!='KeyX'||e.repeat||!PRI||state!='play'||e.ctrlKey||e.altKey||e.metaKey)return;
  const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(!fvA()||fvUI())return;fvToggle()},true);
-/* the camera: behind and a bit above the player, over the right shoulder, pulled in by walls */
+const TPA={dir:'b',ph:0,lean:0,run:0,t:0,D:2.0};
+/* which way the sprite faces, relative to the camera: away when walking forward, toward you when backing up, sideways when strafing */
+function tpaDir(){const mx=FV.mvx||0,my=FV.mvy||0;if(Math.hypot(mx,my)<.1)return;
+ const yaw=FV.yaw,f=mx*-Math.sin(yaw)+my*-Math.cos(yaw),s=mx*Math.cos(yaw)+my*-Math.sin(yaw),af=Math.abs(f),as=Math.abs(s);let d=TPA.dir;
+ if(d=='b'||d=='f'){if(as>af*1.4)d=s>0?'r':'l';else d=f>=0?'b':'f'}else{if(af>as*1.4)d=f>=0?'b':'f';else d=s>0?'r':'l'}TPA.dir=d}
+/* the camera: orbits the player's head — behind, a little above, over the right shoulder — pulled in by walls */
 {const fc=fvCam;fvCam=function(){const tg=fc.apply(this,arguments),c=V3.cam;FV.eye=FV.eye||new THREE.Vector3();FV.eye.copy(c.position);
  if(!tpsOn()){FV.tpD=null;return tg}
- const yaw=FV.yaw,fx=-Math.sin(yaw),fz=-Math.cos(yaw),rx=Math.cos(yaw),rz=-Math.sin(yaw),px=P.x/T,pz=P.y/T,D=2.0,SH=.95;
+ const dt=FV.dt||.016,yaw=FV.yaw,p=Math.max(-1.05,Math.min(1.05,FV.pitch||0)),cp=Math.cos(p),sp=Math.sin(p),
+  fx=-Math.sin(yaw)*cp,fy=sp,fz=-Math.cos(yaw)*cp,rx=Math.cos(yaw),rz=-Math.sin(yaw),px=P.x/T,pz=P.y/T,run=(FV.spd>78&&K.ShiftLeft)?1:0;
+ TPA.run+=(run-TPA.run)*Math.min(1,dt*4);const D=2.0+.3*TPA.run,SH=.95;
  let ok=.35;for(let t=.35;t<=D;t+=.12){const k=t/D,x=px-fx*t+rx*SH*k,z=pz-fz*t+rz*SH*k;if(blocked(x*T,z*T,3))break;ok=t}
- const dt=FV.dt||.016;if(FV.tpD==null)FV.tpD=ok;FV.tpD+=(ok-FV.tpD)*Math.min(1,dt*(ok<FV.tpD?18:4));const d=FV.tpD,k=d/D;
- c.position.set(px-fx*d+rx*SH*k,FV.eye.y+.14*k+.06,pz-fz*d+rz*SH*k);c.rotation.set(-.07,yaw,0);
- if(Math.abs(c.fov-74)>.01){c.fov=74;c.updateProjectionMatrix()}return tg}}
+ if(FV.tpD==null)FV.tpD=ok;FV.tpD+=(ok-FV.tpD)*Math.min(1,dt*(ok<FV.tpD?18:4));const d=FV.tpD,k=d/D,
+  cx=px-fx*d+rx*SH*k,cz=pz-fz*d+rz*SH*k;let cy=FV.eye.y-fy*d+.12*k;const gr=v3HW(cx*T,cz*T)+.22;if(cy<gr)cy=gr;
+ c.position.set(cx,cy,cz);c.rotation.set(p-.03,yaw,0);const fov=72+6*TPA.run;if(Math.abs(c.fov-fov)>.01){c.fov=fov;c.updateProjectionMatrix()}return tg}}
 /* aiming: what lies under the crosshair is the target; shots leave the player's eyes toward it */
 {const fa=fvAim;fvAim=function(){if(!tpsOn())return fa.apply(this,arguments);const c=V3.cam;c.updateMatrixWorld();const p0=c.position.clone(),q0=c.quaternion.clone(),
   dir=new THREE.Vector3(0,0,-1).applyQuaternion(q0),tg=p0.clone().addScaledVector(dir,(FV.tpD||2)+12);
   c.position.copy(FV.eye);c.lookAt(tg);try{return fa.apply(this,arguments)}finally{c.position.copy(p0);c.quaternion.copy(q0)}}}
-/* the player is a 2.5D sprite seen from behind */
-{const dp=drawP;drawP=function(){if(!tpsOn())return dp.apply(this,arguments);const fx=P.fx,fy=P.fy;P.fx=0;P.fy=-1;try{return dp.apply(this,arguments)}finally{P.fx=fx;P.fy=fy}}}
+/* the player is a 2.5D sprite: it faces the way it moves relative to the view */
+{const dp=drawP;drawP=function(){if(!tpsOn())return dp.apply(this,arguments);tpaDir();const fx=P.fx,fy=P.fy,d=TPA.dir;P.fx=d=='l'?-1:d=='r'?1:0;P.fy=d=='b'?-1:d=='f'?1:0;try{return dp.apply(this,arguments)}finally{P.fx=fx;P.fy=fy}}}
 {const fw=fvWeapon;fvWeapon=function(){if(PRI&&TPS)return;return fw.apply(this,arguments)}}
-/* show the sprite and a blob shadow only while the frame is rendered */
+/* show the sprite and a blob shadow only while the frame is rendered; the sprite leans into a strafe and kicks back when firing */
 {const vd=v3Draw;v3Draw=function(){try{if(V3&&V3.R&&!V3.R._tp){const R=V3.R,r0=R.render;R.render=function(s,c){let e=null;
-   try{if(s===V3.S&&tpsOn()){e=V3.ents.get('P');if(e&&e.m){e.m.visible=true;e.m.castShadow=false}
+   try{if(s===V3.S&&tpsOn()&&!(typeof CNS!="undefined"&&CNS.on)){e=V3.ents.get('P');const dt=FV.dt||.016;
+     if(e&&e.m){e.m.visible=true;e.m.castShadow=false;const mv=Math.hypot(FV.mvx||0,FV.mvy||0)>.1,tl=(TPA.dir=='r'?-.07:TPA.dir=='l'?.07:0)*(mv?1:0)-(TPA.run>.4?.03:0);TPA.lean+=(tl-TPA.lean)*Math.min(1,dt*9);
+      const kick=P.cd>0?Math.min(1,P.cd/.45):0;e.m.rotation.z=TPA.lean;e.m.scale.y*=1+(!mv?Math.sin(performance.now()/620)*.006:0)-kick*.03;e.m.scale.x*=1+kick*.02}
      if(!FV.psh){const m=new THREE.Mesh(new THREE.CircleGeometry(.42,14),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.32,depthWrite:false,fog:false}));m.rotation.x=-Math.PI/2;m.renderOrder=2;V3.S.add(m);FV.psh=m}
      FV.psh.visible=true;FV.psh.position.set(P.x/T,v3HW(P.x,P.y)+.03,P.y/T)}else if(FV.psh)FV.psh.visible=false}catch(x){}
+   try{if(s===V3.S&&PRI&&fvOn())tiltEnts()}catch(x){}
    try{return r0.apply(this,arguments)}finally{if(e&&e.m)e.m.visible=false}};R._tp=1}}catch(e){}
   return vd.apply(this,arguments)}}
+/* sprites lean back from a camera that is above them (and forward when it is below), so they are never seen foreshortened */
+function tiltEnts(){const cam=V3.cam;for(const[k,e]of FV.ent){const m=e.m;if(!m||!m.visible)continue;if(m.rotation.order!=='YXZ')m.rotation.order='YXZ';
+ const dx=cam.position.x-m.position.x,dz=cam.position.z-m.position.z,h=Math.hypot(dx,dz)||1,el=Math.atan2(cam.position.y-(m.position.y+.7),h);m.rotation.x=Math.max(-.9,Math.min(.9,-el*.85))}}
 
 /* ===== z320: free look — no click needed: moving the mouse turns the view, the cursor is hidden over the picture, and pushing it to a screen edge keeps turning ===== */
 const FLK={out:true,edge:0};
+const FLK_V=e=>FLK.out?0:(e<-.9?(-e-.9)/.1:e>.96?(e-.96)/.04:0);
 document.addEventListener('mouseleave',()=>{FLK.out=true});document.addEventListener('mouseenter',()=>{FLK.out=false});
 addEventListener('blur',()=>{FLK.out=true});addEventListener('mousemove',()=>{FLK.out=false},true);
 {const up=update;update=function(dt){
@@ -14947,6 +14961,7 @@ addEventListener('blur',()=>{FLK.out=true});addEventListener('mousemove',()=>{FL
   try{if(PRI&&state=='play'&&!TCH.on&&fvLive()){
     const ex=Math.max(-1,Math.min(1,(ms.x/VW-.5)*2)),a=FLK.out?0:Math.max(0,Math.abs(ex)-.84)/.16;FLK.edge=a;
     if(a>0)FV.yaw-=Math.sign(ex)*a*2.4*(dt||.016);
+    const ey=Math.max(-1,Math.min(1,(ms.y/VH-.5)*2)),ay=FLK_V(ey);if(ay)FV.pitch=Math.max(-1.2,Math.min(1.2,FV.pitch-Math.sign(ey)*ay*1.5*(dt||.016)));
     const hide=!FLK.out&&ms.y>26&&ms.y<VH-40;if(C.style.cursor!==(hide?'none':''))C.style.cursor=hide?'none':''
   }else if(C.style.cursor==='none')C.style.cursor=''}catch(e){}
   return r}}
@@ -14954,7 +14969,8 @@ addEventListener('blur',()=>{FLK.out=true});addEventListener('mousemove',()=>{FL
 
 /* ===== z321: the rest of the scenery turns pixel-3D too — birches and tall grass are built from little cubes, every other leftover flat prop is extruded from its own sprite (pixel by pixel); only people, monsters and flat wall/ground decals stay flat ===== */
 const PXM=new THREE.MeshLambertMaterial({vertexColors:true});
-const PXSKIP={pdoll:1,bones:1,papers:1,pcrack:1,pnote:1,pframe:1,pcal:1};
+const PXSKIP={pdoll:1,bones:1,papers:1,pnote:1,pframe:1,pcal:1};
+const PXFLAT={plane:1,hpad:1,pcrack:1};
 const PXTHIN={pflag:1,pbanner:1};
 const PXC=new Map();
 function pxPix(s){let c=PXC.get(s.cv);if(c&&c.w===s.cv.width&&c.h===s.cv.height)return c;const cv=s.cv,w=cv.width,h=cv.height,d=cv.getContext('2d').getImageData(0,0,w,h).data,px=new Array(w*h).fill(null),cnt=new Map();let n=0,x0=999,x1=-1;
@@ -14969,6 +14985,10 @@ function pxExtrude(A,o,tx,ty,gy,s){const c=pxPix(s);if(!c.n||c.n>1800)return fal
   if(!at(i,j-1))fvFace(A,[x0,y1,z0],[x1,y1,z0],[x1,y1,z1],[x0,y1,z1],[0,1,0],col,1.1);
   if(!at(i-1,j))fvFace(A,[x0,y1,z0],[x0,y1,z1],[x0,y0,z1],[x0,y0,z0],[-1,0,0],col,.78);
   if(!at(i+1,j))fvFace(A,[x1,y1,z1],[x1,y1,z0],[x1,y0,z0],[x1,y0,z1],[1,0,0],col,.84)}
+ return true}
+/* road paint, helipad marks, cracks: the sprite laid flat on the ground */
+function pxFlat(A,o,tx,ty,gy,s){const c=pxPix(s);if(!c.n)return false;const u=1/16,fh=o.fh||1,y=gy+.03;
+ for(let j=0;j<c.h;j++)for(let i=0;i<c.w;i++){const col=c.px[j*c.w+i];if(!col)continue;const x0=tx+i*u-1,x1=x0+u,z1=ty+fh-(c.h-j-1)*u,z0=z1-u;fvFace(A,[x0,y,z0],[x1,y,z0],[x1,y,z1],[x0,y,z1],[0,1,0],col,1.12)}
  return true}
 /* a bare winter birch: white trunk with dark marks, thin branches, a little snow */
 function pxBirch(A,tx,ty,gy){const r=k=>aHash(tx*13+k,ty*7+k*3,91+k),cx=tx+.5+(r(1)-.5)*.35,cz=ty+.5+(r(2)-.5)*.35,Ht=4+r(3)*1.4,tw=.07+r(4)*.02,
@@ -14988,6 +15008,8 @@ function pxGrass(A,s,tx,ty,gy){const pal=pxPix(s).pal,r=k=>aHash(tx*17+k,ty*11+k
   if(r(i+40)<.3)fvCube(A,bx-w+lean,gy+hh,bz-w+lz,bx+w+lean,gy+hh+.035,bz+w+lz,sn,null,false)}}
 /* called for every leftover flat sprite while a chunk is built */
 function pxConv(ch,b,o,tx,ty){if(!ch._px||PXSKIP[o.t])return false;const A=ch._px,gy=b.y;
+ if(o.t=='fix'){const y0=gy+1.8,c1=new THREE.Color(.86,.85,.78);fvCube(A,tx+.12,y0,ty+.4,tx+.88,y0+.06,ty+.6,c1,null,false);fvCube(A,tx+.16,y0-.012,ty+.43,tx+.84,y0,ty+.57,new THREE.Color(.98,.97,.88),null,false);return true}
+ if(PXFLAT[o.t]){const s0=v3Sprite(o,tx,ty);return pxFlat(A,o,tx,ty,gy,s0)}
  if(o.t=='pbirch'){pxBirch(A,tx,ty,gy);return true}
  const s=v3Sprite(o,tx,ty);if(o.t=='tgrass'){pxGrass(A,s,tx,ty,gy);return true}
  return pxExtrude(A,o,tx,ty,gy,s)}
@@ -14997,12 +15019,112 @@ function pxFlush(ch){const A=ch._px;ch._px=null;if(!A||!A.P.length)return;const 
 let PRCOOP=false;
 {const in_=init;init=function(...a){if(!PRCOOP)return in_.apply(this,a);a[0]=PRIS;const r=in_.apply(this,a);try{priBuild();PRI=priNew();PRI.day0=day;priPlacePlayer()}catch(e){console.warn('coop init',e)}return r}}
 {const go=goOnline;goOnline=async function(code){PRCOOP=true;try{await go.apply(this,arguments)}finally{PRCOOP=false}
-  try{if(net&&state=='play'&&PRI&&!PRI.coopT){PRI.coopT=1;if(!net.isHost){P.x+=T*1.6;P.y+=T*.6}priOpening()}}catch(e){console.warn('coop open',e)}}}
+  try{if(net&&state=='play'&&PRI&&!PRI.coopT){PRI.coopT=1;if(!net.isHost){P.x+=T*1.6;P.y+=T*.6}if(typeof plbBegin=='function')plbBegin();else priOpening()}}catch(e){console.warn('coop open',e)}}}
 {const lg=lobbyGo;lobbyGo=function(){if(typeof lcode=='string'&&!lcode.length)lcode='P'+Math.random().toString(36).slice(2,6).toUpperCase().padEnd(4,'0');return lg.apply(this,arguments)}}
 function coopTags(){noTr=true;try{
  for(const p of net.peers){const q=p.presence;if(!q||!isFinite(q.x)||!isFinite(q.y)||!peerSame(q))continue;const qx=isFinite(p.sx)?p.sx:q.x,qy=isFinite(p.sy)?p.sy:q.y,s=fvScr(qx,qy,2.25*FVU);if(!s)continue;fvTag(String(q.n||'?').slice(0,12),s[0],s[1],'#8fe0ff')}
  const hu=LANG=='hu',n=net.peers.length+1,t='CO-OP  '+net.code+'  ·  '+n+(hu?' játékos':' players');g.font=fnt(0,8);const w=Math.ceil(g.measureText(t).width)+10;Q(VW/2-w/2,VH-58,w,12,'rgba(12,10,8,.66)');txt(t,VW/2,VH-49,'#8fe0ff','center')}finally{noTr=false}}
 {const h0=hud;hud=function(){const r=h0.apply(this,arguments);try{if(PRI&&net&&!net.dead&&state=='play'&&fvOn()&&!fvUI())coopTags()}catch(e){noTr=false}return r}}
+
+/* ===== z323: the opening is a slow cutscene — a camera flies over the Ferris wheel, the monument and the HQ hut, letterbox bars, text typed out slowly; Space / Enter / click skips ===== */
+const CNS={on:false,t:0,T:41.4,out:false,ot:0,a:1,fin:0,sv:null,yaw:0,skip:false};
+const CNSL=[[2.3,6.2,'1986. április 26., 01:23.','April 26, 1986 — 01:23.'],
+ [6.6,13.6,'A 4-es reaktor felrobban. Ötvenezer ember azt hiszi, csak pár napra mennek el.','Reactor four explodes. Fifty thousand people think they are leaving for a few days.'],
+ [16.2,20.6,'Soha nem jöttek vissza.','They never came back.'],
+ [20.9,27.0,'2070. A világ befagyott, de Pripjaty ugyanaz maradt — mintha megállt volna az idő.','2070. The world froze over, but Pripyat stayed the same — as if time had stopped.'],
+ [28.8,34.2,'A csendben mozgás van. Ők még itt vannak.','Something moves in the silence. They are still here.'],
+ [34.6,40.6,'Te vagy az új stalker. Maradj melegen. Figyeld a Geigert.','You are the new stalker. Stay warm. Watch the Geiger counter.']];
+const ciSm=u=>{u=Math.max(0,Math.min(1,u));return u*u*(3-2*u)},ciL=(a,b,u)=>a+(b-a)*u;
+let CNSS=null;
+function cinShots(){if(CNSS)return CNSS;let wx=161,wz=130,mx=182,mz=161;
+ for(let i=0;i<W*H;i++){const o=ob[i];if(!o||o.pm!=null)continue;if(o.t=='pwheel'){wx=i%W+(o.fw||6)/2;wz=((i/W)|0)+(o.fh||6)/2}else if(o.t=='pmon'){mx=i%W+(o.fw||2)/2;mz=((i/W)|0)+(o.fh||2)/2}}
+ const hx=170,hz=288;
+ CNSS=[{t0:0,d:14.6,f:u=>{const e=ciSm(u),a=ciL(2.55,3.35,e),r=ciL(19,15,e);return[wx+Math.sin(a)*r,wz-Math.cos(a)*r,ciL(10,5.5,e),wx,wz,ciL(6.6,5.6,e)]}},
+  {t0:14.6,d:12.6,f:u=>{const e=ciSm(u),a=ciL(.4,1.15,e),r=ciL(10,6.5,e);return[mx+Math.sin(a)*r,mz+Math.cos(a)*r,ciL(1.5,2.1,e),mx,mz,ciL(2.4,3.2,e)]}},
+  {t0:27.2,d:14.2,f:u=>{const e=ciSm(u);return[ciL(179,173,e),ciL(299,295,e),ciL(1.3,2.7,e),hx,hz,ciL(1.7,2.6,e)]}}];return CNSS}
+function cinStart(){if(window.NOCUT||/nocut/.test(location.search)||CNS.on||!PRI)return;CNSS=null;CNS.on=true;CNS.t=0;CNS.out=false;CNS.ot=0;CNS.skip=false;CNS.a=1;CNS.fin=0;CNS.sv={x:P.x,y:P.y};if(typeof THREE!='undefined')FPV=true}
+function cinEnd(){CNS.on=false;CNS.out=false;if(CNS.sv){P.x=CNS.sv.x;P.y=CNS.sv.y}CNS.fin=1.1;try{FV.yaw=-1.25;FV.pitch=-.05;FV.tpD=null;cam.x=cl(P.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y-VH/(2*ZM),0,H*T-VH/ZM)}catch(e){}
+ try{const e=document.getElementById('prcap');if(e)e.style.display='none'}catch(x){}try{say(prT('Pripjaty, 1986. Mintha megállt volna az idő.','Pripjat, 1986. As if time had stopped.'))}catch(e){}}
+function cinStep(dt){CNS.t+=dt;if(typeof THREE!='undefined'&&V3&&V3.ok)FPV=true;if(CNS.skip&&!CNS.out){CNS.out=true;CNS.ot=0}
+ if(CNS.out){CNS.ot+=dt;if(CNS.ot>=.7){cinEnd();return}}else if(CNS.t>=CNS.T){CNS.out=true;CNS.ot=0}
+ const S=cinShots();let sh=S[S.length-1];for(const q of S)if(CNS.t>=q.t0&&CNS.t<q.t0+q.d){sh=q;break}
+ const lt=CNS.t-sh.t0;let a=lt<.9?1:Math.max(0,1-(lt-.9)/1);const rem=sh.d-lt;if(rem<.8)a=Math.max(a,1-rem/.8);if(CNS.out)a=Math.max(a,Math.min(1,CNS.ot/.7));CNS.a=a;CNS.sh=sh;CNS.u=Math.min(1,lt/sh.d)}
+/* the camera */
+{const fc=fvCam;fvCam=function(){if(!CNS.on||!CNS.sh)return fc.apply(this,arguments);const c=V3.cam,v=CNS.sh.f(CNS.u),gx=v[0],gz=v[1],gy=v3HW(gx*T,gz*T);
+ c.position.set(gx,gy+v[2],gz);c.rotation.order='YXZ';const lx=v[3],lz=v[4],ly=v3HW(lx*T,lz*T)+v[5];c.lookAt(lx,ly,lz);
+ if(Math.abs(c.fov-52)>.01||c.near!==.04){c.fov=52;c.near=.04;c.far=140;c.updateProjectionMatrix()}
+ P.x=cl(gx*T,16,(W-2)*T);P.y=cl(gz*T,16,(H-2)*T);FV.yaw=Math.atan2(-(lx-gx),-(lz-gz));
+ const tg=FV.tg||(FV.tg=new THREE.Vector3());tg.set(gx,gy,gz);V3.tgt=tg.clone();return tg}}
+try{FVUI.push(()=>CNS.on)}catch(e){}
+/* the world stands still while it plays */
+{const up=update;update=function(dt){if(PRI&&CNS.on&&state=='play'){cinStep(dt);return}if(CNS.fin>0)CNS.fin=Math.max(0,CNS.fin-dt);return up.apply(this,arguments)}}
+for(const ev of['keydown','mousedown','touchstart'])addEventListener(ev,e=>{if(!CNS.on||CNS.out)return;if(ev=='keydown'&&!/^(Space|Enter|Escape|NumpadEnter)$/.test(e.code))return;try{e.preventDefault();e.stopImmediatePropagation()}catch(x){}CNS.skip=true},true);
+{const po=priOpening;priOpening=function(){const r=po.apply(this,arguments);try{cinStart()}catch(e){console.warn('cut',e)}return r}}
+/* drawing: bars, typed subtitles, fade */
+function cinWrap(t,maxw){const w=t.split(' '),L=[];let c='';for(const x of w){const n=c?c+' '+x:x;if(g.measureText(n).width>maxw&&c){L.push(c);c=x}else c=n}if(c)L.push(c);return L}
+function drawCin(){try{weather()}catch(e){}
+ const bh=Math.round(VH*.115*Math.min(1,CNS.t/.9)),hu=LANG=='hu';Q(0,0,VW,bh,'#000');Q(0,VH-bh,VW,bh,'#000');
+ noTr=true;try{let li=null;for(const l of CNSL)if(CNS.t>=l[0]&&CNS.t<l[1]+.5){li=l;break}
+  if(li){const t=hu?li[2]:li[3],n=Math.min(t.length,Math.floor((CNS.t-li[0])*17)),done=n>=t.length,al=Math.min(1,(li[1]+.5-CNS.t)/.5);g.font=fnt(1,10);const L=cinWrap(t,VW-90);let k=0;g.globalAlpha=Math.max(0,Math.min(1,al))*(1-CNS.a*.9);
+   const y0=VH-bh-6-(L.length-1)*13;for(let j=0;j<L.length;j++){const part=t.slice(0,n),cut=L.slice(0,j).join(' ').length+(j?1:0),seg=part.slice(cut,cut+L[j].length);if(seg.length){txt(seg+(!done&&j==L.length-1||(!done&&seg.length<L[j].length)?'_':''),VW/2,y0+j*13+1,'#000','center');txt(seg+(!done&&seg.length<L[j].length?'_':''),VW/2,y0+j*13,'#efe6c4','center')}}g.globalAlpha=1}
+  g.globalAlpha=.55;g.font=fnt(0,7);txt(hu?'Szóköz / Enter / kattintás: kihagyás':'Space / Enter / click: skip',VW-8,VH-5,'#9a9a8a','right');g.globalAlpha=1;
+  if(CNS.a>0){g.globalAlpha=CNS.a;Q(0,0,VW,VH,'#000');g.globalAlpha=1}}finally{noTr=false;g.globalAlpha=1}}
+{const h0=hud;hud=function(){if(PRI&&CNS.on&&state=='play'){try{const e=document.getElementById('prcap');if(e)e.style.display='none'}catch(x){}drawCin();return}
+ const r=h0.apply(this,arguments);if(PRI&&CNS.fin>0&&state=='play'){g.globalAlpha=Math.min(1,CNS.fin/1.1);Q(0,0,VW,VH,'#000');g.globalAlpha=1}return r}}
+
+/* ===== z324: co-op lobby — after joining with the room code, a waiting room (DOM overlay): the code (copyable), who is in, ready / Start (host), Leave. Start → everyone gets the opening cutscene; joining late skips it ===== */
+const PLB={on:false,ready:false,seen:{},list:[],go:false,el:null,iv:0,t0:0,late:false};
+const plbH=()=>LANG=='hu';
+function plbBegin(){const nt=net;if(!nt||PLB.on)return;PLB.on=true;PLB.ready=false;PLB.seen={};PLB.list=[];PLB.go=false;PLB.late=false;PLB.t0=performance.now();PLB.nt=nt;
+ const r=nt.r;
+ r.on('plbr',m=>{if(!nt.isHost||!m||!m.data)return;PLB.seen[m.from]={n:String(m.data.n||'?').slice(0,12),r:!!m.data.r,t:performance.now()}});
+ r.on('plbs',m=>{if(nt.isHost||!m||!m.data)return;const d=m.data;PLB.list=Array.isArray(d.l)?d.l:[];if(d.go&&PLB.on){PLB.late=performance.now()-PLB.t0<2500;plbGo(PLB.late)}else if(d.go)PLB.go=true});
+ plbDom();plbTick();clearInterval(PLB.iv);PLB.iv=setInterval(plbTick,400)}
+function plbGo(skipCut){PLB.on=false;PLB.go=true;clearInterval(PLB.iv);PLB.iv=0;plbShow(false);
+ try{if(skipCut){say(plbH()?'Csatlakoztál a játékhoz':'You joined the game')}else priOpening()}catch(e){console.warn('plbGo',e)}
+ if(net&&net.isHost){PLB.hiv=setInterval(()=>{if(!net||net.dead){clearInterval(PLB.hiv);return}try{net.r.emit('plbs',{go:1,l:[]})}catch(e){}},1500)}}
+function plbTick(){const nt=net;if(!PLB.on)return;if(!nt||nt.dead){plbRender();return}
+ const me={id:nt.r.id,n:String(uname||'Player').slice(0,12),r:nt.isHost?true:PLB.ready,h:nt.isHost};
+ if(nt.isHost){const now=performance.now(),l=[me];for(const p of nt.peers){const s=PLB.seen[p.id];l.push({id:p.id,n:s&&now-s.t<4000?s.n:'…',r:!!(s&&s.r&&now-s.t<4000),h:false})}
+  PLB.list=l;try{nt.r.emit('plbs',{l})}catch(e){}}
+ else{try{nt.r.emit('plbr',{n:me.n,r:me.r})}catch(e){}}
+ plbRender()}
+function plbDom(){if(PLB.el)return PLB.el;const d=document.createElement('div');d.id='prlb';
+ d.style.cssText='position:fixed;left:0;top:0;right:0;bottom:0;z-index:90;display:none;align-items:center;justify-content:center;background:rgba(6,8,6,.82);font-family:"DejaVu Sans",Arial,sans-serif;color:#efe6c4;-webkit-user-select:none;user-select:none';
+ d.innerHTML='<div style="width:min(440px,92vw);background:#14160f;border:2px solid #e8c43a;box-shadow:0 6px 30px #000;padding:18px 22px 16px;text-align:center">'
+ +'<div id="prlb_t" style="font-size:12px;letter-spacing:.22em;color:#8fe0ff;font-weight:700"></div>'
+ +'<div style="margin:8px 0 2px;font-size:11px;color:#9a9a8a" id="prlb_h"></div>'
+ +'<div id="prlb_c" style="font-size:36px;font-weight:700;letter-spacing:.3em;color:#ffd84a;margin:2px 0 8px;padding-left:.3em"></div>'
+ +'<button id="prlb_cp" style="font:inherit;font-size:11px;background:#262a1c;color:#efe6c4;border:1px solid #5a6446;padding:4px 12px;cursor:pointer"></button>'
+ +'<div id="prlb_l" style="margin:14px 0 6px;text-align:left"></div>'
+ +'<div id="prlb_m" style="min-height:16px;font-size:11px;color:#c9b26a;margin:4px 0 10px"></div>'
+ +'<div style="display:flex;gap:10px;justify-content:center"><button id="prlb_go" style="font:inherit;font-size:13px;font-weight:700;background:#e8c43a;color:#1a1608;border:0;padding:8px 22px;cursor:pointer"></button>'
+ +'<button id="prlb_lv" style="font:inherit;font-size:13px;background:#3a2018;color:#efd0c4;border:1px solid #7a4a3a;padding:8px 16px;cursor:pointer"></button></div></div>';
+ document.body.appendChild(d);PLB.el=d;
+ const $=i=>d.querySelector('#'+i);
+ $('prlb_cp').onclick=()=>{const c=net&&net.code||'';try{navigator.clipboard.writeText(c)}catch(e){const t=document.createElement('textarea');t.value=c;document.body.appendChild(t);t.select();try{document.execCommand('copy')}catch(x){}t.remove()}$('prlb_cp').textContent=plbH()?'Kimásolva ✓':'Copied ✓';setTimeout(plbRender,1400)};
+ $('prlb_go').onclick=plbAct;$('prlb_lv').onclick=plbLeave;return d}
+function plbAct(){const nt=net;if(!PLB.on||!nt||nt.dead)return;
+ if(nt.isHost){try{nt.r.emit('plbs',{go:1,l:PLB.list})}catch(e){}plbGo(false)}else{PLB.ready=!PLB.ready;plbTick()}}
+function plbLeave(){PLB.on=false;clearInterval(PLB.iv);plbShow(false);try{if(net){net.r.leave().catch(()=>{})}}catch(e){}net=null;state='title'}
+function plbShow(v){if(PLB.el)PLB.el.style.display=v?'flex':'none'}
+function plbRender(){if(!PLB.on){plbShow(false);return}const d=plbDom(),$=i=>d.querySelector('#'+i),hu=plbH(),nt=net;plbShow(true);
+ const dead=!nt||nt.dead;
+ $('prlb_t').textContent=hu?'CO-OP ELŐSZOBA':'CO-OP LOBBY';$('prlb_h').textContent=hu?'Szoba kód — a másik játékos ezt adja meg az Online co-opnál':'Room code — the other player types this in Online co-op';
+ $('prlb_c').textContent=nt&&nt.code||'—';if(!$('prlb_cp').textContent.includes('✓'))$('prlb_cp').textContent=hu?'Kód másolása':'Copy code';
+ const L=PLB.list.length?PLB.list:[{id:'me',n:String(uname||'Player').slice(0,12),r:!!(nt&&nt.isHost),h:!!(nt&&nt.isHost)}];
+ $('prlb_l').innerHTML=L.map(p=>{const me=nt&&p.id===nt.r.id,st=p.h?(hu?'HOST':'HOST'):(p.r?(hu?'kész':'ready'):(hu?'várakozik':'waiting')),col=p.h||p.r?'#8fe0a0':'#c9b26a';
+  return '<div style="display:flex;justify-content:space-between;padding:5px 8px;margin:3px 0;background:#1d2016;border-left:3px solid '+(me?'#8fe0ff':'#4a5238')+';font-size:13px"><span>'+String(p.n).replace(/[<>&]/g,'')+(me?(hu?'  (te)':'  (you)'):'')+'</span><span style="color:'+col+';font-size:11px;font-weight:700">'+st+'</span></div>'}).join('');
+ const n=L.length;
+ $('prlb_m').textContent=dead?(hu?'A host kilépett — a szoba megszűnt.':'The host left — the room is closed.'):nt.isHost?(n<2?(hu?'Még senki sem csatlakozott — indíthatsz egyedül is, később is be tudnak jönni.':'Nobody has joined yet — you can start alone; others can join later.'):(hu?'Indítsd el, ha mindenki kész.':'Start when everyone is ready.')):(PLB.ready?(hu?'Várjuk, hogy a host elindítsa a játékot…':'Waiting for the host to start…'):(hu?'Nyomd meg a Kész gombot.':'Press Ready.'));
+ const go=$('prlb_go');go.style.display=dead?'none':'';go.textContent=nt&&nt.isHost?(hu?'INDÍTÁS':'START'):(PLB.ready?(hu?'Mégsem kész':'Not ready'):(hu?'KÉSZ':'READY'));$('prlb_lv').textContent=hu?'Kilépés':'Leave'}
+/* the world stands still, keys go to the lobby */
+{const up=update;update=function(dt){if(PLB.on&&state=='play')return;return up.apply(this,arguments)}}
+addEventListener('keydown',e=>{if(!PLB.on)return;if(/^(Enter|NumpadEnter|Space)$/.test(e.code))plbAct();else if(e.code=='Escape')plbLeave();try{e.preventDefault();e.stopImmediatePropagation()}catch(x){}},true);
+for(const ev of['mousedown','mouseup','click','touchstart','wheel'])addEventListener(ev,e=>{if(!PLB.on)return;if(e.target&&e.target.closest&&e.target.closest('#prlb'))return;try{e.stopImmediatePropagation()}catch(x){}},true);
+try{FVUI.push(()=>PLB.on)}catch(e){}
+/* no calendar box on top of the cutscene / lobby */
+{const c=calOn209;calOn209=function(){if(PRI&&(CNS.on||PLB.on))return false;return c.apply(this,arguments)}}
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();

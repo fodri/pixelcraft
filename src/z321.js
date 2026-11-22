@@ -1,6 +1,7 @@
 /* ===== z321: the rest of the scenery turns pixel-3D too — birches and tall grass are built from little cubes, every other leftover flat prop is extruded from its own sprite (pixel by pixel); only people, monsters and flat wall/ground decals stay flat ===== */
 const PXM=new THREE.MeshLambertMaterial({vertexColors:true});
-const PXSKIP={pdoll:1,bones:1,papers:1,pcrack:1,pnote:1,pframe:1,pcal:1};
+const PXSKIP={pdoll:1,bones:1,papers:1,pnote:1,pframe:1,pcal:1};
+const PXFLAT={plane:1,hpad:1,pcrack:1};
 const PXTHIN={pflag:1,pbanner:1};
 const PXC=new Map();
 function pxPix(s){let c=PXC.get(s.cv);if(c&&c.w===s.cv.width&&c.h===s.cv.height)return c;const cv=s.cv,w=cv.width,h=cv.height,d=cv.getContext('2d').getImageData(0,0,w,h).data,px=new Array(w*h).fill(null),cnt=new Map();let n=0,x0=999,x1=-1;
@@ -15,6 +16,10 @@ function pxExtrude(A,o,tx,ty,gy,s){const c=pxPix(s);if(!c.n||c.n>1800)return fal
   if(!at(i,j-1))fvFace(A,[x0,y1,z0],[x1,y1,z0],[x1,y1,z1],[x0,y1,z1],[0,1,0],col,1.1);
   if(!at(i-1,j))fvFace(A,[x0,y1,z0],[x0,y1,z1],[x0,y0,z1],[x0,y0,z0],[-1,0,0],col,.78);
   if(!at(i+1,j))fvFace(A,[x1,y1,z1],[x1,y1,z0],[x1,y0,z0],[x1,y0,z1],[1,0,0],col,.84)}
+ return true}
+/* road paint, helipad marks, cracks: the sprite laid flat on the ground */
+function pxFlat(A,o,tx,ty,gy,s){const c=pxPix(s);if(!c.n)return false;const u=1/16,fh=o.fh||1,y=gy+.03;
+ for(let j=0;j<c.h;j++)for(let i=0;i<c.w;i++){const col=c.px[j*c.w+i];if(!col)continue;const x0=tx+i*u-1,x1=x0+u,z1=ty+fh-(c.h-j-1)*u,z0=z1-u;fvFace(A,[x0,y,z0],[x1,y,z0],[x1,y,z1],[x0,y,z1],[0,1,0],col,1.12)}
  return true}
 /* a bare winter birch: white trunk with dark marks, thin branches, a little snow */
 function pxBirch(A,tx,ty,gy){const r=k=>aHash(tx*13+k,ty*7+k*3,91+k),cx=tx+.5+(r(1)-.5)*.35,cz=ty+.5+(r(2)-.5)*.35,Ht=4+r(3)*1.4,tw=.07+r(4)*.02,
@@ -34,6 +39,8 @@ function pxGrass(A,s,tx,ty,gy){const pal=pxPix(s).pal,r=k=>aHash(tx*17+k,ty*11+k
   if(r(i+40)<.3)fvCube(A,bx-w+lean,gy+hh,bz-w+lz,bx+w+lean,gy+hh+.035,bz+w+lz,sn,null,false)}}
 /* called for every leftover flat sprite while a chunk is built */
 function pxConv(ch,b,o,tx,ty){if(!ch._px||PXSKIP[o.t])return false;const A=ch._px,gy=b.y;
+ if(o.t=='fix'){const y0=gy+1.8,c1=new THREE.Color(.86,.85,.78);fvCube(A,tx+.12,y0,ty+.4,tx+.88,y0+.06,ty+.6,c1,null,false);fvCube(A,tx+.16,y0-.012,ty+.43,tx+.84,y0,ty+.57,new THREE.Color(.98,.97,.88),null,false);return true}
+ if(PXFLAT[o.t]){const s0=v3Sprite(o,tx,ty);return pxFlat(A,o,tx,ty,gy,s0)}
  if(o.t=='pbirch'){pxBirch(A,tx,ty,gy);return true}
  const s=v3Sprite(o,tx,ty);if(o.t=='tgrass'){pxGrass(A,s,tx,ty,gy);return true}
  return pxExtrude(A,o,tx,ty,gy,s)}

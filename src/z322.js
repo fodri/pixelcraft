@@ -2,7 +2,7 @@
 let PRCOOP=false;
 {const in_=init;init=function(...a){if(!PRCOOP)return in_.apply(this,a);a[0]=PRIS;const r=in_.apply(this,a);try{priBuild();PRI=priNew();PRI.day0=day;priPlacePlayer()}catch(e){console.warn('coop init',e)}return r}}
 {const go=goOnline;goOnline=async function(code){PRCOOP=true;try{await go.apply(this,arguments)}finally{PRCOOP=false}
-  try{if(net&&state=='play'&&PRI&&!PRI.coopT){PRI.coopT=1;if(!net.isHost){P.x+=T*1.6;P.y+=T*.6}priOpening()}}catch(e){console.warn('coop open',e)}}}
+  try{if(net&&state=='play'&&PRI&&!PRI.coopT){PRI.coopT=1;if(!net.isHost){P.x+=T*1.6;P.y+=T*.6}if(typeof plbBegin=='function')plbBegin();else priOpening()}}catch(e){console.warn('coop open',e)}}}
 {const lg=lobbyGo;lobbyGo=function(){if(typeof lcode=='string'&&!lcode.length)lcode='P'+Math.random().toString(36).slice(2,6).toUpperCase().padEnd(4,'0');return lg.apply(this,arguments)}}
 function coopTags(){noTr=true;try{
  for(const p of net.peers){const q=p.presence;if(!q||!isFinite(q.x)||!isFinite(q.y)||!peerSame(q))continue;const qx=isFinite(p.sx)?p.sx:q.x,qy=isFinite(p.sy)?p.sy:q.y,s=fvScr(qx,qy,2.25*FVU);if(!s)continue;fvTag(String(q.n||'?').slice(0,12),s[0],s[1],'#8fe0ff')}

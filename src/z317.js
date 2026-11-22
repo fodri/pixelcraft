@@ -8,6 +8,6 @@ const prRatio=()=>Math.min(1,PRES/Math.max(1,C.clientWidth));
    else if(!PRI&&R._p25){R.setPixelRatio=R._sp;R.getPixelRatio=R._gp;R._p25=0;V3.w=-1}
    if(R._p25&&PRI&&fvA()){const want=prRatio();if(Math.abs(R._gp.call(R)-want)>.004){R._sp.call(R,want);V3.w=-1}}}}catch(e){}
   return vd.apply(this,arguments)}}
-{const ff=fvFrame;fvFrame=function(){if(PRI){FV.pitch=-.03;FV.vy=0;FV.hz=0;FV.cr=0;FV.slide=0;FV.fl=0;FV.flW=0}ff.apply(this,arguments)}}
+{const ff=fvFrame;fvFrame=function(){if(PRI){FV.pitch=Math.max(-1.05,Math.min(1.05,FV.pitch));FV.bob=0;FV.vy=0;FV.hz=0;FV.cr=0;FV.slide=0;FV.fl=0;FV.flW=0}ff.apply(this,arguments)}}
 {const fs=fvShadows;fvShadows=function(on){return fs.call(this,on&&!PRI)}}
 {const t0=toast112;toast112=function(a,b){if(PRI&&/FPS/.test(String(a)))b=LANG=='hu'?'Egér / nyilak: fordulás · W A S D: mozgás · Shift: futás · X: FPS / TPS nézet':'Mouse / arrows: turn · WASD: move · Shift: run · X: FPS / TPS view';return t0.call(this,a,b)}}
