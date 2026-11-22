@@ -14728,6 +14728,12 @@ priGauge=function(){const hu=LANG=='hu',x=VW-118,y=4,rate=P.rate||0,v=rate*.4,lv
   if(PRI.tv>.02){const gr=g.createRadialGradient(cw/2,ch/2,Math.min(cw,ch)*(.5-.34*PRI.tv),cw/2,ch/2,Math.max(cw,ch)*(.75-.2*PRI.tv));gr.addColorStop(0,'rgba(8,10,6,0)');gr.addColorStop(1,'rgba(8,10,6,'+(.97*PRI.tv)+')');g.fillStyle=gr;g.fillRect(0,0,cw,ch)}
  }finally{g.restore()}}}
 
+/* ===== z315: the 3D first-person view is not ready for Pripjaty yet — the demo stays in the top-down view ===== */
+{const fc=fvCan;fvCan=function(){return !PRI&&fc.apply(this,arguments)}}
+/* no wild horse herds in the dead city */
+{const hg=hrsGen219;hrsGen219=function(){if(PRI){HRS219=[];HID219=1;MNT219=null;return}return hg.apply(this,arguments)}}
+{const up=update;update=function(dt){up(dt);if(PRI&&HRS219.length&&state=='play')HRS219=[]}}
+
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
  if(state=='title')menu();if(state=='opts')optsMenu();if(state=='sndo')sndMenu();if(state=='gfxo')gfxMenu();if(state=='slots')svMenu();if(state=='keys')keysMenu();if(state=='wthr')wthrMenu();if(state=='char')charMenu();if(state=='lobby')drawLobby();if(state=='hb'){Q(0,0,VW,VH,'rgba(6,10,6,.6)');drawHB()}if(0)title('ASHFALL',['The spores took the cities. The forest took the rest.','Chop, fish, hunt, build. Hold the fire. Survive the nights.','','WASD move \u2022 Space chop / fish / attack \u2022 Tab recipes','Press any key']);
