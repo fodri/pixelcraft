@@ -13999,7 +13999,7 @@ function priSave(){try{if(PRI)localStorage.setItem(SKEY()+'_pri',JSON.stringify(
 {const p=PAL;p[0]=['#6e7a3e','#74803f','#7a8646','#808c4a'];p[3]=['#7a7e80','#74787a','#84888a','#7e8284']}
 const MIST={cv:null,t:0};
 function mistMake(){const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d'),r=prRng(1986);for(let i=0;i<22;i++){const px=r()*256,py=r()*256,rr=30+r()*56,gr=x.createRadialGradient(px,py,0,px,py,rr);gr.addColorStop(0,'rgba(222,230,240,.5)');gr.addColorStop(1,'rgba(222,230,240,0)');x.fillStyle=gr;for(const ox of[-256,0,256])for(const oy of[-256,0,256]){x.save();x.translate(ox,oy);x.fillRect(px-rr,py-rr,rr*2,rr*2);x.restore()}}MIST.cv=c}
-function priGrade(){if(!PRI||CLASSIC)return;const cw=g.canvas.width,ch=g.canvas.height,now=performance.now();
+function priGrade(){if(!PRI||CLASSIC||(typeof fvA=='function'&&fvA()))return;const cw=g.canvas.width,ch=g.canvas.height,now=performance.now();
  g.save();g.setTransform(1,0,0,1,0,0);
  try{g.globalCompositeOperation='saturation';g.fillStyle='rgba(128,128,128,'+(inD?.3:.5)+')';g.fillRect(0,0,cw,ch);
   g.globalCompositeOperation='multiply';g.fillStyle=inD?'rgb(212,206,188)':'rgb(204,213,228)';g.fillRect(0,0,cw,ch);
@@ -14636,7 +14636,7 @@ BIG.psign=function(o,x,y){const w=(o.fw||1)*T,h=(o.fh||1)*T,c=PSIGNC[o.k|0]||PSI
  if(lines.length==1)pFitTxt(lines[0],sx+w/2,sy+h/2+3.5,c[1],h>20?13:9,w-8);
  else{pFitTxt(lines[0],sx+w/2,sy+h/2-1,c[1],h>20?14:9,w-8);pFitTxt(lines[1],sx+w/2,sy+h-5,c[1],7,w-8)}};
 SOLID.psign=1;SOLID.p_psign=1;NMX.psign='sign';NMX.pbirch='birch';
-function pSign(x,y,w,h,tx,k){setFP({t:'psign',tx,k},x,y,w,h)}
+function pSign(x,y,w,h,tx,k,hy){setFP({t:'psign',tx,k,hy},x,y,w,h)}
 /* birches: white trunks, black marks, bare thin branches under snow */
 DRAWX.pbirch=function(o,x,y){const h=hs(x*.13,y*.17),tx=x+7,lean=h<.3?-1:h>.7?1:0;pShadow(x+2,y+13,12,3);
  for(let j=0;j<30;j++){const dx=Math.round(lean*j/14);W_(tx+dx,y+14-j,2,1,'#e6e4da');W_(tx+dx+1,y+14-j,1,1,'#b8b6ac')}
@@ -14647,7 +14647,7 @@ DRAWX.pbirch=function(o,x,y){const h=hs(x*.13,y*.17),tx=x+7,lean=h<.3?-1:h>.7?1:
 STYSKIP.pbirch=1;SOLID.pbirch=1;SOLID.p_pbirch=1;
 /* the ground-floor signs of the big buildings, street plates, the stele — placed once after the map is built */
 function priSigns(){const r=prRng(PRIS+31);
- const row=(x,y,w,h,tx,k)=>{for(let yy=y;yy<y+h;yy++)for(let xx=x;xx<x+w;xx++){const o=ob[yy*W+xx];if(o&&(o.t=='door'||o.t=='oup'||o.t=='odn'))return}pSign(x,y,w,h,tx,k)};
+ const row=(x,y,w,h,tx,k)=>{for(let yy=y;yy<y+h;yy++)for(let xx=x;xx<x+w;xx++){const o=ob[yy*W+xx];if(o&&(o.t=='door'||o.t=='oup'||o.t=='odn'))return}pSign(x,y,w,h,tx,k,1.35)};
  const face=(x,y,w,h,L,R_,kL,kR)=>{const hx=x+Math.floor(w/2),wy=y+h-1;if(L)row(hx-8,wy,5,1,L,kL);if(R_)row(hx+4,wy,5,1,R_,kR)};
  face(118,152,36,28,'ЭНЕРГЕТИК','ДВОРЕЦ КУЛЬТУРЫ',0,0);
  face(76,152,34,24,'ШКОЛА №3','УЧИТЬСЯ!',4,0);
@@ -14658,11 +14658,11 @@ function priSigns(){const r=prRng(PRIS+31);
  /* checkpoint huts */
  row(168,286,3,1,'ШТАБ',0);row(144,286,3,1,'СКЛАД',2);
  /* the city stele on the road in from the south */
- for(let yy=265;yy<268;yy++)for(let xx=165;xx<172;xx++)ob[yy*W+xx]=null;pSign(165,266,7,2,'ПРИПЯТЬ|1970',3);
+ for(let yy=265;yy<268;yy++)for(let xx=165;xx<172;xx++)ob[yy*W+xx]=null;pSign(165,266,7,2,'ПРИПЯТЬ|1970',3,0);
  /* street plates on the north pavements of the crossings */
  const EW=['ПР. ЛЕНИНА','УЛ. КУРЧАТОВА','УЛ. ЭНТУЗИАСТОВ','УЛ. ДРУЖБЫ НАРОДОВ'],NS=['УЛ. ГЕРОЕВ СТАЛИНГРАДА','БУЛЬВАР СТРОИТЕЛЕЙ'];
- let k=0;for(const[y,w]of PRS.ew)for(const[x,ww]of PRS.ns){const px=x-6,py=y-1;if(px<4)continue;let ok=true;for(let xx=px;xx<px+5;xx++)if(ob[py*W+xx]||map[py*W+xx]!=14)ok=false;if(ok)pSign(px,py,5,1,EW[k%EW.length],2);k++}
- k=0;for(const[x,w]of PRS.ns)for(const[y,ww]of PRS.ew){const px=x+w+1,py=y-1;let ok=true;for(let xx=px;xx<px+5;xx++)if(ob[py*W+xx]||map[py*W+xx]!=14)ok=false;if(ok)pSign(px,py,5,1,NS[k%NS.length],2);k++}
+ let k=0;for(const[y,w]of PRS.ew)for(const[x,ww]of PRS.ns){const px=x-6,py=y-1;if(px<4)continue;let ok=true;for(let xx=px;xx<px+5;xx++)if(ob[py*W+xx]||map[py*W+xx]!=14)ok=false;if(ok)pSign(px,py,5,1,EW[k%EW.length],2,.7);k++}
+ k=0;for(const[x,w]of PRS.ns)for(const[y,ww]of PRS.ew){const px=x+w+1,py=y-1;let ok=true;for(let xx=px;xx<px+5;xx++)if(ob[py*W+xx]||map[py*W+xx]!=14)ok=false;if(ok)pSign(px,py,5,1,NS[k%NS.length],2,.7);k++}
  /* birches replace a third of the trees outside the red forest */
  for(let i=0;i<W*H;i++){const o=ob[i];if(o&&o.t=='tree'){const x=i%W,y=(i/W)|0;if(!(x<110&&y<118)&&hs(x*.31,y*.27)<.38)ob[i]={t:'pbirch',hp:6}}}}
 {const f=priFinish;priFinish=function(r){const o=f.apply(this,arguments);try{priSigns()}catch(e){console.warn('signs',e)}return o}}
@@ -14718,21 +14718,37 @@ priGauge=function(){const hu=LANG=='hu',x=VW-118,y=4,rate=P.rate||0,v=rate*.4,lv
  g.font=fnt(0,7);txt(PRI.rub+(hu?' rubel':' rub')+' · '+(PRI.gas|0)+(hu?' gáz':' gas'),x+62,y+58,'#e8d890');noTr=false};
 {const po=priObj;priObj=function(){const y0=VH;po.apply(this,arguments)}}
 /* ---------- grade extras: frost edge, blizzard whiteout, filter tunnel vision, tube night vision ---------- */
-{const pg=priGrade;priGrade=function(){pg.apply(this,arguments);if(!PRI||CLASSIC)return;const cw=g.canvas.width,ch=g.canvas.height,tp=T*(cw/VW)*ZM;g.save();g.setTransform(1,0,0,1,0,0);
+{const pg=priGrade;priGrade=function(){pg.apply(this,arguments);if(!PRI||CLASSIC)return;const FPX=typeof fvA=='function'&&fvA();const cw=g.canvas.width,ch=g.canvas.height,tp=T*(cw/VW)*ZM;g.save();g.setTransform(1,0,0,1,0,0);
  try{
-  if(PRI.nv){g.globalCompositeOperation='multiply';g.fillStyle='rgb(120,255,150)';g.fillRect(0,0,cw,ch);g.globalCompositeOperation='lighter';g.fillStyle='rgba(18,70,28,'+(.22+dk0()*.3)+')';g.fillRect(0,0,cw,ch);g.globalCompositeOperation='source-over';
+  if(PRI.nv&&FPX){g.fillStyle='rgba(50,255,100,.3)';g.fillRect(0,0,cw,ch);g.fillStyle='rgba(0,0,0,.16)';for(let yy=0;yy<ch;yy+=3)g.fillRect(0,yy,cw,1)}
+  else if(PRI.nv){g.globalCompositeOperation='multiply';g.fillStyle='rgb(120,255,150)';g.fillRect(0,0,cw,ch);g.globalCompositeOperation='lighter';g.fillStyle='rgba(18,70,28,'+(.22+dk0()*.3)+')';g.fillRect(0,0,cw,ch);g.globalCompositeOperation='source-over';
    g.fillStyle='rgba(0,0,0,.18)';for(let yy=0;yy<ch;yy+=3)g.fillRect(0,yy,cw,1)}
   if(wea==2&&!inD){const gr=g.createRadialGradient(cw/2,ch/2,tp*3.2,cw/2,ch/2,tp*10);gr.addColorStop(0,'rgba(214,222,232,0)');gr.addColorStop(1,'rgba(214,222,232,.9)');g.fillStyle=gr;g.fillRect(0,0,cw,ch)}
   if(PRI.cw>0&&!inD){g.fillStyle='rgba(210,225,245,.1)';g.fillRect(0,0,cw,ch)}
   const fr=Math.max(0,(40-PRI.heat)/40);if(fr>0){const gr=g.createRadialGradient(cw/2,ch/2,Math.min(cw,ch)*.3,cw/2,ch/2,Math.max(cw,ch)*.75);gr.addColorStop(0,'rgba(220,235,255,0)');gr.addColorStop(1,'rgba(220,235,255,'+(.6*fr)+')');g.fillStyle=gr;g.fillRect(0,0,cw,ch)}
-  if(PRI.tv>.02){const gr=g.createRadialGradient(cw/2,ch/2,Math.min(cw,ch)*(.5-.34*PRI.tv),cw/2,ch/2,Math.max(cw,ch)*(.75-.2*PRI.tv));gr.addColorStop(0,'rgba(8,10,6,0)');gr.addColorStop(1,'rgba(8,10,6,'+(.97*PRI.tv)+')');g.fillStyle=gr;g.fillRect(0,0,cw,ch)}
+  if(PRI.tv>.02){const gr=g.createRadialGradient(cw/2,ch/2,Math.min(cw,ch)*(.45-.3*PRI.tv),cw/2,ch/2,Math.max(cw,ch)*(.62-.26*PRI.tv));gr.addColorStop(0,'rgba(8,10,6,0)');gr.addColorStop(1,'rgba(8,10,6,'+(.97*PRI.tv)+')');g.fillStyle=gr;g.fillRect(0,0,cw,ch)}
  }finally{g.restore()}}}
 
-/* ===== z315: the 3D first-person view is not ready for Pripjaty yet — the demo stays in the top-down view ===== */
-{const fc=fvCan;fvCan=function(){return !PRI&&fc.apply(this,arguments)}}
+/* ===== z315: first-person (3D) view in Pripjaty ===== */
 /* no wild horse herds in the dead city */
 {const hg=hrsGen219;hrsGen219=function(){if(PRI){HRS219=[];HID219=1;MNT219=null;return}return hg.apply(this,arguments)}}
 {const up=update;update=function(dt){up(dt);if(PRI&&HRS219.length&&state=='play')HRS219=[]}}
+/* landmarks and signs get their own upright planes in the 3D view: the wheel (it keeps turning), the park arch and every Cyrillic sign, readable from the front */
+const SP3={pwheel:{L:44,R:44,T:140,bk:1,y:0},pgate:{L:52,R:52,T:62,bk:1,y:0},psign:{L:0,R:0,T:0,bk:0,y:1.35}},TL3=new Map();
+{const bo=v3BuildObjs;v3BuildObjs=function(ch){bo.apply(this,arguments);
+ try{if(!PRI)return;const x0=ch.cx*GQS,y0=ch.cy*GQS;
+  for(let y=0;y<GQS;y++)for(let x=0;x<GQS;x++){const tx=x0+x,ty=y0+y,o=ob[ty*W+tx];if(!o||!SP3[o.t])continue;
+   const sp=SP3[o.t],s=v3Sprite(o,tx,ty),fw=o.fw||1,fh=o.fh||1;
+   for(const m of ch.og.children.slice())if(m.material===s.mat||(m.geometry&&m.geometry===s.gm))ch.og.remove(m);
+   const cw=fw*T+sp.L+sp.R,chh=fh*T+sp.T,key=tx+','+ty;let e=TL3.get(key);
+   if(!e||e.cv.width!==cw){const cv=document.createElement('canvas');cv.width=cw;cv.height=chh;const tex=v3Tex(cv),mat=new THREE.MeshLambertMaterial({map:tex,alphaTest:o.t=='psign'?.5:.06,side:THREE.FrontSide});if(o.t!='psign'){tex.generateMipmaps=false;tex.minFilter=THREE.LinearFilter;tex.magFilter=THREE.NearestFilter}e={cv,tex,mat,t:0};TL3.set(key,e)}
+   e.o=o;e.tx=tx;e.ty=ty;e.L=sp.L;e.Tm=sp.T;e.wh=o.t=='pwheel';v3Paint(e.cv,tx*T-sp.L,ty*T-sp.T,()=>{drawObj(o,tx*T,ty*T)});e.tex.needsUpdate=true;
+   const wu=cw/16,hu=chh/16,by=v3H(tx,ty)+(o.t=='psign'?(o.hy!=null?o.hy:sp.y):sp.y),mk=(z,ry)=>{const ge=new THREE.PlaneGeometry(wu,hu);ge.translate(ry?-(wu/2-sp.L/16):wu/2-sp.L/16,hu/2,0);const m=new THREE.Mesh(ge,e.mat);m.position.set(tx+(ry?fw:0),by,z);m.rotation.y=ry?Math.PI:0;m.castShadow=false;m.receiveShadow=false;ch.og.add(m);return m};
+   mk(ty+fh+.03,0);if(sp.bk&&!(o.hy>=1))mk(ty-.03,1)}
+ }catch(er){console.warn('sp3',er)}}}
+{const vd=v3Draw;v3Draw=function(){const r=vd.apply(this,arguments);try{if(PRI&&V3&&V3.on){const n=performance.now();for(const e of TL3.values()){if(e.wh&&n-e.t>120&&Math.hypot(e.tx*T-P.x,e.ty*T-P.y)<90*T){e.t=n;v3Paint(e.cv,e.tx*T-e.L,e.ty*T-e.Tm,()=>{drawObj(e.o,e.tx*T,e.ty*T)});e.tex.needsUpdate=true}}}}catch(er){}return r}}
+/* the winter haze is thick, but the landmarks have to show through it; a blizzard still closes in */
+{const vl=v3Light;v3Light=function(tg){vl.apply(this,arguments);if(PRI&&!inD&&wea!=2&&V3.S.fog){V3.S.fog.near*=1.7;V3.S.fog.far*=2.2}}}
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();

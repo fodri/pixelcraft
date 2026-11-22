@@ -33,7 +33,7 @@ function priSave(){try{if(PRI)localStorage.setItem(SKEY()+'_pri',JSON.stringify(
 {const p=PAL;p[0]=['#6e7a3e','#74803f','#7a8646','#808c4a'];p[3]=['#7a7e80','#74787a','#84888a','#7e8284']}
 const MIST={cv:null,t:0};
 function mistMake(){const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d'),r=prRng(1986);for(let i=0;i<22;i++){const px=r()*256,py=r()*256,rr=30+r()*56,gr=x.createRadialGradient(px,py,0,px,py,rr);gr.addColorStop(0,'rgba(222,230,240,.5)');gr.addColorStop(1,'rgba(222,230,240,0)');x.fillStyle=gr;for(const ox of[-256,0,256])for(const oy of[-256,0,256]){x.save();x.translate(ox,oy);x.fillRect(px-rr,py-rr,rr*2,rr*2);x.restore()}}MIST.cv=c}
-function priGrade(){if(!PRI||CLASSIC)return;const cw=g.canvas.width,ch=g.canvas.height,now=performance.now();
+function priGrade(){if(!PRI||CLASSIC||(typeof fvA=='function'&&fvA()))return;const cw=g.canvas.width,ch=g.canvas.height,now=performance.now();
  g.save();g.setTransform(1,0,0,1,0,0);
  try{g.globalCompositeOperation='saturation';g.fillStyle='rgba(128,128,128,'+(inD?.3:.5)+')';g.fillRect(0,0,cw,ch);
   g.globalCompositeOperation='multiply';g.fillStyle=inD?'rgb(212,206,188)':'rgb(204,213,228)';g.fillRect(0,0,cw,ch);

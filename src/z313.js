@@ -7,7 +7,7 @@ BIG.psign=function(o,x,y){const w=(o.fw||1)*T,h=(o.fh||1)*T,c=PSIGNC[o.k|0]||PSI
  if(lines.length==1)pFitTxt(lines[0],sx+w/2,sy+h/2+3.5,c[1],h>20?13:9,w-8);
  else{pFitTxt(lines[0],sx+w/2,sy+h/2-1,c[1],h>20?14:9,w-8);pFitTxt(lines[1],sx+w/2,sy+h-5,c[1],7,w-8)}};
 SOLID.psign=1;SOLID.p_psign=1;NMX.psign='sign';NMX.pbirch='birch';
-function pSign(x,y,w,h,tx,k){setFP({t:'psign',tx,k},x,y,w,h)}
+function pSign(x,y,w,h,tx,k,hy){setFP({t:'psign',tx,k,hy},x,y,w,h)}
 /* birches: white trunks, black marks, bare thin branches under snow */
 DRAWX.pbirch=function(o,x,y){const h=hs(x*.13,y*.17),tx=x+7,lean=h<.3?-1:h>.7?1:0;pShadow(x+2,y+13,12,3);
  for(let j=0;j<30;j++){const dx=Math.round(lean*j/14);W_(tx+dx,y+14-j,2,1,'#e6e4da');W_(tx+dx+1,y+14-j,1,1,'#b8b6ac')}
@@ -18,7 +18,7 @@ DRAWX.pbirch=function(o,x,y){const h=hs(x*.13,y*.17),tx=x+7,lean=h<.3?-1:h>.7?1:
 STYSKIP.pbirch=1;SOLID.pbirch=1;SOLID.p_pbirch=1;
 /* the ground-floor signs of the big buildings, street plates, the stele — placed once after the map is built */
 function priSigns(){const r=prRng(PRIS+31);
- const row=(x,y,w,h,tx,k)=>{for(let yy=y;yy<y+h;yy++)for(let xx=x;xx<x+w;xx++){const o=ob[yy*W+xx];if(o&&(o.t=='door'||o.t=='oup'||o.t=='odn'))return}pSign(x,y,w,h,tx,k)};
+ const row=(x,y,w,h,tx,k)=>{for(let yy=y;yy<y+h;yy++)for(let xx=x;xx<x+w;xx++){const o=ob[yy*W+xx];if(o&&(o.t=='door'||o.t=='oup'||o.t=='odn'))return}pSign(x,y,w,h,tx,k,1.35)};
  const face=(x,y,w,h,L,R_,kL,kR)=>{const hx=x+Math.floor(w/2),wy=y+h-1;if(L)row(hx-8,wy,5,1,L,kL);if(R_)row(hx+4,wy,5,1,R_,kR)};
  face(118,152,36,28,'ЭНЕРГЕТИК','ДВОРЕЦ КУЛЬТУРЫ',0,0);
  face(76,152,34,24,'ШКОЛА №3','УЧИТЬСЯ!',4,0);
@@ -29,11 +29,11 @@ function priSigns(){const r=prRng(PRIS+31);
  /* checkpoint huts */
  row(168,286,3,1,'ШТАБ',0);row(144,286,3,1,'СКЛАД',2);
  /* the city stele on the road in from the south */
- for(let yy=265;yy<268;yy++)for(let xx=165;xx<172;xx++)ob[yy*W+xx]=null;pSign(165,266,7,2,'ПРИПЯТЬ|1970',3);
+ for(let yy=265;yy<268;yy++)for(let xx=165;xx<172;xx++)ob[yy*W+xx]=null;pSign(165,266,7,2,'ПРИПЯТЬ|1970',3,0);
  /* street plates on the north pavements of the crossings */
  const EW=['ПР. ЛЕНИНА','УЛ. КУРЧАТОВА','УЛ. ЭНТУЗИАСТОВ','УЛ. ДРУЖБЫ НАРОДОВ'],NS=['УЛ. ГЕРОЕВ СТАЛИНГРАДА','БУЛЬВАР СТРОИТЕЛЕЙ'];
- let k=0;for(const[y,w]of PRS.ew)for(const[x,ww]of PRS.ns){const px=x-6,py=y-1;if(px<4)continue;let ok=true;for(let xx=px;xx<px+5;xx++)if(ob[py*W+xx]||map[py*W+xx]!=14)ok=false;if(ok)pSign(px,py,5,1,EW[k%EW.length],2);k++}
- k=0;for(const[x,w]of PRS.ns)for(const[y,ww]of PRS.ew){const px=x+w+1,py=y-1;let ok=true;for(let xx=px;xx<px+5;xx++)if(ob[py*W+xx]||map[py*W+xx]!=14)ok=false;if(ok)pSign(px,py,5,1,NS[k%NS.length],2);k++}
+ let k=0;for(const[y,w]of PRS.ew)for(const[x,ww]of PRS.ns){const px=x-6,py=y-1;if(px<4)continue;let ok=true;for(let xx=px;xx<px+5;xx++)if(ob[py*W+xx]||map[py*W+xx]!=14)ok=false;if(ok)pSign(px,py,5,1,EW[k%EW.length],2,.7);k++}
+ k=0;for(const[x,w]of PRS.ns)for(const[y,ww]of PRS.ew){const px=x+w+1,py=y-1;let ok=true;for(let xx=px;xx<px+5;xx++)if(ob[py*W+xx]||map[py*W+xx]!=14)ok=false;if(ok)pSign(px,py,5,1,NS[k%NS.length],2,.7);k++}
  /* birches replace a third of the trees outside the red forest */
  for(let i=0;i<W*H;i++){const o=ob[i];if(o&&o.t=='tree'){const x=i%W,y=(i/W)|0;if(!(x<110&&y<118)&&hs(x*.31,y*.27)<.38)ob[i]={t:'pbirch',hp:6}}}}
 {const f=priFinish;priFinish=function(r){const o=f.apply(this,arguments);try{priSigns()}catch(e){console.warn('signs',e)}return o}}
