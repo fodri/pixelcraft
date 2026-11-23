@@ -312,7 +312,7 @@ function menu(){const moved=ms.x!=lmx||ms.y!=lmy;lmx=ms.x;lmy=ms.y;Q(0,0,VW,VH,'
  noTr=true;txt(LANG=='hu'?'A karaktered':'Your character',VW/2+107,128,'#8fa07f','center');noTr=false;
  const hu=LANG=='hu';noTr=true;
  txt(hu?'WASD mozgás  Katt: művelet  Space: ugrás  E: interakció  C: barkácsolás':'WASD move   Click: act   Space: jump   E: interact   C: craft',VW/2,VH-30,'#8fa07f','center');
- txt(hu?'I: tárgyak  M: térkép  N: minitérkép  H: segítség  U: beragadás':'I: inventory   M: map   N: minimap   H: help   U: unstuck',VW/2,VH-20,'#8fa07f','center');
+ txt(hu?'I: tárgyak  M: térkép  N: minitérkép  H: segítség  U: beragadás  P: nézőpont  +/-: nagyítás':'I: inventory   M: map   N: minimap   H: help   U: unstuck   P: view   +/-: zoom',VW/2,VH-20,'#8fa07f','center');
  txt(hu?'W/S vagy egér: választás   Enter: ok':'W/S or mouse: choose   Enter: select',VW/2,VH-9,'#6f7c62','center');
  txt('Created by: Fodros Gergely',VW-6,VH-6,'#6f7c62','right');noTr=false}
 function menuAct(i){if(i==0){if(!started){if(!load()){init();tut=1}}started=true;state='play'}
@@ -13969,7 +13969,7 @@ gfxMenu=function(){if(PV225.big&&PV225.b&&PV225.a){pvBig225();return}PV225.big=f
 
 /* ===== z301: PRIPJATY 1986 — the one story mode. A hand-built city frozen in 1986, seen 84 years later by a stalker on the first day.
    Core: the mode card, starting the fixed world, saved state, the look (colour grade, mist, vignette, grain) ===== */
-GAMEV=304;
+GAMEV=305;
 const PRIS=19860426;
 var PRI=null;
 const prH=()=>LANG=='hu';
@@ -15580,6 +15580,37 @@ addEventListener('wheel',e=>{if(!stOpen||state!='play')return;const o=stOpen;con
 
 /* ===== z350 (PixelCRAFT only): for now the game is plain PixelCRAFT — "New game" starts Survival straight away, the Pripjaty 1986 mode card is not offered any more (the code stays, earlier Pripjaty saves still load) ===== */
 {const m=menuAct;menuAct=function(i){if(i==1&&!net&&!MODEQ&&state=='title'){snd('ui');return startMode(false)}return m.apply(this,arguments)}}
+
+/* ===== z351 (PixelCRAFT): the first-person view gets the sharper picture of ZIMA-86 — the chunky tile pixels of the ground get ragged, finely grained edges (UV warp + smooth sampling) and a fine grain; the 3D view renders at up to 1920 px wide instead of ~480. Only while the first-person view is on, the top-down / 3D Alpha looks stay as they were ===== */
+const GDU={value:0};
+const GDG={vs:'varying vec3 vWp;varying float vDs;\nvoid main() {',fs:'uniform float gdOn;varying vec3 vWp;varying float vDs;float gh(vec2 p){p=fract(p*vec2(.1031,.1030));p+=dot(p,p.yx+33.33);return fract((p.x+p.y)*p.x);}float vn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(gh(i),gh(i+vec2(1.,0.)),f.x),mix(gh(i+vec2(0.,1.)),gh(i+vec2(1.,1.)),f.x),f.y);}\nvoid main() {'};
+function gdMat(m){if(!m||m._gd)return;m._gd=1;const prev=m.onBeforeCompile;
+ m.onBeforeCompile=function(sh){if(prev)try{prev.call(this,sh)}catch(e){}
+  sh.uniforms.gdOn=GDU;
+  sh.vertexShader=sh.vertexShader.replace('void main() {',GDG.vs).replace('#include <project_vertex>','#include <project_vertex>\n vWp=(modelMatrix*vec4(transformed,1.0)).xyz;vDs=-mvPosition.z;');
+  sh.fragmentShader=sh.fragmentShader.replace('void main() {',GDG.fs).replace('#include <map_fragment>',
+   '{float fd=gdOn*(1.-smoothstep(9.,34.,vDs));vec4 texelColor;if(fd<=.001){texelColor=texture2D(map,vUv);}else{vec2 q=vWp.xz+vec2(vWp.y*.7);vec2 ts=vec2(1./512.);vec2 w=(vec2(gh(floor(q*48.)),gh(floor(q*48.)+17.))-.5)*7.+(vec2(vn(q*9.),vn(q*9.+31.))-.5)*9.;vec2 uv=vUv+w*ts*fd;vec2 f=fract(uv*512.-.5),b=(floor(uv*512.-.5)+.5)*ts;vec4 sm=mix(mix(texture2D(map,b),texture2D(map,b+vec2(ts.x,0.)),f.x),mix(texture2D(map,b+vec2(0.,ts.y)),texture2D(map,b+ts),f.x),f.y);texelColor=mix(texture2D(map,vUv),sm,fd);float d=(vn(q*5.)-.5)*.2+(gh(floor(q*18.)+9.)-.5)*.12+(gh(floor(q*56.)+3.)-.5)*.1;texelColor.rgb*=1.+d*fd;}texelColor=mapTexelToLinear(texelColor);diffuseColor*=texelColor;}')};
+ m.needsUpdate=true}
+{const f=v3BuildGround;v3BuildGround=function(ch){const r=f.apply(this,arguments);try{gdMat(ch.mat);gdMat(ch.amat)}catch(e){}return r}}
+/* resolution of the first-person picture (the base game renders it at game-pixel size, ~480 x 300) */
+const p51Ratio=()=>Math.min(1,1920/Math.max(1,C.clientWidth));
+{const vd=v3Draw;v3Draw=function(){try{GDU.value=(typeof fvA=='function'&&fvA())?1:0;
+  if(V3&&V3.R&&!PRI){const R=V3.R;
+   if(!R._p51){R._gp51=R.getPixelRatio;R._sp51=R.setPixelRatio;
+    R.setPixelRatio=function(r){this._rq51=r;if(!PRI&&fvA())r=p51Ratio();return this._sp51.call(this,r)};
+    R.getPixelRatio=function(){return(!PRI&&fvA()&&this._rq51!=null)?this._rq51:this._gp51.call(this)};R._p51=1;V3.w=-1}
+   if(fvA()){const want=p51Ratio();if(Math.abs(R._gp51.call(R)-want)>.004){R._sp51.call(R,want);V3.w=-1}}}}catch(e){}
+  return vd.apply(this,arguments)}}
+
+/* ===== z352 (PixelCRAFT): the camera is on keys — P switches between the top-down view and first person (the same as Settings → first-person view), + / − (or the numpad ones) zoom the top-down camera ===== */
+addEventListener('keydown',e=>{if(PRI||state!='play'||e.repeat||e.ctrlKey||e.altKey||e.metaKey)return;
+ const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;
+ const c=e.code;
+ if(c=='KeyP'){if(fvUI())return;e.preventDefault();fvToggle();return}
+ if(c=='Equal'||c=='NumpadAdd'||c=='Minus'||c=='NumpadSubtract'){if(fvUI()||showMap||fvA())return;e.preventDefault();
+  const d=(c=='Equal'||c=='NumpadAdd')?1:-1,n=Math.max(0,Math.min(ZL.length-1,zi+d));if(n===zi)return;zi=n;ZM=ZL[zi];try{localStorage.setItem('pxc_zm',zi)}catch(x){}
+  say((LANG=='hu'?'Nagyítás: ':'Zoom: ')+Math.round(ZL[zi]*100)+'%')}
+},true);
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
