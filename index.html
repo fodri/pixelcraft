@@ -113,7 +113,7 @@ function drawChar(x,y,c,w,fx,fy,s,e){if(c&&c.bk==1&&typeof drawBlocky=='function
  bk=fy<-.45&&Math.abs(fy)>=Math.abs(fx),sd=!bk&&Math.abs(fx)>.55&&Math.abs(fx)>Math.abs(fy),fr=!bk&&!sd,sg=fx>0?1:-1,OL='#14100c',BT='#2e2018',ac=c.ac,BPK=c.ac==4||!!(e&&e.bp),
  tH=e.h&&TP[e.h],tC=e.c&&TP[e.c],tL=e.l&&TP[e.l],tB=e.b&&TP[e.b];
  const S=(a,b,cw,ch,col)=>Q(sg>0?a:-a-cw,b,cw,ch,col);
- if(!chNoSh)Q(-13,-3,26,6,'rgba(0,0,0,.35)');
+ if(!chNoSh&&!V3PT)Q(-13,-3,26,6,'rgba(0,0,0,.35)');
  const LG_=[[-1,2,2,0],[3,-2,-3,0],[1,1,0,-2],[-2,3,3,0],[1,1,0,-2]][(w|0)%5]||[-1,2,2,0],yA=LG_[0],yB=LG_[1],aL=LG_[2],BOB=LG_[3]+(!w&&!chNoSh&&Math.floor(performance.now()/700)%2?-1:0);
  const hair=()=>{switch(c.hs){
   case 0:Q(-9,-60,18,6,hc);Q(-7,-60,12,1,hcl);Q(-9,-55,2,5,hc);Q(7,-55,2,5,hc);if(bk)Q(-8,-58,16,14,hc);break;
@@ -312,7 +312,7 @@ function menu(){const moved=ms.x!=lmx||ms.y!=lmy;lmx=ms.x;lmy=ms.y;Q(0,0,VW,VH,'
  noTr=true;txt(LANG=='hu'?'A karaktered':'Your character',VW/2+107,128,'#8fa07f','center');noTr=false;
  const hu=LANG=='hu';noTr=true;
  txt(hu?'WASD mozgás  Katt: művelet  Space: ugrás  E: interakció  C: barkácsolás':'WASD move   Click: act   Space: jump   E: interact   C: craft',VW/2,VH-30,'#8fa07f','center');
- txt(hu?'I: tárgyak  M: térkép  N: minitérkép  H: segítség  U: beragadás  P: nézőpont  +/-: nagyítás':'I: inventory   M: map   N: minimap   H: help   U: unstuck   P: view   +/-: zoom',VW/2,VH-20,'#8fa07f','center');
+ txt(hu?'I: tárgyak  M: térkép  N: minitérkép  H: segítség  U: beragadás  F1/F2/F3: nézet  +/-: nagyítás':'I: inventory   M: map   N: minimap   H: help   U: unstuck   F1/F2/F3: view   +/-: zoom',VW/2,VH-20,'#8fa07f','center');
  txt(hu?'W/S vagy egér: választás   Enter: ok':'W/S or mouse: choose   Enter: select',VW/2,VH-9,'#6f7c62','center');
  txt('Created by: Fodros Gergely',VW-6,VH-6,'#6f7c62','right');noTr=false}
 function menuAct(i){if(i==0){if(!started){if(!load()){init();tut=1}}started=true;state='play'}
@@ -2652,7 +2652,7 @@ function chNV(){return BKU?CHK.length:CHK.length-1}
 function drawBlocky(x,y,c,w,fx,fy,s,e){g.save();g.translate(Math.round(x),Math.round(y));const sc=(s||1)/3;g.scale(sc,sc);e=e||{};
  const sk=SKIN[c.sk|0]||'#d8a878',skd=shade(sk,.78),bk=fy<-.45&&Math.abs(fy)>=Math.abs(fx),sd=!bk&&Math.abs(fx)>.55&&Math.abs(fx)>Math.abs(fy),sg=fx>0?1:-1,S=(a,b,cw,ch,col)=>Q(sg>0?a:-a-cw,b,cw,ch,col);
  const VE='#e0701c',VEd='#b8561a',RF='#f0e878',PA='#4a5a2e',PAd='#38461f',BO='#2a1a10',HT='#f0c020',HTd='#c89a10',OL='#14100c',st=w?[3,-3,-3,3,0][(w|0)%5]||0:0,bob=w&&(w%2)?-1:0;
- if(!chNoSh)Q(-12,-3,24,6,'rgba(0,0,0,.35)');
+ if(!chNoSh&&!V3PT)Q(-12,-3,24,6,'rgba(0,0,0,.35)');
  if(!sd){Q(-9,-21,8,21+Math.min(0,st),OL);Q(1,-21,8,21+Math.min(0,-st),OL);Q(-8,-20,6,19+Math.min(0,st),PA);Q(2,-20,6,19+Math.min(0,-st),PA);Q(-8,-20,2,19,PAd);Q(-9,-4+Math.min(0,st),8,4,BO);Q(1,-4+Math.min(0,-st),8,4,BO);
   g.translate(0,bob);Q(-11,-42,22,23,OL);Q(-10,-41,20,21,VE);Q(-10,-41,20,2,shade(VE,1.2));Q(5,-41,5,21,VEd);if(!bk){Q(-10,-31,20,2,RF);Q(-10,-26,20,2,RF);Q(-3,-41,6,4,'#8a8a8a')}else{Q(-10,-33,20,2,RF);Q(-10,-28,20,2,RF)}
   if(!NOARM){Q(-16,-41,6,20,OL);Q(10,-41,6,20,OL);Q(-15,-40,4,16-st,VE);Q(11,-40,4,16+st,VE);Q(-15,-24-st,4,4,sk);Q(11,-24+st,4,4,sk);}
@@ -2867,7 +2867,7 @@ function treeRetro(x,y){const s=Math.round(Math.sin(performance.now()/(700-wea*2
 {const tr8=tree;tree=function(x,y){if(CLASSIC)return treeRetro(x,y);return tr8(x,y)}}
 /* tiny first-version people */
 {const dc8=drawChar;drawChar=function(x,y,c,w,fx,fy,s,e){if(!CLASSIC||(s&&s>1.5))return dc8(x,y,c,w,fx,fy,s,e);c=c||CH;const sh=c.bk==1?'#e0701c':SHIRTC[c.sh|0]||'#5f6b3a',hc=HAIRC[c.hc|0]||'#3a2418',sk=SKIN[c.sk|0]||'#d9a77c',pn=PANTC[c.pn|0]||'#2a3140',ww=w?(w%2):0;
- if(!chNoSh)Q(x-4,y-1,8,2,'rgba(0,0,0,.35)');Q(x-3,y-4,2,4+ww,pn);Q(x+1,y-4,2,5-ww,pn);Q(x-4,y-10,8,7,sh);Q(x-4,y-9,8,1,shade(sh,1.3));Q(x-4,y-5,8,1,'#3a2a1a');if((fy||0)<=0&&(fy||0)<-.45)Q(x-3,y-10,6,6,shade(sh,.75));
+ if(!chNoSh&&!V3PT)Q(x-4,y-1,8,2,'rgba(0,0,0,.35)');Q(x-3,y-4,2,4+ww,pn);Q(x+1,y-4,2,5-ww,pn);Q(x-4,y-10,8,7,sh);Q(x-4,y-9,8,1,shade(sh,1.3));Q(x-4,y-5,8,1,'#3a2a1a');if((fy||0)<=0&&(fy||0)<-.45)Q(x-3,y-10,6,6,shade(sh,.75));
  Q(x-3,y-15,6,5,sk);Q(x-3,y-16,6,2,hc);if((c.bd|0)>2)Q(x-3,y-12,6,2,hc);if((fy||0)>=0&&Math.abs(fx||0)<.5){Q(x-2,y-13,1,1,'#222');Q(x+1,y-13,1,1,'#222')}}}
 {const hi8=heldItem;heldItem=function(x,y,fx,fy,k,sw){if(!CLASSIC)return hi8(x,y,fx,fy,k,sw);if(!k||k=='hand')return;const tc=GUN[k]?'#3a3a3a':{spear:'#c8b48a',axe:'#9aa4a8',bow:'#7a5636',shovel:'#8a9092',rod:'#a07a4a',pickaxe:'#9aa4a8'}[k]||'#d9a77c';Q(x+fx*7-1,y-7+fy*6,3,3,tc);if(GUN[k])Q(x+fx*10-1,y-7+fy*8,2,2,'#5a5a5a')}}
 {const gh8=gunHeld;gunHeld=function(...a){if(CLASSIC)return;return gh8(...a)}}
@@ -8879,7 +8879,7 @@ function windTick(){try{if(!SXS||!SXS.ok||vol<=0||state!='play'){if(SXS&&SXS.amb
 var PHOTO=null;
 function photoToggle(){if(PHOTO){PHOTO=null;return}if(state!='play')return;PHOTO={ox:0,oy:0,t0:performance.now(),z:ZM};say('')}
 function photoSave(){try{const a=document.createElement('a');a.download='pixelcraft-'+day+'-'+Date.now()%100000+'.png';a.href=C.toDataURL('image/png');document.body.appendChild(a);a.click();a.remove();PHOTO.flash=performance.now()}catch(e){}}
-addEventListener('keydown',e=>{if(e.code=='F2'&&state=='play'){e.preventDefault();photoToggle();return}if(!PHOTO)return;if(e.code=='Escape'){PHOTO=null;e.preventDefault();e.stopImmediatePropagation();return}if(e.code=='Enter'){photoSave();e.preventDefault();e.stopImmediatePropagation();return}
+addEventListener('keydown',e=>{if(e.code=='F4'&&state=='play'){e.preventDefault();photoToggle();return}if(!PHOTO)return;if(e.code=='Escape'){PHOTO=null;e.preventDefault();e.stopImmediatePropagation();return}if(e.code=='Enter'){photoSave();e.preventDefault();e.stopImmediatePropagation();return}
  if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)){PHOTO.k=PHOTO.k||{};PHOTO.k[e.code]=1;e.stopImmediatePropagation();e.preventDefault()}},true);
 addEventListener('keyup',e=>{if(PHOTO&&PHOTO.k)PHOTO.k[e.code]=0},true);
 {const up151=update;update=function(dt){if(PHOTO&&state=='play'){const s=180*(dt||1/60),k=PHOTO.k||{};if(k.ArrowLeft||k.KeyA)PHOTO.ox-=s;if(k.ArrowRight||k.KeyD)PHOTO.ox+=s;if(k.ArrowUp||k.KeyW)PHOTO.oy-=s;if(k.ArrowDown||k.KeyS)PHOTO.oy+=s;PHOTO.ox=Math.max(-400,Math.min(400,PHOTO.ox));PHOTO.oy=Math.max(-300,Math.min(300,PHOTO.oy));cam.x=cl(P.x-VW/(2*ZM)+PHOTO.ox,0,W*T-VW/ZM);cam.y=cl(P.y-VH/(2*ZM)+PHOTO.oy,0,H*T-VH/ZM);return}
@@ -8890,7 +8890,7 @@ let PHC=null;
 {const hpb151=hpBars;hpBars=function(){if(PHOTO)return;return hpb151.apply(this,arguments)}}
 {const hp151=hud;hud=function(){if(PHOTO&&state=='play'){try{if(!PHC||PHC.width!=C.width||PHC.height!=C.height){PHC=document.createElement('canvas');PHC.width=C.width;PHC.height=C.height}const c=PHC.getContext('2d');c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,PHC.width,PHC.height);c.drawImage(C,0,0)}catch(e){}return}return hp151.apply(this,arguments)}}
 function photoDraw(){const h=LANG=='hu';g.save();g.setTransform(1,0,0,1,0,0);if(PHC)g.drawImage(PHC,0,0);g.restore();g.setTransform(RS,0,0,RS,0,0);
- const age=performance.now()-PHOTO.t0;if(age<3500){g.globalAlpha=Math.min(1,(3500-age)/600);noTr=true;g.font=fnt(0,8);const s=h?'FOTÓ MÓD · WASD/nyilak: kamera · Enter: kép mentése · F2/Esc: vissza':'PHOTO MODE · WASD/arrows: camera · Enter: save picture · F2/Esc: back';const w=g.measureText(s).width+12;Q(VW/2-w/2,8,w,14,'rgba(0,0,0,.6)');txt(s,VW/2,18,'#fff','center');noTr=false;g.globalAlpha=1}
+ const age=performance.now()-PHOTO.t0;if(age<3500){g.globalAlpha=Math.min(1,(3500-age)/600);noTr=true;g.font=fnt(0,8);const s=h?'FOTÓ MÓD · WASD/nyilak: kamera · Enter: kép mentése · F4/Esc: vissza':'PHOTO MODE · WASD/arrows: camera · Enter: save picture · F4/Esc: back';const w=g.measureText(s).width+12;Q(VW/2-w/2,8,w,14,'rgba(0,0,0,.6)');txt(s,VW/2,18,'#fff','center');noTr=false;g.globalAlpha=1}
  if(PHOTO.flash){const f=(performance.now()-PHOTO.flash)/400;if(f<1){g.fillStyle='rgba(255,255,255,'+(1-f)*.7+')';g.fillRect(0,0,VW,VH)}else PHOTO.flash=0}}
 /* ---------- gamepad ---------- */
 const GPAD={on:false,prev:{},cx:VW/2,cy:VH/2,last:0,keys:{},seen:0};
@@ -8931,8 +8931,8 @@ function err151(where,e){ERR151.n++;try{console.error('[pixelcraft '+where+']',e
 {const in151=init;init=function(...a){const r=in151.apply(this,a);GSX={s:0,th:0,fd:0,at:0,done:0};PHOTO=null;return r}}
 {const sv151=save;save=function(){const r=sv151.apply(this,arguments);try{localStorage.setItem(SKEY()+'_gs',JSON.stringify(GSX?{s:GSX.s,done:GSX.done}:{done:1}))}catch(e){}return r}}
 {const ld151=load;load=function(){const r=ld151.apply(this,arguments);try{const d=JSON.parse(localStorage.getItem(SKEY()+'_gs')||'null');GSX=d&&!d.done?{s:d.s|0,th:0,fd:0,at:0,done:0}:{done:1}}catch(e){GSX={done:1}}PHOTO=null;return r}}
-try{TUT.hu.push(['Kontroller és fotó','Kontroller: bal kar mozgás, jobb kar célzás, RT használat/ütés, LT jobb klikk, A interakció, B vissza, X újratöltés, Y tárgyak, LB/RB eszközváltás, D-pad le: evés, Select: térkép, Start: menü.','F2: fotó mód — eltűnik a kijelző, WASD-dal mozgatod a kamerát, Enterrel elmented a képet.','Könnyű és Békés fokozaton lassabban éhezel és szomjazol, a hordák csak a 10. naptól jönnek.']);
- TUT.en.push(['Controller and photos','Controller: left stick move, right stick aim, RT use/hit, LT right click, A interact, B back, X reload, Y inventory, LB/RB switch tool, D-pad down: eat, Select: map, Start: menu.','F2: photo mode — the HUD disappears, WASD moves the camera, Enter saves the picture.','On Easy and Peaceful you get hungry and thirsty slower, and hordes only come from day 10.'])}catch(e){}
+try{TUT.hu.push(['Kontroller és fotó','Kontroller: bal kar mozgás, jobb kar célzás, RT használat/ütés, LT jobb klikk, A interakció, B vissza, X újratöltés, Y tárgyak, LB/RB eszközváltás, D-pad le: evés, Select: térkép, Start: menü.','F4: fotó mód — eltűnik a kijelző, WASD-dal mozgatod a kamerát, Enterrel elmented a képet.','Könnyű és Békés fokozaton lassabban éhezel és szomjazol, a hordák csak a 10. naptól jönnek.']);
+ TUT.en.push(['Controller and photos','Controller: left stick move, right stick aim, RT use/hit, LT right click, A interact, B back, X reload, Y inventory, LB/RB switch tool, D-pad down: eat, Select: map, Start: menu.','F4: photo mode — the HUD disappears, WASD moves the camera, Enter saves the picture.','On Easy and Peaceful you get hungry and thirsty slower, and hordes only come from day 10.'])}catch(e){}
 
 /* ===== v153: adventures — people at the camps (and the radio) hand out jobs: rescue a trapped survivor, hunt a beast, burn out an infected nest, survey the unknown; the story teaches the recipes it asks for; fewer name tags; calmer defaults ===== */
 GAMEV=153;
@@ -13969,7 +13969,7 @@ gfxMenu=function(){if(PV225.big&&PV225.b&&PV225.a){pvBig225();return}PV225.big=f
 
 /* ===== z301: PRIPJATY 1986 — the one story mode. A hand-built city frozen in 1986, seen 84 years later by a stalker on the first day.
    Core: the mode card, starting the fixed world, saved state, the look (colour grade, mist, vignette, grain) ===== */
-GAMEV=305;
+GAMEV=308;
 const PRIS=19860426;
 var PRI=null;
 const prH=()=>LANG=='hu';
@@ -14882,7 +14882,7 @@ const prRatio=()=>Math.min(1,PRES/Math.max(1,C.clientWidth));
    if(R._p25&&PRI&&fvA()){const want=prRatio();if(Math.abs(R._gp.call(R)-want)>.004){R._sp.call(R,want);V3.w=-1}}}}catch(e){}
   return vd.apply(this,arguments)}}
 /* looking up and down is free (in TPS not far down — the camera would see under the waist-up body); no walking bob; Space jumps (a human jump, not a bunny hop), Ctrl / Z crouches */
-{const ff=fvFrame;fvFrame=function(){if(PRI){const lo=(typeof tpsOn=='function'&&tpsOn())?-.62:-1.05;FV.pitch=Math.max(lo,Math.min(1.05,FV.pitch));FV.bob=0;FV.fl=0;FV.flW=0}ff.apply(this,arguments)}}
+{const ff=fvFrame;fvFrame=function(){if(PRI||(typeof tpsOn=='function'&&tpsOn())){const lo=(typeof tpsOn=='function'&&tpsOn())?-.62:-1.05;FV.pitch=Math.max(lo,Math.min(1.05,FV.pitch));FV.bob=0;FV.fl=0;FV.flW=0}ff.apply(this,arguments)}}
 {const fj=fvJump;fvJump=function(){const v0=FV.vy;const r=fj.apply(this,arguments);if(PRI&&FV.vy>0&&!(v0>0))FV.vy=3.7;return r}}
 {const fs=fvShadows;fvShadows=function(on){return fs.call(this,on&&!PRI)}}
 {const t0=toast112;toast112=function(a,b){if(PRI&&/FPS/.test(String(a)))b=LANG=='hu'?'WASD: mozgás · Shift: futás · Szóköz: ugrás · Ctrl / Z: guggolás · X: FPS / TPS':'WASD: move · Shift: run · Space: jump · Ctrl / Z: crouch · X: FPS / TPS';return t0.call(this,a,b)}}
@@ -14916,7 +14916,7 @@ C.addEventListener('touchend',tfpEnd,{passive:false,capture:true});C.addEventLis
 
 /* ===== z319: Pripjaty has no top-down view — a 2.5D first-person (FPS) and a 2.5D third-person (TPS) view; X (or the round button) switches between them. TPS: a close over-the-shoulder orbit camera (looks up and down) — the character is always seen from behind, from the waist up ===== */
 let TPS=false;try{TPS=localStorage.getItem('pxc_tps')=='1'}catch(e){}
-const tpsOn=()=>!!(PRI&&TPS&&typeof fvA=='function'&&fvA());
+const tpsOn=()=>!!(TPS&&typeof fvA=='function'&&fvA());
 function tpsSet(v){TPS=!!v;try{localStorage.setItem('pxc_tps',TPS?'1':'0')}catch(e){}
  const h=LANG=='hu';try{say(TPS?(h?'Harmadik személyű nézet (TPS)':'Third-person view (TPS)'):(h?'Belső nézet (FPS)':'First-person view (FPS)'))}catch(e){}}
 /* never top-down: the view button and X only change between FPS and TPS */
@@ -14930,7 +14930,7 @@ function tpaDir(){const mx=FV.mvx||0,my=FV.mvy||0;if(Math.hypot(mx,my)<.1){TPA.d
  const yaw=FV.yaw,f=mx*-Math.sin(yaw)+my*-Math.cos(yaw),s=mx*Math.cos(yaw)+my*-Math.sin(yaw),af=Math.abs(f),as=Math.abs(s);let d=TPA.dir;
  if(d=='b'||d=='f'||d=='n'){if(as>af*1.4)d=s>0?'r':'l';else d=f>=0?'b':'f'}else{if(af>as*1.4)d=f>=0?'b':'f';else d=s>0?'r':'l'}TPA.dir=d}
 /* a person is ~1.5 m on screen next to a 1.62 m eye: scale people up a little and lower the eye, so the player is not a giant */
-const PSC=1.2,PEYE=.12,PWAIST=.52;
+const PSC=1.2,PEYE=.12,PWAIST=-9;
 const eyeDrop=()=>PEYE*Math.max(0,Math.min(1,((FV.eb==null?1.08:FV.eb)-.6)/.4));
 /* the camera: FPS — eye lowered to human height; TPS — a close orbit over the right shoulder, a little above the head, pulled in by walls */
 {const fc=fvCam;fvCam=function(){const tg=fc.apply(this,arguments),c=V3.cam;if(PRI&&!(typeof CNS!='undefined'&&CNS.on))c.position.y-=eyeDrop();FV.eye=FV.eye||new THREE.Vector3();FV.eye.copy(c.position);
@@ -14948,7 +14948,7 @@ const eyeDrop=()=>PEYE*Math.max(0,Math.min(1,((FV.eb==null?1.08:FV.eb)-.6)/.4));
   c.position.copy(FV.eye);c.lookAt(tg);try{return fa.apply(this,arguments)}finally{c.position.copy(p0);c.quaternion.copy(q0)}}}
 /* the player is a 2.5D sprite that always shows its back */
 {const dp=drawP;drawP=function(){if(!tpsOn())return dp.apply(this,arguments);tpaDir();const fx=P.fx,fy=P.fy;P.fx=0;P.fy=-1;try{return dp.apply(this,arguments)}finally{P.fx=fx;P.fy=fy}}}
-{const fw=fvWeapon;fvWeapon=function(){if(PRI&&TPS)return;return fw.apply(this,arguments)}}
+{const fw=fvWeapon;fvWeapon=function(){if(TPS&&fvA())return;return fw.apply(this,arguments)}}
 /* the sprite fades out under the waist (a soft cut — the legs are never shown); applied to the player's material only */
 function tpaMat(e){const mt=e.m.material;if(!mt||mt._tpf)return;mt._tpf=1;const u={uCut:{value:-99},uFd:{value:.16}};mt.userData.tpu=u;
  mt.onBeforeCompile=sh=>{sh.uniforms.uCut=u.uCut;sh.uniforms.uFd=u.uFd;
@@ -14957,7 +14957,7 @@ function tpaMat(e){const mt=e.m.material;if(!mt||mt._tpf)return;mt._tpf=1;const 
  mt.customProgramCacheKey=()=>'tpf';mt.transparent=true;mt.needsUpdate=true}
 /* show the sprite and a blob shadow only while the frame is rendered; body language: forward lean when running, back lean when backing up, side lean when sidestepping, a breathing sway, a kick when firing */
 {const vd=v3Draw;v3Draw=function(){try{if(V3&&V3.R&&!V3.R._tp){const R=V3.R,r0=R.render;R.render=function(s,c){let e=null;
-   try{if(s===V3.S&&PRI&&fvOn())tiltEnts()}catch(x){}
+   try{if(s===V3.S&&(PRI||tpsOn())&&fvOn())tiltEnts()}catch(x){}
    try{if(s===V3.S&&tpsOn()&&!(typeof CNS!="undefined"&&CNS.on)){e=V3.ents.get('P');const dt=FV.dt||.016;
      if(e&&e.m){tpaMat(e);e.m.visible=true;e.m.castShadow=false;const sp=Math.hypot(FV.mvx||0,FV.mvy||0)>.1&&FV.spd>10,d=TPA.dir,run=TPA.run;
       TPA.bob+=sp?dt*Math.min(260,FV.spd)*.045:0;
@@ -15336,7 +15336,7 @@ function ualDraw(x,y,c,w,fx,fy,s,e){const M=UAL.meta;[c,e]=ualCE(c,e);const now=
  if(hk){const h=M.hand[hk][an],hh=h&&h[fi]&&h[fi][dir];if(hh)hp=[gx+(hh[0]-M.W/2)*sc,gy+(hh[1]-M.FY)*sc,hh[2],hh[0]<M.W/2]}
  let tax=fx,tay=fy;if(!acting){tax=Math.sin(dir*Math.PI/4);tay=Math.cos(dir*Math.PI/4)}
  const sw=who=='p'?(P.cd>0?Math.min(1,P.cd/.45):0):(who=='r'&&o&&o.s?(now*2.86)%1:0);
- g.save();g.translate(gx,gy);g.scale(sc,sc);if(!chNoSh)Q(-13,-3,26,6,'rgba(0,0,0,.35)');g.restore();
+ g.save();g.translate(gx,gy);g.scale(sc,sc);if(!chNoSh&&!V3PT)Q(-13,-3,26,6,'rgba(0,0,0,.35)');g.restore();
  if(hp&&!hp[2])ualTool(hp[0],hp[1],it,tax,tay,sw,dir,hp[3]);
  g.save();g.translate(gx,gy);g.scale(sc,sc);
  if(sit){const n=Math.hypot(fx,fy)||1;g.translate((fx/n*UAL.sdx)/sc,(fy/n*UAL.sdy)/sc)}   /* the seat is under the hips, not under the feet */
@@ -15602,15 +15602,57 @@ const p51Ratio=()=>Math.min(1,1920/Math.max(1,C.clientWidth));
    if(fvA()){const want=p51Ratio();if(Math.abs(R._gp51.call(R)-want)>.004){R._sp51.call(R,want);V3.w=-1}}}}catch(e){}
   return vd.apply(this,arguments)}}
 
-/* ===== z352 (PixelCRAFT): the camera is on keys — P switches between the top-down view and first person (the same as Settings → first-person view), + / − (or the numpad ones) zoom the top-down camera ===== */
+/* ===== z352 (PixelCRAFT): the camera is on keys — F1 plain top-down view, F2 third person (TPS), F3 first person (FPS); P toggles top-down / first person; + / − (or the numpad ones) zoom the top-down camera ===== */
 addEventListener('keydown',e=>{if(PRI||state!='play'||e.repeat||e.ctrlKey||e.altKey||e.metaKey)return;
  const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;
  const c=e.code;
+ if(c=='F1'||c=='F2'||c=='F3'){e.preventDefault();e.stopImmediatePropagation();if(typeof PHOTO!='undefined'&&PHOTO)return;const h=LANG=='hu';
+  if(c=='F1'){if(FPV)fvToggle();try{say(h?'Sima nézet (F1)':'Plain view (F1)')}catch(x){}}
+  else{if(!FPV)fvToggle();tpsSet(c=='F2')}
+  return}
  if(c=='KeyP'){if(fvUI())return;e.preventDefault();fvToggle();return}
  if(c=='Equal'||c=='NumpadAdd'||c=='Minus'||c=='NumpadSubtract'){if(fvUI()||showMap||fvA())return;e.preventDefault();
   const d=(c=='Equal'||c=='NumpadAdd')?1:-1,n=Math.max(0,Math.min(ZL.length-1,zi+d));if(n===zi)return;zi=n;ZM=ZL[zi];try{localStorage.setItem('pxc_zm',zi)}catch(x){}
   say((LANG=='hu'?'Nagyítás: ':'Zoom: ')+Math.round(ZL[zi]*100)+'%')}
 },true);
+
+/* ===== z353 (PixelCRAFT): people are drawn in high resolution in the first / third person views — the 48x76 people sprite (player, villagers, other players, infected) is painted 1:1 into a 3x canvas (the flat view draws it at 1/3 size), upscaled twice with Scale2x (EPX: smooth diagonals, no blur) and sampled smoothly ===== */
+var V3PT=0;  /* 1 while a sprite is painted for the 3D scene: the sprites' flat rectangle shadows are left out when the scene has real shadows */
+const v3Sh=()=>{try{return !!(V3&&V3.R&&V3.R.shadowMap&&V3.R.shadowMap.enabled)}catch(e){return false}};
+{const f=v3Paint;v3Paint=function(){V3PT=v3Sh()?1:0;try{return f.apply(this,arguments)}finally{V3PT=0}}}
+const HPK=3,HPCW=96,HPCH=108,HPR=new Map(),HPG={bc:null,bg:null,b1:null,b2:null,id:null,fr:-1,n:0};
+function hpScratch(){const bc=document.createElement('canvas');bc.width=72*HPK;bc.height=64*HPK;HPG.bc=bc;HPG.bg=bc.getContext('2d',{willReadFrequently:true});
+ HPG.b1=new Uint32Array(HPCW*HPCH*4);HPG.b2=new Uint32Array(HPCW*HPCH*16);HPG.id=new ImageData(new Uint8ClampedArray(HPG.b2.buffer),HPCW*4,HPCH*4)}
+/* Scale2x / EPX: every pixel becomes 2x2; a corner takes the colour of its two neighbours when they agree and the other two do not */
+function hpEpx(s,w,h,d){const W2=w*2;for(let y=0;y<h;y++){const ym=y>0?y-1:0,yp=y<h-1?y+1:h-1;for(let x=0;x<w;x++){const xm=x>0?x-1:0,xp=x<w-1?x+1:w-1,
+  P=s[y*w+x],A=s[ym*w+x],B=s[y*w+xp],C=s[y*w+xm],D=s[yp*w+x];let p1=P,p2=P,p3=P,p4=P;
+  if(C===A&&C!==D&&A!==B)p1=A;if(A===B&&A!==C&&B!==D)p2=B;if(D===C&&D!==B&&C!==A)p3=C;if(B===D&&B!==A&&D!==C)p4=D;
+  const o=y*2*W2+x*2;d[o]=p1;d[o+1]=p2;d[o+W2]=p3;d[o+W2+1]=p4}}}
+function hpEnt(e,key,x,y,w,h,ax,ay,fn){if(!HPG.bc)hpScratch();let H=HPR.get(key);const G=HPG,now=performance.now();
+ if(!H||H.e!==e){if(H)H.tex.dispose();const W0=w*HPK,H0=h*HPK,x0=Math.max(0,Math.min(W0-HPCW,ax*HPK-48)),y0=Math.max(0,Math.min(H0-HPCH,ay*HPK-96));
+  const fc=document.createElement('canvas');fc.width=HPCW*4;fc.height=HPCH*4;const tex=new THREE.CanvasTexture(fc);tex.magFilter=THREE.LinearFilter;tex.minFilter=THREE.LinearFilter;tex.generateMipmaps=false;tex.flipY=true;
+  tex.repeat.set(W0/HPCW,H0/HPCH);tex.offset.set(-x0/HPCW,1-H0/HPCH+y0/HPCH);H={e,key,fc,fg:fc.getContext('2d'),tex,x0,y0,t:0,hs:0,ok:0};HPR.set(key,H)}
+ H.fr=V3.fr;if(G.fr!==V3.fr){G.fr=V3.fr;G.n=0}
+ const me=key==='P';
+ if(now-H.t>=(me?24:60)&&(me||G.n<3)){if(!me)G.n++;H.t=now;const cg=G.bg,sg=g,sc=cam,sb=BASE;cg.setTransform(1,0,0,1,0,0);cg.clearRect(0,0,G.bc.width,G.bc.height);cg.imageSmoothingEnabled=false;cg.setTransform(HPK,0,0,HPK,0,0);g=cg;BASE=1;cam={x:x-ax,y:y-ay};
+  V3PT=v3Sh()?1:0;try{fn()}catch(err){}finally{V3PT=0;g=sg;cam=sc;BASE=sb;cg.setTransform(1,0,0,1,0,0)}
+  const im=cg.getImageData(H.x0,H.y0,HPCW,HPCH),u=new Uint32Array(im.data.buffer);let hs=0;for(let i=0;i<u.length;i++)hs=(Math.imul(hs,31)+u[i])|0;
+  if(hs!==H.hs||!H.ok){H.hs=hs;hpEpx(u,HPCW,HPCH,G.b1);hpEpx(G.b1,HPCW*2,HPCH*2,G.b2);H.fg.putImageData(G.id,0,0);H.tex.needsUpdate=true;H.ok=1}}
+ if(H.ok&&e.m.material.map!==H.tex){e.m.material.map=H.tex;e.m.material.needsUpdate=true}}
+function hpOff(e){if(e.m.material.map!==e.tex){e.m.material.map=e.tex;e.m.material.needsUpdate=true}}
+{const f=v3Ent;v3Ent=function(key,x,y,w,h,ax,ay,fn,flat){const e=f.apply(this,arguments);
+ try{if(e&&e.m&&!flat){const ppl=(w===72&&h===64)||(w===64&&h===60)||(w===64&&h===56);
+  if(ppl){const me=key==='P',on=me?(tpsOn()&&!(typeof CNS!='undefined'&&CNS.on)):(fvA()&&Math.abs(x-P.x)<14*T&&Math.abs(y-P.y)<14*T);if(on)hpEnt(e,key,x,y,w,h,ax,ay,fn);else hpOff(e)}}
+  if(V3.fr%120===0)for(const[k,H]of HPR)if(V3.ents.get(k)!==H.e){H.tex.dispose();HPR.delete(k)}}catch(err){}
+ return e}}
+/* a jump in the third-person view: the first-person jump only lifted the camera — now the figure leaves the ground too and plays its jump frames (the hop-on-the-spot pose: crouch, spring, tuck) */
+{const f=drawP;drawP=function(){if(!tpsOn()||!(FV.hz>0)||HOP.on||J)return f.apply(this,arguments);
+ const u=Math.max(0,Math.min(1,(4.4-FV.vy)/8.8)),h0=HOP.h,t0=HOP.t;HOP.on=1;HOP.t=.12+u*.34;HOP.h=10.3;
+ try{return f.apply(this,arguments)}finally{HOP.on=0;HOP.t=t0;HOP.h=h0}}}
+
+/* ===== z354 (PixelCRAFT): no dinosaur-like bosses — the Ash Lizard, the Frost Back and the Rust Claw no longer come out of their shrines ===== */
+ashSpawn194=function(){};
+spawn201=function(){};
 
 (function loop(n){if(typeof fpsSkip=='function'&&fpsSkip(n)){requestAnimationFrame(loop);return}const dt=Math.min(.05,(n-last)/1e3);last=n;ZM=ZL[zi]*(inC?1.6:1);musT-=dt;if(musT<0){musT=1;musTick()}if(state=='play'&&!book&&!tut&&!invOpen&&!stOpen&&!skOpen&&!gtOpen&&!gaOpen&&!mdOpen&&!DTAG)update(dt);else if(state=='play'&&net&&!net.dead)coopIdle(dt);else{if(gtOpen||gaOpen||mdOpen)miscTick(dt);if(state=='play'&&net)netTick(dt);cam.x=cl(P.x+CL_.x-VW/(2*ZM),0,W*T-VW/ZM);cam.y=cl(P.y+CL_.y-VH/(2*ZM),0,H*T-VH/ZM)}
  draw();
